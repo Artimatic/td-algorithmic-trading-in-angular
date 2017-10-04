@@ -1,0 +1,18 @@
+{
+    "quote": {
+        "get": {
+            "query": {
+                "type": "object",
+                "properties": {
+                    "symbol": {
+                        "type": "string"
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "symbol"
+                ]
+            }
+        }
+    }
+}
