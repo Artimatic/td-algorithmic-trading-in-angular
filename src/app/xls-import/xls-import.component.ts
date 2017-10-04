@@ -19,7 +19,7 @@ export class XlsImportComponent implements OnInit {
     let fileBrowser = this.fileInput.nativeElement;
     const component = this;
 
-    reader.onload = function (evt: any) {
+    const overwriteOnload = function (evt: any) {
       const data = evt.target.result;
 
       const workbook = XLSX.read(data, { type: 'binary' });
@@ -28,8 +28,11 @@ export class XlsImportComponent implements OnInit {
 
       const parsedData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
-      component.onImport.emit(parsedData);
+      this.onImport.emit(parsedData);
+      console.log(parsedData);
     };
+
+    reader.onload = overwriteOnload.bind(this);
 
     reader.readAsBinaryString(fileBrowser.files[0]);
   }
