@@ -7,4 +7,7 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
   title = 'app';
+  import(event) {
+    console.log('event: ', event);
+  }
 }

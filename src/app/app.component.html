@@ -1,9 +1,27 @@
 <md-sidenav-container>
-  <md-toolbar color="primary">
-    <button md-button [routerLink]="['/bulk']">
-      <md-icon>trending_up</md-icon>
-      <span>Stocks</span>
-    </button>
+  <md-toolbar color="primary" class="main-toolbar">
+    <div fxLayout="row" fxLayoutWrap>
+      <div fxFlex="25">
+        <button md-icon-button [mdMenuTriggerFor]="menu">
+              <md-icon>toc</md-icon>
+          </button>
+        <md-menu #menu="mdMenu">
+          <button md-menu-item [routerLink]="['/bulk']">
+            <md-icon>trending_up</md-icon>
+            <span>Stocks</span>
+          </button>
+          <a href="https://nofile.io/f/79S5TrgzFCd/Example.xlsx" target="_blank">
+            <button md-menu-item>
+              <md-icon>open_in_new</md-icon>
+              <span>Example File</span>
+            </button>
+          </a>
+        </md-menu>
+      </div>
+      <div fxFlex="25">
+        <app-xls-import (onImport)="import($event)"></app-xls-import>
+      </div>
+    </div>
   </md-toolbar>
   <div class="loading-overlay" *ngIf="loading">
     <md-progress-spinner mode="indeterminate"></md-progress-spinner>

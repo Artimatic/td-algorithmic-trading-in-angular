@@ -22,7 +22,9 @@
         "styles.css",
         "robinhood-merchant-theme.scss"
       ],
-      "scripts": [],
+      "scripts": [
+        "../node_modules/xlsx/dist/xlsx.min.js"
+      ],
       "environmentSource": "environments/environment.ts",
       "environments": {
         "dev": "environments/environment.ts",

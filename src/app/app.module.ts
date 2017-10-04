@@ -15,16 +15,21 @@ import {
   MatGridListModule,
   MatButtonModule,
   MatSidenavModule,
+  MatExpansionModule,
 } from '@angular/material';
+
+import {FlexLayoutModule} from '@angular/flex-layout';
 
 import { routes } from './app.routes';
 import { AppComponent } from './app.component';
 import { BulkBacktestComponent } from './bulk-backtest';
+import { XlsImportComponent } from './xls-import/xls-import.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    BulkBacktestComponent
+    BulkBacktestComponent,
+    XlsImportComponent,
   ],
   imports: [
     BrowserModule,
@@ -42,6 +47,8 @@ import { BulkBacktestComponent } from './bulk-backtest';
     MatGridListModule,
     MatButtonModule,
     MatSidenavModule,
+    MatExpansionModule,
+    FlexLayoutModule,
   ],
   providers: [],
   bootstrap: [AppComponent]
