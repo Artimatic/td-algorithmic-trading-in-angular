@@ -16,6 +16,7 @@ import {
   MatButtonModule,
   MatSidenavModule,
   MatExpansionModule,
+  MatTableModule,
 } from '@angular/material';
 
 import {FlexLayoutModule} from '@angular/flex-layout';
@@ -24,12 +25,14 @@ import { routes } from './app.routes';
 import { AppComponent } from './app.component';
 import { BulkBacktestComponent } from './bulk-backtest';
 import { XlsImportComponent } from './xls-import/xls-import.component';
+import { RhTableComponent } from './rh-table';
 
 @NgModule({
   declarations: [
     AppComponent,
     BulkBacktestComponent,
     XlsImportComponent,
+    RhTableComponent,
   ],
   imports: [
     BrowserModule,
@@ -48,6 +51,7 @@ import { XlsImportComponent } from './xls-import/xls-import.component';
     MatButtonModule,
     MatSidenavModule,
     MatExpansionModule,
+    MatTableModule,
     FlexLayoutModule,
   ],
   providers: [],

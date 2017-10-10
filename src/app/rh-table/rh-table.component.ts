@@ -4,11 +4,11 @@ import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/of';
 
 @Component({
-  selector: 'app-bulk-backtest',
-  templateUrl: './bulk-backtest.component.html',
-  styleUrls: ['./bulk-backtest.component.css']
+  selector: 'app-rh-table',
+  templateUrl: './rh-table.component.html',
+  styleUrls: ['./rh-table.component.css']
 })
-export class BulkBacktestComponent implements OnInit {
+export class RhTableComponent implements OnInit {
   displayedColumns = ['position', 'name', 'weight', 'symbol'];
   dataSource = new ExampleDataSource();
   constructor() { }
