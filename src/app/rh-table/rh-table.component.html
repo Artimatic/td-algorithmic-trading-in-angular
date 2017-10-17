@@ -5,27 +5,37 @@
           The actual rendered columns are set as a property on the row definition" -->
 
     <!-- Position Column -->
-    <ng-container mdColumnDef="position">
-      <md-header-cell *mdHeaderCellDef> No. </md-header-cell>
-      <md-cell *mdCellDef="let element"> {{element.position}} </md-cell>
+    <ng-container mdColumnDef="stock">
+      <md-header-cell *mdHeaderCellDef> Stock </md-header-cell>
+      <md-cell *mdCellDef="let element"> {{element.stock}} </md-cell>
     </ng-container>
 
     <!-- Name Column -->
-    <ng-container mdColumnDef="name">
-      <md-header-cell *mdHeaderCellDef> Name </md-header-cell>
-      <md-cell *mdCellDef="let element"> {{element.name}} </md-cell>
+    <ng-container mdColumnDef="totalReturns">
+      <md-header-cell *mdHeaderCellDef> Returns </md-header-cell>
+      <md-cell *mdCellDef="let element"> {{element.totalReturns}} </md-cell>
     </ng-container>
 
     <!-- Weight Column -->
-    <ng-container mdColumnDef="weight">
-      <md-header-cell *mdHeaderCellDef> Weight </md-header-cell>
-      <md-cell *mdCellDef="let element"> {{element.weight}} </md-cell>
+    <ng-container mdColumnDef="lastVolume">
+      <md-header-cell *mdHeaderCellDef> Last Volume </md-header-cell>
+      <md-cell *mdCellDef="let element"> {{element.lastVolume}} </md-cell>
     </ng-container>
 
     <!-- Color Column -->
-    <ng-container mdColumnDef="symbol">
-      <md-header-cell *mdHeaderCellDef> Symbol </md-header-cell>
-      <md-cell *mdCellDef="let element"> {{element.symbol}} </md-cell>
+    <ng-container mdColumnDef="lastPrice">
+      <md-header-cell *mdHeaderCellDef> Last Price </md-header-cell>
+      <md-cell *mdCellDef="let element"> {{element.lastPrice}} </md-cell>
+    </ng-container>
+
+    <ng-container mdColumnDef="totalTrades">
+      <md-header-cell *mdHeaderCellDef> Trades </md-header-cell>
+      <md-cell *mdCellDef="let element"> {{element.totalTrades}} </md-cell>
+    </ng-container>
+
+    <ng-container mdColumnDef="trending">
+      <md-header-cell *mdHeaderCellDef> Recommendation </md-header-cell>
+      <md-cell *mdCellDef="let element"> {{element.trending}} </md-cell>
     </ng-container>
 
     <md-header-row *mdHeaderRowDef="displayedColumns"></md-header-row>

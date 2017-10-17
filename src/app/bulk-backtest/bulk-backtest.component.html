@@ -1,1 +1,2 @@
-<app-rh-table></app-rh-table>
+<app-xls-import (onImport)="import($event)"></app-xls-import>
+<app-rh-table [data]="stocks" [displayedColumns]="headers"></app-rh-table>

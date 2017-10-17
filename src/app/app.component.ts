@@ -15,7 +15,4 @@ import 'rxjs/add/operator/share';
 })
 export class AppComponent {
   title = 'app';
-  import(event) {
-    console.log('event: ', event);
-  }
 }

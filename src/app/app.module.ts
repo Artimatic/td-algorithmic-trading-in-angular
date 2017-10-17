@@ -26,6 +26,7 @@ import { AppComponent } from './app.component';
 import { BulkBacktestComponent } from './bulk-backtest';
 import { XlsImportComponent } from './xls-import/xls-import.component';
 import { RhTableComponent } from './rh-table';
+import { BacktestService } from './shared';
 
 @NgModule({
   declarations: [
@@ -54,7 +55,9 @@ import { RhTableComponent } from './rh-table';
     MatTableModule,
     FlexLayoutModule,
   ],
-  providers: [],
+  providers: [
+    BacktestService
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
