@@ -1,8 +1,7 @@
-const google = require('google-finance');
+import google from '../../components/google-finance';
+import _ from 'lodash';
 
-const _ = require('lodash');
-
-const errors = require('../../components/errors/baseErrors');
+import errors from '../../components/errors/baseErrors';
 
 class QuoteService {
     getData(ticker, start, end) {

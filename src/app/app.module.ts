@@ -17,6 +17,8 @@ import {
   MatSidenavModule,
   MatExpansionModule,
   MatTableModule,
+  MatCheckboxModule,
+  MatRadioModule
 } from '@angular/material';
 
 import {FlexLayoutModule} from '@angular/flex-layout';
@@ -54,6 +56,8 @@ import { BacktestService } from './shared';
     MatExpansionModule,
     MatTableModule,
     FlexLayoutModule,
+    MatCheckboxModule,
+    MatRadioModule
   ],
   providers: [
     BacktestService

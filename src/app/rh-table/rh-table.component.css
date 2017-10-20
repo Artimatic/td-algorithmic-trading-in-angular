@@ -1,8 +1,17 @@
-.example-container {
+.table-container {
   display: flex;
   flex-direction: column;
   max-height: auto;
   min-width: auto;
+}
+
+.table-header {
+  min-height: 64px;
+  display: flex;
+  align-items: baseline;
+  padding: 8px 24px 0;
+  font-size: 20px;
+  justify-content: space-between;
 }
 
 .mat-table {
