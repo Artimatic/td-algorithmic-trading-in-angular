@@ -1,10 +1,12 @@
 <div class="table-container mat-elevation-z8">
     <div class="table-header">
-        <md-checkbox [(ngModel)]="actionable">Show Actionable Only</md-checkbox>
         <md-radio-group [(ngModel)]="recommendation">
             <md-radio-button value="buy">Buy</md-radio-button>
             <md-radio-button value="sell">Sell</md-radio-button>
           </md-radio-group>
+          <button (click)="openDialog()">Pick one</button>
+
+        <md-checkbox [(ngModel)]="actionable">Show Actionable Only</md-checkbox>
       </div>
   <md-table #table [dataSource]="dataSource">
 

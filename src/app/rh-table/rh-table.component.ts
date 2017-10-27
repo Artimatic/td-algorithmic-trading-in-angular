@@ -1,11 +1,13 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, SimpleChanges, Inject } from '@angular/core';
 import { DataSource } from '@angular/cdk/collections';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/of';
 import 'rxjs/add/observable/merge';
+import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material';
 
 import { BacktestService, Stock, AlgoParam } from '../shared';
+import { ChartDialogComponent } from '../chart-dialog';
 
 @Component({
   selector: 'app-rh-table',
@@ -21,7 +23,10 @@ export class RhTableComponent implements OnInit, OnChanges {
   actionable: boolean = true;
   recommendation: string = 'buy';
 
-  constructor(private algo: BacktestService) { }
+  animal: string;
+  name: string;
+
+  constructor(private algo: BacktestService, public dialog: MatDialog) { }
 
   ngOnInit() {
     this.dataSource = new RhDataSource(this.rhDatabase);
@@ -40,6 +45,18 @@ export class RhTableComponent implements OnInit, OnChanges {
         stockData.totalReturns = +((stockData.totalReturns*100).toFixed(2));
         this.rhDatabase.addStock(stockData);
       });
+    });
+  }
+
+  openDialog(): void {
+    let dialogRef = this.dialog.open(ChartDialogComponent, {
+      width: '250px',
+      data: { name: this.name, animal: this.animal }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('The dialog was closed');
+      this.animal = result;
     });
   }
 }

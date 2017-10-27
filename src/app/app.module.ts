@@ -18,7 +18,8 @@ import {
   MatExpansionModule,
   MatTableModule,
   MatCheckboxModule,
-  MatRadioModule
+  MatRadioModule,
+  MatDialogModule
 } from '@angular/material';
 
 import {FlexLayoutModule} from '@angular/flex-layout';
@@ -29,6 +30,7 @@ import { BulkBacktestComponent } from './bulk-backtest';
 import { XlsImportComponent } from './xls-import/xls-import.component';
 import { RhTableComponent } from './rh-table';
 import { BacktestService } from './shared';
+import { ChartDialogComponent } from './chart-dialog';
 
 @NgModule({
   declarations: [
@@ -36,6 +38,10 @@ import { BacktestService } from './shared';
     BulkBacktestComponent,
     XlsImportComponent,
     RhTableComponent,
+    ChartDialogComponent,
+  ],
+  entryComponents: [
+    ChartDialogComponent,
   ],
   imports: [
     BrowserModule,
@@ -57,7 +63,8 @@ import { BacktestService } from './shared';
     MatTableModule,
     FlexLayoutModule,
     MatCheckboxModule,
-    MatRadioModule
+    MatRadioModule,
+    MatDialogModule
   ],
   providers: [
     BacktestService
