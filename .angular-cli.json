@@ -24,8 +24,7 @@
       ],
       "scripts": [
         "../node_modules/xlsx/dist/xlsx.min.js",
-        "../node_modules/moment/min/moment.min.js",
-        "../node_modules/nvd3/build/nv.d3.min.js"
+        "../node_modules/moment/min/moment.min.js"
       ],
       "environmentSource": "environments/environment.ts",
       "environments": {

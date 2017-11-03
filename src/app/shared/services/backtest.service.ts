@@ -14,9 +14,15 @@ export class BacktestService {
 
   constructor(private http: Http) { }
 
-  postMeanReversion(data: any): Observable<Stock> {
-    console.log('posting: ', data);
+  getInfo(data: any): Observable<Stock> {
+    console.log('info: ', data);
     return this.http.post(`${BASE_URL}api/mean-reversion/info`, data, {})
+      .map(r => r.json());
+  }
+
+  getBacktest(data: any): Observable<Stock> {
+    console.log('backtest: ', data);
+    return this.http.post(`${BASE_URL}api/mean-reversion/backtest`, data, {})
       .map(r => r.json());
   }
 }

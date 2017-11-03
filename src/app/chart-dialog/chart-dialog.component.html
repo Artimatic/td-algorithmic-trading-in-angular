@@ -1,1 +1,6 @@
-<p>What's your favorite animal?</p>
+<div>
+  <span [hidden]="!resolving">
+    <mat-spinner></mat-spinner>
+  </span>
+  <nvd3 [options]="options" [data]="dataPoints" [hidden]="resolving"></nvd3>
+</div>

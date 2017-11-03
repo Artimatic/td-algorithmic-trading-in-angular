@@ -5,6 +5,7 @@ import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/of';
 import 'rxjs/add/observable/merge';
 import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material';
+import * as moment from 'moment';
 
 import { BacktestService, Stock, AlgoParam } from '../shared';
 import { ChartDialogComponent } from '../chart-dialog';
@@ -40,7 +41,7 @@ export class RhTableComponent implements OnInit, OnChanges {
 
   getData(algoParam) {
     algoParam.forEach((param) => {
-      this.algo.postMeanReversion(param).subscribe((stockData) => {
+      this.algo.getInfo(param).subscribe((stockData) => {
         stockData.stock = param.ticker;
         stockData.totalReturns = +((stockData.totalReturns*100).toFixed(2));
         this.rhDatabase.addStock(stockData);
@@ -48,10 +49,20 @@ export class RhTableComponent implements OnInit, OnChanges {
     });
   }
 
-  openDialog(): void {
+  openDialog(event, index): void {
+    console.log(event, index);
+    const currentDate   = moment().format('YYYY-MM-DD');
+    const pastDate      = moment().subtract(3, 'years').format('YYYY-MM-DD');
+    const requestBody   = {
+        ticker: event.stock,
+        start: pastDate,
+        end: currentDate,
+        deviation: event.recommendedDifference
+    };
+
     let dialogRef = this.dialog.open(ChartDialogComponent, {
-      width: '250px',
-      data: { name: this.name, animal: this.animal }
+      width: '800px',
+      data: requestBody
     });
 
     dialogRef.afterClosed().subscribe(result => {

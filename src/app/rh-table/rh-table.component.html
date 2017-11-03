@@ -1,53 +1,52 @@
 <div class="table-container mat-elevation-z8">
     <div class="table-header">
-        <md-radio-group [(ngModel)]="recommendation">
-            <md-radio-button value="buy">Buy</md-radio-button>
-            <md-radio-button value="sell">Sell</md-radio-button>
-          </md-radio-group>
-          <button (click)="openDialog()">Pick one</button>
-
-        <md-checkbox [(ngModel)]="actionable">Show Actionable Only</md-checkbox>
+        <mat-radio-group [(ngModel)]="recommendation">
+            <mat-radio-button value="buy">Buy</mat-radio-button>
+            <mat-radio-button value="sell">Sell</mat-radio-button>
+          </mat-radio-group>
+        <mat-checkbox [(ngModel)]="actionable">Show Actionable Only</mat-checkbox>
       </div>
-  <md-table #table [dataSource]="dataSource">
+  <mat-table #table [dataSource]="dataSource">
 
     <!--- Note that these columns can be defined in any order.
           The actual rendered columns are set as a property on the row definition" -->
 
     <!-- Position Column -->
-    <ng-container mdColumnDef="stock">
-      <md-header-cell *mdHeaderCellDef> Stock </md-header-cell>
-      <md-cell *mdCellDef="let element"> {{element.stock}} </md-cell>
+    <ng-container matColumnDef="stock">
+      <mat-header-cell *matHeaderCellDef> Stock </mat-header-cell>
+      <mat-cell *matCellDef="let element"> {{element.stock}} </mat-cell>
     </ng-container>
 
     <!-- Name Column -->
-    <ng-container mdColumnDef="totalReturns">
-      <md-header-cell *mdHeaderCellDef> Returns </md-header-cell>
-      <md-cell *mdCellDef="let element"> {{element.totalReturns}}% </md-cell>
+    <ng-container matColumnDef="totalReturns">
+      <mat-header-cell *matHeaderCellDef> Returns </mat-header-cell>
+      <mat-cell *matCellDef="let element"> {{element.totalReturns}}% </mat-cell>
     </ng-container>
 
     <!-- Weight Column -->
-    <ng-container mdColumnDef="lastVolume">
-      <md-header-cell *mdHeaderCellDef> Last Volume </md-header-cell>
-      <md-cell *mdCellDef="let element"> {{element.lastVolume}} </md-cell>
+    <ng-container matColumnDef="lastVolume">
+      <mat-header-cell *matHeaderCellDef> Last Volume </mat-header-cell>
+      <mat-cell *matCellDef="let element"> {{element.lastVolume}} </mat-cell>
     </ng-container>
 
     <!-- Color Column -->
-    <ng-container mdColumnDef="lastPrice">
-      <md-header-cell *mdHeaderCellDef> Last Price </md-header-cell>
-      <md-cell *mdCellDef="let element"> {{element.lastPrice}} </md-cell>
+    <ng-container matColumnDef="lastPrice">
+      <mat-header-cell *matHeaderCellDef> Last Price </mat-header-cell>
+      <mat-cell *matCellDef="let element"> {{element.lastPrice}} </mat-cell>
     </ng-container>
 
-    <ng-container mdColumnDef="totalTrades">
-      <md-header-cell *mdHeaderCellDef> Trades </md-header-cell>
-      <md-cell *mdCellDef="let element"> {{element.totalTrades}} </md-cell>
+    <ng-container matColumnDef="totalTrades">
+      <mat-header-cell *matHeaderCellDef> Trades </mat-header-cell>
+      <mat-cell *matCellDef="let element"> {{element.totalTrades}} </mat-cell>
     </ng-container>
 
-    <ng-container mdColumnDef="trending">
-      <md-header-cell *mdHeaderCellDef> Recommendation </md-header-cell>
-      <md-cell *mdCellDef="let element"> {{element.trending}} </md-cell>
+    <ng-container matColumnDef="trending">
+      <mat-header-cell *matHeaderCellDef> Recommendation </mat-header-cell>
+      <mat-cell *matCellDef="let element"> {{element.trending}} </mat-cell>
     </ng-container>
 
-    <md-header-row *mdHeaderRowDef="displayedColumns"></md-header-row>
-    <md-row *mdRowDef="let row; columns: displayedColumns;"></md-row>
-  </md-table>
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;" (click)="openDialog(row)">
+    </mat-row>
+  </mat-table>
 </div>

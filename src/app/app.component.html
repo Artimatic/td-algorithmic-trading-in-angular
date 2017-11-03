@@ -1,27 +1,27 @@
-<md-sidenav-container>
-  <md-toolbar color="primary" class="main-toolbar">
+<mat-sidenav-container>
+  <mat-toolbar color="primary" class="main-toolbar">
     <div fxLayout="row" fxLayoutWrap>
       <div fxFlex="25">
-        <button md-icon-button [mdMenuTriggerFor]="menu">
-              <md-icon>toc</md-icon>
-          </button>
-        <md-menu #menu="mdMenu">
-          <button md-menu-item [routerLink]="['/bulk']">
-            <md-icon>trending_up</md-icon>
+        <button mat-icon-button [matMenuTriggerFor]="menu">
+          <mat-icon>toc</mat-icon>
+        </button>
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item [routerLink]="['/bulk']">
+            <mat-icon>trending_up</mat-icon>
             <span>Stocks</span>
           </button>
           <a href="https://nofile.io/f/79S5TrgzFCd/Example.xlsx" target="_blank">
-            <button md-menu-item>
-              <md-icon>open_in_new</md-icon>
+            <button mat-menu-item>
+              <mat-icon>open_in_new</mat-icon>
               <span>Example File</span>
             </button>
           </a>
-        </md-menu>
+        </mat-menu>
       </div>
     </div>
-  </md-toolbar>
+  </mat-toolbar>
   <div class="loading-overlay" *ngIf="loading">
-    <md-progress-spinner mode="indeterminate"></md-progress-spinner>
+    <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
   </div>
   <router-outlet></router-outlet>
-</md-sidenav-container>
+</mat-sidenav-container>
