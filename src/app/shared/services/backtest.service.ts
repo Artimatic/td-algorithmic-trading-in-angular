@@ -20,7 +20,7 @@ export class BacktestService {
       .map(r => r.json());
   }
 
-  getBacktest(data: any): Observable<Stock> {
+  getBacktest(data: any): Observable<any[]> {
     console.log('backtest: ', data);
     return this.http.post(`${BASE_URL}api/mean-reversion/backtest`, data, {})
       .map(r => r.json());

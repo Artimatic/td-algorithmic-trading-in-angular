@@ -2,5 +2,8 @@
   <span [hidden]="!resolving">
     <mat-spinner></mat-spinner>
   </span>
-  <nvd3 [options]="options" [data]="dataPoints" [hidden]="resolving"></nvd3>
+  <span [hidden]="resolving">
+    <button (click)="add()">Add Point!</button>
+    <div [chart]="chart"></div>
+  </span>
 </div>

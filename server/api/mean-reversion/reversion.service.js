@@ -100,7 +100,7 @@ class ReversionService {
             start           = moment(startDate).subtract(140, 'days').format(),
             autoDeviation   = false,
             quotes          = null,
-            decision       = null,
+            decision        = null,
             returnInfo      = null;
 
         deviation = parseFloat(deviation);
@@ -197,7 +197,7 @@ class ReversionService {
             }
             return accumulator;
         }, {
-            date: data[data.length-1].date,
+            date: moment(data[data.length-1].date).valueOf(),
             trending: null,
             deviation: null,
             thirtyAvg: null,
