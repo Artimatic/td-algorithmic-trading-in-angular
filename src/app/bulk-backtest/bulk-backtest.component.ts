@@ -26,10 +26,8 @@ export class BulkBacktestComponent implements OnInit {
   }
 
   import(event) {
-    console.log('event: ', event);
     this.stocks = [];
     event.forEach((row: Row) => {
-      console.log('test: ', this);
       let params = {
         ticker: row.Stock,
         start: row.Start,
@@ -37,7 +35,7 @@ export class BulkBacktestComponent implements OnInit {
       };
 
       if(!row.Start) {
-        params.start = moment().subtract(3, 'years').format('YYYY-MM-DD');
+        params.start = moment().subtract(1, 'years').format('YYYY-MM-DD');
       }
 
       if(!row.End) {
@@ -46,5 +44,16 @@ export class BulkBacktestComponent implements OnInit {
 
       this.stocks.push(params);
     });
+  }
+
+  query(stock) {
+    console.log('stock: ', stock);
+    this.stocks = [];
+    let params = {
+      ticker: stock,
+      start: moment().subtract(1, 'years').format('YYYY-MM-DD'),
+      end: moment().format('YYYY-MM-DD')
+    };
+    this.stocks.push(params);
   }
 }

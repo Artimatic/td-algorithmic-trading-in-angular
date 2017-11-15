@@ -52,7 +52,7 @@ export class RhTableComponent implements OnInit, OnChanges {
   openDialog(event, index): void {
     console.log(event, index);
     const currentDate   = moment().format('YYYY-MM-DD');
-    const pastDate      = moment().subtract(3, 'years').format('YYYY-MM-DD');
+    const pastDate      = moment().subtract(1, 'years').format('YYYY-MM-DD');
     const requestBody   = {
         ticker: event.stock,
         start: pastDate,
@@ -61,7 +61,8 @@ export class RhTableComponent implements OnInit, OnChanges {
     };
 
     let dialogRef = this.dialog.open(ChartDialogComponent, {
-      width: '800px',
+      width: '100%',
+      height: '80%',
       data: requestBody
     });
 

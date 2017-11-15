@@ -1,6 +1,6 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import { HttpModule } from '@angular/http';
 import { RouterModule, NavigationError } from '@angular/router';
 import { ChartModule } from 'angular-highcharts';
@@ -21,7 +21,9 @@ import {
   MatTableModule,
   MatCheckboxModule,
   MatRadioModule,
-  MatDialogModule
+  MatDialogModule,
+  MatFormFieldModule,
+  MatInputModule
 } from '@angular/material';
 
 import {FlexLayoutModule} from '@angular/flex-layout';
@@ -35,6 +37,7 @@ import { BacktestService } from './shared';
 import { ChartDialogComponent } from './chart-dialog';
 
 import { NvD3Component } from 'ng2-nvd3';
+import { RhInputComponent } from './rh-input/rh-input.component';
 
 
 @NgModule({
@@ -44,7 +47,8 @@ import { NvD3Component } from 'ng2-nvd3';
     XlsImportComponent,
     RhTableComponent,
     ChartDialogComponent,
-    NvD3Component
+    NvD3Component,
+    RhInputComponent
   ],
   entryComponents: [
     ChartDialogComponent,
@@ -53,6 +57,7 @@ import { NvD3Component } from 'ng2-nvd3';
     BrowserModule,
     BrowserAnimationsModule,
     FormsModule,
+    ReactiveFormsModule,
     HttpModule,
     RouterModule.forRoot(routes, {
       enableTracing: true
@@ -71,7 +76,9 @@ import { NvD3Component } from 'ng2-nvd3';
     MatCheckboxModule,
     MatRadioModule,
     MatDialogModule,
-    ChartModule
+    ChartModule,
+    MatFormFieldModule,
+    MatInputModule
   ],
   providers: [
     BacktestService,

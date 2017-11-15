@@ -1,0 +1,5 @@
+<form [formGroup]="form" novalidate>
+    <mat-form-field>
+        <input matInput formControlName="query" (keyup.enter)="submit()" placeholder="Enter ticker symbol"/>
+      </mat-form-field>
+</form>

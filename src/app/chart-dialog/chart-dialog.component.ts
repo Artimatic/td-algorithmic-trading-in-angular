@@ -2,6 +2,8 @@ import { Component, OnInit, Inject } from '@angular/core';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { RhTableComponent } from '../rh-table';
 import { Chart } from 'angular-highcharts';
+import { DataPoint, SeriesOptions } from 'highcharts';
+import * as moment from 'moment';
 
 import { BacktestService, Stock, AlgoParam } from '../shared';
 
@@ -12,7 +14,6 @@ import { BacktestService, Stock, AlgoParam } from '../shared';
 })
 export class ChartDialogComponent implements OnInit {
   chart;
-  dataPoints: any[] = [];
   resolving: boolean = false;
 
   constructor(
@@ -22,62 +23,106 @@ export class ChartDialogComponent implements OnInit {
 
   ngOnInit() {
     this.resolving = true;
-    this.chart = new Chart({
-      chart: {
-        type: 'line'
-      },
-      title: {
-        text: 'Linechart'
-      },
-      credits: {
-        enabled: false
-      },
-      series: [{
-        name: 'Line 1',
-        data: [1, 2, 3]
-      }]
-    });
 
-    // this.algo.getBacktest(this.data)
-    //   .map(result => {
-    //     this.dataPoints = [
-    //       {
-    //         key: this.data.ticker,
-    //         values: [[result[0].date, 0]],
-    //         color: '#268CBE',
-    //         type: 'line'
-    //       },
-    //       {
-    //         key: 'Buy',
-    //         values: [],
-    //         color: '#22DC22',
-    //         type: 'bar'
-    //       }
-    //     ];
+    this.algo.getBacktest(this.data)
+      .map(result => {
+        let time = [],
+          seriesData = [];
 
-    //     result.slice(0, -1).forEach(day => {
-    //       if (this.triggerCondition(day.close, day.thirtyAvg, day.ninetyAvg, this.data.deviation)) {
-    //         if (day.trending === 'Sell') {
-    //           this.dataPoints[0].values.push([day.date, day.close]);
-    //         } else if (day.trending === 'Buy') {
-    //           this.dataPoints[1].values.push([day.date, day.close]);
-    //         } else {
-    //           this.dataPoints[0].values.push([day.date, day.close]);
-    //         }
-    //       } else {
-    //         this.dataPoints[0].values.push([day.date, day.close]);
-    //       }
-    //       console.log('add: ', [day.date, day.close]);
+        result.slice(0, -1).forEach(day => {
+          console.log(day);
+          time.push(day.date);
+          if (this.triggerCondition(day.close, day.thirtyAvg, day.ninetyAvg, this.data.deviation)) {
+            if (day.trending === 'Sell') {
+              let signal: DataPoint = {
+                y: day.close,
+                marker: {
+                  symbol: 'triangle-down',
+                  fillColor: 'red',
+                  radius: 3
+                }
+              };
+              seriesData.push(signal);
+            } else if (day.trending === 'Buy') {
+              let signal: DataPoint = {
+                y: day.close,
+                marker: {
+                  symbol: 'triangle',
+                  fillColor: 'green',
+                  radius: 3
+                }
+              };
+              seriesData.push(signal);
+            } else {
+              seriesData.push(day.close);
+            }
+          } else {
+            seriesData.push(day.close);
+          }
+        });
 
-    //     });
-    //     return result;
-    //   })
-    //   .subscribe(backtest => {
-    //     console.log('results: ', backtest);
+        this.chart = new Chart({
+          chart: {
+            type: 'spline'
+          },
+          title: {
+            text: 'Daily Price'
+          },
+          subtitle: {
+            text: 'Source: Google Finance'
+          },
+          xAxis: {
+            type: 'datetime',
+            dateTimeLabelFormats: {
+              month: '%e. %b',
+              year: '%b'
+            },
+            labels: {
+              formatter: function () {
+                return moment(this.value).format('MMM D');
+              }
+            },
+            categories: time
+          },
+          yAxis: {
+            title: {
+              text: 'Price'
+            },
+            labels: {
+              formatter: function () {
+                return '$' + this.value;
+              }
+            }
+          },
+          tooltip: {
+            crosshairs: true,
+            shared: true
+          },
+          plotOptions: {
+            spline: {
+              marker: {
+                radius: 1,
+                lineColor: '#666666',
+                lineWidth: 1
+              }
+            },
+            series: {
+              marker: {
+                enabled: true
+              }
+            }
+          },
+          series: [{
+            name: 'Stock',
+            data: seriesData
+          }]
+        });
+        return result;
+      })
+      .subscribe(backtest => {
 
-    //     this.resolving = false;
-    //   });
-    this.resolving = false;
+        this.resolving = false;
+      });
   }
 
   triggerCondition(lastPrice, thirtyDay, ninetyDay, deviation) {
@@ -91,8 +136,8 @@ export class ChartDialogComponent implements OnInit {
     return Math.abs(Math.abs(v1 - v2) / ((v1 + v2) / 2));
   }
 
-  add() {
-    this.chart.addPoint(Math.floor(Math.random() * 10));
+  add(y: DataPoint) {
+    this.chart.addPoint(y);
   }
 
   onNoClick(): void {

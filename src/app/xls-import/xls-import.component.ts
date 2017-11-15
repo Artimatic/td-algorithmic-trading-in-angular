@@ -15,7 +15,7 @@ export class XlsImportComponent implements OnInit {
   }
 
   upload() {
-    var reader = new FileReader();
+    let reader = new FileReader();
     let fileBrowser = this.fileInput.nativeElement;
     const component = this;
 
@@ -35,9 +35,4 @@ export class XlsImportComponent implements OnInit {
 
     reader.readAsBinaryString(fileBrowser.files[0]);
   }
-
-  emitData(data) {
-
-  }
-
 }
