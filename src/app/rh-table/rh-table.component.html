@@ -8,40 +8,52 @@
       </div>
   <mat-table #table [dataSource]="dataSource">
 
-    <!--- Note that these columns can be defined in any order.
-          The actual rendered columns are set as a property on the row definition" -->
+    <ng-container matColumnDef="select">
+      <mat-header-cell *matHeaderCellDef>
+        <mat-checkbox (change)="$event ? masterToggle() : null"
+                     [checked]="isAllSelected()"
+                     [indeterminate]="selection.hasValue() && !isAllSelected()">
+        </mat-checkbox>
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row">
+        <mat-checkbox (click)="$event.stopPropagation()"
+                     (change)="$event ? selection.toggle(row.id) : null"
+                     [checked]="selection.isSelected(row.id)">
+        </mat-checkbox>
+      </mat-cell>
+    </ng-container>
 
     <!-- Position Column -->
     <ng-container matColumnDef="stock">
-      <mat-header-cell *matHeaderCellDef> Stock </mat-header-cell>
+      <mat-header-cell *matHeaderCellDef mat-sort-header> Stock </mat-header-cell>
       <mat-cell *matCellDef="let element"> {{element.stock}} </mat-cell>
     </ng-container>
 
     <!-- Name Column -->
     <ng-container matColumnDef="totalReturns">
-      <mat-header-cell *matHeaderCellDef> Returns </mat-header-cell>
+      <mat-header-cell *matHeaderCellDef mat-sort-header> Returns </mat-header-cell>
       <mat-cell *matCellDef="let element"> {{element.totalReturns}}% </mat-cell>
     </ng-container>
 
     <!-- Weight Column -->
     <ng-container matColumnDef="lastVolume">
-      <mat-header-cell *matHeaderCellDef> Last Volume </mat-header-cell>
+      <mat-header-cell *matHeaderCellDef mat-sort-header> Last Volume </mat-header-cell>
       <mat-cell *matCellDef="let element"> {{element.lastVolume}} </mat-cell>
     </ng-container>
 
     <!-- Color Column -->
     <ng-container matColumnDef="lastPrice">
-      <mat-header-cell *matHeaderCellDef> Last Price </mat-header-cell>
+      <mat-header-cell *matHeaderCellDef mat-sort-header> Last Price </mat-header-cell>
       <mat-cell *matCellDef="let element"> {{element.lastPrice}} </mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="totalTrades">
-      <mat-header-cell *matHeaderCellDef> Trades </mat-header-cell>
+      <mat-header-cell *matHeaderCellDef mat-sort-header> Trades </mat-header-cell>
       <mat-cell *matCellDef="let element"> {{element.totalTrades}} </mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="trending">
-      <mat-header-cell *matHeaderCellDef> Recommendation </mat-header-cell>
+      <mat-header-cell *matHeaderCellDef mat-sort-header> Recommendation </mat-header-cell>
       <mat-cell *matCellDef="let element"> {{element.trending}} </mat-cell>
     </ng-container>
 
