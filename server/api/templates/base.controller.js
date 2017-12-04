@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const Ajv = require('ajv');
 const Boom = require('boom');
+const errors = require('errors');
 
 const ajv = new Ajv({
     v5: true,
@@ -21,7 +22,6 @@ class BaseController {
 
     static requestGetSuccessHandler(reply, data) {
         if (_.isEmpty(data)) {
-            console.log('reply empty');
             reply.status(204).send();
         } else {
           reply.status(200).send(data);
@@ -30,11 +30,17 @@ class BaseController {
 
     static requestErrorHandler(reply, error) {
         if (error) {
-            reply.status(error.output.statusCode).send(error.output);
+          console.log("error: ", error);
+
+          reply.status(error.Code).send(error.defaultMessage);
         } else {
-            reply.status(Boom.badImplementation().output.statusCode).send(Boom.badImplementation().output);
+          reply.status(Boom.badImplementation().output.statusCode).send(Boom.badImplementation().output);
         }
     }
+
+    static notFoundErrorHandler(reply, error) {
+      reply.status(Boom.notFound().output.statusCode).send(Boom.notFound.output);
+  }
 }
 
 module.exports = BaseController;

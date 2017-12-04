@@ -36,7 +36,6 @@ import { RhTableComponent } from './rh-table';
 import { BacktestService } from './shared';
 import { ChartDialogComponent } from './chart-dialog';
 
-import { NvD3Component } from 'ng2-nvd3';
 import { RhInputComponent } from './rh-input/rh-input.component';
 
 
@@ -47,7 +46,6 @@ import { RhInputComponent } from './rh-input/rh-input.component';
     XlsImportComponent,
     RhTableComponent,
     ChartDialogComponent,
-    NvD3Component,
     RhInputComponent
   ],
   entryComponents: [

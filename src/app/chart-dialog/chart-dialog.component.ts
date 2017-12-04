@@ -39,7 +39,7 @@ export class ChartDialogComponent implements OnInit {
                 marker: {
                   symbol: 'triangle-down',
                   fillColor: 'red',
-                  radius: 3
+                  radius: 5
                 }
               };
               seriesData.push(signal);
@@ -49,7 +49,7 @@ export class ChartDialogComponent implements OnInit {
                 marker: {
                   symbol: 'triangle',
                   fillColor: 'green',
-                  radius: 3
+                  radius: 5
                 }
               };
               seriesData.push(signal);
@@ -63,7 +63,8 @@ export class ChartDialogComponent implements OnInit {
 
         this.chart = new Chart({
           chart: {
-            type: 'spline'
+            type: 'spline',
+            zoomType: 'x'
           },
           title: {
             text: 'Daily Price'
