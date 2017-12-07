@@ -30,7 +30,6 @@ export class ChartDialogComponent implements OnInit {
           seriesData = [];
 
         result.slice(0, -1).forEach(day => {
-          console.log(day);
           time.push(day.date);
           if (this.triggerCondition(day.close, day.thirtyAvg, day.ninetyAvg, this.data.deviation)) {
             if (day.trending === 'Sell') {

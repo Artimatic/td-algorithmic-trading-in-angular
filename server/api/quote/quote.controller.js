@@ -22,8 +22,7 @@ class QuoteController extends BaseController {
     else {
       QuoteService.getData(request.body.ticker, request.body.start, request.body.end)
         .then((data) => BaseController.requestGetSuccessHandler(response, data))
-        .catch(errors.NotFound, (err) => BaseController.requestErrorHandler(response, err))
-        .catch((err) => BaseController.requestErrorHandler(response, err));
+        .catch((e) => BaseController.requestErrorHandler(response, e));
     }
   }
 }
