@@ -69,7 +69,7 @@ export class ChartDialogComponent implements OnInit {
             text: 'Daily Price'
           },
           subtitle: {
-            text: 'Source: Google Finance'
+            text: 'Source: Yahoo'
           },
           xAxis: {
             type: 'datetime',

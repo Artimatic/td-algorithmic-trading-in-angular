@@ -26,7 +26,7 @@ class QuoteService {
       throw new errors.Http400Error('Invalid arguments')
     }
 
-    return api.getHistoricalData(ticker, '1d', '1y')
+    return api.getHistoricalData(ticker, '1d', '2y')
       .then((data) => {
         let quotes = _.get(data, 'chart.result[0].indicators.quote[0]', []);
         let timestamps = _.get(data, 'chart.result[0].timestamp', []);
