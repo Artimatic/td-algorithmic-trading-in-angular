@@ -21,13 +21,13 @@ export class RhTableComponent implements OnInit, OnChanges {
   private stockList: Stock[] = [];
   rhDatabase = new RhDatabase();
   dataSource: RhDataSource | null;
-  actionable: boolean = true;
-  recommendation: string = 'buy';
+  recommendation: string = '';
 
   constructor(private algo: BacktestService, public dialog: MatDialog) { }
 
   ngOnInit() {
     this.dataSource = new RhDataSource(this.rhDatabase);
+    this.filterRecommendation();
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -68,18 +68,10 @@ export class RhTableComponent implements OnInit, OnChanges {
     });
   }
 
-  applyFilter(filterValue: any) {
-    console.log("filter: ", filterValue);
-    let filter: string = filterValue.value
-                                    .trim()
-                                    .toLowerCase();
-
-    this.dataSource.filter = filter;
+  filterRecommendation() {
+    this.dataSource.filter = `${this.recommendation}`;
   }
 
-  showUseful(filterValue: boolean) {
-    console.log("filter: ", filterValue);
-  }
 }
 
 
@@ -114,7 +106,6 @@ export class RhDataSource extends DataSource<any> {
     return Observable.merge(...displayDataChanges).map(() => {
       return this._rhDatabase.data.slice().filter((item: Stock) => {
         let searchStr = JSON.stringify(item).toLowerCase();
-        console.log("search: ", searchStr);
         return searchStr.indexOf(this.filter.toLowerCase()) != -1;
       });
     });
