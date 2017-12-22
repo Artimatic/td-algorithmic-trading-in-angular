@@ -8,7 +8,6 @@ import { ChartModule } from 'angular-highcharts';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import 'hammerjs';
 import {
-  MATERIAL_COMPATIBILITY_MODE,
   MatMenuModule,
   MatToolbarModule,
   MatIconModule,
@@ -79,8 +78,7 @@ import { RhInputComponent } from './rh-input/rh-input.component';
     MatInputModule
   ],
   providers: [
-    BacktestService,
-    { provide: MATERIAL_COMPATIBILITY_MODE, useValue: true }
+    BacktestService
   ],
   bootstrap: [AppComponent]
 })
