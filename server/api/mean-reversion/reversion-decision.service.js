@@ -11,6 +11,7 @@ const trends = {
     up: 'Buy',
     indet: 'Indeterminant'
 };
+
 function getTrendsConst() {
     return trends;
 }
