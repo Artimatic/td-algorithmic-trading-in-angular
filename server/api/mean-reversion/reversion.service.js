@@ -17,6 +17,7 @@ class ReversionService {
     trend = DecisionService.getTrendLogic(quotes[end], thirtyDay, ninetyDay, trend, deviation);
     return trend;
   }
+
   getData(ticker, currentDate) {
     let endDate = moment(currentDate).format(),
       startDate = moment(currentDate).subtract(200, 'days').format();
@@ -80,13 +81,13 @@ class ReversionService {
         if (data.length === 0) {
           throw errors.InvalidArgumentsError();
         }
-        return this.calculateForBacktest(data, this.getDecisionData);
+        return this.runThirtyNinetyMeanReversion(data, this.getDecisionData);
       })
       .then(decisions => {
-        let recommendedDeviation = DecisionService.findBestDeviation(decisions, startDate);
-        let returns = DecisionService.getReturns(decisions, deviation, startDate).totalReturns;
-        let element = { totalReturn: returns, recommendedDifference: recommendedDeviation };
-        decisions.push(element);
+        let recommendedDifference = DecisionService.findBestDeviation(decisions, startDate);
+        let totalReturn = DecisionService.getReturns(decisions, deviation, startDate).totalReturns;
+
+        decisions.push({ ...totalReturn, ...recommendedDifference });
 
         return decisions;
       })
@@ -111,42 +112,39 @@ class ReversionService {
 
     return QuoteService.getData(ticker, start, endDate)
       .then(data => {
+        //Get the Quotes
         if (data.length === 0) {
           throw errors.InvalidArgumentsError();
         }
         quotes = data;
         return data;
       })
-      .then(this.getDecisionData)
       .then(data => {
         decision = data;
-        return this.calculateForBacktest(quotes, this.getDecisionData);
+        return this.runThirtyNinetyMeanReversion(quotes, this.getDecisionData);
       })
       .then(decisions => {
         let recommendedDifference = DecisionService.findBestDeviation(decisions, startDate);
+
         if (autoDeviation) {
           deviation = recommendedDifference;
         }
 
         let returns = DecisionService.getReturns(decisions, deviation, startDate);
 
-        return { ...returns, ...recommendedDifference };
+        return { ...returns, recommendedDifference };
       })
       .then(algoStats => {
         let lastPrice = quotes[quotes.length - 1].close,
           lastVolume = quotes[quotes.length - 1].volume,
-          recommendation = DecisionService.getTrendsConst().indet,
-          trend = null;
+          trending = DecisionService.getTrendsConst().indet;
 
         if (DecisionService.triggerCondition(lastPrice, decision.thirtyAvg, decision.ninetyAvg, deviation)) {
-          recommendation = decision.trending;
+          trending = decision.trending;
         }
 
-        let quoteInfo = {
-          lastPrice: lastPrice,
-          lastVolume: lastVolume,
-          trending: recommendation
-        };
+        let quoteInfo = { lastPrice, lastVolume, trending };
+
         return { ...algoStats, ...quoteInfo };
       })
       .catch(err => {
@@ -155,7 +153,7 @@ class ReversionService {
       });
   }
 
-  calculateForBacktest(historicalData, fn) {
+  runThirtyNinetyMeanReversion(historicalData, fn) {
     return historicalData.reduce(function (accumulator, value, idx) {
       if (idx >= 90) {
         let decision = fn(historicalData, idx, idx - 90);
