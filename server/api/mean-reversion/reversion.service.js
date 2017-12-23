@@ -83,9 +83,9 @@ class ReversionService {
         return this.calculateForBacktest(data, this.getDecisionData);
       })
       .then(decisions => {
-        let recommendedDeviation  = DecisionService.findBestDeviation(decisions, startDate);
-        let returns               = DecisionService.getReturns(decisions, deviation, startDate).totalReturns;
-        let element               = { totalReturn: returns, recommendedDifference: recommendedDeviation };
+        let recommendedDeviation = DecisionService.findBestDeviation(decisions, startDate);
+        let returns = DecisionService.getReturns(decisions, deviation, startDate).totalReturns;
+        let element = { totalReturn: returns, recommendedDifference: recommendedDeviation };
         decisions.push(element);
 
         return decisions;
@@ -97,11 +97,11 @@ class ReversionService {
   }
 
   runBacktestSnapshot(ticker, currentDate, startDate, deviation) {
-    let endDate       = moment(currentDate).format(),
-        start         = moment(startDate).subtract(140, 'days').format(),
-        autoDeviation = false,
-        quotes        = null,
-        decision      = null;
+    let endDate = moment(currentDate).format(),
+      start = moment(startDate).subtract(140, 'days').format(),
+      autoDeviation = false,
+      quotes = null,
+      decision = null;
 
     deviation = parseFloat(deviation);
 
@@ -130,24 +130,24 @@ class ReversionService {
 
         let returns = DecisionService.getReturns(decisions, deviation, startDate);
 
-        return {...returns, ...recommendedDifference};
+        return { ...returns, ...recommendedDifference };
       })
       .then(algoStats => {
-        let lastPrice       = quotes[quotes.length - 1].close,
-            lastVolume      = quotes[quotes.length - 1].volume,
-            recommendation  = DecisionService.getTrendsConst().indet,
-            trend           = null;
+        let lastPrice = quotes[quotes.length - 1].close,
+          lastVolume = quotes[quotes.length - 1].volume,
+          recommendation = DecisionService.getTrendsConst().indet,
+          trend = null;
 
         if (DecisionService.triggerCondition(lastPrice, decision.thirtyAvg, decision.ninetyAvg, deviation)) {
           recommendation = decision.trending;
         }
 
         let quoteInfo = {
-                          lastPrice: lastPrice,
-                          lastVolume: lastVolume,
-                          trending: recommendation
-                        };
-        return {...algoStats, ...quoteInfo};
+          lastPrice: lastPrice,
+          lastVolume: lastVolume,
+          trending: recommendation
+        };
+        return { ...algoStats, ...quoteInfo };
       })
       .catch(err => {
         console.log('ERROR! backtest snapshot', err, ticker);
