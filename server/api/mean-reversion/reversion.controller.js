@@ -1,7 +1,9 @@
-const _ = require('lodash');
-const Boom = require('boom');
+import * as _ from 'lodash';
+import * as Boom from 'boom';
+import * as  moment from 'moment';
 
-const BaseController = require('../../api/templates/base.controller');
+import BaseController from '../../api/templates/base.controller';
+
 const ReversionService = require('./reversion.service');
 
 const errors = require('../../components/errors/baseErrors');
@@ -28,7 +30,7 @@ class ReversionController extends BaseController {
             return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
         }
         else {
-            ReversionService.runBacktest(request.body.ticker, request.body.end, request.body.start, request.body.deviation)
+            ReversionService.runBacktest(request.body.ticker, request.body.end, request.body.start, parseFloat(request.body.deviation))
                 .then((data) => BaseController.requestGetSuccessHandler(response, data))
                 .catch((err) => BaseController.requestErrorHandler(response, err));
         }
@@ -39,7 +41,7 @@ class ReversionController extends BaseController {
             return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
         }
         else {
-            ReversionService.runBacktestSnapshot(request.body.ticker, request.body.end, request.body.start, request.body.deviation)
+            ReversionService.runBacktestSnapshot(request.body.ticker, request.body.end, request.body.start, parseFloat(request.body.deviation))
                 .then((data) => BaseController.requestGetSuccessHandler(response, data))
                 .catch((err) => BaseController.requestErrorHandler(response, err));
         }
@@ -49,7 +51,7 @@ class ReversionController extends BaseController {
             return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
         }
         else {
-            ReversionService.getPrice(request.body.ticker, request.body.end, request.body.deviation)
+            ReversionService.getPrice(request.body.ticker, request.body.end, parseFloat(request.body.deviation))
                 .then((data) => BaseController.requestGetSuccessHandler(response, data))
                 .catch((err) => BaseController.requestErrorHandler(response, err));
         }

@@ -76,4 +76,4 @@ class QuoteService {
   }
 }
 
-module.exports = new QuoteService();
+module.exports.QuoteService = new QuoteService();

@@ -1,8 +1,8 @@
-const _ = require('lodash');
-const Boom = require('boom');
-const moment = require('moment');
+import * as _ from 'lodash';
+import * as Boom from 'boom';
+import * as  moment from 'moment';
 
-const BaseController = require('../../api/templates/base.controller');
+import BaseController from '../../api/templates/base.controller';
 const QuoteService = require('./quote.service');
 
 const errors = require('../../components/errors/baseErrors');

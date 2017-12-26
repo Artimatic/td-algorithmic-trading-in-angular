@@ -6,24 +6,13 @@
             <mat-radio-button value="indeterminant">Unknown</mat-radio-button>
             <mat-radio-button value="">Any</mat-radio-button>
           </mat-radio-group>
+          <mat-form-field>
+            <input matInput [matDatepicker]="picker" placeholder="Choose a date">
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+          </mat-form-field>
       </div>
   <mat-table #table [dataSource]="dataSource">
-
-    <ng-container matColumnDef="select">
-      <mat-header-cell *matHeaderCellDef>
-        <mat-checkbox (change)="$event ? masterToggle() : null"
-                     [checked]="isAllSelected()"
-                     [indeterminate]="selection.hasValue() && !isAllSelected()">
-        </mat-checkbox>
-      </mat-header-cell>
-      <mat-cell *matCellDef="let row">
-        <mat-checkbox (click)="$event.stopPropagation()"
-                     (change)="$event ? selection.toggle(row.id) : null"
-                     [checked]="selection.isSelected(row.id)">
-        </mat-checkbox>
-      </mat-cell>
-    </ng-container>
-
     <!-- Position Column -->
     <ng-container matColumnDef="stock">
       <mat-header-cell *matHeaderCellDef mat-sort-header> Stock </mat-header-cell>

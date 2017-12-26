@@ -1,15 +1,19 @@
 const moment = require('moment');
-const assert = require('assert');
 const algebra = require("algebra.js");
 const math = require("mathjs");
 
-const errors = require('../../components/errors/baseErrors');
-const QuoteService = require('./../quote/quote.service');
+import * as errors from '../../components/errors/baseErrors';
+import { QuoteService } from './../quote/quote.service';
+
 const DecisionService = require('./reversion-decision.service');
 
 const Fraction = algebra.Fraction;
 const Expression = algebra.Expression;
 const Equation = algebra.Equation;
+
+const algorithms = {
+  MeanReversion_30_90: "0"
+};
 
 class ReversionService {
   getTrend(quotes, end, thirtyDay, ninetyDay, deviation) {
@@ -18,23 +22,23 @@ class ReversionService {
     return trend;
   }
 
-  getData(ticker, currentDate) {
-    let endDate = moment(currentDate).format(),
-      startDate = moment(currentDate).subtract(200, 'days').format();
+  getData(ticker, currentDate, startDate) {
+    let { endDate, start } = this.getDateRanges(currentDate, startDate);
 
-    return QuoteService.getData(ticker, startDate, endDate)
-      .then(this.getDecisionData)
-      .then(data => data)
-      .catch(err => err);
+    return QuoteService.getData(ticker, start, endDate)
+      .then(data => {
+        if (data.length === 0) {
+          throw errors.NotFoundError();
+        }
+        return data;
+      });
   }
 
   getPrice(ticker, currentDate, deviation) {
-    let endDate = moment(currentDate).format(),
-      start = moment(currentDate).subtract(140, 'days').format(),
-      quotes = null,
+    let quotes = null,
       decisions = null;
 
-    deviation = parseFloat(deviation);
+    let { endDate, start } = this.getDateRanges();
 
     if (isNaN(deviation)) {
       throw errors.InvalidArgumentsError();
@@ -66,30 +70,23 @@ class ReversionService {
       });
   }
 
-  runBacktest(ticker, currentDate, startDate, deviation) {
-    let endDate = moment(currentDate).format(),
-      start = moment(startDate).subtract(140, 'days').format();
+  getDateRanges(currentDate, startDate) {
+    return {
+      endDate: moment(currentDate).format(),
+      start: moment(startDate).subtract(118, 'days').format()
+    };
+  }
 
-    deviation = parseFloat(deviation);
+  runBacktest(ticker, currentDate, startDate, deviation) {
+    let { endDate, start } = this.getDateRanges(currentDate, startDate);
 
     if (isNaN(deviation)) {
       throw errors.InvalidArgumentsError();
     }
 
-    return QuoteService.getData(ticker, start, endDate)
+    return this.getData(ticker, start, endDate)
       .then(data => {
-        if (data.length === 0) {
-          throw errors.InvalidArgumentsError();
-        }
         return this.runThirtyNinetyMeanReversion(data, this.getDecisionData);
-      })
-      .then(decisions => {
-        let recommendedDifference = DecisionService.findBestDeviation(decisions, startDate);
-        let totalReturn = DecisionService.getReturns(decisions, deviation, startDate).totalReturns;
-
-        decisions.push({ ...totalReturn, ...recommendedDifference });
-
-        return decisions;
       })
       .catch(err => {
         console.log('ERROR! backtest', err);
@@ -98,32 +95,26 @@ class ReversionService {
   }
 
   runBacktestSnapshot(ticker, currentDate, startDate, deviation) {
-    let endDate = moment(currentDate).format(),
-      start = moment(startDate).subtract(140, 'days').format(),
-      autoDeviation = false,
+    let autoDeviation = false,
       quotes = null,
-      decision = null;
+      yesterdayDecision = null;
 
-    deviation = parseFloat(deviation);
+    let { endDate, start } = this.getDateRanges(currentDate, startDate);
 
     if (isNaN(deviation)) {
       autoDeviation = true;
     }
 
-    return QuoteService.getData(ticker, start, endDate)
+    return this.getData(ticker, start, endDate)
       .then(data => {
-        //Get the Quotes
-        if (data.length === 0) {
-          throw errors.InvalidArgumentsError();
-        }
         quotes = data;
         return data;
       })
       .then(data => {
-        decision = data;
-        return this.runThirtyNinetyMeanReversion(quotes, this.getDecisionData);
+        return this.runThirtyNinetyMeanReversion(data, this.getDecisionData);
       })
       .then(decisions => {
+        yesterdayDecision = decisions[decisions.length - 1];
         let recommendedDifference = DecisionService.findBestDeviation(decisions, startDate);
 
         if (autoDeviation) {
@@ -139,8 +130,9 @@ class ReversionService {
           lastVolume = quotes[quotes.length - 1].volume,
           trending = DecisionService.getTrendsConst().indet;
 
-        if (DecisionService.triggerCondition(lastPrice, decision.thirtyAvg, decision.ninetyAvg, deviation)) {
-          trending = decision.trending;
+        //Check to see if yesterday's moving avgs trigger a signal
+        if (DecisionService.triggerCondition(lastPrice, yesterdayDecision.thirtyAvg, yesterdayDecision.ninetyAvg, deviation)) {
+          trending = yesterdayDecision.trending;
         }
 
         let quoteInfo = { lastPrice, lastVolume, trending };
@@ -162,6 +154,58 @@ class ReversionService {
       }
       return accumulator;
     }, []);
+  }
+
+  executeMeanReversion(quotes, shortTerm, longTerm) {
+    return quotes.reduce(function (accumulator, value, idx) {
+      if (idx >= longTerm) {
+        let decision = this.calcMA(quotes, idx, idx - longTerm, shortTerm, longTerm);
+
+        accumulator.push(decision);
+      }
+      return accumulator;
+    }, []);
+  }
+
+  calcMA(quotes, endIdx, startIdx, shortTerm, longTerm) {
+    if (endIdx === undefined) {
+      endIdx = quotes.length - 1;
+    }
+
+    if (startIdx === undefined) {
+      startIdx = 0;
+    }
+
+    let trend = DecisionService.getInitialTrend(quotes, endIdx);
+
+    let data = quotes.slice(startIdx, endIdx + 1);
+
+    return data.reduceRight((accumulator, currentValue, currentIdx) => {
+      accumulator.total += currentValue.close;
+      switch (currentIdx) {
+        case data.length - shortTerm:
+          accumulator.shortTermAvg = accumulator.total / shortTerm;
+          accumulator.shortTermTotal = accumulator.total;
+          break;
+        case data.length - longTerm:
+          accumulator.longTermAvg = accumulator.total / longTerm;
+          accumulator.longTermTotal = accumulator.total;
+          accumulator.deviation = DecisionService.calculatePercentDifference(accumulator.shortTermAvg, accumulator.longTermAvg);
+          accumulator.trending = DecisionService.getTrendLogic(accumulator.close, accumulator.shortTermAvg, accumulator.longTermAvg, trend);
+          break;
+      }
+      return accumulator;
+    }, {
+        date: moment(data[data.length - 1].date).valueOf(),
+        trending: null,
+        deviation: null,
+        shortTermAvg: null,
+        longTermAvg: null,
+        close: data[data.length - 1].close,
+        shortTermTotal: 0,
+        longTermTotal: 0,
+        total: 0
+      });
   }
 
   getDecisionData(historicalData, endIdx, startIdx) {

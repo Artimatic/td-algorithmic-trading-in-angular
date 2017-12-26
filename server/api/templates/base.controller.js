@@ -9,7 +9,7 @@ const ajv = new Ajv({
   jsonPointers: true
 });
 
-class BaseController {
+export default class BaseController {
 
   addSchema(schemaKey, schemaObject) {
     ajv.addSchema(schemaObject, schemaKey);
@@ -38,5 +38,3 @@ class BaseController {
     console.log("Unhandled error: ", error);
   }
 }
-
-module.exports = BaseController;
