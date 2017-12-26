@@ -4,7 +4,7 @@ import * as  moment from 'moment';
 
 import BaseController from '../../api/templates/base.controller';
 
-const ReversionService = require('./reversion.service');
+import { ReversionService } from './../mean-reversion/reversion.service';
 
 const errors = require('../../components/errors/baseErrors');
 

@@ -49,8 +49,8 @@ function getInitialTrend(quotes, end, deviation) {
   return trend;
 }
 
-function triggerCondition(lastPrice, thirtyDay, ninetyDay, deviation) {
-  if (calculatePercentDifference(thirtyDay, ninetyDay) <= deviation) {
+function triggerCondition(lastPrice, shortTermAvg, longTermAvg, deviation) {
+  if (calculatePercentDifference(shortTermAvg, longTermAvg) <= deviation) {
     return true;
   }
   return false;
@@ -175,6 +175,58 @@ function findBestDeviation(decisions, startDate) {
   return max;
 }
 
+function calcReturns(decisions, deviation, startDate) {
+  let results = decisions.reduce(function (orders, day) {
+    if (moment(day.date).isAfter(moment(startDate).subtract(1, 'day').format())) {
+      if (triggerCondition(day.close, day.shortTermAvg, day.longTermAvg, deviation)) {
+        if (day.trending === trends.down) {
+          orders.trades++;
+          //Sell
+          if (orders.buy.length > 0) {
+            let holding = orders.buy.shift(),
+              profit = day.close - holding;
+            orders.total += holding;
+            orders.net += profit;
+          }
+        } else if (day.trending === trends.up) {
+          orders.trades++;
+          //Buy
+          orders.buy.push(day.close);
+        }
+      }
+    }
+    return orders;
+  }, { buy: [], total: 0, net: 0, trades: 0 });
+
+  let totalTrades = results.trades;
+  let totalReturns = math.divide(results.net, results.total);
+
+  if (isNaN(totalReturns)) {
+    totalReturns = 0;
+  }
+  let response = { totalReturns, totalTrades };
+
+  return response;
+}
+
+function findDeviation(decisions, startDate, shortTermAvg, longTermAvg) {
+  let i = 0,
+    maxReturn = math.round(calcReturns(decisions, 0, startDate, shortTermAvg, longTermAvg).totalReturns, 3),
+    max = 0;
+
+  while (math.compare(i, 0.095) < 0) {
+    i = math.round(math.add(i, 0.001), 3);
+    let currentReturn = calcReturns(decisions, i, startDate).totalReturns;
+    currentReturn = math.round(currentReturn, 3);
+    if (math.compare(currentReturn, maxReturn) === 1) {
+      maxReturn = currentReturn;
+      max = i;
+    }
+  }
+
+  return max;
+}
+
 module.exports = {
   getTrendsConst,
   getTrendLogic,
@@ -185,5 +237,7 @@ module.exports = {
   calculatePercentDifference,
   fractionToPrice,
   getReturns,
+  calcReturns,
+  findDeviation,
   findBestDeviation
 };

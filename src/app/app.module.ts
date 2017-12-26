@@ -23,7 +23,6 @@ import {
   MatDialogModule,
   MatFormFieldModule,
   MatInputModule,
-  MatDatepickerModule
 } from '@angular/material';
 
 import {FlexLayoutModule} from '@angular/flex-layout';
@@ -37,7 +36,6 @@ import { BacktestService } from './shared';
 import { ChartDialogComponent } from './chart-dialog';
 
 import { RhInputComponent } from './rh-input/rh-input.component';
-import { RhDateComponent } from './rh-date/rh-date/rh-date.component';
 
 
 @NgModule({
@@ -48,7 +46,6 @@ import { RhDateComponent } from './rh-date/rh-date/rh-date.component';
     RhTableComponent,
     ChartDialogComponent,
     RhInputComponent,
-    RhDateComponent
   ],
   entryComponents: [
     ChartDialogComponent,

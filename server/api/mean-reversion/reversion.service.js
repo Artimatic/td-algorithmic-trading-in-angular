@@ -156,10 +156,10 @@ class ReversionService {
     }, []);
   }
 
-  executeMeanReversion(quotes, shortTerm, longTerm) {
+  executeMeanReversion(calculationFn, quotes, shortTerm, longTerm) {
     return quotes.reduce(function (accumulator, value, idx) {
       if (idx >= longTerm) {
-        let decision = this.calcMA(quotes, idx, idx - longTerm, shortTerm, longTerm);
+        let decision = calculationFn(quotes, idx, idx - longTerm, shortTerm, longTerm);
 
         accumulator.push(decision);
       }
@@ -267,4 +267,4 @@ class ReversionService {
   }
 }
 
-module.exports = new ReversionService();
+module.exports.ReversionService = new ReversionService();
