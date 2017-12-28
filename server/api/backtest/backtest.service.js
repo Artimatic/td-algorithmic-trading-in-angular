@@ -10,8 +10,8 @@ import * as errors from '../../components/errors/baseErrors';
 import { start } from 'repl';
 
 const config = {
-  shortTerm: [7, 13],
-  longTerm: [30, 35]
+  shortTerm: [5, 30],
+  longTerm: [31, 90]
 }
 
 class BacktestService {
