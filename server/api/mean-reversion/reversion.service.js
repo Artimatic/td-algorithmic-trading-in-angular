@@ -110,18 +110,18 @@ class ReversionService {
         quotes = data;
         return data;
       })
-      .then(data => {
-        return this.runThirtyNinetyMeanReversion(data, this.getDecisionData);
-      })
       .then(decisions => {
-        yesterdayDecision = decisions[decisions.length - 1];
-        let recommendedDifference = DecisionService.findBestDeviation(decisions, startDate);
+        let MAs = this.executeMeanReversion(this.calcMA, quotes, 30, 90);
+
+        yesterdayDecision = MAs[MAs.length - 1];
+
+        let recommendedDifference = DecisionService.findDeviation(MAs, startDate);
 
         if (autoDeviation) {
           deviation = recommendedDifference;
         }
 
-        let returns = DecisionService.getReturns(decisions, deviation, startDate);
+        let returns = DecisionService.calcReturns(MAs, deviation, startDate);
 
         return { ...returns, recommendedDifference };
       })
@@ -131,7 +131,7 @@ class ReversionService {
           trending = DecisionService.getTrendsConst().indet;
 
         //Check to see if yesterday's moving avgs trigger a signal
-        if (DecisionService.triggerCondition(lastPrice, yesterdayDecision.thirtyAvg, yesterdayDecision.ninetyAvg, deviation)) {
+        if (DecisionService.triggerCondition(lastPrice, yesterdayDecision.shortTerm, yesterdayDecision.longTerm, deviation)) {
           trending = yesterdayDecision.trending;
         }
 

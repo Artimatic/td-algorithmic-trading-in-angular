@@ -58,8 +58,8 @@ export class RhTableComponent implements OnInit, OnChanges {
     };
 
     let dialogRef = this.dialog.open(ChartDialogComponent, {
-      width: '100%',
-      height: '80%',
+      width: '200%',
+      height: '100%',
       data: requestBody
     });
 

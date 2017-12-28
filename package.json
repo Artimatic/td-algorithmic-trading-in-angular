@@ -41,6 +41,7 @@
     "feedparser": "^2.2.7",
     "hammerjs": "^2.0.8",
     "highcharts": "^6.0.4",
+    "json2csv": "^3.11.5",
     "lodash": "^4.17.4",
     "mathjs": "^3.18.0",
     "method-override": "^2.3.10",
