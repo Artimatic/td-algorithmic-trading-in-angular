@@ -30,30 +30,29 @@ export class BulkBacktestComponent implements OnInit {
     event.forEach((row: Row) => {
       let params = {
         ticker: row.Stock,
-        start: row.Start,
-        end: row.End
+        start: row.Start || moment().subtract(1, 'years').format('YYYY-MM-DD'),
+        end: row.End || moment().format('YYYY-MM-DD'),
+        short: row.Short || 30,
+        long:	row.Long || 90,
+        deviation: row.Deviation
       };
-
-      if(!row.Start) {
-        params.start = moment().subtract(1, 'years').format('YYYY-MM-DD');
-      }
-
-      if(!row.End) {
-        params.end = moment().format('YYYY-MM-DD');
-      }
 
       this.stocks.push(params);
     });
   }
 
-  query(stock) {
-    console.log('stock: ', stock);
+  query(param) {
+    console.log('stock: ', param);
     this.stocks = [];
     let params = {
-      ticker: stock,
+      ticker: param.query,
       start: moment().subtract(1, 'years').format('YYYY-MM-DD'),
-      end: moment().format('YYYY-MM-DD')
+      end: moment().format('YYYY-MM-DD'),
+      short: param.short || 30,
+      long:	param.long || 90,
+      deviation: param.deviation
     };
+
     this.stocks.push(params);
   }
 }

@@ -12,14 +12,17 @@ export class RhInputComponent implements OnInit {
 
   constructor(fb: FormBuilder) {
     this.form = fb.group({
-      query: new FormControl('')
-    });
+      query: new FormControl(''),
+      deviation: null,
+      short: 30,
+      long: 90
+    }, { updateOn: 'blur' });
   }
 
   ngOnInit() {
   }
 
   submit() {
-    this.onQuery.emit(this.form.value.query);
+    this.onQuery.emit(this.form.value);
   }
 }

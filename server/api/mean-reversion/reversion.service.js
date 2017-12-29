@@ -77,7 +77,7 @@ class ReversionService {
     };
   }
 
-  runBacktest(ticker, currentDate, startDate, deviation) {
+  runBacktest(ticker, currentDate, startDate, deviation, shortTerm, longTerm) {
     let { endDate, start } = this.getDateRanges(currentDate, startDate);
 
     if (isNaN(deviation)) {
@@ -85,8 +85,8 @@ class ReversionService {
     }
 
     return this.getData(ticker, start, endDate)
-      .then(data => {
-        return this.runThirtyNinetyMeanReversion(data, this.getDecisionData);
+      .then(quotes => {
+        return this.executeMeanReversion(this.calcMA, quotes, shortTerm, longTerm);
       })
       .catch(err => {
         console.log('ERROR! backtest', err);
@@ -94,7 +94,7 @@ class ReversionService {
       });
   }
 
-  runBacktestSnapshot(ticker, currentDate, startDate, deviation) {
+  runBacktestSnapshot(ticker, currentDate, startDate, deviation, shortTerm, longTerm) {
     let autoDeviation = false,
       quotes = null,
       yesterdayDecision = null;
@@ -111,7 +111,7 @@ class ReversionService {
         return data;
       })
       .then(decisions => {
-        let MAs = this.executeMeanReversion(this.calcMA, quotes, 30, 90);
+        let MAs = this.executeMeanReversion(this.calcMA, quotes, shortTerm, longTerm);
 
         yesterdayDecision = MAs[MAs.length - 1];
 
@@ -123,7 +123,7 @@ class ReversionService {
 
         let returns = DecisionService.calcReturns(MAs, deviation, startDate);
 
-        return { ...returns, recommendedDifference };
+        return { ...returns, recommendedDifference, shortTerm, longTerm };
       })
       .then(algoStats => {
         let lastPrice = quotes[quotes.length - 1].close,

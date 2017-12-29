@@ -26,26 +26,41 @@ class ReversionController extends BaseController {
     }
 
     runBacktest(request, response) {
-        if (_.isEmpty(request.body)) {
+        if (_.isEmpty(request.body) ||
+            !request.body.short ||
+            !request.body.long) {
             return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
         }
         else {
-            ReversionService.runBacktest(request.body.ticker, request.body.end, request.body.start, parseFloat(request.body.deviation))
+            ReversionService.runBacktest(request.body.ticker,
+                request.body.end,
+                request.body.start,
+                parseFloat(request.body.deviation),
+                request.body.short,
+                request.body.long)
                 .then((data) => BaseController.requestGetSuccessHandler(response, data))
                 .catch((err) => BaseController.requestErrorHandler(response, err));
         }
     }
 
     runBacktestQuick(request, response) {
-        if (_.isEmpty(request.body)) {
+        if (_.isEmpty(request.body) ||
+            !request.body.short ||
+            !request.body.long) {
             return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
         }
         else {
-            ReversionService.runBacktestSnapshot(request.body.ticker, request.body.end, request.body.start, parseFloat(request.body.deviation))
+            ReversionService.runBacktestSnapshot(request.body.ticker,
+                request.body.end,
+                request.body.start,
+                parseFloat(request.body.deviation),
+                request.body.short,
+                request.body.long)
                 .then((data) => BaseController.requestGetSuccessHandler(response, data))
                 .catch((err) => BaseController.requestErrorHandler(response, err));
         }
     }
+
     getPrice(request, response) {
         if (_.isEmpty(request.body)) {
             return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);

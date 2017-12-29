@@ -31,7 +31,7 @@ export class ChartDialogComponent implements OnInit {
 
         result.slice(0, -1).forEach(day => {
           time.push(day.date);
-          if (this.triggerCondition(day.close, day.thirtyAvg, day.ninetyAvg, this.data.deviation)) {
+          if (this.triggerCondition(day.close, day.shortTermAvg, day.longTermAvg, this.data.deviation)) {
             if (day.trending === 'Sell') {
               let signal: DataPoint = {
                 y: day.close,

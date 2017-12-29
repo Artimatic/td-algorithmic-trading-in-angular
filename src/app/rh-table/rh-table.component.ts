@@ -54,7 +54,9 @@ export class RhTableComponent implements OnInit, OnChanges {
         ticker: event.stock,
         start: pastDate,
         end: currentDate,
-        deviation: event.recommendedDifference
+        deviation: event.recommendedDifference,
+        short: event.shortTerm,
+        long: event.longTerm
     };
 
     let dialogRef = this.dialog.open(ChartDialogComponent, {
