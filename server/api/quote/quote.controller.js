@@ -3,7 +3,7 @@ import * as Boom from 'boom';
 import * as  moment from 'moment';
 
 import BaseController from '../../api/templates/base.controller';
-const QuoteService = require('./quote.service');
+import { QuoteService } from './quote.service';
 
 const errors = require('../../components/errors/baseErrors');
 

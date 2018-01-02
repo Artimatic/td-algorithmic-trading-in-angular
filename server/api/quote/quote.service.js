@@ -34,6 +34,7 @@ class QuoteService {
 
         timestamps.forEach((val, idx) => {
           let quote = {
+            symbol: ticker,
             date: moment.unix(val).toISOString(),
             open: quotes.open[idx],
             high: quotes.high[idx],
