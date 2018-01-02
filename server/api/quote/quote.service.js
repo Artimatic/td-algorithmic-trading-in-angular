@@ -26,7 +26,26 @@ class QuoteService {
       throw new errors.Http400Error('Invalid arguments')
     }
 
-    return api.getHistoricalData(ticker, '1d', '2y')
+    let diff = start.diff(b, 'days');
+    let intervalOption;
+    
+    if (diff <= 5) {
+      intervalOption = '5d';
+    } else if (diff <= 30) {
+      intervalOption = '1mo';
+    } else if (diff <= 90) {
+      intervalOption = '3mo';
+    } else if (diff <= 365) {
+      intervalOption = '1y';
+    } else if (diff <= 730) {
+      intervalOption = '2y';
+    } else if (diff <= 1825) {
+      intervalOption = '5y';
+    } else {
+      intervalOption = '10y';
+    }
+
+    return api.getHistoricalData(ticker, '1d', intervalOption)
       .then((data) => {
         let quotes = _.get(data, 'chart.result[0].indicators.quote[0]', []);
         let timestamps = _.get(data, 'chart.result[0].timestamp', []);
