@@ -26,7 +26,7 @@ class QuoteService {
       throw new errors.Http400Error('Invalid arguments')
     }
 
-    let diff = start.diff(b, 'days');
+    let diff = start.diff(end, 'days');
     let intervalOption;
     
     if (diff <= 5) {
