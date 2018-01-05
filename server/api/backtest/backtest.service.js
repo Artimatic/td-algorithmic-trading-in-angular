@@ -10,7 +10,7 @@ import * as errors from '../../components/errors/baseErrors';
 import { start } from 'repl';
 
 const config = {
-  shortTerm: [5, 30],
+  shortTerm: [10, 30],
   longTerm: [31, 90]
 }
 

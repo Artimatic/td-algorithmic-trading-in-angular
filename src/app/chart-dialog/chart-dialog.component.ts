@@ -40,7 +40,7 @@ export class ChartDialogComponent implements OnInit {
                   fillColor: 'red',
                   radius: 5
                 },
-                name: '<b>Short:</b> ' + day.shortTermAvg + '<br><b>Long:</b> ' + day.longTermAvg + '<b><br>Deviation:</b> ' + day.deviation 
+                name: '<b>Short:</b> ' + day.shortTermAvg + '<br><b>Long:</b> ' + day.longTermAvg + '<br><b>Deviation:</b> ' + day.deviation 
               };
               seriesData.push(signal);
             } else if (day.trending === 'Buy') {
@@ -101,11 +101,7 @@ export class ChartDialogComponent implements OnInit {
             crosshairs: true,
             shared: true,
             formatter: function() {
-              console.log("tooltip: ", this);
-              if(this.points[0] && this.points[0].key) {
-                return this.points[0].key;
-              }
-              return this.x;
+              return '<b>Price:</b> ' + this.x + '<br>' + this.points[0].key;
           }
           },
           plotOptions: {

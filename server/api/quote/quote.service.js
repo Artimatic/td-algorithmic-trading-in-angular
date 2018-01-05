@@ -104,7 +104,6 @@ class QuoteService {
 
   getLocalQuotes(ticker, toDate, fromDate) {
     let { to, from } = checkDate(toDate, fromDate);
-    console.log("dates4: ", to, from);
 
     const  diff = Math.abs(to.diff(from, 'days'));
 

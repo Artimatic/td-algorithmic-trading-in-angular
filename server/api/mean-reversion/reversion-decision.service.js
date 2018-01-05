@@ -157,24 +157,6 @@ function getReturns(decisions, deviation, startDate) {
   return response;
 }
 
-function findBestDeviation(decisions, startDate) {
-  let i = 0,
-    maxReturn = math.round(getReturns(decisions, 0, startDate).totalReturns, 3),
-    max = 0;
-
-  while (math.compare(i, 0.035) < 0) {
-    i = math.round(math.add(i, 0.001), 3);
-    let currentReturn = getReturns(decisions, i, startDate).totalReturns;
-    currentReturn = math.round(currentReturn, 3);
-    if (math.compare(currentReturn, maxReturn) === 1) {
-      maxReturn = currentReturn;
-      max = i;
-    }
-  }
-
-  return max;
-}
-
 function calcReturns(decisions, deviation, startDate) {
   let results = decisions.reduce(function (orders, day) {
     if (moment(day.date).isAfter(moment(startDate).subtract(1, 'day').format())) {
@@ -214,7 +196,7 @@ function findDeviation(decisions, startDate, shortTermAvg, longTermAvg) {
     maxReturn = math.round(calcReturns(decisions, 0, startDate, shortTermAvg, longTermAvg).totalReturns, 3),
     max = 0;
 
-  while (math.compare(i, 0.095) < 0) {
+  while (math.compare(i, 0.035) < 0) {
     i = math.round(math.add(i, 0.001), 3);
     let currentReturn = calcReturns(decisions, i, startDate).totalReturns;
     currentReturn = math.round(currentReturn, 3);
@@ -238,6 +220,5 @@ module.exports = {
   fractionToPrice,
   getReturns,
   calcReturns,
-  findDeviation,
-  findBestDeviation
+  findDeviation
 };
