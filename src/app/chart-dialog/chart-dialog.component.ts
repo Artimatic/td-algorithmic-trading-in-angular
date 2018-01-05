@@ -39,7 +39,8 @@ export class ChartDialogComponent implements OnInit {
                   symbol: 'triangle-down',
                   fillColor: 'red',
                   radius: 5
-                }
+                },
+                name: '<b>Short:</b> ' + day.shortTermAvg + '<br><b>Long:</b> ' + day.longTermAvg + '<b><br>Deviation:</b> ' + day.deviation 
               };
               seriesData.push(signal);
             } else if (day.trending === 'Buy') {
@@ -49,8 +50,10 @@ export class ChartDialogComponent implements OnInit {
                   symbol: 'triangle',
                   fillColor: 'green',
                   radius: 5
-                }
+                },
+                name: '<b>Short:</b> ' + day.shortTermAvg + '<br><b>Long:</b> ' + day.longTermAvg + '<b><br>Deviation:</b> ' + day.deviation 
               };
+
               seriesData.push(signal);
             } else {
               seriesData.push(day.close);
@@ -96,7 +99,14 @@ export class ChartDialogComponent implements OnInit {
           },
           tooltip: {
             crosshairs: true,
-            shared: true
+            shared: true,
+            formatter: function() {
+              console.log("tooltip: ", this);
+              if(this.points[0] && this.points[0].key) {
+                return this.points[0].key;
+              }
+              return this.x;
+          }
           },
           plotOptions: {
             spline: {

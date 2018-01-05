@@ -23,14 +23,13 @@ class ReversionService {
   }
 
   getData(ticker, currentDate, startDate) {
-    let { endDate, start } = this.getDateRanges(currentDate, startDate);
-
-    return QuoteService.getData(ticker, start, endDate)
+    let { to, from } = this.getDateRanges(currentDate, startDate);
+    return QuoteService.getLocalQuotes(ticker, to, from)
       .then(data => {
-        if (data.length === 0) {
-          throw errors.NotFoundError();
-        }
         return data;
+      })
+      .catch((error) => {
+        return QuoteService.getData(ticker, to, from);
       });
   }
 
@@ -70,21 +69,21 @@ class ReversionService {
       });
   }
 
-  getDateRanges(currentDate, startDate) {
+  getDateRanges(to, from) {
     return {
-      endDate: moment(currentDate).format(),
-      start: moment(startDate).subtract(118, 'days').format()
+      to: moment(to).format(),
+      from: moment(from).subtract(118, 'days').format()
     };
   }
 
-  runBacktest(ticker, currentDate, startDate, deviation, shortTerm, longTerm) {
-    let { endDate, start } = this.getDateRanges(currentDate, startDate);
+  runBacktest(ticker, toDate, fromDate, deviation, shortTerm, longTerm) {
+    let { to, from } = this.getDateRanges(toDate, fromDate);
 
     if (isNaN(deviation)) {
       throw errors.InvalidArgumentsError();
     }
 
-    return this.getData(ticker, start, endDate)
+    return this.getData(ticker, to, from)
       .then(quotes => {
         return this.executeMeanReversion(this.calcMA, quotes, shortTerm, longTerm);
       })
@@ -94,18 +93,18 @@ class ReversionService {
       });
   }
 
-  runBacktestSnapshot(ticker, currentDate, startDate, deviation, shortTerm, longTerm) {
+  runBacktestSnapshot(ticker, toDate, fromDate, deviation, shortTerm, longTerm) {
     let autoDeviation = false,
       quotes = null,
       yesterdayDecision = null;
 
-    let { endDate, start } = this.getDateRanges(currentDate, startDate);
+    let { to, from } = this.getDateRanges(toDate, fromDate);
 
     if (isNaN(deviation)) {
       autoDeviation = true;
     }
 
-    return this.getData(ticker, start, endDate)
+    return this.getData(ticker, to, from)
       .then(data => {
         quotes = data;
         return data;
@@ -115,13 +114,13 @@ class ReversionService {
 
         yesterdayDecision = MAs[MAs.length - 1];
 
-        let recommendedDifference = DecisionService.findDeviation(MAs, startDate);
+        let recommendedDifference = DecisionService.findDeviation(MAs, fromDate);
 
         if (autoDeviation) {
           deviation = recommendedDifference;
         }
 
-        let returns = DecisionService.calcReturns(MAs, deviation, startDate);
+        let returns = DecisionService.calcReturns(MAs, deviation, fromDate);
 
         return { ...returns, recommendedDifference, shortTerm, longTerm };
       })
@@ -131,7 +130,7 @@ class ReversionService {
           trending = DecisionService.getTrendsConst().indet;
 
         //Check to see if yesterday's moving avgs trigger a signal
-        if (DecisionService.triggerCondition(lastPrice, yesterdayDecision.shortTerm, yesterdayDecision.longTerm, deviation)) {
+        if (DecisionService.triggerCondition(lastPrice, yesterdayDecision.shortTermAvg, yesterdayDecision.longTermAvg, deviation)) {
           trending = yesterdayDecision.trending;
         }
 

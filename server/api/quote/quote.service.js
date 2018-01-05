@@ -2,6 +2,7 @@ import google from '../../components/google-finance';
 import _ from 'lodash';
 import moment from 'moment';
 import boom from 'boom';
+import RequestPromise from 'request-promise';
 
 import { feedQuandl } from 'd3fc-financial-feed';
 import YahooFinanceAPI from 'yahoo-finance-data';
@@ -9,26 +10,33 @@ import YahooFinanceAPI from 'yahoo-finance-data';
 import errors from '../../components/errors/baseErrors';
 
 const api = new YahooFinanceAPI({
-  key: 'dj0yJmk9M01YVmFheW8yQXNqJmQ9WVdrOWJHOTFNRVJXTnpnbWNHbzlNQS0tJnM9Y29uc3VtZXJzZWNyZXQmeD1jZg--',
-  secret: '73f1a874dc9f596e0a1cd1ee01fcae4f08443956'
+  key: 'dj0yJmk9TUdJOGpUZms0OUl2JmQ9WVdrOVlVdFFWazF3TkdzbWNHbzlNQS0tJnM9Y29uc3VtZXJzZWNyZXQmeD04Mw--',
+  secret: 'a46cf2610a81dceb6a9306fda66dcfc767e76055'
 });
 
 const quandl = feedQuandl()
   .apiKey('5DsGxgTS3k9BepaWg_MD')
   .database('WIKI');
 
+function checkDate(toDate, fromDate) {
+  let to = moment(toDate);
+  let from = moment(fromDate);
+
+  if (!to.isValid() || !from.isValid()) {
+    throw new errors.Http400Error('Invalid arguments')
+  }
+
+  return { to, from };
+}
+
 class QuoteService {
-  getData(ticker, startDate, endDate) {
-    let start = moment(startDate);
-    let end = moment(endDate);
+  getData(ticker, toDate, fromDate) {
+    let { to, from } = checkDate(toDate, fromDate);
 
-    if (!start.isValid() || !end.isValid()) {
-      throw new errors.Http400Error('Invalid arguments')
-    }
+    let diff = Math.abs(to.diff(from, 'days'));
 
-    let diff = start.diff(end, 'days');
     let intervalOption;
-    
+
     if (diff <= 5) {
       intervalOption = '5d';
     } else if (diff <= 30) {
@@ -70,8 +78,7 @@ class QuoteService {
   }
 
   getDataQuandl(ticker, startDate, endDate) {
-    let start = moment(startDate);
-    let end = moment(endDate);
+    let { start, end } = checkDate(startDate, endDate);
 
     if (!start.isValid() || !end.isValid()) {
       throw new errors.Http400Error('Invalid arguments')
@@ -93,6 +100,29 @@ class QuoteService {
         resolve(data);
       });
     })
+  }
+
+  getLocalQuotes(ticker, toDate, fromDate) {
+    let { to, from } = checkDate(toDate, fromDate);
+    console.log("dates4: ", to, from);
+
+    const  diff = Math.abs(to.diff(from, 'days'));
+
+    to = to.format('YYYY-MM-DD');
+    from = from.format('YYYY-MM-DD');
+
+
+    const query = `http://localhost:8080/backtest?ticker=${ticker}&to=${to}&from=${from}`;
+    const options = {
+      method: 'POST',
+      uri: query
+    };
+
+    return RequestPromise(options)
+      .then((data) => {
+        let arr = JSON.parse(data);
+        return arr;
+      });
   }
 }
 

@@ -17,7 +17,7 @@ const config = {
 class BacktestService {
   evaluateStrategyAll(ticker, end, start) {
     console.log('Executing: ', new Date());
-    return this.getData(ticker, end, start);
+    return this.runTest(ticker, end, start);
   }
 
   getDateRanges(currentDate, startDate) {
@@ -33,12 +33,22 @@ class BacktestService {
   }
 
   getData(ticker, currentDate, startDate) {
-    let { end, start } = this.getDateRanges(currentDate, startDate);
+    let { endDate, start } = this.getDateRanges(currentDate, startDate);
 
+    return QuoteService.getLocalQuotes(ticker, endDate, start)
+      .then(data => {
+        return data;
+      })
+      .catch((error) => {
+        return QuoteService.getData(ticker, endDate, start);
+      });
+  }
+
+  runTest(ticker, currentDate, startDate) {
     let shortTerm = config.shortTerm;
     let longTerm = config.longTerm;
     let snapshots = [];
-    return QuoteService.getData(ticker, start, end)
+    return this.getData(ticker, startDate, currentDate)
       .then(quotes => {
         for (let i = shortTerm[0]; i < shortTerm[1]; i++) {
           for (let j = longTerm[0]; j < longTerm[1]; j++) {
@@ -56,7 +66,7 @@ class BacktestService {
 
         let csv = json2csv({ data: snapshots, fields: fields });
 
-        fs.writeFile(`${ticker}_analysis.csv`, csv, function (err) {
+        fs.writeFile(`${ticker}_analysis_${currentDate}-${startDate}.csv`, csv, function (err) {
           if (err) throw err;
           console.log('file saved');
         });
