@@ -119,10 +119,9 @@ class ReversionService {
         if (autoDeviation) {
           deviation = recommendedDifference;
         }
-
         let returns = DecisionService.calcReturns(MAs, deviation, fromDate);
 
-        return { ...returns, recommendedDifference, shortTerm, longTerm };
+        return { ...returns, deviation, recommendedDifference, shortTerm, longTerm };
       })
       .then(algoStats => {
         let lastPrice = quotes[quotes.length - 1].close,

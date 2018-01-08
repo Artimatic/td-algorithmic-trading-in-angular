@@ -123,40 +123,6 @@ function fractionToPrice(fraction) {
   return math.round(math.eval(fraction), 2);
 }
 
-function getReturns(decisions, deviation, startDate) {
-  let results = decisions.reduce(function (orders, day) {
-    if (moment(day.date).isAfter(moment(startDate).subtract(1, 'day').format())) {
-      if (triggerCondition(day.close, day.thirtyAvg, day.ninetyAvg, deviation)) {
-        if (day.trending === trends.down) {
-          orders.trades++;
-          //Sell
-          if (orders.buy.length > 0) {
-            let holding = orders.buy.shift(),
-              profit = day.close - holding;
-            orders.total += holding;
-            orders.net += profit;
-          }
-        } else if (day.trending === trends.up) {
-          orders.trades++;
-          //Buy
-          orders.buy.push(day.close);
-        }
-      }
-    }
-    return orders;
-  }, { buy: [], total: 0, net: 0, trades: 0 });
-
-  let totalTrades = results.trades;
-  let totalReturns = math.divide(results.net, results.total);
-
-  if (isNaN(totalReturns)) {
-    totalReturns = 0;
-  }
-  let response = { totalReturns, totalTrades };
-
-  return response;
-}
-
 function calcReturns(decisions, deviation, startDate) {
   let results = decisions.reduce(function (orders, day) {
     if (moment(day.date).isAfter(moment(startDate).subtract(1, 'day').format())) {
@@ -191,9 +157,9 @@ function calcReturns(decisions, deviation, startDate) {
   return response;
 }
 
-function findDeviation(decisions, startDate, shortTermAvg, longTermAvg) {
+function findDeviation(decisions, startDate) {
   let i = 0,
-    maxReturn = math.round(calcReturns(decisions, 0, startDate, shortTermAvg, longTermAvg).totalReturns, 3),
+    maxReturn = math.round(calcReturns(decisions, 0, startDate).totalReturns, 3),
     max = 0;
 
   while (math.compare(i, 0.035) < 0) {
@@ -218,7 +184,6 @@ module.exports = {
   findLowerbound,
   calculatePercentDifference,
   fractionToPrice,
-  getReturns,
   calcReturns,
   findDeviation
 };

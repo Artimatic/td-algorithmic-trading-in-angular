@@ -54,7 +54,7 @@ export class RhTableComponent implements OnInit, OnChanges {
         ticker: event.stock,
         start: pastDate,
         end: currentDate,
-        deviation: event.recommendedDifference,
+        deviation: event.deviation,
         short: event.shortTerm,
         long: event.longTerm
     };

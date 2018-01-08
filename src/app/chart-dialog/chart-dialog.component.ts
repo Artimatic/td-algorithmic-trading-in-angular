@@ -33,6 +33,9 @@ export class ChartDialogComponent implements OnInit {
           time.push(day.date);
           if (this.triggerCondition(day.close, day.shortTermAvg, day.longTermAvg, this.data.deviation)) {
             if (day.trending === 'Sell') {
+              console.log("Selling: ", moment(day.date).format());
+              console.log("short:",  day.shortTermAvg, " long:",day.longTermAvg, " dev:", this.data.deviation);
+
               let signal: DataPoint = {
                 y: day.close,
                 marker: {
@@ -46,6 +49,9 @@ export class ChartDialogComponent implements OnInit {
               };
               seriesData.push(signal);
             } else if (day.trending === 'Buy') {
+              console.log("Buying: ", moment(day.date).format());
+              console.log("short:",  day.shortTermAvg, " long:",day.longTermAvg, " dev:", this.data.deviation);
+
               let signal: DataPoint = {
                 y: day.close,
                 marker: {
