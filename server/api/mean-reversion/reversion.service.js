@@ -4,6 +4,7 @@ const math = require("mathjs");
 
 import * as errors from '../../components/errors/baseErrors';
 import { QuoteService } from './../quote/quote.service';
+import { BacktestService } from './../backtest/backtest.service';
 
 const DecisionService = require('./reversion-decision.service');
 
@@ -134,7 +135,6 @@ class ReversionService {
         }
 
         let quoteInfo = { lastPrice, lastVolume, trending };
-
         return { ...algoStats, ...quoteInfo };
       })
       .catch(err => {

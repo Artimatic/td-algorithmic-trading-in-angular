@@ -36,6 +36,7 @@ import { BacktestService } from './shared';
 import { ChartDialogComponent } from './chart-dialog';
 
 import { RhInputComponent } from './rh-input/rh-input.component';
+import { ProductViewComponent } from './product-view/product-view.component';
 
 
 @NgModule({
@@ -46,6 +47,7 @@ import { RhInputComponent } from './rh-input/rh-input.component';
     RhTableComponent,
     ChartDialogComponent,
     RhInputComponent,
+    ProductViewComponent,
   ],
   entryComponents: [
     ChartDialogComponent,

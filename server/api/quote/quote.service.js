@@ -110,7 +110,6 @@ class QuoteService {
     to = to.format('YYYY-MM-DD');
     from = from.format('YYYY-MM-DD');
 
-
     const query = `http://localhost:8080/backtest?ticker=${ticker}&to=${to}&from=${from}`;
     const options = {
       method: 'POST',

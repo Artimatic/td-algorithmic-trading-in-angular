@@ -1,3 +1,25 @@
-<app-xls-import (onImport)="import($event)"></app-xls-import>
-<app-rh-input (onQuery)="query($event)"></app-rh-input>
+<mat-accordion>
+    <mat-expansion-panel>
+        <mat-expansion-panel-header>
+            <mat-panel-title>
+                Import File
+            </mat-panel-title>
+            <mat-panel-description>
+                Parses stocks from Stock column of Excel file
+            </mat-panel-description>
+        </mat-expansion-panel-header>
+        <app-xls-import (onImport)="import($event)"></app-xls-import>
+    </mat-expansion-panel>
+    <mat-expansion-panel>
+        <mat-expansion-panel-header>
+            <mat-panel-title>
+                Single Quote Search
+            </mat-panel-title>
+            <mat-panel-description>
+                Type ticker, short term moving average, and long term moving average
+            </mat-panel-description>
+        </mat-expansion-panel-header>
+        <app-rh-input (onQuery)="query($event)"></app-rh-input>
+    </mat-expansion-panel>
+</mat-accordion>
 <app-rh-table [data]="stocks" [displayedColumns]="headers"></app-rh-table>

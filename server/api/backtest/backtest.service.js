@@ -10,13 +10,17 @@ import * as errors from '../../components/errors/baseErrors';
 import { start } from 'repl';
 
 const config = {
-  shortTerm: [20, 30],
-  longTerm: [70, 200]
+  shortTerm: [20, 200],
+  longTerm: [70, 333]
 }
+
+let startTime;
+let endTime;
 
 class BacktestService {
   evaluateStrategyAll(ticker, end, start) {
-    console.log('Executing: ', new Date());
+    console.log('Executing: ', ticker, new Date());
+    startTime = moment();
     return this.runTest(ticker, end, start);
   }
 
@@ -24,7 +28,7 @@ class BacktestService {
     let current = moment(currentDate),
       start = moment(startDate);
 
-    let days = current.diff(start, 'days') + 1;
+      let days = current.diff(start, 'days') + 1;
 
     return {
       end: current.format(),
@@ -33,14 +37,15 @@ class BacktestService {
   }
 
   getData(ticker, currentDate, startDate) {
-    let { endDate, start } = this.getDateRanges(currentDate, startDate);
+    let { end, start } = this.getDateRanges(currentDate, startDate);
+    console.log(start, " to ", end);
 
-    return QuoteService.getLocalQuotes(ticker, endDate, start)
+    return QuoteService.getLocalQuotes(ticker, end, start)
       .then(data => {
         return data;
       })
       .catch((error) => {
-        return QuoteService.getData(ticker, endDate, start);
+        return QuoteService.getData(ticker, end, start);
       });
   }
 
@@ -50,26 +55,32 @@ class BacktestService {
     let snapshots = [];
     return this.getData(ticker, startDate, currentDate)
       .then(quotes => {
-        console.log(startDate, " to ", currentDate);
-
         for (let i = shortTerm[0]; i < shortTerm[1]; i++) {
           for (let j = longTerm[0]; j < longTerm[1]; j++) {
-            console.log("short:", i, " long:", j);
-            let MAs = ReversionService.executeMeanReversion(ReversionService.calcMA, quotes, i, j);
-            let yesterdayDecision = MAs[MAs.length - 1];
-            let recommendedDifference = DecisionService.findDeviation(MAs, startDate);
+            if ((i + 20) < j) {
+              //console.log("short:", i, " long:", j);
+              let MAs = ReversionService.executeMeanReversion(ReversionService.calcMA, quotes, i, j);
+              let yesterdayDecision = MAs[MAs.length - 1];
+              let recommendedDifference = DecisionService.findDeviation(MAs, startDate);
 
-            let averagesRange = { shortTerm: i, longTerm: j };
-            let returns = DecisionService.calcReturns(MAs, recommendedDifference, startDate);
-            console.log("returns: ", returns.totalReturns);
+              let averagesRange = { shortTerm: i, longTerm: j };
+              let returns = DecisionService.calcReturns(MAs, recommendedDifference, startDate);
+              //console.log("returns: ", returns.totalReturns);
 
-            snapshots.push({ ...averagesRange, ...returns, recommendedDifference });
+              snapshots.push({ ...averagesRange, ...returns, recommendedDifference });
+            }
           }
         }
-        console.log('Calculations done: ', new Date());
-        let fields = ['shortTerm', 'longTerm', 'totalReturns', 'totalTrades', 'recommendedDifference'];
+        console.log('Calculations done: ', ticker, new Date());
+        endTime = moment();
 
-        let csv = json2csv({ data: snapshots, fields: fields });
+        const duration = moment.duration(endTime.diff(startTime)).humanize();
+
+        console.log("Duration: ", duration);
+
+        const fields = ['shortTerm', 'longTerm', 'totalReturns', 'totalTrades', 'recommendedDifference'];
+
+        const csv = json2csv({ data: snapshots, fields: fields });
 
         fs.writeFile(`${ticker}_analysis_${currentDate}-${startDate}.csv`, csv, function (err) {
           if (err) throw err;

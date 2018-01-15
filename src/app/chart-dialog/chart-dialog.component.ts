@@ -79,10 +79,10 @@ export class ChartDialogComponent implements OnInit {
             zoomType: 'x'
           },
           title: {
-            text: 'Daily Price'
+            text: this.data.ticker
           },
           subtitle: {
-            text: 'Source: Yahoo'
+            text: 'Daily Price'
           },
           xAxis: {
             type: 'datetime',

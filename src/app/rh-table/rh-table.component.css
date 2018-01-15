@@ -1,8 +1,8 @@
 .table-container {
   display: flex;
   flex-direction: column;
-  max-height: auto;
-  min-width: auto;
+  max-height: 800px;
+  min-width: 800px;
 }
 
 .table-header {
