@@ -23,6 +23,7 @@ import {
   MatDialogModule,
   MatFormFieldModule,
   MatInputModule,
+  MatSnackBarModule,
 } from '@angular/material';
 
 import {FlexLayoutModule} from '@angular/flex-layout';
@@ -77,7 +78,8 @@ import { ProductViewComponent } from './product-view/product-view.component';
     MatDialogModule,
     ChartModule,
     MatFormFieldModule,
-    MatInputModule
+    MatInputModule,
+    MatSnackBarModule
   ],
   providers: [
     BacktestService

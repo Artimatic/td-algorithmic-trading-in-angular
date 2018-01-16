@@ -1,3 +1,4 @@
+<app-product-view #product></app-product-view>
 <mat-card>
   <div class="table-container mat-elevation-z8">
     <div class="table-header">
@@ -44,7 +45,7 @@
       </ng-container>
 
       <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedColumns;" (click)="openDialog(row)">
+      <mat-row *matRowDef="let row; columns: displayedColumns;" (click)="product.load(row)">
       </mat-row>
     </mat-table>
   </div>
