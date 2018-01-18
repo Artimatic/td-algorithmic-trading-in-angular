@@ -53,7 +53,7 @@ class BacktestService {
     let shortTerm = config.shortTerm;
     let longTerm = config.longTerm;
     let snapshots = [];
-    return this.getData(ticker, startDate, currentDate)
+    return this.getData(ticker, currentDate, startDate)
       .then(quotes => {
         for (let i = shortTerm[0]; i < shortTerm[1]; i++) {
           for (let j = longTerm[0]; j < longTerm[1]; j++) {
@@ -87,6 +87,17 @@ class BacktestService {
           console.log('file saved');
         });
         return snapshots;
+      });
+  }
+
+  getMeanReversionChart(ticker, currentDate, startDate, deviation, shortTerm, longTerm) {
+    return this.getData(ticker, currentDate, startDate)
+      .then(quotes => {
+        return ReversionService.executeMeanReversion(ReversionService.calcMA, quotes, shortTerm, longTerm);
+      })
+      .catch(err => {
+        console.log('ERROR! backtest', err);
+        throw errors.InvalidArgumentsError();
       });
   }
 

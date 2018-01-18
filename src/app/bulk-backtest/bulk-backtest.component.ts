@@ -52,7 +52,6 @@ export class BulkBacktestComponent implements OnInit {
       long:	param.long || 90,
       deviation: param.deviation
     };
-
     this.stocks.push(params);
   }
 }

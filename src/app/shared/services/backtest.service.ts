@@ -22,7 +22,7 @@ export class BacktestService {
 
   getBacktest(data: any): Observable<any[]> {
     console.log('backtest: ', data);
-    return this.http.post(`${BASE_URL}api/mean-reversion/backtest`, data, {})
+    return this.http.post(`${BASE_URL}api/backtest/chart`, data, {})
       .map(r => r.json());
   }
 }

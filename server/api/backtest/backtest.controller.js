@@ -24,6 +24,24 @@ class BacktestController extends BaseController {
     }
   }
 
+  getMeanReversionChart(request, response) {
+    if (_.isEmpty(request.body) ||
+      !request.body.short ||
+      !request.body.long) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    }
+    else {
+      BacktestService.getMeanReversionChart(request.body.ticker,
+        request.body.end,
+        request.body.start,
+        parseFloat(request.body.deviation),
+        request.body.short,
+        request.body.long)
+        .then((data) => BaseController.requestGetSuccessHandler(response, data))
+        .catch((err) => BaseController.requestErrorHandler(response, err));
+    }
+  }
+
 }
 
 module.exports.BacktestController = new BacktestController();

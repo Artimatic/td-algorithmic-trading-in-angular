@@ -4,7 +4,7 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/of';
 import 'rxjs/add/observable/merge';
-import {MatDialog, MatDialogRef, MatTableDataSource} from '@angular/material';
+import { MatDialog, MatDialogRef, MatTableDataSource } from '@angular/material';
 import * as moment from 'moment';
 
 import { BacktestService, Stock, AlgoParam } from '../shared';
@@ -18,7 +18,6 @@ import { ChartDialogComponent } from '../chart-dialog';
 export class RhTableComponent implements OnInit, OnChanges {
   @Input() data: AlgoParam[];
   @Input() displayedColumns: string[];
-  private stockList: Stock[] = [];
   rhDatabase = new RhDatabase();
   dataSource: RhDataSource | null;
   recommendation: string = '';
@@ -36,11 +35,11 @@ export class RhTableComponent implements OnInit, OnChanges {
     }
   }
 
-  getData(algoParam) {
-    algoParam.forEach((param) => {
+  getData(algoParams) {
+    algoParams.forEach((param) => {
       this.algo.getInfo(param).subscribe((stockData) => {
         stockData.stock = param.ticker;
-        stockData.totalReturns = +((stockData.totalReturns*100).toFixed(2));
+        stockData.totalReturns = +((stockData.totalReturns * 100).toFixed(2));
         this.rhDatabase.addStock(stockData);
       });
     });
@@ -48,15 +47,15 @@ export class RhTableComponent implements OnInit, OnChanges {
 
   openDialog(event, index): void {
     console.log(event, index);
-    const currentDate   = moment().format('YYYY-MM-DD');
-    const pastDate      = moment().subtract(1, 'years').format('YYYY-MM-DD');
-    const requestBody   = {
-        ticker: event.stock,
-        start: pastDate,
-        end: currentDate,
-        deviation: event.deviation,
-        short: event.shortTerm,
-        long: event.longTerm
+    const currentDate = moment().format('YYYY-MM-DD');
+    const pastDate = moment().subtract(1, 'years').format('YYYY-MM-DD');
+    const requestBody = {
+      ticker: event.stock,
+      start: pastDate,
+      end: currentDate,
+      deviation: event.deviation,
+      short: event.shortTerm,
+      long: event.longTerm
     };
 
     let dialogRef = this.dialog.open(ChartDialogComponent, {
@@ -81,7 +80,7 @@ export class RhDatabase {
   dataChange: BehaviorSubject<Stock[]> = new BehaviorSubject<Stock[]>([]);
   get data(): Stock[] { return this.dataChange.value; }
 
-  constructor() {}
+  constructor() { }
 
   addStock(stock: Stock) {
     const copiedData = this.data.slice();
@@ -113,5 +112,5 @@ export class RhDataSource extends DataSource<any> {
     });
   }
 
-  disconnect() {}
+  disconnect() { }
 }

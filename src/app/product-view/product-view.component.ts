@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Chart } from 'angular-highcharts';
 import { DataPoint, SeriesOptions } from 'highcharts';
 import * as moment from 'moment';
-import {MatSnackBar} from '@angular/material';
+import { MatSnackBar } from '@angular/material';
 
 import { BacktestService, Stock, AlgoParam } from '../shared';
 
@@ -13,7 +13,7 @@ import { BacktestService, Stock, AlgoParam } from '../shared';
 })
 export class ProductViewComponent implements OnInit {
   chart;
-  resolving: boolean = false,
+  resolving: boolean = false;
   stock: string;
 
   constructor(
@@ -41,30 +41,28 @@ export class ProductViewComponent implements OnInit {
   load(data): void {
     this.resolving = true;
 
-    const currentDate   = moment().format('YYYY-MM-DD');
-    const pastDate      = moment().subtract(1, 'years').format('YYYY-MM-DD');
-    const requestBody   = {
-        ticker: data.stock,
-        start: pastDate,
-        end: currentDate,
-        deviation: data.deviation,
-        short: data.shortTerm,
-        long: data.longTerm
+    const currentDate = moment().format('YYYY-MM-DD');
+    const pastDate = moment().subtract(1, 'years').format('YYYY-MM-DD');
+    const requestBody = {
+      ticker: data.stock,
+      start: pastDate,
+      end: currentDate,
+      deviation: data.deviation,
+      short: data.shortTerm,
+      long: data.longTerm
     };
 
     this.algo.getBacktest(requestBody)
       .map(result => {
         let time = [],
-          seriesData = [];
-
+          seriesData = [],
+          signal: DataPoint;
+          
         result.slice(0, -1).forEach(day => {
           time.push(day.date);
           if (this.triggerCondition(day.close, day.shortTermAvg, day.longTermAvg, data.deviation)) {
             if (day.trending === 'Sell') {
-              console.log("Selling: ", moment(day.date).format());
-              console.log("short:", day.shortTermAvg, " long:", day.longTermAvg, " dev:", data.deviation);
-
-              let signal: DataPoint = {
+              signal = {
                 y: day.close,
                 marker: {
                   symbol: 'triangle-down',
@@ -75,12 +73,8 @@ export class ProductViewComponent implements OnInit {
                   '<br><b>Long:</b> ' + day.longTermAvg +
                   '<br><b>Deviation:</b> ' + day.deviation
               };
-              seriesData.push(signal);
             } else if (day.trending === 'Buy') {
-              console.log("Buying: ", moment(day.date).format());
-              console.log("short:", day.shortTermAvg, " long:", day.longTermAvg, " dev:", data.deviation);
-
-              let signal: DataPoint = {
+              signal = {
                 y: day.close,
                 marker: {
                   symbol: 'triangle',
@@ -91,14 +85,23 @@ export class ProductViewComponent implements OnInit {
                   '<br><b>Long:</b> ' + day.longTermAvg +
                   '<br><b>Deviation:</b> ' + day.deviation
               };
-
-              seriesData.push(signal);
             } else {
-              seriesData.push(day.close);
+              signal = {
+                y: day.close,
+                name: '<br><b>Short:</b> ' + day.shortTermAvg +
+                  '<br><b>Long:</b> ' + day.longTermAvg +
+                  '<br><b>Deviation:</b> ' + day.deviation
+              };
             }
           } else {
-            seriesData.push(day.close);
+            signal = {
+              y: day.close,
+              name: '<br><b>Short:</b> ' + day.shortTermAvg +
+                '<br><b>Long:</b> ' + day.longTermAvg +
+                '<br><b>Deviation:</b> ' + day.deviation
+            };
           }
+          seriesData.push(signal);
         });
 
         this.chart = new Chart({
@@ -163,15 +166,15 @@ export class ProductViewComponent implements OnInit {
         });
         return result;
       })
-      .subscribe(  
-        response => {
-          this.stock = data.stock;
-          this.resolving = false;
-        },
-        err => {
-          this.resolving = false;
-          this.snackBar.open('There was an error.');
-        }
+      .subscribe(
+      response => {
+        this.stock = data.stock;
+        this.resolving = false;
+      },
+      err => {
+        this.resolving = false;
+        this.snackBar.open('There was an error.');
+      }
       );
   }
 }
