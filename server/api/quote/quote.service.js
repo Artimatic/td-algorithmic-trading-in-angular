@@ -8,10 +8,11 @@ import { feedQuandl } from 'd3fc-financial-feed';
 import YahooFinanceAPI from 'yahoo-finance-data';
 
 import errors from '../../components/errors/baseErrors';
+import config from '../../config/environment';
 
 const api = new YahooFinanceAPI({
-  key: 'dj0yJmk9TUdJOGpUZms0OUl2JmQ9WVdrOVlVdFFWazF3TkdzbWNHbzlNQS0tJnM9Y29uc3VtZXJzZWNyZXQmeD04Mw--',
-  secret: 'a46cf2610a81dceb6a9306fda66dcfc767e76055'
+  key: config.yahoo.key,
+  secret: config.yahoo.secret
 });
 
 const quandl = feedQuandl()
@@ -105,7 +106,7 @@ class QuoteService {
   getLocalQuotes(ticker, toDate, fromDate) {
     let { to, from } = checkDate(toDate, fromDate);
 
-    const  diff = Math.abs(to.diff(from, 'days'));
+    const diff = Math.abs(to.diff(from, 'days'));
 
     to = to.format('YYYY-MM-DD');
     from = from.format('YYYY-MM-DD');

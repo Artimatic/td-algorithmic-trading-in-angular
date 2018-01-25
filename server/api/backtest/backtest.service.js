@@ -58,14 +58,14 @@ class BacktestService {
         for (let i = shortTerm[0]; i < shortTerm[1]; i++) {
           for (let j = longTerm[0]; j < longTerm[1]; j++) {
             if ((i + 20) < j) {
-              //console.log("short:", i, " long:", j);
+              console.log("short:", i, " long:", j);
               let MAs = ReversionService.executeMeanReversion(ReversionService.calcMA, quotes, i, j);
               let yesterdayDecision = MAs[MAs.length - 1];
               let recommendedDifference = DecisionService.findDeviation(MAs, startDate);
 
               let averagesRange = { shortTerm: i, longTerm: j };
               let returns = DecisionService.calcReturns(MAs, recommendedDifference, startDate);
-              //console.log("returns: ", returns.totalReturns);
+              console.log("returns: ", returns.totalReturns);
 
               snapshots.push({ ...averagesRange, ...returns, recommendedDifference });
             }
