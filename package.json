@@ -51,6 +51,7 @@
     "path": "^0.12.7",
     "qs": "^6.5.1",
     "request-promise": "^4.2.2",
+    "robinhood": "^1.1.2",
     "robinhood-api": "^1.2.3",
     "rxjs": "^5.5.6",
     "serve-favicon": "^2.4.5",
