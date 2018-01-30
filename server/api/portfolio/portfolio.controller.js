@@ -14,7 +14,13 @@ class PortfolioController extends BaseController {
   }
 
   login(request, response) {
-    PortfolioService.login(response);
+    console.log('body: ', request.body);
+    if (_.isEmpty(request.body)) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    }
+    else {
+      PortfolioService.login(request.body.username, request.body.password, response);
+    }
   }
 
   mfaLogin(request, response) {
@@ -33,7 +39,7 @@ class PortfolioController extends BaseController {
   getPositions(request, response) {
     PortfolioService.getPositions(response);
   }
-  
+
 }
 
 module.exports.PortfolioController = new PortfolioController();

@@ -33,11 +33,13 @@ import { AppComponent } from './app.component';
 import { BulkBacktestComponent } from './bulk-backtest';
 import { XlsImportComponent } from './xls-import/xls-import.component';
 import { RhTableComponent } from './rh-table';
-import { BacktestService } from './shared';
+import { BacktestService, AuthenticationService } from './shared';
 import { ChartDialogComponent } from './chart-dialog';
 
 import { RhInputComponent } from './rh-input/rh-input.component';
 import { ProductViewComponent } from './product-view/product-view.component';
+import { LoginComponent } from './login/login.component';
+import { LoginDialogComponent } from './login-dialog/login-dialog.component';
 
 
 @NgModule({
@@ -49,9 +51,12 @@ import { ProductViewComponent } from './product-view/product-view.component';
     ChartDialogComponent,
     RhInputComponent,
     ProductViewComponent,
+    LoginComponent,
+    LoginDialogComponent,
   ],
   entryComponents: [
     ChartDialogComponent,
+    LoginDialogComponent
   ],
   imports: [
     BrowserModule,
@@ -82,7 +87,8 @@ import { ProductViewComponent } from './product-view/product-view.component';
     MatSnackBarModule
   ],
   providers: [
-    BacktestService
+    BacktestService,
+    AuthenticationService
   ],
   bootstrap: [AppComponent]
 })

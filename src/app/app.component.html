@@ -1,22 +1,13 @@
 <mat-sidenav-container>
   <mat-toolbar color="primary" class="main-toolbar">
-    <div fxLayout="row" fxLayoutWrap>
-      <div fxFlex="25">
-        <button mat-icon-button [matMenuTriggerFor]="menu">
+    <div fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px" fxLayoutGap.xs="0">
+      <div fxFlex="90%">
+        <button mat-icon-button>
           <mat-icon>toc</mat-icon>
         </button>
-        <mat-menu #menu="matMenu">
-          <button mat-menu-item [routerLink]="['/bulk']">
-            <mat-icon>trending_up</mat-icon>
-            <span>Stocks</span>
-          </button>
-          <a href="https://nofile.io/f/79S5TrgzFCd/Example.xlsx" target="_blank">
-            <button mat-menu-item>
-              <mat-icon>open_in_new</mat-icon>
-              <span>Example File</span>
-            </button>
-          </a>
-        </mat-menu>
+      </div>
+      <div fxFlex="10%">
+        <app-login></app-login>
       </div>
     </div>
   </mat-toolbar>

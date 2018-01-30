@@ -17,7 +17,11 @@ var all = {
   root: path.normalize(__dirname + '/../../..'),
 
   // Server port
-  port: process.env.PORT || 9000
+  port: process.env.PORT || 9000,
+  yahoo: {
+    key: 'dj0yJmk9TUdJOGpUZms0OUl2JmQ9WVdrOVlVdFFWazF3TkdzbWNHbzlNQS0tJnM9Y29uc3VtZXJzZWNyZXQmeD04Mw--',
+    secret: 'a46cf2610a81dceb6a9306fda66dcfc767e76055'
+  } 
 };
 
 // Export the config object based on the NODE_ENV

@@ -4,12 +4,12 @@ import { Routes, Route, ActivatedRouteSnapshot } from '@angular/router';
 
 export const routes: Routes = [
   {
-    path: 'bulk',
+    path: 'console',
     component: BulkBacktestComponent
   },
   {
     path: '**',
-    redirectTo: '/bulk',
+    redirectTo: '/console',
     pathMatch: 'full'
   }
 ];

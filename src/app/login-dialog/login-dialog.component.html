@@ -1,0 +1,29 @@
+<div class="login-container" fxLayout="column" fxLayoutAlign="center center">
+
+    <form name="form" (ngSubmit)="login()" #f="ngForm" novalidate>
+        <div class="form-group" *ngIf="!mfa">
+            <mat-form-field class="login-input">
+                <input matInput placeholder="Username" name="username" [(ngModel)]="model.username" #username="ngModel" required>
+            </mat-form-field>
+        </div>
+        <div class="form-group" *ngIf="!mfa">
+            <mat-form-field class="login-input">
+                <input matInput placeholder="Password" [type]="hide ? 'password' : 'text'" name="password" [(ngModel)]="model.password" #password="ngModel"
+                    required>
+                <mat-icon matSuffix (click)="hide = !hide">{{hide ? 'visibility' : 'visibility_off'}}</mat-icon>
+            </mat-form-field>
+        </div>
+        <div class="form-group" *ngIf="mfa">
+            <mat-form-field class="login-input">
+                <input matInput placeholder="Code" type="number" name="code" [(ngModel)]="model.code" #code="ngModel" required>
+            </mat-form-field>
+        </div>
+        <div class="form-group">
+            <div *ngIf="loading"></div>
+            <span *ngIf="!loading">
+                <button mat-raised-button (click)="login()">Next</button>
+            </span>
+        </div>
+        <div *ngIf="error" class="alert alert-danger">{{error}}</div>
+    </form>
+</div>

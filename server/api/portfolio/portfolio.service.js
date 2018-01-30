@@ -12,13 +12,14 @@ let session = {
 };
 
 class PortfolioService {
-  login(reply) {
+  login(username, password, reply) {
     (async () => {
-      try{
-        let loginResult = await robinhood.login({username: credentials.username, password: credentials.password});
+      try {
+        let loginResult = await robinhood.login({ username: username, password: password });
         reply.status(200).send({});
-      }catch(e){
+      } catch (e) {
         console.log('Oh noes! Login probably failed!', e);
+        reply.status(401).send(e);
       }
     })();
   }
@@ -26,34 +27,37 @@ class PortfolioService {
   mfaLogin(code, reply) {
     console.log('login code: ', code);
     (async () => {
-      try{
-        let loginResult = await robinhood.mfaCode({username: credentials.username, password: credentials.password, mfa_code: code});
+      try {
+        let loginResult = await robinhood.mfaCode({ username: credentials.username, password: credentials.password, mfa_code: code });
         reply.status(200).send(loginResult);
-      }catch(e){
+      } catch (e) {
         console.log('Oh noes! Login probably failed!', e);
+        reply.status(401).send(e);
       }
     })();
   }
 
   getPortfolio(reply) {
     (async () => {
-      try{
-        let portfolioData = await robinhood.getPortfolio({account_number: credentials.account_number});
+      try {
+        let portfolioData = await robinhood.getPortfolio({ account_number: credentials.account_number });
         reply.status(200).send(portfolioData);
 
-      }catch(e){
+      } catch (e) {
         console.log('Oh noes! Login probably failed!', e);
+        reply.status(401).send(e);
       }
     })();
   }
 
   getPositions(reply) {
     (async () => {
-      try{
-        let positionData = await robinhood.getPositions({nonzero: true});
+      try {
+        let positionData = await robinhood.getPositions({ nonzero: true });
         reply.status(200).send(positionData);
-      }catch(e){
+      } catch (e) {
         console.log('Oh noes! Login probably failed!', e);
+        reply.status(401).send(e);
       }
     })();
   }

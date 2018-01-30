@@ -1,0 +1,8 @@
+.login-container {
+    height: 100%;
+    width: 100%; 
+}
+
+.login-input {
+    width: 250px;
+}
