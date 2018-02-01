@@ -24,15 +24,15 @@ export class AuthenticationService {
           else if (res.status === 200) {
             return true;
           }
+        } else {
+          return false;
         }
       });
   }
 
-  mfa(username: string, code: number): Observable<boolean> {
-    return this.http.post('/api/portfolio/mfa', { code: code })
-      .map((response: Response) => {
-        console.log("mfa: ", response);
-        
+  mfa(username: string, password: string, code: number): Observable<boolean> {
+    return this.http.post('/api/portfolio/mfa', { username: username, password: password, code: code })
+      .map((response: Response) => {        
         // login successful if there's a jwt token in the response
         let token = response.json() && response.json().token;
         if (token) {

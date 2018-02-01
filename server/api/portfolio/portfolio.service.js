@@ -1,15 +1,14 @@
 import moment from 'moment';
 import json2csv from 'json2csv';
 import fs from 'fs';
+import Robinhood from 'robinhood';
 
 import * as errors from '../../components/errors/baseErrors';
-const RobinHood = require('robinhood-api');
-const robinhood = new RobinHood();
-import credentials from '../../config/environment/credentials.js';
 
-let session = {
-  token: ''
-};
+const RobinHoodApi = require('robinhood-api');
+const robinhood = new RobinHoodApi();
+
+import credentials from '../../config/environment/credentials.js';
 
 class PortfolioService {
   login(username, password, reply) {
@@ -24,11 +23,11 @@ class PortfolioService {
     })();
   }
 
-  mfaLogin(code, reply) {
+  mfaLogin(username, password, code, reply) {
     console.log('login code: ', code);
     (async () => {
       try {
-        let loginResult = await robinhood.mfaCode({ username: credentials.username, password: credentials.password, mfa_code: code });
+        let loginResult = await robinhood.mfaCode({ username: username, password: password, mfa_code: code });
         reply.status(200).send(loginResult);
       } catch (e) {
         console.log('Oh noes! Login probably failed!', e);
@@ -37,29 +36,38 @@ class PortfolioService {
     })();
   }
 
-  getPortfolio(reply) {
-    (async () => {
-      try {
-        let portfolioData = await robinhood.getPortfolio({ account_number: credentials.account_number });
-        reply.status(200).send(portfolioData);
+  expireToken(token, reply) {
+    Robinhood({ token: token }).expire_token((error, response, body) => {
+      if (error) {
+        console.error(error);
+        reply.status(500).send(error);
 
-      } catch (e) {
-        console.log('Oh noes! Login probably failed!', e);
-        reply.status(401).send(e);
+      } else {
+        reply.status(200).send(body);
       }
-    })();
+    });
   }
 
-  getPositions(reply) {
-    (async () => {
-      try {
-        let positionData = await robinhood.getPositions({ nonzero: true });
-        reply.status(200).send(positionData);
-      } catch (e) {
-        console.log('Oh noes! Login probably failed!', e);
-        reply.status(401).send(e);
+  getPortfolio(token, reply) {
+    Robinhood({ token: token }).accounts((error, response, body) => {
+      if (error) {
+        console.error(error);
+        reply.status(500).send(error);
+      } else {
+        reply.status(200).send(body);
       }
-    })();
+    });
+  }
+
+  getPositions(token, reply) {
+    Robinhood({ token: token }).nonzero_positions((error, response, body) => {
+      if (error) {
+        console.error(error);
+        reply.status(500).send(error);
+      } else {
+        reply.status(200).send(body);
+      }
+    });
   }
 }
 

@@ -58,7 +58,7 @@ export class ProductViewComponent implements OnInit {
           seriesData = [],
           signal: DataPoint;
           
-        result.slice(0, -1).forEach(day => {
+        result.forEach(day => {
           time.push(day.date);
           if (this.triggerCondition(day.close, day.shortTermAvg, day.longTermAvg, data.deviation)) {
             if (day.trending === 'Sell') {

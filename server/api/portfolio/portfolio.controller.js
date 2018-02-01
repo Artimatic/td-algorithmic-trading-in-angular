@@ -14,7 +14,6 @@ class PortfolioController extends BaseController {
   }
 
   login(request, response) {
-    console.log('body: ', request.body);
     if (_.isEmpty(request.body)) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     }
@@ -28,16 +27,35 @@ class PortfolioController extends BaseController {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     }
     else {
-      PortfolioService.mfaLogin(request.body.code, response);
+      PortfolioService.mfaLogin(request.body.username, request.body.password, request.body.code, response);
+    }
+  }
+
+  logout(request, response) {
+    if (_.isEmpty(request.body)) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    }
+    else {
+      PortfolioService.expireToken(request.body.token, response);
     }
   }
 
   getPortfolio(request, response) {
-    PortfolioService.getPortfolio(response);
+    if (_.isEmpty(request.headers.authorization)) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    }
+    else {
+      PortfolioService.getPortfolio(request.headers.authorization.replace('Bearer ', ''), response);
+    }
   }
 
   getPositions(request, response) {
-    PortfolioService.getPositions(response);
+    if (_.isEmpty(request.headers.authorization)) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    }
+    else {
+      PortfolioService.getPositions(request.headers.authorization.replace('Bearer ', ''), response);
+    }
   }
 
 }

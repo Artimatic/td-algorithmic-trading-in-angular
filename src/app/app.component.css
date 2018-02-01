@@ -1,3 +1,7 @@
 .main-toolbar {
   min-height: 25px;
 }
+
+.toolbar-content {
+  width: 100%;
+}

@@ -1,6 +1,6 @@
 <mat-sidenav-container>
   <mat-toolbar color="primary" class="main-toolbar">
-    <div fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px" fxLayoutGap.xs="0">
+    <div class="toolbar-content" fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px" fxLayoutGap.xs="0">
       <div fxFlex="90%">
         <button mat-icon-button>
           <mat-icon>toc</mat-icon>
@@ -11,8 +11,5 @@
       </div>
     </div>
   </mat-toolbar>
-  <div class="loading-overlay" *ngIf="loading">
-    <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
-  </div>
   <router-outlet></router-outlet>
 </mat-sidenav-container>

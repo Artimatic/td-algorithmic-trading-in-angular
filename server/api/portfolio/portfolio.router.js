@@ -12,6 +12,10 @@ export let login = (request, response) => {
   PortfolioController.login(request, response);
 }
 
+export let logout = (request, response) => {
+  PortfolioController.logout(request, response);
+}
+
 export let mfaLogin = (request, response) => {
   PortfolioController.mfaLogin(request, response);
 }

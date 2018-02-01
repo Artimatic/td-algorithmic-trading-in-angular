@@ -31,13 +31,12 @@ export class LoginDialogComponent implements OnInit {
   login() {
     this.loading = true;
     if (this.mfa) {
-      this.authenticationService.mfa(this.model.username, this.model.code)
+      this.authenticationService.mfa(this.model.username, this.model.password, this.model.code)
         .subscribe(result => {
-          console.log('rsult:', result);
-
           if (result === true) {
             this.mfa = true;
             this.loading = false;
+            this.dialogRef.close();
           } else {
             // login failed
             this.snackBar.open('Username or password is incorrect');
@@ -45,13 +44,12 @@ export class LoginDialogComponent implements OnInit {
           }
         },
         error => {
-          this.snackBar.open('Code is incorrect');
+          this.snackBar.open('Username or password or Code is incorrect');
           this.loading = false;
         });
     } else {
       this.authenticationService.login(this.model.username, this.model.password)
         .subscribe(result => {
-          console.log('rsult:', result);
           if (result === true) {
             this.mfa = true;
             this.loading = false;
@@ -62,11 +60,8 @@ export class LoginDialogComponent implements OnInit {
           }
         },
         error => {
-          if(error.message === "Your account requires 2-step authentication.  Please enter in the code received on your device.") {
-            this.mfa = true;
-          } else {
-            this.snackBar.open('Username or password is incorrect');
-          }
+          this.mfa = true;
+
           this.loading = false;
         });
     }

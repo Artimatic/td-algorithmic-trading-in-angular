@@ -33,7 +33,7 @@ import { AppComponent } from './app.component';
 import { BulkBacktestComponent } from './bulk-backtest';
 import { XlsImportComponent } from './xls-import/xls-import.component';
 import { RhTableComponent } from './rh-table';
-import { BacktestService, AuthenticationService } from './shared';
+import { BacktestService, AuthenticationService, PortfolioService } from './shared';
 import { ChartDialogComponent } from './chart-dialog';
 
 import { RhInputComponent } from './rh-input/rh-input.component';
@@ -88,7 +88,8 @@ import { LoginDialogComponent } from './login-dialog/login-dialog.component';
   ],
   providers: [
     BacktestService,
-    AuthenticationService
+    AuthenticationService,
+    PortfolioService
   ],
   bootstrap: [AppComponent]
 })

@@ -1,12 +1,12 @@
 <div class="login-container" fxLayout="column" fxLayoutAlign="center center">
 
     <form name="form" (ngSubmit)="login()" #f="ngForm" novalidate>
-        <div class="form-group" *ngIf="!mfa">
+        <div class="form-group">
             <mat-form-field class="login-input">
                 <input matInput placeholder="Username" name="username" [(ngModel)]="model.username" #username="ngModel" required>
             </mat-form-field>
         </div>
-        <div class="form-group" *ngIf="!mfa">
+        <div class="form-group">
             <mat-form-field class="login-input">
                 <input matInput placeholder="Password" [type]="hide ? 'password' : 'text'" name="password" [(ngModel)]="model.password" #password="ngModel"
                     required>
