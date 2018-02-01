@@ -38,6 +38,7 @@ export class LoginComponent implements OnInit {
 
   logout() {
     this.authenticationService.logout();
+    window.location.reload();
   }
 
 }

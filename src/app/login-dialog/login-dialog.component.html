@@ -19,7 +19,9 @@
             </mat-form-field>
         </div>
         <div class="form-group">
-            <div *ngIf="loading"></div>
+            <div *ngIf="loading">
+                <mat-spinner></mat-spinner>
+            </div>
             <span *ngIf="!loading">
                 <button mat-raised-button (click)="login()">Next</button>
             </span>

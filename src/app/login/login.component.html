@@ -1,5 +1,8 @@
 <button *ngIf=!authenticated mat-raised-button (click)="openDialog()">Sign In</button>
-<button *ngIf=authenticated mat-icon-button (click)="logout()">
+<div *ngIf=authenticated>
+  <mat-progress-bar mode="buffer" color="accent"></mat-progress-bar>
+  <button mat-icon-button (click)="logout()">
     <mat-icon>exit_to_app</mat-icon>
     Logout
   </button>
+</div>
