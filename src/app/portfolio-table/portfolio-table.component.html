@@ -1,0 +1,46 @@
+<div class="example-container mat-elevation-z8">
+  <div class="example-loading-shade" *ngIf="isLoadingResults || isRateLimitReached">
+    <mat-spinner *ngIf="isLoadingResults"></mat-spinner>
+    <div class="example-rate-limit-reached" *ngIf="isRateLimitReached">
+      GitHub's API rate limit has been reached. It will be reset in one minute.
+    </div>
+  </div>
+
+  <mat-table #table [dataSource]="dataSource" class="example-table" matSort matSortActive="created">
+
+    <!--- Note that these columns can be defined in any order.
+            The actual rendered columns are set as a property on the row definition" -->
+    <ng-container matColumnDef="instrument">
+      <mat-header-cell *matHeaderCellDef>Instrument</mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.instrument | instrument }}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="quantity">
+      <mat-header-cell *matHeaderCellDef>Quantity</mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.quantity }}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="average_buy_price">
+      <mat-header-cell *matHeaderCellDef>Price</mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.average_buy_price }}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="created_at">
+      <mat-header-cell *matHeaderCellDef disableClear="true">
+        Created
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.created_at | date }}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="updated_at">
+      <mat-header-cell *matHeaderCellDef disableClear="true">
+        Updated
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.updated_at | date }}</mat-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+  </mat-table>
+
+</div>

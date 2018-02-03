@@ -58,6 +58,17 @@ class PortfolioController extends BaseController {
     }
   }
 
+  getResources(request, response) {
+    const urlRegex = /^https\:\/\/api\.robinhood\.com\/instruments\/[a-z0-9]{8}\-[a-z0-9]{4}\-[a-z0-9]{4}\-[a-z0-9]{4}\-[a-z0-9]{12}\/{0,}$/;
+    if (_.isEmpty(request.body) && _.isEmpty(request.body.instrument) && !request.body.instrument.match(urlRegex)) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    }
+    else {
+      console.log('instr: ', typeof request.body.instrument);
+
+      PortfolioService.getResource(request.body.instrument, response);
+    }
+  }
 }
 
 module.exports.PortfolioController = new PortfolioController();

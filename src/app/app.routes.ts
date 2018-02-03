@@ -1,11 +1,11 @@
-import { BulkBacktestComponent } from './bulk-backtest';
+import { MainViewComponent } from './main-view/main-view.component';
 
 import { Routes, Route, ActivatedRouteSnapshot } from '@angular/router';
 
 export const routes: Routes = [
   {
     path: 'console',
-    component: BulkBacktestComponent
+    component: MainViewComponent
   },
   {
     path: '**',

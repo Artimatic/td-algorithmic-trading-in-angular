@@ -1,0 +1,8 @@
+<mat-tab-group>
+    <mat-tab label="Backtest">
+      <app-bulk-backtest></app-bulk-backtest>
+    </mat-tab>
+    <mat-tab label="Portfolio" *ngIf="isAuthenticated()">
+      <app-portfolio-view></app-portfolio-view>
+    </mat-tab>
+  </mat-tab-group>

@@ -24,7 +24,6 @@ class PortfolioService {
   }
 
   mfaLogin(username, password, code, reply) {
-    console.log('login code: ', code);
     (async () => {
       try {
         let loginResult = await robinhood.mfaCode({ username: username, password: password, mfa_code: code });
@@ -68,6 +67,17 @@ class PortfolioService {
         reply.status(200).send(body);
       }
     });
+  }
+
+  getResource(instrument, reply) {
+    (async () => {
+      try {
+        let inst = await robinhood.getResource(instrument);
+        reply.status(200).send(inst);
+      } catch (e) {
+        reply.status(500).send(e);
+      }
+    })();
   }
 }
 

@@ -19,3 +19,7 @@ export let logout = (request, response) => {
 export let mfaLogin = (request, response) => {
   PortfolioController.mfaLogin(request, response);
 }
+
+export let getResources = (request, response) => {
+  PortfolioController.getResources(request, response);
+}
