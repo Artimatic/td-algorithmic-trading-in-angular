@@ -15,14 +15,18 @@ export class BacktestService {
   constructor(private http: Http) { }
 
   getInfo(data: any): Observable<Stock> {
-    console.log('info: ', data);
     return this.http.post(`${BASE_URL}api/mean-reversion/info`, data, {})
       .map(r => r.json());
   }
 
   getBacktest(data: any): Observable<any[]> {
-    console.log('backtest: ', data);
     return this.http.post(`${BASE_URL}api/backtest/chart`, data, {})
+      .map(r => r.json());
+  }
+
+  getPrice(data: any): Observable<any[]> {
+    console.log('price tickers: ', data);
+    return this.http.post(`${BASE_URL}api/quote/current`, data, {})
       .map(r => r.json());
   }
 }

@@ -75,7 +75,6 @@ class QuoteService {
 
         return converted;
       });
-
   }
 
   getDataQuandl(ticker, startDate, endDate) {
@@ -122,6 +121,11 @@ class QuoteService {
         let arr = JSON.parse(data);
         return arr;
       });
+  }
+
+  getLastPrice(tickers) {
+    return api
+      .getRealtimeQuotes(tickers.join(','));
   }
 }
 

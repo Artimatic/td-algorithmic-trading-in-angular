@@ -8,8 +8,6 @@ import * as errors from '../../components/errors/baseErrors';
 const RobinHoodApi = require('robinhood-api');
 const robinhood = new RobinHoodApi();
 
-import credentials from '../../config/environment/credentials.js';
-
 class PortfolioService {
   login(username, password, reply) {
     (async () => {

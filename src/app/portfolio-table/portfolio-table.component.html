@@ -10,9 +10,14 @@
 
     <!--- Note that these columns can be defined in any order.
             The actual rendered columns are set as a property on the row definition" -->
-    <ng-container matColumnDef="instrument">
-      <mat-header-cell *matHeaderCellDef>Instrument</mat-header-cell>
-      <mat-cell *matCellDef="let row">{{ row.instrument | instrument }}</mat-cell>
+    <ng-container matColumnDef="symbol">
+      <mat-header-cell *matHeaderCellDef>Symbol</mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.symbol }}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="name">
+      <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.name }}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="quantity">
