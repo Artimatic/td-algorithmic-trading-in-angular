@@ -24,8 +24,7 @@ export class BacktestService {
       .map(r => r.json());
   }
 
-  getPrice(data: any): Observable<any[]> {
-    console.log('price tickers: ', data);
+  getPrice(data: any): Observable<any> {
     return this.http.post(`${BASE_URL}api/quote/current`, data, {})
       .map(r => r.json());
   }

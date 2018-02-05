@@ -24,7 +24,6 @@ export class PortfolioViewComponent implements AfterViewInit {
   refresh() {
     this.portfolioService.getPortfolio()
       .subscribe(result => {
-        console.log('received: ', result);
         this.portfolioTableComponent.setData(result);
       });
   }

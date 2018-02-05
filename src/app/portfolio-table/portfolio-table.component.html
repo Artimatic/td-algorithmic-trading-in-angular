@@ -20,14 +20,39 @@
       <mat-cell *matCellDef="let row">{{ row.name }}</mat-cell>
     </ng-container>
 
+    <ng-container matColumnDef="gainz">
+      <mat-header-cell *matHeaderCellDef mat-sort-header> Gainz </mat-header-cell>
+      <mat-cell *matCellDef="let element"> {{element.gainz | percent}} </mat-cell>
+    </ng-container>
+
     <ng-container matColumnDef="quantity">
       <mat-header-cell *matHeaderCellDef>Quantity</mat-header-cell>
-      <mat-cell *matCellDef="let row">{{ row.quantity }}</mat-cell>
+      <mat-cell *matCellDef="let row">{{ row.quantity | number }}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="realtime_price">
+      <mat-header-cell *matHeaderCellDef>Price</mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.realtime_price | currency }}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="average_buy_price">
-      <mat-header-cell *matHeaderCellDef>Price</mat-header-cell>
-      <mat-cell *matCellDef="let row">{{ row.average_buy_price }}</mat-cell>
+      <mat-header-cell *matHeaderCellDef>Cost Basis</mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.average_buy_price | currency }}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="Volume">
+      <mat-header-cell *matHeaderCellDef>Volume</mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.Volume | number}}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="PERatio">
+      <mat-header-cell *matHeaderCellDef>PE</mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.PERatio }}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="realtime_chg_percent">
+      <mat-header-cell *matHeaderCellDef>Last Change</mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.realtime_chg_percent }}%</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="created_at">

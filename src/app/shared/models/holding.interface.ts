@@ -9,5 +9,6 @@ export interface Holding {
     realtime_price?: number,
     Volume?: number,
     PERatio?: number,
-    realtime_chg_percent?: number
+    realtime_chg_percent?: number,
+    gainz?: number
 }

@@ -13,7 +13,7 @@ import { BacktestService } from '../shared/services/backtest.service';
 })
 export class PortfolioTableComponent implements OnInit {
   portfolioData: Holding[];
-  displayedColumns = ['symbol', 'name', 'quantity', 'average_buy_price', 'created_at', 'updated_at'];
+  displayedColumns = ['name', 'symbol', 'gainz', 'quantity', 'average_buy_price', 'realtime_price', 'Volume', 'PERatio', 'realtime_chg_percent', 'created_at', 'updated_at'];
   dataSource = new MatTableDataSource();
 
   tickers = [];
@@ -45,10 +45,31 @@ export class PortfolioTableComponent implements OnInit {
 
   getCurrentPrice() {
     if (this.tickers.length >= this.dataSource.data.length) {
-      this.backtestService.getPrice({tickers: this.tickers})
+      this.backtestService.getPrice({ tickers: this.tickers })
         .subscribe(result => {
-          console.log('prices: ', result);
+          this.dataSource.data.map((holding: Holding) => {
+            let myQuote = result.query.results.quote.find(quote => {
+              return quote.symbol === holding.symbol;
+            });
+            if (myQuote) {
+              holding.realtime_price = myQuote.realtime_price;
+              holding.Volume = myQuote.Volume;
+              holding.PERatio = myQuote.PERatio;
+              holding.realtime_chg_percent = myQuote.realtime_chg_percent;
+            }
+            return holding;
+          });
+          this.getCalculations();
         });
     }
   }
+
+  getCalculations() {
+    this.dataSource.data.map((holding: Holding) => {
+      holding.gainz = (holding.realtime_price-holding.average_buy_price)/holding.average_buy_price;
+      return holding;
+    });
+  }
 }
+
+
