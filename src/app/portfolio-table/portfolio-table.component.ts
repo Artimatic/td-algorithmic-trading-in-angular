@@ -6,6 +6,8 @@ import { Observable } from 'rxjs/Observable';
 import { PortfolioService } from '../shared/services/portfolio.service';
 import { Holding } from '../shared/models';
 import { BacktestService } from '../shared/services/backtest.service';
+import { Account } from '../shared/account';
+import { AuthenticationService } from '../shared/services/authentication.service';
 @Component({
   selector: 'app-portfolio-table',
   templateUrl: './portfolio-table.component.html',
@@ -13,8 +15,9 @@ import { BacktestService } from '../shared/services/backtest.service';
 })
 export class PortfolioTableComponent implements OnInit {
   portfolioData: Holding[];
-  displayedColumns = ['name', 'symbol', 'gainz', 'quantity', 'average_buy_price', 'realtime_price', 'Volume', 'PERatio', 'realtime_chg_percent', 'created_at', 'updated_at'];
+  displayedColumns = ['name', 'symbol', 'gainz', 'quantity', 'average_buy_price', 'realtime_price', 'Volume', 'PERatio', 'realtime_chg_percent', 'diversification', 'created_at', 'updated_at'];
   dataSource = new MatTableDataSource();
+  panelOpenState: boolean = false;
 
   tickers = [];
   resultsLength = 0;
@@ -23,7 +26,8 @@ export class PortfolioTableComponent implements OnInit {
 
   constructor(
     private portfolioService: PortfolioService,
-    private backtestService: BacktestService) { }
+    private backtestService: BacktestService,
+    private authenticationService: AuthenticationService) { }
 
   ngOnInit() {
   }
@@ -56,6 +60,11 @@ export class PortfolioTableComponent implements OnInit {
               holding.Volume = myQuote.Volume;
               holding.PERatio = myQuote.PERatio;
               holding.realtime_chg_percent = myQuote.realtime_chg_percent;
+              if (this.authenticationService.myAccount && !this.authenticationService.myAccount.stocks) {
+                this.authenticationService.myAccount.stocks = (holding.quantity * holding.realtime_price);
+              } else if (this.authenticationService.myAccount) {
+                this.authenticationService.myAccount.stocks += (holding.quantity * holding.realtime_price);
+              }
             }
             return holding;
           });
@@ -67,6 +76,9 @@ export class PortfolioTableComponent implements OnInit {
   getCalculations() {
     this.dataSource.data.map((holding: Holding) => {
       holding.gainz = (holding.realtime_price-holding.average_buy_price)/holding.average_buy_price;
+      if (this.authenticationService.myAccount) {
+        holding.diversification = (holding.quantity * holding.realtime_price)/this.authenticationService.myAccount.stocks;
+      }
       return holding;
     });
   }

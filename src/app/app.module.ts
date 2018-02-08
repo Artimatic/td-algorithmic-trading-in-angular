@@ -46,6 +46,7 @@ import { MainViewComponent } from './main-view/main-view.component';
 import { PortfolioTableComponent } from './portfolio-table/portfolio-table.component';
 import { PortfolioViewComponent } from './portfolio-view/portfolio-view.component';
 import { InstrumentPipe } from './shared/pipes/instrument.pipe';
+import { CartComponent } from './cart/cart.component';
 
 
 @NgModule({
@@ -63,6 +64,7 @@ import { InstrumentPipe } from './shared/pipes/instrument.pipe';
     PortfolioTableComponent,
     PortfolioViewComponent,
     InstrumentPipe,
+    CartComponent,
   ],
   entryComponents: [
     ChartDialogComponent,
@@ -101,7 +103,7 @@ import { InstrumentPipe } from './shared/pipes/instrument.pipe';
   providers: [
     BacktestService,
     AuthenticationService,
-    PortfolioService
+    PortfolioService,
   ],
   bootstrap: [AppComponent]
 })

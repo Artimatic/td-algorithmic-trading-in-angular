@@ -60,13 +60,22 @@ class PortfolioController extends BaseController {
 
   getResources(request, response) {
     const urlRegex = /^https\:\/\/api\.robinhood\.com\/instruments\/[a-z0-9]{8}\-[a-z0-9]{4}\-[a-z0-9]{4}\-[a-z0-9]{4}\-[a-z0-9]{12}\/{0,}$/;
-    if (_.isEmpty(request.body) && _.isEmpty(request.body.instrument) && !request.body.instrument.match(urlRegex)) {
+    if (_.isEmpty(request.body) || _.isEmpty(request.body.instrument) || !request.body.instrument.match(urlRegex)) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     }
     else {
-      console.log('instr: ', typeof request.body.instrument);
-
       PortfolioService.getResource(request.body.instrument, response);
+    }
+  }
+
+  sell(request, response) {
+    if (_.isEmpty(request.headers.authorization) || _.isEmpty(request.body)) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    }
+    else {
+      PortfolioService.sell(request.body.account, request.headers.authorization.replace('Bearer ', ''), request.body.url, request.body.symbol, request.body.quantity, request.body.price, response)
+        .then((data) => BaseController.requestGetSuccessHandler(response, data))
+        .catch((err) => BaseController.requestErrorHandler(response, err));
     }
   }
 }

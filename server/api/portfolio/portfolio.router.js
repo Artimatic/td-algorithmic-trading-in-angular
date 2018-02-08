@@ -23,3 +23,7 @@ export let mfaLogin = (request, response) => {
 export let getResources = (request, response) => {
   PortfolioController.getResources(request, response);
 }
+
+export let sell = (request, response) => {
+  PortfolioController.sell(request, response);
+}

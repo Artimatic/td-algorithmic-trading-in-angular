@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { PortfolioService } from '../shared/services/portfolio.service';
 import { Holding } from '../shared/models';
 import { PortfolioTableComponent } from '../portfolio-table/portfolio-table.component';
+import { AuthenticationService } from '../shared/services/authentication.service';
 
 @Component({
   selector: 'app-portfolio-view',
@@ -15,16 +16,19 @@ export class PortfolioViewComponent implements AfterViewInit {
   private portfolioTableComponent: PortfolioTableComponent;
 
   constructor(
-    private portfolioService: PortfolioService) { }
+    private portfolioService: PortfolioService,
+    private authenticationService: AuthenticationService) { }
 
   ngAfterViewInit() {
     this.refresh();
   }
 
   refresh() {
-    this.portfolioService.getPortfolio()
-      .subscribe(result => {
-        this.portfolioTableComponent.setData(result);
-      });
+    this.authenticationService.getPortfolioAccount().subscribe(account => {
+      this.portfolioService.getPortfolio()
+        .subscribe(result => {
+          this.portfolioTableComponent.setData(result);
+        });
+    })
   }
 }

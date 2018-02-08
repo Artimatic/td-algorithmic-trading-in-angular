@@ -26,7 +26,7 @@ export default class BaseController {
 
   static requestErrorHandler(reply, error) {
     console.log("Error: ", error);
-    reply.status(Boom.badImplementation().output.statusCode).send(Boom.badImplementation().output);
+    reply.status(Boom.badImplementation().output.statusCode).send(error);
   }
 
   static notFoundErrorHandler(reply, error) {

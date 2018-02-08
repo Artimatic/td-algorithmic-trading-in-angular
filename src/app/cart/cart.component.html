@@ -1,0 +1,12 @@
+<mat-sidenav-container
+    class="example-container" (backdropClick)="close('backdrop')" *ngIf="shouldRun">
+  <mat-sidenav #sidenav (keydown.escape)="close('escape')" disableClose>
+    <p><button mat-button (click)="close('toggle button')">Toggle</button></p>
+    my cart
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+      <button mat-button color="warn" (click)="sidenav.open()">SELL</button>
+    <p>Closed due to: {{reason}}</p>
+  </mat-sidenav-content>
+</mat-sidenav-container>

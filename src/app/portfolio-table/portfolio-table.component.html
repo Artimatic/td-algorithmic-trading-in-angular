@@ -7,22 +7,28 @@
   </div>
 
   <mat-table #table [dataSource]="dataSource" class="example-table" matSort matSortActive="created">
-
     <!--- Note that these columns can be defined in any order.
             The actual rendered columns are set as a property on the row definition" -->
     <ng-container matColumnDef="symbol">
       <mat-header-cell *matHeaderCellDef>Symbol</mat-header-cell>
-      <mat-cell *matCellDef="let row">{{ row.symbol }}</mat-cell>
+      <mat-cell *matCellDef="let row">
+        {{ row.symbol }}
+        <button mat-button color="primary">BUY</button>
+      </mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="name">
       <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
-      <mat-cell *matCellDef="let row">{{ row.name }}</mat-cell>
+      <mat-cell *matCellDef="let row">
+        {{ row.name }}
+      </mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="gainz">
       <mat-header-cell *matHeaderCellDef mat-sort-header> Gainz </mat-header-cell>
-      <mat-cell *matCellDef="let element"> {{element.gainz | percent}} </mat-cell>
+      <mat-cell *matCellDef="let element"> {{element.gainz | percent}}
+        <button mat-button color="warn">SELL</button>
+      </mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="quantity">
@@ -55,6 +61,11 @@
       <mat-cell *matCellDef="let row">{{ row.realtime_chg_percent }}%</mat-cell>
     </ng-container>
 
+    <ng-container matColumnDef="diversification">
+      <mat-header-cell *matHeaderCellDef>Diversification</mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.diversification | percent:'1.2-3'}}</mat-cell>
+    </ng-container>
+
     <ng-container matColumnDef="created_at">
       <mat-header-cell *matHeaderCellDef disableClear="true">
         Created
@@ -66,7 +77,10 @@
       <mat-header-cell *matHeaderCellDef disableClear="true">
         Updated
       </mat-header-cell>
-      <mat-cell *matCellDef="let row">{{ row.updated_at | date }}</mat-cell>
+      <mat-cell *matCellDef="let row">
+        {{ row.updated_at | date }}
+
+      </mat-cell>
     </ng-container>
 
     <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
