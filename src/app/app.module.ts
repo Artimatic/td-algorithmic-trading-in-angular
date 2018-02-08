@@ -47,6 +47,7 @@ import { PortfolioTableComponent } from './portfolio-table/portfolio-table.compo
 import { PortfolioViewComponent } from './portfolio-view/portfolio-view.component';
 import { InstrumentPipe } from './shared/pipes/instrument.pipe';
 import { CartComponent } from './cart/cart.component';
+import { OrderDialogComponent } from './order-dialog/order-dialog.component';
 
 
 @NgModule({
@@ -65,6 +66,7 @@ import { CartComponent } from './cart/cart.component';
     PortfolioViewComponent,
     InstrumentPipe,
     CartComponent,
+    OrderDialogComponent,
   ],
   entryComponents: [
     ChartDialogComponent,
