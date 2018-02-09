@@ -24,8 +24,25 @@ export class PortfolioService {
     }
 
     getResource(url: string): Observable<any> {
-        let body = {instrument: url};
+        let body = { instrument: url };
         return this.http.post('/api/portfolio/resources', body)
             .map((response: Response) => response.json());
+    }
+
+    sell(holding: Holding, quantity: number, price: number): Observable<Holding[]> {
+        let headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.token });
+        let options = new RequestOptions({ headers: headers });
+        let body = {
+            "account": this.authenticationService.myAccount.url,
+            "url": holding.instrument,
+            "symbol": holding.symbol,
+            "quantity": quantity,
+            "price": price
+        };
+
+        return this.http.post('/api/portfolio/positions', body, options)
+            .map((response: Response) => {
+                return response.json().results;
+            });
     }
 }

@@ -25,8 +25,8 @@
 
     <ng-container matColumnDef="gainz">
       <mat-header-cell *matHeaderCellDef mat-sort-header> Gainz </mat-header-cell>
-      <mat-cell *matCellDef="let element"> {{element.gainz | percent}}
-        <button mat-button color="warn">SELL</button>
+      <mat-cell *matCellDef="let row"> {{row.gainz | percent}}
+        <button mat-button color="warn" (click)="sell(row)">SELL</button>
       </mat-cell>
     </ng-container>
 

@@ -1,6 +1,6 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output, ViewChild } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { MatPaginator, MatSort, MatTableDataSource } from '@angular/material';
+import { MatPaginator, MatSort, MatTableDataSource, MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { Observable } from 'rxjs/Observable';
 
 import { PortfolioService } from '../shared/services/portfolio.service';
@@ -8,12 +8,15 @@ import { Holding } from '../shared/models';
 import { BacktestService } from '../shared/services/backtest.service';
 import { Account } from '../shared/account';
 import { AuthenticationService } from '../shared/services/authentication.service';
+import { OrderDialogComponent } from '../order-dialog/order-dialog.component';
 @Component({
   selector: 'app-portfolio-table',
   templateUrl: './portfolio-table.component.html',
   styleUrls: ['./portfolio-table.component.css']
 })
 export class PortfolioTableComponent implements OnInit {
+  @Output() addCart = new EventEmitter<Holding>();
+
   portfolioData: Holding[];
   displayedColumns = ['name', 'symbol', 'gainz', 'quantity', 'average_buy_price', 'realtime_price', 'Volume', 'PERatio', 'realtime_chg_percent', 'diversification', 'created_at', 'updated_at'];
   dataSource = new MatTableDataSource();
@@ -27,9 +30,22 @@ export class PortfolioTableComponent implements OnInit {
   constructor(
     private portfolioService: PortfolioService,
     private backtestService: BacktestService,
-    private authenticationService: AuthenticationService) { }
+    private authenticationService: AuthenticationService,
+    public dialog: MatDialog) { }
 
   ngOnInit() {
+  }
+
+  sell(row: Holding): void {
+    let dialogRef = this.dialog.open(OrderDialogComponent, {
+      width: '500px',
+      height: '500px',
+      data: { holding: row }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('Closed dialog', result);
+    });
   }
 
   setData(data) {
@@ -75,9 +91,9 @@ export class PortfolioTableComponent implements OnInit {
 
   getCalculations() {
     this.dataSource.data.map((holding: Holding) => {
-      holding.gainz = (holding.realtime_price-holding.average_buy_price)/holding.average_buy_price;
+      holding.gainz = (holding.realtime_price - holding.average_buy_price) / holding.average_buy_price;
       if (this.authenticationService.myAccount) {
-        holding.diversification = (holding.quantity * holding.realtime_price)/this.authenticationService.myAccount.stocks;
+        holding.diversification = (holding.quantity * holding.realtime_price) / this.authenticationService.myAccount.stocks;
       }
       return holding;
     });

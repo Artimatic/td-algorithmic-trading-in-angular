@@ -1,3 +1,17 @@
-<p>
-  order-dialog works!
-</p>
+<form class="example-container" [formGroup]="options" (ngSubmit)="sell()">
+  <mat-form-field>
+    <input matInput type="number" placeholder="Quantity" formControlName="quantity" min="0">
+  </mat-form-field>
+  <mat-form-field>
+    <input matInput type="number" placeholder="Price" formControlName="price" min="0" class="example-right-align">
+    <span matPrefix>$&nbsp;</span>
+  </mat-form-field>
+  <div class="form-group">
+    <div *ngIf="loading">
+      <mat-spinner></mat-spinner>
+    </div>
+    <span *ngIf="!loading">
+      <button mat-raised-button (click)="sell()">Submit</button>
+    </span>
+  </div>
+</form>

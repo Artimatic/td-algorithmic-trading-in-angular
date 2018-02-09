@@ -17,7 +17,7 @@ export class PortfolioViewComponent implements AfterViewInit {
 
   @ViewChild(PortfolioTableComponent)
   private portfolioTableComponent: PortfolioTableComponent;
-  
+
   portfolioData: Holding[];
 
   constructor(
@@ -26,6 +26,10 @@ export class PortfolioViewComponent implements AfterViewInit {
 
   ngAfterViewInit() {
     this.refresh();
+  }
+
+  addCart(holding: Holding) {
+
   }
 
   close(reason: string) {
