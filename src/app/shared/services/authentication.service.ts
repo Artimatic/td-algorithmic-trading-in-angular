@@ -67,8 +67,8 @@ export class AuthenticationService {
 
     return this.http.get('/api/portfolio', options)
       .map((response: Response) => {
-        this.myAccount = response;
-        return response.json().results[0];
+        this.myAccount = response.json().results[0];
+        return this.myAccount;
       });
   }
 

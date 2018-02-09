@@ -29,7 +29,7 @@ export class PortfolioService {
             .map((response: Response) => response.json());
     }
 
-    sell(holding: Holding, quantity: number, price: number): Observable<Holding[]> {
+    sell(holding: Holding, quantity: number, price: number): Observable<any> {
         let headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.token });
         let options = new RequestOptions({ headers: headers });
         let body = {
@@ -40,9 +40,9 @@ export class PortfolioService {
             "price": price
         };
 
-        return this.http.post('/api/portfolio/positions', body, options)
+        return this.http.post('/api/portfolio/sell', body, options)
             .map((response: Response) => {
-                return response.json().results;
+                return response.json();
             });
     }
 }

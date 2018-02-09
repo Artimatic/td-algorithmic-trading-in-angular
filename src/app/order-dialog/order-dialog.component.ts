@@ -5,6 +5,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 import { Holding } from '../shared/models';
 import { PortfolioService } from '../shared/services/portfolio.service';
+import { PortfolioTableComponent } from '../portfolio-table/portfolio-table.component';
 
 @Component({
   selector: 'app-order-dialog',
@@ -21,8 +22,8 @@ export class OrderDialogComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) public data: Holding,
     private portfolioService: PortfolioService) {
     this.options = fb.group({
-      'quantity': ['', Validators.min(0)],
-      'price': ['', Validators.min(0)],
+      'quantity': [this.data.quantity, Validators.min(0)],
+      'price': [this.data.realtime_price, Validators.min(0)],
     });
   }
 
@@ -31,8 +32,15 @@ export class OrderDialogComponent implements OnInit {
 
   sell() {
     this.loading = true;
-    console.log('data: ', this.data, this.options.value);
-    this.loading = false;
+    this.portfolioService.sell(this.data, this.options.value.quantity, this.options.value.price).subscribe(
+      response => {
+        this.snackBar.open("Success");
+        this.loading = false;
+      },
+      error => {
+        this.snackBar.open("Unknown error");
+        this.loading = false;
+      });
   }
 
 }

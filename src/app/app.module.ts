@@ -70,7 +70,8 @@ import { OrderDialogComponent } from './order-dialog/order-dialog.component';
   ],
   entryComponents: [
     ChartDialogComponent,
-    LoginDialogComponent
+    LoginDialogComponent,
+    OrderDialogComponent
   ],
   imports: [
     BrowserModule,
