@@ -1,4 +1,19 @@
 <button mat-icon-button (click)="refresh()">
-    <mat-icon>autorenew</mat-icon>
-  </button>
-<app-portfolio-table></app-portfolio-table>
+  <mat-icon>autorenew</mat-icon>
+</button>
+<button mat-icon-button (click)="sidenav.open()">
+  <mat-icon>add_shopping_cart</mat-icon>
+</button>
+<mat-sidenav-container class="example-container" (backdropClick)="close('backdrop')">
+  <mat-sidenav #sidenav (keydown.escape)="close('escape')" disableClose>
+    <p>
+      <button mat-icon-button (click)="close('toggle button')">
+        <mat-icon>backspace</mat-icon>
+      </button>
+    </p>
+  </mat-sidenav>
+  <mat-sidenav-content>
+
+    <app-portfolio-table></app-portfolio-table>
+  </mat-sidenav-content>
+</mat-sidenav-container>

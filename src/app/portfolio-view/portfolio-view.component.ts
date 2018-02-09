@@ -1,5 +1,7 @@
 import { AfterViewInit, ViewChild } from '@angular/core';
 import { Component, OnInit } from '@angular/core';
+import {MatSidenav} from '@angular/material/sidenav';
+
 import { PortfolioService } from '../shared/services/portfolio.service';
 import { Holding } from '../shared/models';
 import { PortfolioTableComponent } from '../portfolio-table/portfolio-table.component';
@@ -11,9 +13,12 @@ import { AuthenticationService } from '../shared/services/authentication.service
   styleUrls: ['./portfolio-view.component.css']
 })
 export class PortfolioViewComponent implements AfterViewInit {
-  portfolioData: Holding[];
+  @ViewChild('sidenav') sidenav: MatSidenav;
+
   @ViewChild(PortfolioTableComponent)
   private portfolioTableComponent: PortfolioTableComponent;
+  
+  portfolioData: Holding[];
 
   constructor(
     private portfolioService: PortfolioService,
@@ -21,6 +26,10 @@ export class PortfolioViewComponent implements AfterViewInit {
 
   ngAfterViewInit() {
     this.refresh();
+  }
+
+  close(reason: string) {
+    this.sidenav.close();
   }
 
   refresh() {
