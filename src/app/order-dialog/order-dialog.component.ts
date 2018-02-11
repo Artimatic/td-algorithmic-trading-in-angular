@@ -19,28 +19,50 @@ export class OrderDialogComponent implements OnInit {
     fb: FormBuilder,
     public snackBar: MatSnackBar,
     public dialogRef: MatDialogRef<OrderDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: Holding,
+    @Inject(MAT_DIALOG_DATA) public data: {holding: Holding, side: string},
     private portfolioService: PortfolioService) {
     this.options = fb.group({
-      'quantity': [this.data.quantity, Validators.min(0)],
-      'price': [this.data.realtime_price, Validators.min(0)],
+      'quantity': [this.data.holding.quantity, Validators.min(0)],
+      'price': [this.data.holding.realtime_price, Validators.min(0)],
     });
   }
 
   ngOnInit() {
+    this.data.holding
   }
 
   sell() {
     this.loading = true;
-    this.portfolioService.sell(this.data, this.options.value.quantity, this.options.value.price).subscribe(
+    this.portfolioService.sell(this.data.holding, this.options.value.quantity, this.options.value.price).subscribe(
       response => {
-        this.snackBar.open("Success");
+        this.snackBar.open("Sell order sent");
         this.loading = false;
       },
       error => {
         this.snackBar.open("Unknown error");
         this.loading = false;
       });
+  }
+
+  buy() {
+    this.loading = true;
+    this.portfolioService.buy(this.data.holding, 1, this.options.value.price).subscribe(
+      response => {
+        this.snackBar.open("Buy order sent");
+        this.loading = false;
+      },
+      error => {
+        this.snackBar.open("Unknown error");
+        this.loading = false;
+      });
+  }
+
+  order() {
+    if (this.data.side === 'Buy') {
+      this.buy();
+    } if (this.data.side === 'Sell') {
+      this.sell();
+    }
   }
 
 }

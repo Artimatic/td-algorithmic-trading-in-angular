@@ -12,7 +12,7 @@
       <mat-header-cell *matHeaderCellDef>Symbol</mat-header-cell>
       <mat-cell *matCellDef="let row">
         {{ row.symbol }}
-        <button mat-button color="primary">BUY</button>
+        <button mat-button color="primary" (click)="buy(row)">BUY</button>
       </mat-cell>
     </ng-container>
 

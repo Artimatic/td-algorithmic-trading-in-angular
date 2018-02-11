@@ -40,7 +40,19 @@ export class PortfolioTableComponent implements OnInit {
     let dialogRef = this.dialog.open(OrderDialogComponent, {
       width: '500px',
       height: '500px',
-      data: row
+      data: {holding: row, side: 'Sell'}
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('Closed dialog', result);
+    });
+  }
+
+  buy(row: Holding): void {
+    let dialogRef = this.dialog.open(OrderDialogComponent, {
+      width: '500px',
+      height: '500px',
+      data: {holding: row, side: 'Buy'}
     });
 
     dialogRef.afterClosed().subscribe(result => {

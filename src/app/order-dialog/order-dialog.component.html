@@ -1,11 +1,14 @@
 <mat-card class="example-card">
   <mat-card-header>
     <div mat-card-avatar class="example-header-image"></div>
-    <mat-card-title>{{data.symbol}}</mat-card-title>
-    <mat-card-subtitle>{{data.name}}</mat-card-subtitle>
+    <mat-card-title>{{data.side}}</mat-card-title>
+    <mat-card-subtitle>{{data.holding.symbol}}</mat-card-subtitle>
   </mat-card-header>
   <mat-card-content>
-    <form class="example-container" [formGroup]="options" (ngSubmit)="sell()">
+      <p>
+          {{data.holding.name}}
+        </p>
+    <form class="example-container" [formGroup]="options" (ngSubmit)="order()">
       <mat-form-field>
         <input matInput type="number" placeholder="Quantity" formControlName="quantity" min="0">
       </mat-form-field>
@@ -21,7 +24,7 @@
         <mat-spinner></mat-spinner>
       </div>
       <span *ngIf="!loading">
-        <button mat-raised-button (click)="sell()">Submit</button>
+        <button mat-raised-button (click)="order()">Submit</button>
       </span>
     </div>
   </mat-card-actions>
