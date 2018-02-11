@@ -27,3 +27,11 @@ export let getResources = (request, response) => {
 export let sell = (request, response) => {
   PortfolioController.sell(request, response);
 }
+
+export let buy = (request, response) => {
+  PortfolioController.sell(request, response);
+}
+
+export let getInstruments = (request, response) => {
+  PortfolioController.getInstruments(request, response);
+}

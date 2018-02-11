@@ -78,6 +78,26 @@ class PortfolioController extends BaseController {
         .catch((err) => BaseController.requestErrorHandler(response, err));
     }
   }
+
+  buy(request, response) {
+    if (_.isEmpty(request.headers.authorization) || _.isEmpty(request.body)) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    }
+    else {
+      PortfolioService.sell(request.body.account, request.headers.authorization.replace('Bearer ', ''), request.body.url, request.body.symbol, request.body.quantity, request.body.price, response)
+        .then((data) => BaseController.requestGetSuccessHandler(response, data))
+        .catch((err) => BaseController.requestErrorHandler(response, err));
+    }
+  }
+
+  getInstruments(request, response) {
+    if (_.isEmpty(request.body)) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    }
+    else {
+      PortfolioService.getInstruments(request.body.symbol, response);
+    }
+  }
 }
 
 module.exports.PortfolioController = new PortfolioController();

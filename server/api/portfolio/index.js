@@ -10,5 +10,7 @@ router.post('/mfa', handler.mfaLogin);
 router.post('/logout', handler.logout);
 router.post('/resources', handler.getResources);
 router.post('/sell', handler.sell);
+router.post('/buy', handler.sell);
+router.post('/instruments', handler.sell);
 
 module.exports = router;
