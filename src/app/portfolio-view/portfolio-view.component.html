@@ -10,9 +10,25 @@
       <button mat-icon-button (click)="close('toggle button')">
         <mat-icon>backspace</mat-icon>
       </button>
+      <mat-list>
+        <h3 mat-subheader>Buys</h3>
+        <mat-list-item *ngFor="let buy of cartService.buyOrders">
+          <mat-icon mat-list-icon>folder</mat-icon>
+          <h4 mat-line>{{buy.holding.symbol}}</h4>
+          <p mat-line> {{buy.quantity}} </p>
+          <p mat-line> {{buy.price}} </p>
+        </mat-list-item>
+        <mat-divider></mat-divider>
+        <h3 mat-subheader>Sells</h3>
+        <mat-list-item *ngFor="let note of notes">
+          <mat-icon mat-list-icon>note</mat-icon>
+          <h4 mat-line>{{note.name}}</h4>
+          <p mat-line> {{note.updated | date}} </p>
+        </mat-list-item>
+      </mat-list>
     </p>
   </mat-sidenav>
   <mat-sidenav-content>
-    <app-portfolio-table (addCart)="addCart($event)">      ></app-portfolio-table>
+    <app-portfolio-table (addCart)="addCart($event)"></app-portfolio-table>
   </mat-sidenav-content>
 </mat-sidenav-container>

@@ -26,6 +26,8 @@ import {
   MatInputModule,
   MatSnackBarModule,
   MatTabsModule,
+  MatListModule,
+  MatChipsModule,
 } from '@angular/material';
 
 import {FlexLayoutModule} from '@angular/flex-layout';
@@ -48,6 +50,7 @@ import { PortfolioViewComponent } from './portfolio-view/portfolio-view.componen
 import { InstrumentPipe } from './shared/pipes/instrument.pipe';
 import { CartComponent } from './cart/cart.component';
 import { OrderDialogComponent } from './order-dialog/order-dialog.component';
+import { CartService } from './shared/services/cart.service';
 
 
 @NgModule({
@@ -102,11 +105,14 @@ import { OrderDialogComponent } from './order-dialog/order-dialog.component';
     MatInputModule,
     MatSnackBarModule,
     MatTabsModule,
+    MatListModule,
+    MatChipsModule,
   ],
   providers: [
     BacktestService,
     AuthenticationService,
     PortfolioService,
+    CartService
   ],
   bootstrap: [AppComponent]
 })

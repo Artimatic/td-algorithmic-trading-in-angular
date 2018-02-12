@@ -6,6 +6,8 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Holding } from '../shared/models';
 import { PortfolioService } from '../shared/services/portfolio.service';
 import { PortfolioTableComponent } from '../portfolio-table/portfolio-table.component';
+import { CartService } from '../shared/services/cart.service';
+import { Order } from '../shared/models/order';
 
 @Component({
   selector: 'app-order-dialog',
@@ -15,12 +17,14 @@ import { PortfolioTableComponent } from '../portfolio-table/portfolio-table.comp
 export class OrderDialogComponent implements OnInit {
   options: FormGroup;
   loading: boolean = false;
+  chipColor: string;
   constructor(
     fb: FormBuilder,
     public snackBar: MatSnackBar,
     public dialogRef: MatDialogRef<OrderDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: {holding: Holding, side: string},
-    private portfolioService: PortfolioService) {
+    @Inject(MAT_DIALOG_DATA) public data: { holding: Holding, side: string },
+    private portfolioService: PortfolioService,
+    private cartService: CartService) {
     this.options = fb.group({
       'quantity': [this.data.holding.quantity, Validators.min(0)],
       'price': [this.data.holding.realtime_price, Validators.min(0)],
@@ -29,6 +33,11 @@ export class OrderDialogComponent implements OnInit {
 
   ngOnInit() {
     this.data.holding
+    if (this.data.side === 'Sell') {
+      this.chipColor = 'warn';
+    } else if (this.data.side === 'Buy') {
+      this.chipColor = 'primary';
+    }
   }
 
   sell() {
@@ -46,7 +55,7 @@ export class OrderDialogComponent implements OnInit {
 
   buy() {
     this.loading = true;
-    this.portfolioService.buy(this.data.holding, 1, this.options.value.price).subscribe(
+    this.portfolioService.buy(this.data.holding, this.options.value.quantity, this.options.value.price).subscribe(
       response => {
         this.snackBar.open("Buy order sent");
         this.loading = false;
@@ -65,4 +74,38 @@ export class OrderDialogComponent implements OnInit {
     }
   }
 
+  addSellOrder() {
+    let order: Order = {
+      holding: this.data.holding,
+      quantity: this.options.value.quantity,
+      price: this.options.value.price,
+      submitted: false,
+      pending: false,
+      side: 'Sell'
+    };
+
+    this.cartService.addToCart(order);
+  }
+
+  addBuyOrder() {
+    let order: Order = {
+      holding: this.data.holding,
+      quantity: this.options.value.quantity,
+      price: this.options.value.price,
+      submitted: false,
+      pending: false,
+      side: 'Buy'
+    };
+
+    this.cartService.addToCart(order);
+  }
+
+  addToCart() {
+    if (this.data.side === 'Buy') {
+      this.addBuyOrder();
+    } if (this.data.side === 'Sell') {
+      this.addSellOrder();
+    }
+    this.snackBar.open("Order added to cart");
+  }
 }

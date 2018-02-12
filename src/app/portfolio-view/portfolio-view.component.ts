@@ -6,6 +6,7 @@ import { PortfolioService } from '../shared/services/portfolio.service';
 import { Holding } from '../shared/models';
 import { PortfolioTableComponent } from '../portfolio-table/portfolio-table.component';
 import { AuthenticationService } from '../shared/services/authentication.service';
+import { CartService } from '../shared/services/cart.service';
 
 @Component({
   selector: 'app-portfolio-view',
@@ -19,10 +20,35 @@ export class PortfolioViewComponent implements AfterViewInit {
   private portfolioTableComponent: PortfolioTableComponent;
 
   portfolioData: Holding[];
+  folders = [
+    {
+      name: 'Photos',
+      updated: new Date('1/1/16'),
+    },
+    {
+      name: 'Recipes',
+      updated: new Date('1/17/16'),
+    },
+    {
+      name: 'Work',
+      updated: new Date('1/28/16'),
+    }
+  ];
+  notes = [
+    {
+      name: 'Vacation Itinerary',
+      updated: new Date('2/20/16'),
+    },
+    {
+      name: 'Kitchen Remodel',
+      updated: new Date('1/18/16'),
+    }
+  ];
 
   constructor(
     private portfolioService: PortfolioService,
-    private authenticationService: AuthenticationService) { }
+    private authenticationService: AuthenticationService,
+    private cartService: CartService) { }
 
   ngAfterViewInit() {
     this.refresh();
