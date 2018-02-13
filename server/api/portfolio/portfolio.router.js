@@ -29,7 +29,7 @@ export let sell = (request, response) => {
 }
 
 export let buy = (request, response) => {
-  PortfolioController.sell(request, response);
+  PortfolioController.buy(request, response);
 }
 
 export let getInstruments = (request, response) => {

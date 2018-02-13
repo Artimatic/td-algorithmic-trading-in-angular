@@ -84,7 +84,7 @@ class PortfolioController extends BaseController {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     }
     else {
-      PortfolioService.sell(request.body.account, request.headers.authorization.replace('Bearer ', ''), request.body.url, request.body.symbol, request.body.quantity, request.body.price, response)
+      PortfolioService.buy(request.body.account, request.headers.authorization.replace('Bearer ', ''), request.body.url, request.body.symbol, request.body.quantity, request.body.price, response)
         .then((data) => BaseController.requestGetSuccessHandler(response, data))
         .catch((err) => BaseController.requestErrorHandler(response, err));
     }
