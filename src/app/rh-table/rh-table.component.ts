@@ -7,8 +7,10 @@ import 'rxjs/add/observable/merge';
 import { MatDialog, MatDialogRef, MatTableDataSource } from '@angular/material';
 import * as moment from 'moment';
 
-import { BacktestService, Stock, AlgoParam } from '../shared';
+import { BacktestService, Stock, AlgoParam, PortfolioService } from '../shared';
 import { ChartDialogComponent } from '../chart-dialog';
+import { OrderDialogComponent } from '../order-dialog/order-dialog.component';
+import { Holding } from '../shared/models';
 
 @Component({
   selector: 'app-rh-table',
@@ -22,7 +24,10 @@ export class RhTableComponent implements OnInit, OnChanges {
   dataSource: RhDataSource | null;
   recommendation: string = '';
 
-  constructor(private algo: BacktestService, public dialog: MatDialog) { }
+  constructor(
+    private algo: BacktestService,
+    public dialog: MatDialog,
+    private portfolioService: PortfolioService) { }
 
   ngOnInit() {
     this.dataSource = new RhDataSource(this.rhDatabase);
@@ -73,8 +78,36 @@ export class RhTableComponent implements OnInit, OnChanges {
     this.dataSource.filter = `${this.recommendation}`;
   }
 
-}
+  sell(row: Stock): void {
+    this.order(row, 'Sell');
+  }
 
+  buy(row: Stock): void {
+    this.order(row, 'Buy');
+  }
+
+  order(row: Stock, side: string): void {
+    this.portfolioService.getInstruments(row.stock).subscribe((response) => {
+      let instruments = response.results[0];
+      let newHolding: Holding = {
+        instrument: instruments.url,
+        symbol: instruments.symbol,
+        name: instruments.name,
+        realtime_price: row.lastPrice
+      };
+
+      let dialogRef = this.dialog.open(OrderDialogComponent, {
+        width: '500px',
+        height: '500px',
+        data: { holding: newHolding, side: side }
+      });
+      
+      dialogRef.afterClosed().subscribe(result => {
+        console.log('Closed dialog', result);
+      });
+    });
+  }
+}
 
 export class RhDatabase {
   dataChange: BehaviorSubject<Stock[]> = new BehaviorSubject<Stock[]>([]);

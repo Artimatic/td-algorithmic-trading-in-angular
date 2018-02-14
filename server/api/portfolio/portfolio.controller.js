@@ -91,6 +91,7 @@ class PortfolioController extends BaseController {
   }
 
   getInstruments(request, response) {
+    console.log('body: ', request.body);
     if (_.isEmpty(request.body)) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     }

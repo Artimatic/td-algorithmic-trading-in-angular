@@ -26,7 +26,7 @@ export class OrderDialogComponent implements OnInit {
     private portfolioService: PortfolioService,
     private cartService: CartService) {
     this.options = fb.group({
-      'quantity': [this.data.holding.quantity, Validators.min(0)],
+      'quantity': ['', Validators.min(0)],
       'price': [this.data.holding.realtime_price, Validators.min(0)],
     });
   }
@@ -44,11 +44,13 @@ export class OrderDialogComponent implements OnInit {
     this.loading = true;
     this.portfolioService.sell(this.data.holding, this.options.value.quantity, this.options.value.price).subscribe(
       response => {
-        this.snackBar.open("Sell order sent");
+        this.snackBar.open('Sell order sent', 'Close', {
+          duration: 2000,
+        });
         this.loading = false;
       },
       error => {
-        this.snackBar.open("Unknown error");
+        this.snackBar.open('Unknown error');
         this.loading = false;
       });
   }
@@ -57,11 +59,13 @@ export class OrderDialogComponent implements OnInit {
     this.loading = true;
     this.portfolioService.buy(this.data.holding, this.options.value.quantity, this.options.value.price).subscribe(
       response => {
-        this.snackBar.open("Buy order sent");
+        this.snackBar.open('Buy order sent', 'Close', {
+          duration: 2000,
+        });
         this.loading = false;
       },
       error => {
-        this.snackBar.open("Unknown error");
+        this.snackBar.open('Unknown error');
         this.loading = false;
       });
   }

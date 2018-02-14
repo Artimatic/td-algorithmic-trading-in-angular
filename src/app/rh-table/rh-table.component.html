@@ -13,19 +13,27 @@
       <!-- Position Column -->
       <ng-container matColumnDef="stock">
         <mat-header-cell *matHeaderCellDef mat-sort-header> Stock </mat-header-cell>
-        <mat-cell *matCellDef="let element"> {{element.stock}} </mat-cell>
+        <mat-cell *matCellDef="let element"> {{element.stock}}
+          <button mat-icon-button (click)="product.load(element)">
+            <mat-icon>show_chart</mat-icon>
+          </button>
+        </mat-cell>
       </ng-container>
 
       <!-- Name Column -->
       <ng-container matColumnDef="totalReturns">
         <mat-header-cell *matHeaderCellDef mat-sort-header> Returns </mat-header-cell>
-        <mat-cell *matCellDef="let element"> {{element.totalReturns}}% </mat-cell>
+        <mat-cell *matCellDef="let element"> {{element.totalReturns}}%
+          <button mat-button color="primary" (click)="buy(element)">BUY</button>
+        </mat-cell>
       </ng-container>
 
       <!-- Weight Column -->
       <ng-container matColumnDef="lastVolume">
         <mat-header-cell *matHeaderCellDef mat-sort-header> Last Volume </mat-header-cell>
-        <mat-cell *matCellDef="let element"> {{element.lastVolume | number}} </mat-cell>
+        <mat-cell *matCellDef="let element"> {{element.lastVolume | number}}
+          <button mat-button color="warn" (click)="sell(element)">SELL</button>
+        </mat-cell>
       </ng-container>
 
       <!-- Color Column -->
@@ -45,7 +53,7 @@
       </ng-container>
 
       <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedColumns;" (click)="product.load(row)">
+      <mat-row *matRowDef="let element; columns: displayedColumns;">
       </mat-row>
     </mat-table>
   </div>

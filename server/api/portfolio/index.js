@@ -11,6 +11,6 @@ router.post('/logout', handler.logout);
 router.post('/resources', handler.getResources);
 router.post('/sell', handler.sell);
 router.post('/buy', handler.buy);
-router.post('/instruments', handler.sell);
+router.post('/instruments', handler.instruments);
 
 module.exports = router;

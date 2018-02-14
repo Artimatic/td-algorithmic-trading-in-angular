@@ -147,7 +147,7 @@ class PortfolioService {
   }
 
   getInstruments(symbol, reply) {
-    Robinhood.instruments(symbol, (error, response, body) => {
+    Robinhood().instruments(symbol, (error, response, body) => {
       if (error) {
         console.error(error);
         reply.status(500).send(error);

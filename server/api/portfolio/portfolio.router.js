@@ -32,6 +32,6 @@ export let buy = (request, response) => {
   PortfolioController.buy(request, response);
 }
 
-export let getInstruments = (request, response) => {
+export let instruments = (request, response) => {
   PortfolioController.getInstruments(request, response);
 }
