@@ -1,12 +1,13 @@
 import { AfterViewInit, ViewChild } from '@angular/core';
 import { Component, OnInit } from '@angular/core';
-import {MatSidenav} from '@angular/material/sidenav';
+import { MatSidenav } from '@angular/material/sidenav';
 
 import { PortfolioService } from '../shared/services/portfolio.service';
 import { Holding } from '../shared/models';
 import { PortfolioTableComponent } from '../portfolio-table/portfolio-table.component';
 import { AuthenticationService } from '../shared/services/authentication.service';
 import { CartService } from '../shared/services/cart.service';
+import { Order } from '../shared/models/order';
 
 @Component({
   selector: 'app-portfolio-view',
@@ -54,12 +55,20 @@ export class PortfolioViewComponent implements AfterViewInit {
     this.refresh();
   }
 
-  addCart(holding: Holding) {
-
-  }
-
   close(reason: string) {
     this.sidenav.close();
+  }
+
+  deleteSellOrder(deleteOrder: Order) {
+    this.cartService.deleteSell(deleteOrder);
+  }
+
+  deleteBuyOrder(deleteOrder: Order) {
+    this.cartService.deleteBuy(deleteOrder);
+  }
+
+  submitOrders() {
+    this.cartService.submitOrders();
   }
 
   refresh() {

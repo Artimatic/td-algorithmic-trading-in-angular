@@ -44,7 +44,7 @@ export class OrderDialogComponent implements OnInit {
     this.loading = true;
     this.portfolioService.sell(this.data.holding, this.options.value.quantity, this.options.value.price).subscribe(
       response => {
-        this.snackBar.open('Sell order sent', 'Close', {
+        this.snackBar.open('Sell order sent', 'Dismiss', {
           duration: 2000,
         });
         this.loading = false;
@@ -59,7 +59,7 @@ export class OrderDialogComponent implements OnInit {
     this.loading = true;
     this.portfolioService.buy(this.data.holding, this.options.value.quantity, this.options.value.price).subscribe(
       response => {
-        this.snackBar.open('Buy order sent', 'Close', {
+        this.snackBar.open('Buy order sent', 'Dismiss', {
           duration: 2000,
         });
         this.loading = false;
