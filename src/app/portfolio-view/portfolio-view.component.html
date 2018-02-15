@@ -22,7 +22,8 @@
           <mat-divider *ngIf="buy.pending==true"></mat-divider>
           <mat-icon mat-list-icon *ngIf="buy.submitted==true">check_circle</mat-icon>
         </mat-list-item>
-
+        Total: ${{cartService.buyTotal}}
+        <mat-divider></mat-divider>
         <h3 mat-subheader>Sells</h3>
         <mat-list-item *ngFor="let sell of cartService.sellOrders">
           <button mat-icon-button (click)="deleteSellOrder(sell)">
@@ -34,6 +35,7 @@
           <mat-divider *ngIf="sell.pending==true"></mat-divider>
           <mat-icon mat-list-icon *ngIf="sell.submitted==true">check_circle</mat-icon>
         </mat-list-item>
+        Total: ${{cartService.sellTotal}}
       </mat-list>
       <button mat-button color="primary" (click)="submitOrders()">Submit Orders</button>
     </p>
