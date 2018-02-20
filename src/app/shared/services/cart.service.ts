@@ -78,7 +78,9 @@ export class CartService {
             sell.submitted = true;
           },
           error => {
-            this.snackBar.open('Unknown error');
+            this.snackBar.open('Unknown error', 'Dismiss', {
+              duration: 2000,
+            });
             sell.pending = false;
             sell.submitted = false;
           });
@@ -97,7 +99,9 @@ export class CartService {
             buy.submitted = true;
           },
           error => {
-            this.snackBar.open('Unknown error');
+            this.snackBar.open('Unknown error', 'Dismiss', {
+              duration: 2000,
+            });
             buy.pending = false;
             buy.submitted = false;
           });

@@ -1,6 +1,9 @@
 const moment = require('moment');
 const algebra = require("algebra.js");
 const math = require("mathjs");
+import {
+  ma, dma, ema, sma, wma
+} from 'moving-averages';
 
 import * as errors from '../../components/errors/baseErrors';
 import { QuoteService } from './../quote/quote.service';
@@ -112,7 +115,6 @@ class ReversionService {
       })
       .then(decisions => {
         let MAs = this.executeMeanReversion(this.calcMA, quotes, shortTerm, longTerm);
-
         yesterdayDecision = MAs[MAs.length - 1];
 
         let recommendedDifference = DecisionService.findDeviation(MAs, fromDate);
@@ -143,23 +145,12 @@ class ReversionService {
       });
   }
 
-  runThirtyNinetyMeanReversion(historicalData, fn) {
-    return historicalData.reduce(function (accumulator, value, idx) {
-      if (idx >= 90) {
-        let decision = fn(historicalData, idx, idx - 90);
-
-        accumulator.push(decision);
-      }
-      return accumulator;
-    }, []);
-  }
-
   executeMeanReversion(calculationFn, quotes, shortTerm, longTerm) {
     return quotes.reduce(function (accumulator, value, idx) {
       if (idx >= longTerm) {
-        let decision = calculationFn(quotes, idx, idx - longTerm, shortTerm, longTerm);
+        let movingAverages = calculationFn(quotes, idx, idx - longTerm, shortTerm, longTerm);
 
-        accumulator.push(decision);
+        accumulator.push(movingAverages);
       }
       return accumulator;
     }, []);
@@ -178,32 +169,57 @@ class ReversionService {
 
     let data = quotes.slice(startIdx, endIdx + 1);
 
-    return data.reduceRight((accumulator, currentValue, currentIdx) => {
-      accumulator.total += currentValue.close;
-      switch (currentIdx) {
-        case data.length - shortTerm:
-          accumulator.shortTermAvg = accumulator.total / shortTerm;
-          accumulator.shortTermTotal = accumulator.total;
-          break;
-        case data.length - longTerm:
-          accumulator.longTermAvg = accumulator.total / longTerm;
-          accumulator.longTermTotal = accumulator.total;
-          accumulator.deviation = DecisionService.calculatePercentDifference(accumulator.shortTermAvg, accumulator.longTermAvg);
-          accumulator.trending = DecisionService.getTrendLogic(accumulator.close, accumulator.shortTermAvg, accumulator.longTermAvg, trend);
-          break;
+    let date          = moment(data[data.length - 1].date).valueOf(),
+        trending      = null,
+        deviation     = null,
+        shortTermAvg  = null,
+        longTermAvg   = null,
+        close         = data[data.length - 1].close,
+        total         = 0;
+
+    for (let i = data.length - 1; i > 0; i--) {
+      let current = data[i];
+      total += current.close;
+      if (i === (data.length - shortTerm)) {
+        shortTermAvg = total / shortTerm;
+      } else if (i === (data.length - longTerm)) {
+        longTermAvg = total / longTerm;
+        deviation = DecisionService.calculatePercentDifference(shortTermAvg, longTermAvg);
+        trending = DecisionService.getTrendLogic(close, shortTermAvg, longTermAvg, trend);
+        break;
       }
+    }
+
+    return {
+      date,
+      trending,
+      deviation,
+      shortTermAvg,
+      longTermAvg,
+      close
+    };
+  }
+
+  getClosingPrices(history) {
+    let lastQuote = moment().add('days', 1);
+    return history.reduce((accumulator, current, currentIdx) => {
+      if (moment(current.date).isBefore(lastQuote)) {
+        accumulator.push(current.close);
+      }
+      lastQuote = current;
       return accumulator;
-    }, {
-        date: moment(data[data.length - 1].date).valueOf(),
-        trending: null,
-        deviation: null,
-        shortTermAvg: null,
-        longTermAvg: null,
-        close: data[data.length - 1].close,
-        shortTermTotal: 0,
-        longTermTotal: 0,
-        total: 0
-      });
+    }, []);
+  }
+
+  getMA(items, shortRangeStart, shortRangeEnd, longRangeStart, longRangeEnd) {
+    let lastQuote = moment().add('days', 1);
+    return history.reduce((accumulator, current, currentIdx) => {
+      if (moment(current.date).isBefore(lastQuote)) {
+        accumulator.push(current.close);
+      }
+      lastQuote = current;
+      return accumulator;
+    }, []);
   }
 
   getDecisionData(historicalData, endIdx, startIdx) {

@@ -39,12 +39,16 @@ export class LoginDialogComponent implements OnInit {
             this.dialogRef.close();
           } else {
             // login failed
-            this.snackBar.open('Username or password is incorrect');
+            this.snackBar.open('Username or password is incorrect', 'Dismiss', {
+              duration: 2000,
+            });
             this.loading = false;
           }
         },
         error => {
-          this.snackBar.open('Username or password or Code is incorrect');
+          this.snackBar.open('Username or password or Code is incorrect', 'Dismiss', {
+            duration: 2000,
+          });
           this.loading = false;
         });
     } else {
@@ -55,7 +59,9 @@ export class LoginDialogComponent implements OnInit {
             this.loading = false;
           } else {
             // login failed
-            this.snackBar.open('Username or password is incorrect');
+            this.snackBar.open('Username or password is incorrect', 'Dismiss', {
+              duration: 2000,
+            });
             this.loading = false;
           }
         },

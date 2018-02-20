@@ -173,7 +173,9 @@ export class ProductViewComponent implements OnInit {
       },
       err => {
         this.resolving = false;
-        this.snackBar.open('There was an error.');
+        this.snackBar.open('There was an error.', 'Dismiss', {
+          duration: 2000,
+        });
       }
       );
   }

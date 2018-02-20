@@ -50,7 +50,9 @@ export class OrderDialogComponent implements OnInit {
         this.loading = false;
       },
       error => {
-        this.snackBar.open('Unknown error');
+        this.snackBar.open('Unknown error', 'Dismiss', {
+          duration: 2000,
+        });
         this.loading = false;
       });
   }
@@ -65,7 +67,9 @@ export class OrderDialogComponent implements OnInit {
         this.loading = false;
       },
       error => {
-        this.snackBar.open('Unknown error');
+        this.snackBar.open('Unknown error', 'Dismiss', {
+          duration: 2000,
+        });
         this.loading = false;
       });
   }
@@ -110,6 +114,8 @@ export class OrderDialogComponent implements OnInit {
     } if (this.data.side === 'Sell') {
       this.addSellOrder();
     }
-    this.snackBar.open("Order added to cart");
+    this.snackBar.open("Order added to cart", 'Dismiss', {
+      duration: 2000,
+    });
   }
 }
