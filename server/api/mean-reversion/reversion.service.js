@@ -211,15 +211,26 @@ class ReversionService {
     }, []);
   }
 
-  getMA(items, shortRangeStart, shortRangeEnd, longRangeStart, longRangeEnd) {
-    let lastQuote = moment().add('days', 1);
-    return history.reduce((accumulator, current, currentIdx) => {
-      if (moment(current.date).isBefore(lastQuote)) {
-        accumulator.push(current.close);
+  getMA(history, rangeStart, rangeEnd) {
+    let date          = moment(history[history.length - 1].date).valueOf(),
+        close         = history[history.length - 1].close,
+        total         = 0,
+        averages      = {};
+
+    for (let i = history.length - 1; i > 0; i--) {
+      let current = history[i],
+          period = history.length - i;
+      total += current.close;
+      if (period >= rangeStart && period <= rangeEnd) {
+        averages[period] = total / period;
       }
-      lastQuote = current;
-      return accumulator;
-    }, []);
+    }
+
+    return {
+      date,
+      averages,
+      close
+    };
   }
 
   getDecisionData(historicalData, endIdx, startIdx) {

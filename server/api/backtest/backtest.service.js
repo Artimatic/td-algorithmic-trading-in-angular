@@ -65,7 +65,7 @@ class BacktestService {
 
               let averagesRange = { shortTerm: i, longTerm: j };
               let returns = DecisionService.calcReturns(MAs, recommendedDifference, startDate);
-              console.log("returns: ", returns.totalReturns);
+              console.log("returns: ", returns.totalReturns, "trades: ", returns.totalTrades);
 
               snapshots.push({ ...averagesRange, ...returns, recommendedDifference });
             }
