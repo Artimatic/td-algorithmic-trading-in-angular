@@ -8,6 +8,8 @@ import { PortfolioTableComponent } from '../portfolio-table/portfolio-table.comp
 import { AuthenticationService } from '../shared/services/authentication.service';
 import { CartService } from '../shared/services/cart.service';
 import { Order } from '../shared/models/order';
+import { OrderRow } from '../shared/models/order-row';
+import { MatSnackBar } from '@angular/material';
 
 @Component({
   selector: 'app-portfolio-view',
@@ -21,35 +23,12 @@ export class PortfolioViewComponent implements AfterViewInit {
   private portfolioTableComponent: PortfolioTableComponent;
 
   portfolioData: Holding[];
-  folders = [
-    {
-      name: 'Photos',
-      updated: new Date('1/1/16'),
-    },
-    {
-      name: 'Recipes',
-      updated: new Date('1/17/16'),
-    },
-    {
-      name: 'Work',
-      updated: new Date('1/28/16'),
-    }
-  ];
-  notes = [
-    {
-      name: 'Vacation Itinerary',
-      updated: new Date('2/20/16'),
-    },
-    {
-      name: 'Kitchen Remodel',
-      updated: new Date('1/18/16'),
-    }
-  ];
 
   constructor(
     private portfolioService: PortfolioService,
     private authenticationService: AuthenticationService,
-    private cartService: CartService) { }
+    private cartService: CartService,
+    public snackBar: MatSnackBar) { }
 
   ngAfterViewInit() {
     this.refresh();
@@ -78,5 +57,31 @@ export class PortfolioViewComponent implements AfterViewInit {
           this.portfolioTableComponent.setData(result);
         });
     })
+  }
+
+  import(file) {
+    file.forEach((row: OrderRow) => {
+      this.portfolioService.getInstruments(row.symbol).subscribe((response) => {
+        let instruments = response.results[0];
+        let newHolding: Holding = {
+          instrument: instruments.url,
+          symbol: instruments.symbol,
+          name: instruments.name
+        };
+
+        let order: Order = {
+          holding: newHolding,
+          quantity: row.quantity,
+          price: row.price,
+          submitted: false,
+          pending: false,
+          side: row.side
+        };
+        this.cartService.addToCart(order);
+      },
+        (error) => {this.snackBar.open("Error getting instruments", 'Dismiss', {
+          duration: 2000,
+        });});
+    });
   }
 }

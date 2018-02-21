@@ -6,7 +6,7 @@ export interface Holding {
     instrument: string,
     symbol: string,
     name?: string,
-    realtime_price: number,
+    realtime_price?: number,
     Volume?: number,
     PERatio?: number,
     realtime_chg_percent?: number,
