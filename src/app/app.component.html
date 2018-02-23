@@ -11,5 +11,12 @@
       </div>
     </div>
   </mat-toolbar>
-  <router-outlet></router-outlet>
+</mat-sidenav-container>
+<mat-sidenav-container>
+  <mat-sidenav mode="side" opened>
+    <app-login></app-login>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <router-outlet></router-outlet>
+  </mat-sidenav-content>
 </mat-sidenav-container>
