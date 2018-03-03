@@ -9,6 +9,7 @@ import { BacktestService } from '../shared/services/backtest.service';
 import { Account } from '../shared/account';
 import { AuthenticationService } from '../shared/services/authentication.service';
 import { OrderDialogComponent } from '../order-dialog/order-dialog.component';
+import { ExcelService } from '../shared/services/excel-service.service';
 @Component({
   selector: 'app-portfolio-table',
   templateUrl: './portfolio-table.component.html',

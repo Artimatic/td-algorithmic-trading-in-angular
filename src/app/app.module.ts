@@ -51,6 +51,7 @@ import { InstrumentPipe } from './shared/pipes/instrument.pipe';
 import { CartComponent } from './cart/cart.component';
 import { OrderDialogComponent } from './order-dialog/order-dialog.component';
 import { CartService } from './shared/services/cart.service';
+import { ExcelService } from './shared/services/excel-service.service';
 
 
 @NgModule({
@@ -112,7 +113,8 @@ import { CartService } from './shared/services/cart.service';
     BacktestService,
     AuthenticationService,
     PortfolioService,
-    CartService
+    CartService,
+    ExcelService
   ],
   bootstrap: [AppComponent]
 })

@@ -14,6 +14,7 @@
 <button mat-icon-button (click)="sidenav.open()">
   <mat-icon>add_shopping_cart</mat-icon>
 </button>
+<button mat-raised-button (click)="exportPortfolio()">Export Portfolio</button>
 <mat-sidenav-container class="example-container" (backdropClick)="close('backdrop')">
   <mat-sidenav #sidenav (keydown.escape)="close('escape')" disableClose>
     <p>

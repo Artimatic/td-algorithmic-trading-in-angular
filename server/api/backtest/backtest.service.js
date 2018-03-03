@@ -10,8 +10,8 @@ import * as errors from '../../components/errors/baseErrors';
 import { start } from 'repl';
 
 const config = {
-  shortTerm: [5, 200],
-  longTerm: [7, 333]
+  shortTerm: [3, 85],
+  longTerm: [5, 85]
 }
 
 let startTime;
@@ -68,6 +68,14 @@ class BacktestService {
               console.log("returns: ", returns.totalReturns, "trades: ", returns.totalTrades);
 
               snapshots.push({ ...averagesRange, ...returns, recommendedDifference });
+
+              if (i%3 === 0 && j===longTerm[longTerm.length-1]-1) {
+                fs.writeFile(`${ticker}_analysis_${startDate}-${currentDate}_${i}.csv`, json2csv({ data: snapshots, fields: fields }), function (err) {
+                  if (err) throw err;
+                  console.log('file saved');
+                });
+                snapshots.length = 0;
+              }
             }
           }
         }
@@ -80,9 +88,8 @@ class BacktestService {
 
         const fields = ['shortTerm', 'longTerm', 'totalReturns', 'totalTrades', 'recommendedDifference'];
 
-        const csv = json2csv({ data: snapshots, fields: fields });
-
-        fs.writeFile(`${ticker}_analysis_${currentDate}-${startDate}.csv`, csv, function (err) {
+        
+        fs.writeFile(`${ticker}_analysis_${currentDate}-${startDate}.csv`, json2csv({ data: snapshots, fields: fields }), function (err) {
           if (err) throw err;
           console.log('file saved');
         });

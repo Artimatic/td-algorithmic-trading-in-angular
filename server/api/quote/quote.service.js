@@ -77,6 +77,32 @@ class QuoteService {
       });
   }
 
+  getRawData(ticker, toDate, fromDate) {
+    let { to, from } = checkDate(toDate, fromDate);
+
+    let diff = Math.abs(to.diff(from, 'days'));
+
+    let intervalOption;
+
+    if (diff <= 5) {
+      intervalOption = '5d';
+    } else if (diff <= 30) {
+      intervalOption = '1mo';
+    } else if (diff <= 90) {
+      intervalOption = '3mo';
+    } else if (diff <= 365) {
+      intervalOption = '1y';
+    } else if (diff <= 730) {
+      intervalOption = '2y';
+    } else if (diff <= 1825) {
+      intervalOption = '5y';
+    } else {
+      intervalOption = '10y';
+    }
+
+    return api.getHistoricalData(ticker, '1d', intervalOption);
+  }
+
   getDataQuandl(ticker, startDate, endDate) {
     let { start, end } = checkDate(startDate, endDate);
 

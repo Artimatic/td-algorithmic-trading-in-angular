@@ -1,6 +1,7 @@
 import { AfterViewInit, ViewChild } from '@angular/core';
 import { Component, OnInit } from '@angular/core';
 import { MatSidenav } from '@angular/material/sidenav';
+import * as moment from 'moment';
 
 import { PortfolioService } from '../shared/services/portfolio.service';
 import { Holding } from '../shared/models';
@@ -10,6 +11,7 @@ import { CartService } from '../shared/services/cart.service';
 import { Order } from '../shared/models/order';
 import { OrderRow } from '../shared/models/order-row';
 import { MatSnackBar } from '@angular/material';
+import { ExcelService } from '../shared/services/excel-service.service';
 
 @Component({
   selector: 'app-portfolio-view',
@@ -28,6 +30,7 @@ export class PortfolioViewComponent implements AfterViewInit {
     private portfolioService: PortfolioService,
     private authenticationService: AuthenticationService,
     private cartService: CartService,
+    private excelService: ExcelService,
     public snackBar: MatSnackBar) { }
 
   ngAfterViewInit() {
@@ -83,5 +86,10 @@ export class PortfolioViewComponent implements AfterViewInit {
           duration: 2000,
         });});
     });
+  }
+
+  exportPortfolio() {
+    let today = moment().format('MM-DD-YY');
+    this.excelService.exportAsExcelFile(this.portfolioTableComponent.dataSource.data,`portfolio_${today}`)
   }
 }

@@ -10,3 +10,7 @@ exports.quote = function (req, res, next) {
 exports.currentQuote = function (req, res, next) {
   QuoteController.getCurrentQuote(req, res);
 };
+
+exports.rawQuote = function (req, res, next) {
+  QuoteController.getRawData(req, res);
+};
