@@ -19,9 +19,13 @@ export class PortfolioTableComponent implements OnInit {
   @Output() addCart = new EventEmitter<Holding>();
 
   portfolioData: Holding[];
-  displayedColumns = ['name', 'symbol', 'gainz', 'quantity', 'average_buy_price', 'realtime_price', 'Volume', 'PERatio', 'realtime_chg_percent', 'diversification', 'created_at', 'updated_at'];
+  displayedColumns = ['name', 'symbol',
+    'gainz', 'quantity',
+    'average_buy_price', 'realtime_price',
+    'Volume', 'PERatio', 'realtime_chg_percent',
+    'diversification', 'created_at', 'updated_at'];
   dataSource = new MatTableDataSource();
-  panelOpenState: boolean = false;
+  panelOpenState = false;
 
   tickers = [];
   resultsLength = 0;
@@ -38,10 +42,10 @@ export class PortfolioTableComponent implements OnInit {
   }
 
   sell(row: Holding): void {
-    let dialogRef = this.dialog.open(OrderDialogComponent, {
+    const dialogRef = this.dialog.open(OrderDialogComponent, {
       width: '500px',
       height: '500px',
-      data: {holding: row, side: 'Sell'}
+      data: { holding: row, side: 'Sell' }
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -50,10 +54,10 @@ export class PortfolioTableComponent implements OnInit {
   }
 
   buy(row: Holding): void {
-    let dialogRef = this.dialog.open(OrderDialogComponent, {
+    const dialogRef = this.dialog.open(OrderDialogComponent, {
       width: '500px',
       height: '500px',
-      data: {holding: row, side: 'Buy'}
+      data: { holding: row, side: 'Buy' }
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -67,7 +71,7 @@ export class PortfolioTableComponent implements OnInit {
     this.dataSource.data.map((holding: Holding) => {
       return this.portfolioService.getResource(holding.instrument)
         .subscribe(result => {
-          holding.symbol = result.symbol
+          holding.symbol = result.symbol;
           holding.name = result.name;
           this.tickers.push(holding.symbol);
           this.getCurrentPrice();
@@ -81,7 +85,7 @@ export class PortfolioTableComponent implements OnInit {
       this.backtestService.getPrice({ tickers: this.tickers })
         .subscribe(result => {
           this.dataSource.data.map((holding: Holding) => {
-            let myQuote = result.query.results.quote.find(quote => {
+            const myQuote = result.query.results.quote.find(quote => {
               return quote.symbol === holding.symbol;
             });
             if (myQuote) {
