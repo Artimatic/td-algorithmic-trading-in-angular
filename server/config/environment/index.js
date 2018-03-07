@@ -1,5 +1,6 @@
 const path = require('path');
 const _ = require('lodash');
+import credentials from './credentials';
 
 function requiredProcessEnv(name) {
   if(!process.env[name]) {
@@ -19,8 +20,8 @@ var all = {
   // Server port
   port: process.env.PORT || 9000,
   yahoo: {
-    key: 'dj0yJmk9TUdJOGpUZms0OUl2JmQ9WVdrOVlVdFFWazF3TkdzbWNHbzlNQS0tJnM9Y29uc3VtZXJzZWNyZXQmeD04Mw--',
-    secret: 'a46cf2610a81dceb6a9306fda66dcfc767e76055'
+    key: credentials.yahoo.key,
+    secret: credentials.yahoo.secret
   } 
 };
 
