@@ -40,12 +40,9 @@ class BacktestService {
     let { end, start } = this.getDateRanges(currentDate, startDate);
     console.log(start, " to ", end);
 
-    return QuoteService.getLocalQuotes(ticker, end, start)
+    return QuoteService.getDailyQuotes(ticker, end, start)
       .then(data => {
         return data;
-      })
-      .catch((error) => {
-        return QuoteService.getData(ticker, end, start);
       });
   }
 

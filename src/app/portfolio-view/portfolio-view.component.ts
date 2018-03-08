@@ -59,20 +59,20 @@ export class PortfolioViewComponent implements AfterViewInit {
         .subscribe(result => {
           this.portfolioTableComponent.setData(result);
         });
-    })
+    });
   }
 
   import(file) {
     file.forEach((row: OrderRow) => {
       this.portfolioService.getInstruments(row.symbol).subscribe((response) => {
-        let instruments = response.results[0];
-        let newHolding: Holding = {
+        const instruments = response.results[0];
+        const newHolding: Holding = {
           instrument: instruments.url,
           symbol: instruments.symbol,
           name: instruments.name
         };
 
-        let order: Order = {
+        const order: Order = {
           holding: newHolding,
           quantity: row.quantity,
           price: row.price,
@@ -82,14 +82,16 @@ export class PortfolioViewComponent implements AfterViewInit {
         };
         this.cartService.addToCart(order);
       },
-        (error) => {this.snackBar.open("Error getting instruments", 'Dismiss', {
-          duration: 2000,
-        });});
+        (error) => {
+          this.snackBar.open('Error getting instruments', 'Dismiss', {
+            duration: 2000,
+          });
+        });
     });
   }
 
   exportPortfolio() {
-    let today = moment().format('MM-DD-YY');
-    this.excelService.exportAsExcelFile(this.portfolioTableComponent.dataSource.data,`portfolio_${today}`)
+    const today = moment().format('MM-DD-YY');
+    this.excelService.exportAsExcelFile(this.portfolioTableComponent.dataSource.data, `portfolio_${today}`);
   }
 }

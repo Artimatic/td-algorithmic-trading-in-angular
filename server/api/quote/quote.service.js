@@ -31,30 +31,12 @@ function checkDate(toDate, fromDate) {
 }
 
 class QuoteService {
-  getData(ticker, toDate, fromDate) {
-    let { to, from } = checkDate(toDate, fromDate);
-
-    let diff = Math.abs(to.diff(from, 'days'));
-
-    let intervalOption;
-
-    if (diff <= 5) {
-      intervalOption = '5d';
-    } else if (diff <= 30) {
-      intervalOption = '1mo';
-    } else if (diff <= 90) {
-      intervalOption = '3mo';
-    } else if (diff <= 365) {
-      intervalOption = '1y';
-    } else if (diff <= 730) {
-      intervalOption = '2y';
-    } else if (diff <= 1825) {
-      intervalOption = '5y';
-    } else {
-      intervalOption = '10y';
-    }
-
-    return api.getHistoricalData(ticker, '1d', intervalOption)
+  /*
+  * Interval: ["2m", "1d"]
+  * Range: ["1d","5d","1mo","3mo","6mo","1y","2y","5y","10y","ytd","max"]
+  */
+  getData(ticker, interval = '1d', range) {
+    return api.getHistoricalData(ticker, interval, range)
       .then((data) => {
         let quotes = _.get(data, 'chart.result[0].indicators.quote[0]', []);
         let timestamps = _.get(data, 'chart.result[0].timestamp', []);
@@ -77,30 +59,8 @@ class QuoteService {
       });
   }
 
-  getRawData(ticker, toDate, fromDate) {
-    let { to, from } = checkDate(toDate, fromDate);
-
-    let diff = Math.abs(to.diff(from, 'days'));
-
-    let intervalOption;
-
-    if (diff <= 5) {
-      intervalOption = '5d';
-    } else if (diff <= 30) {
-      intervalOption = '1mo';
-    } else if (diff <= 90) {
-      intervalOption = '3mo';
-    } else if (diff <= 365) {
-      intervalOption = '1y';
-    } else if (diff <= 730) {
-      intervalOption = '2y';
-    } else if (diff <= 1825) {
-      intervalOption = '5y';
-    } else {
-      intervalOption = '10y';
-    }
-
-    return api.getHistoricalData(ticker, '1d', intervalOption);
+  getRawData(ticker, interval = '1d', range) {
+    return api.getHistoricalData(ticker, interval, range);
   }
 
   getDataQuandl(ticker, startDate, endDate) {
@@ -128,7 +88,7 @@ class QuoteService {
     })
   }
 
-  getLocalQuotes(ticker, toDate, fromDate) {
+  getDailyQuotes(ticker, toDate, fromDate) {
     let { to, from } = checkDate(toDate, fromDate);
 
     const diff = Math.abs(to.diff(from, 'days'));
@@ -146,6 +106,32 @@ class QuoteService {
       .then((data) => {
         let arr = JSON.parse(data);
         return arr;
+      })
+      .catch(() => {
+        console.log('catchsss');
+        let { to, from } = checkDate(toDate, fromDate);
+
+        let diff = Math.abs(to.diff(from, 'days'));
+    
+        let range;
+    
+        if (diff <= 5) {
+          range = '5d';
+        } else if (diff <= 30) {
+          range = '1mo';
+        } else if (diff <= 90) {
+          range = '3mo';
+        } else if (diff <= 365) {
+          range = '1y';
+        } else if (diff <= 730) {
+          range = '2y';
+        } else if (diff <= 1825) {
+          range = '5y';
+        } else {
+          range = '10y';
+        }
+    
+        return this.getData(ticker, '1d', range);
       });
   }
 

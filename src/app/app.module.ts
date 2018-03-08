@@ -52,6 +52,7 @@ import { CartComponent } from './cart/cart.component';
 import { OrderDialogComponent } from './order-dialog/order-dialog.component';
 import { CartService } from './shared/services/cart.service';
 import { ExcelService } from './shared/services/excel-service.service';
+import { BollingerBandComponent } from './bollinger-band/bollinger-band.component';
 
 
 @NgModule({
@@ -71,6 +72,7 @@ import { ExcelService } from './shared/services/excel-service.service';
     InstrumentPipe,
     CartComponent,
     OrderDialogComponent,
+    BollingerBandComponent,
   ],
   entryComponents: [
     ChartDialogComponent,

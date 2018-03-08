@@ -3,8 +3,6 @@
 </button>
 <div *ngIf=authenticated>
   <mat-progress-bar mode="buffer" color="accent"></mat-progress-bar>
-  <button mat-icon-button (click)="logout()">
-    <mat-icon>exit_to_app</mat-icon>
-  </button>
+  <button mat-raised-button color="warn" (click)="logout()">LOGGED IN</button>
   <mat-progress-bar mode="buffer" color="accent"></mat-progress-bar>
 </div>

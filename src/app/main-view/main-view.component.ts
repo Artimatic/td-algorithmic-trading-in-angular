@@ -27,5 +27,4 @@ export class MainViewComponent implements OnInit {
   isAuthenticated() {
     return this.authenticationService.isAuthenticated();
   }
-
 }

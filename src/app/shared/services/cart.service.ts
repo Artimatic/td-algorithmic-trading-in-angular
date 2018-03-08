@@ -7,8 +7,8 @@ import { MatSnackBar } from '@angular/material';
 export class CartService {
   sellOrders: Order[] = [];
   buyOrders: Order[] = [];
-  sellTotal: number = 0;
-  buyTotal: number = 0;
+  sellTotal = 0;
+  buyTotal = 0;
 
   constructor(
     private portfolioService: PortfolioService,
@@ -22,7 +22,7 @@ export class CartService {
       });
     } else if (order.side.toLowerCase() === 'buy') {
       this.buyOrders.push(order);
-      this.snackBar.open('Buy order sent', 'Dismiss', {
+      this.snackBar.open('Buy order added to cart', 'Dismiss', {
         duration: 2000,
       });
     }
@@ -30,7 +30,7 @@ export class CartService {
   }
 
   deleteSell(deleteOrder: Order) {
-    let index = this.sellOrders.findIndex((order) => {
+    const index = this.sellOrders.findIndex((order) => {
       if (deleteOrder.price === order.price
         && deleteOrder.holding.symbol === order.holding.symbol
         && deleteOrder.quantity === order.quantity) {
@@ -43,7 +43,7 @@ export class CartService {
   }
 
   deleteBuy(deleteOrder: Order) {
-    let index = this.buyOrders.findIndex((order) => {
+    const index = this.buyOrders.findIndex((order) => {
       if (deleteOrder.price === order.price
         && deleteOrder.holding.symbol === order.holding.symbol
         && deleteOrder.quantity === order.quantity) {
