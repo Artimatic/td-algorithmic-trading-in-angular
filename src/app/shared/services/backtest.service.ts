@@ -28,4 +28,9 @@ export class BacktestService {
     return this.http.post(`${BASE_URL}api/quote/current`, data, {})
       .map(r => r.json());
   }
+
+  getIntraday(data: any): Observable<any> {
+    return this.http.post(`${BASE_URL}api/intraday`, data, {})
+      .map(r => r.json());
+  }
 }

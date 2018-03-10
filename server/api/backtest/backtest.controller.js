@@ -42,6 +42,10 @@ class BacktestController extends BaseController {
     }
   }
 
+  getIndicator(request, response) {
+    BaseController.requestGetSuccessHandler(response, BacktestService.getIndicator())
+  }
+
 }
 
 module.exports.BacktestController = new BacktestController();

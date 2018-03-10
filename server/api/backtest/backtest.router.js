@@ -8,3 +8,6 @@ export let getMeanReversionChart = (request, response) => {
   BacktestController.getMeanReversionChart(request, response);
 }
 
+export let indicator = (request, response) => {
+  BacktestController.getIndicator(request, response);
+}

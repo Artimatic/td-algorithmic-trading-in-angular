@@ -35,8 +35,8 @@ class QuoteService {
   * Interval: ["2m", "1d"]
   * Range: ["1d","5d","1mo","3mo","6mo","1y","2y","5y","10y","ytd","max"]
   */
-  getData(ticker, interval = '1d', range) {
-    return api.getHistoricalData(ticker, interval, range)
+  getData(symbol, interval = '1d', range) {
+    return api.getHistoricalData(symbol, interval, range)
       .then((data) => {
         let quotes = _.get(data, 'chart.result[0].indicators.quote[0]', []);
         let timestamps = _.get(data, 'chart.result[0].timestamp', []);
@@ -44,7 +44,7 @@ class QuoteService {
 
         timestamps.forEach((val, idx) => {
           let quote = {
-            symbol: ticker,
+            symbol: symbol,
             date: moment.unix(val).toISOString(),
             open: quotes.open[idx],
             high: quotes.high[idx],
@@ -59,11 +59,11 @@ class QuoteService {
       });
   }
 
-  getRawData(ticker, interval = '1d', range) {
-    return api.getHistoricalData(ticker, interval, range);
+  getRawData(symbol, interval = '1d', range) {
+    return api.getHistoricalData(symbol, interval, range);
   }
 
-  getDataQuandl(ticker, startDate, endDate) {
+  getDataQuandl(symbol, startDate, endDate) {
     let { start, end } = checkDate(startDate, endDate);
 
     if (!start.isValid() || !end.isValid()) {
@@ -71,7 +71,7 @@ class QuoteService {
     }
 
     let quote = quandl
-      .dataset(ticker)
+      .dataset(symbol)
       .start(start.toDate())
       .end(end.toDate())
       .descending(true)
@@ -88,7 +88,7 @@ class QuoteService {
     })
   }
 
-  getDailyQuotes(ticker, toDate, fromDate) {
+  getDailyQuotes(symbol, toDate, fromDate) {
     let { to, from } = checkDate(toDate, fromDate);
 
     const diff = Math.abs(to.diff(from, 'days'));
@@ -96,7 +96,7 @@ class QuoteService {
     to = to.format('YYYY-MM-DD');
     from = from.format('YYYY-MM-DD');
 
-    const query = `http://localhost:8080/backtest?ticker=${ticker}&to=${to}&from=${from}`;
+    const query = `http://localhost:8080/backtest?ticker=${symbol}&to=${to}&from=${from}`;
     const options = {
       method: 'POST',
       uri: query
@@ -108,13 +108,12 @@ class QuoteService {
         return arr;
       })
       .catch(() => {
-        console.log('catchsss');
         let { to, from } = checkDate(toDate, fromDate);
 
         let diff = Math.abs(to.diff(from, 'days'));
-    
+
         let range;
-    
+
         if (diff <= 5) {
           range = '5d';
         } else if (diff <= 30) {
@@ -130,14 +129,21 @@ class QuoteService {
         } else {
           range = '10y';
         }
-    
-        return this.getData(ticker, '1d', range);
+
+        return this.getData(symbol, '1d', range);
       });
   }
 
-  getLastPrice(tickers) {
-    return api
-      .getRealtimeQuotes(tickers.join(','));
+  getLastPrice(symbols) {
+    return api.getRealtimeQuotes(symbols.join(','));
+  }
+
+  getIntradayData(symbol) {
+    return api.getIntradayChartData(symbol, '2m', true);
+  }
+
+  getCompanySummary(symbol) {
+    return api.quoteSummary(symbol);
   }
 }
 

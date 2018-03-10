@@ -53,6 +53,8 @@ import { OrderDialogComponent } from './order-dialog/order-dialog.component';
 import { CartService } from './shared/services/cart.service';
 import { ExcelService } from './shared/services/excel-service.service';
 import { BollingerBandComponent } from './bollinger-band/bollinger-band.component';
+import { RealtimeChartComponent } from './realtime-chart/realtime-chart.component';
+import { BbCardComponent } from './bb-card/bb-card.component';
 
 
 @NgModule({
@@ -73,6 +75,8 @@ import { BollingerBandComponent } from './bollinger-band/bollinger-band.componen
     CartComponent,
     OrderDialogComponent,
     BollingerBandComponent,
+    RealtimeChartComponent,
+    BbCardComponent,
   ],
   entryComponents: [
     ChartDialogComponent,

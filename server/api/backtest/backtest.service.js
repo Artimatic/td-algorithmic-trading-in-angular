@@ -7,7 +7,7 @@ import { ReversionService } from './../mean-reversion/reversion.service';
 import * as DecisionService from './../mean-reversion/reversion-decision.service';
 
 import * as errors from '../../components/errors/baseErrors';
-import { start } from 'repl';
+import * as tulind from 'tulind';
 
 const config = {
   shortTerm: [3, 85],
@@ -18,6 +18,17 @@ let startTime;
 let endTime;
 
 class BacktestService {
+  getIndicator() {
+    console.log("Tulip Indicators version is:");
+    console.log(tulind.version);
+    var open = [4, 5, 5, 5, 4, 4, 4, 6, 6, 6];
+    var high = [9, 7, 8, 7, 8, 8, 7, 7, 8, 7];
+    var low = [1, 2, 3, 3, 2, 1, 2, 2, 2, 3];
+    var close = [4, 5, 6, 6, 6, 5, 5, 5, 6, 4];
+    var volume = [123, 232, 212, 232, 111, 232, 212, 321, 232, 321];
+    return tulind.indicators;
+  }
+
   evaluateStrategyAll(ticker, end, start) {
     console.log('Executing: ', ticker, new Date());
     startTime = moment();
@@ -28,7 +39,7 @@ class BacktestService {
     let current = moment(currentDate),
       start = moment(startDate);
 
-      let days = current.diff(start, 'days') + 1;
+    let days = current.diff(start, 'days') + 1;
 
     return {
       end: current.format(),
@@ -66,7 +77,7 @@ class BacktestService {
 
               snapshots.push({ ...averagesRange, ...returns, recommendedDifference });
 
-              if (i%3 === 0 && j===longTerm[longTerm.length-1]-1) {
+              if (i % 3 === 0 && j === longTerm[longTerm.length - 1] - 1) {
                 fs.writeFile(`${ticker}_analysis_${startDate}-${currentDate}_${i}.csv`, json2csv({ data: snapshots, fields: fields }), function (err) {
                   if (err) throw err;
                   console.log('file saved');
@@ -85,7 +96,7 @@ class BacktestService {
 
         const fields = ['shortTerm', 'longTerm', 'totalReturns', 'totalTrades', 'recommendedDifference'];
 
-        
+
         fs.writeFile(`${ticker}_analysis_${currentDate}-${startDate}.csv`, json2csv({ data: snapshots, fields: fields }), function (err) {
           if (err) throw err;
           console.log('file saved');
