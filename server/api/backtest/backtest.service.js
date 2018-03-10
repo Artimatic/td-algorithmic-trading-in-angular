@@ -29,6 +29,10 @@ class BacktestService {
     return tulind.indicators;
   }
 
+  getBBands(real, period, stddev) {
+      return tulind.indicators.bbands.indicator([real], [period, stddev]);
+  }
+
   evaluateStrategyAll(ticker, end, start) {
     console.log('Executing: ', ticker, new Date());
     startTime = moment();

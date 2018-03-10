@@ -11,3 +11,7 @@ export let getMeanReversionChart = (request, response) => {
 export let indicator = (request, response) => {
   BacktestController.getIndicator(request, response);
 }
+
+export let bollingerBands = (request, response) => {
+  BacktestController.getBollingerBands(request, response);
+}
