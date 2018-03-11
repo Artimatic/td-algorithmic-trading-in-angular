@@ -16,12 +16,11 @@ export class BbCardComponent implements OnInit {
   constructor(private backtestService: BacktestService) { }
 
   ngOnInit() {
+    console.log('order: ', JSON.stringify(this.order));
     this.load();
   }
 
   load(): void {
-    const data = [71, 78, 39, 66];
-
     this.chart = new Chart({
       chart: {
         type: 'spline',

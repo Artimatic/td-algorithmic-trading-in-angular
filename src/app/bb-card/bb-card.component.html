@@ -1,21 +1,18 @@
 <mat-card *ngIf="order">
   <div class="toolbar-content" fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px" fxLayoutGap.xs="0">
-    <div fxFlex="90%">
+    <div fxFlex="10%">
       <mat-card-header>
         <mat-card-title>{{order.holding.symbol}}</mat-card-title>
         <mat-card-subtitle>{{order.quantity}} share</mat-card-subtitle>
         <p mat-line>${{order.price}} </p>
       </mat-card-header>
     </div>
-    <div fxFlex="10%">
-      
+    <div fxFlex="90%">
+      <div [chart]="chart"></div>
     </div>
   </div>
-  <mat-card-content>
-  </mat-card-content>
   <mat-card-actions>
     <button mat-button>LIKE</button>
     <button mat-button>SHARE</button>
   </mat-card-actions>
 </mat-card>
-<div [chart]="chart"></div>

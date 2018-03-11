@@ -1,13 +1,4 @@
-<mat-list>
-  <h3 mat-subheader>Buys</h3>
-  <app-bb-card></app-bb-card>
-  <app-bb-card></app-bb-card>
-  <app-bb-card></app-bb-card>
-  <app-bb-card></app-bb-card>
-  <app-bb-card></app-bb-card>
-  <app-bb-card></app-bb-card>
-  <app-bb-card></app-bb-card>
-  <mat-list-item *ngFor="let buy of cartService.buyOrders">
-    <app-bb-card [order]="buy"></app-bb-card>
-  </mat-list-item>
-</mat-list>
+<h3 mat-subheader>Buys</h3>
+<div *ngFor="let buy of cartService.buyOrders">
+  <app-bb-card [order]="buy"></app-bb-card>
+</div>
