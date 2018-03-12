@@ -1,6 +1,8 @@
 import { Component, OnInit, EventEmitter, Input } from '@angular/core';
 import { Chart } from 'angular-highcharts';
 import { DataPoint, SeriesOptions } from 'highcharts';
+import * as Highcharts from 'highcharts';
+
 import * as moment from 'moment';
 
 import { BacktestService } from '../shared';
@@ -23,11 +25,16 @@ export class BbCardComponent implements OnInit {
   }
 
   load(): void {
+    Highcharts.setOptions({
+      global: {
+        useUTC: false
+      }
+    });
     const requestBody = {
       symbol: this.order.holding.symbol
     };
 
-    this.backtestService.getIntraday(requestBody)
+    this.backtestService.getTestData(requestBody)
       .map(data => {
         var ohlc = [],
           volume = [],
@@ -38,7 +45,7 @@ export class BbCardComponent implements OnInit {
 
         for (i; i < dataLength; i += 1) {
           ohlc.push([
-            timestamps[i], // the date
+            moment.unix(timestamps[i]).valueOf(), // the date
             quotes.open[i], // open
             quotes.high[i], // high
             quotes.low[i], // low
@@ -46,8 +53,8 @@ export class BbCardComponent implements OnInit {
           ]);
 
           volume.push([
-            timestamps[i], // the date
-            timestamps[i].volume // the volume
+            moment.unix(timestamps[i]).valueOf(), // the date
+            quotes.volume[i] // the volume
           ]);
         }
 
@@ -57,15 +64,22 @@ export class BbCardComponent implements OnInit {
             spacingTop: 20,
             spacingBottom: 20
           },
+          title: {
+            text: this.order.holding.symbol
+          },
+          subtitle: {
+            text: this.order.holding.name
+          },
           xAxis: {
             type: 'datetime',
             dateTimeLabelFormats: {
-              month: '%e. %b',
-              year: '%b'
+              second: '%H:%M:%S',
+              minute: '%H:%M',
+              hour: '%H:%M'
             },
             labels: {
               formatter: function () {
-                return moment(this.value).format('MMM D');
+                return moment(this.value).format('hh:mm');
               }
             }
           },
@@ -79,6 +93,13 @@ export class BbCardComponent implements OnInit {
               text: null
             },
             tickPositions: [0]
+          },
+          tooltip: {
+            crosshairs: true,
+            shared: true,
+            formatter: function () {
+              return moment(this.x).format('hh:mm') + '<br><b>Price:</b> ' + this.y + '<br>' + this.points[0].key;
+            }
           },
           series: [{
             name: this.order.holding.symbol,
@@ -95,15 +116,12 @@ export class BbCardComponent implements OnInit {
             spacingBottom: 20
           },
           xAxis: {
+            type: 'datetime',
             labels: {
-              enabled: false
-            },
-            title: {
-              text: null
-            },
-            startOnTick: false,
-            endOnTick: false,
-            tickPositions: []
+              formatter: function () {
+                return moment(this.value).format('hh:mm');
+              }
+            }
           },
           yAxis: {
             endOnTick: false,
@@ -115,6 +133,13 @@ export class BbCardComponent implements OnInit {
               text: null
             },
             tickPositions: [0]
+          },
+          tooltip: {
+            crosshairs: true,
+            shared: true,
+            formatter: function () {
+              return moment(this.x).format('hh:mm') + '<br><b>Volume:</b> ' + this.y + '<br>' + this.points[0].key;
+            }
           },
           series: [
             {
