@@ -34,6 +34,11 @@ export class BacktestService {
       .map(r => r.json());
   }
 
+  getBBands(data: any): Observable<any> {
+    return this.http.post(`${BASE_URL}api/backtest/bbands`, data, {})
+      .map(r => r.json());
+  }
+
   getTestData(data: any): Observable<any> {
     return Observable.of({
       'chart': {

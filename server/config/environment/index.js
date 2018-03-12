@@ -1,10 +1,7 @@
 const path = require('path');
 const _ = require('lodash');
 var fs = require('fs');
-var credentials;
-if (fs.existsSync('./credentials')) {
-  credentials = require('./credentials');
-}
+var credentials = require('./credentials');
 
 function requiredProcessEnv(name) {
   if(!process.env[name]) {
@@ -25,7 +22,7 @@ var all = {
   port: process.env.PORT || 9000,
   yahoo: {
     key: _.get(credentials, 'yahoo.key', null),
-    secret: _.get(credentials, 'yahoo.key', null)
+    secret: _.get(credentials, 'yahoo.secret', null)
   }
 };
 

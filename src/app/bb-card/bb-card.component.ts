@@ -1,4 +1,5 @@
 import { Component, OnInit, EventEmitter, Input } from '@angular/core';
+import { Observable } from 'rxjs/Observable';
 import { Chart } from 'angular-highcharts';
 import { DataPoint, SeriesOptions } from 'highcharts';
 import * as Highcharts from 'highcharts';
@@ -36,30 +37,10 @@ export class BbCardComponent implements OnInit {
 
     this.backtestService.getTestData(requestBody)
       .map(data => {
-        var ohlc = [],
-          volume = [],
-          timestamps = data.chart.result[0].timestamp,
-          dataLength = timestamps.length,
-          quotes = data.chart.result[0].indicators.quote[0],
-          i = 0;
-
-        for (i; i < dataLength; i += 1) {
-          ohlc.push([
-            moment.unix(timestamps[i]).valueOf(), // the date
-            quotes.open[i], // open
-            quotes.high[i], // high
-            quotes.low[i], // low
-            quotes.close[i] // close
-          ]);
-
-          volume.push([
-            moment.unix(timestamps[i]).valueOf(), // the date
-            quotes.volume[i] // the volume
-          ]);
-        }
-
         this.chart = new Chart({
           chart: {
+            type: 'spline',
+            zoomType: 'x',
             marginLeft: 40, // Keep all charts left aligned
             spacingTop: 20,
             spacingBottom: 20
@@ -98,14 +79,81 @@ export class BbCardComponent implements OnInit {
             crosshairs: true,
             shared: true,
             formatter: function () {
-              return moment(this.x).format('hh:mm') + '<br><b>Price:</b> ' + this.y + '<br>' + this.points[0].key;
+              return moment(this.x).format('hh:mm') + '<br><b>Price:</b> ' + this.y + '<br>';
+            }
+          },
+          plotOptions: {
+            spline: {
+              marker: {
+                radius: 1,
+                lineColor: '#666666',
+                lineWidth: 1
+              }
+            },
+            series: {
+              marker: {
+                enabled: true
+              }
             }
           },
           series: [{
             name: this.order.holding.symbol,
             id: this.order.holding.symbol,
-            data: ohlc
+            data: []
           }]
+        });
+
+        let ohlc = [],
+          volume = [],
+          timestamps = data.chart.result[0].timestamp,
+          dataLength = timestamps.length,
+          quotes = data.chart.result[0].indicators.quote[0],
+          i = 0;
+
+        let batch = [];
+
+        for (i; i < dataLength; i += 1) {
+          volume.push([
+            moment.unix(timestamps[i]).valueOf(), // the date
+            quotes.volume[i] // the volume
+          ]);
+          // if (i > 80) {
+          //   const body = {
+          //     real: [],
+          //     period: 80,
+          //     stddev: 2
+          //   };
+
+          //   body.real = quotes.close.slice(i - 80, i + 1);
+          //   this.backtestService.getBBands(body)
+          //     .subscribe(response => {
+          //       console.log('bbands: ', response);
+
+          //       this.chart.addPoint({
+          //         x: moment.unix(timestamps[i]).valueOf(), // the date
+          //         y: quotes.close[i] // close
+          //       });
+
+          //     });
+          // } else {
+          //   this.chart.addPoint({
+          //     x: moment.unix(timestamps[i]).valueOf(), // the date
+          //     y: quotes.close[i] // close
+          //   });
+          // }
+          batch.push(Observable.create(() => {
+            this.chart.addPoint({
+              x: moment.unix(timestamps[i]).valueOf(), // the date
+              y: quotes.close[i] // close
+            });
+          }));
+        }
+
+        console.log(batch);
+        // Concat observables
+        Observable.concat(...batch).subscribe({
+          next: v => console.log(v),
+          complete: () => console.log('Complete')
         });
 
         this.volumeChart = new Chart({
