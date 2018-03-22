@@ -15,16 +15,18 @@ export class CartService {
     public snackBar: MatSnackBar) { }
 
   addToCart(order: Order) {
-    if (order.side.toLowerCase() === 'sell') {
-      this.sellOrders.push(order);
-      this.snackBar.open('Sell order added to cart', 'Dismiss', {
-        duration: 2000,
-      });
-    } else if (order.side.toLowerCase() === 'buy') {
-      this.buyOrders.push(order);
-      this.snackBar.open('Buy order added to cart', 'Dismiss', {
-        duration: 2000,
-      });
+    if (order.quantity > 0) {
+      if (order.side.toLowerCase() === 'sell') {
+        this.sellOrders.push(order);
+        this.snackBar.open('Sell order added to cart', 'Dismiss', {
+          duration: 2000,
+        });
+      } else if (order.side.toLowerCase() === 'buy') {
+        this.buyOrders.push(order);
+        this.snackBar.open('Buy order added to cart', 'Dismiss', {
+          duration: 2000,
+        });
+      }
     }
     this.calculateTotals();
   }
@@ -68,7 +70,7 @@ export class CartService {
   submitOrders() {
     this.sellOrders.forEach((sell) => {
       sell.pending = true;
-      if (!sell.submitted) {
+      if (!sell.submitted && sell.quantity > 0) {
         this.portfolioService.sell(sell.holding, sell.quantity, sell.price).subscribe(
           response => {
             this.snackBar.open('Sell order sent', 'Dismiss', {
@@ -89,7 +91,7 @@ export class CartService {
 
     this.buyOrders.forEach((buy) => {
       buy.pending = true;
-      if (!buy.submitted) {
+      if (!buy.submitted && buy.quantity > 0) {
         this.portfolioService.buy(buy.holding, buy.quantity, buy.price).subscribe(
           response => {
             this.snackBar.open('Buy order sent', 'Dismiss', {
