@@ -1,6 +1,10 @@
 const path = require('path');
 const _ = require('lodash');
-import credentials from './credentials';
+var fs = require('fs');
+var credentials;
+if (fs.existsSync('./credentials')) {
+  credentials = require('./credentials');
+}
 
 function requiredProcessEnv(name) {
   if(!process.env[name]) {
@@ -20,9 +24,9 @@ var all = {
   // Server port
   port: process.env.PORT || 9000,
   yahoo: {
-    key: credentials.yahoo.key,
-    secret: credentials.yahoo.secret
-  } 
+    key: _.get(credentials, 'yahoo.key', null),
+    secret: _.get(credentials, 'yahoo.key', null)
+  }
 };
 
 // Export the config object based on the NODE_ENV
