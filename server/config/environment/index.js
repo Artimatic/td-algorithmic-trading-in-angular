@@ -1,7 +1,13 @@
 const path = require('path');
 const _ = require('lodash');
-var fs = require('fs');
-var credentials = require('./credentials');
+const fs = require('fs');
+
+let credentials = {}
+fs.exists('./credentials', function(exists) {
+  if (exists) {
+    credentials = require('./credentials');
+  }
+});
 
 function requiredProcessEnv(name) {
   if(!process.env[name]) {
@@ -12,7 +18,7 @@ function requiredProcessEnv(name) {
 
 // All configurations will extend these options
 // ============================================
-var all = {
+const all = {
   env: process.env.NODE_ENV,
 
   // Root path of server
