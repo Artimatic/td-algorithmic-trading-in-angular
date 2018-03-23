@@ -48,76 +48,16 @@ export class BbCardComponent implements OnInit {
         useUTC: false
       }
     });
+
     const requestBody = {
       symbol: this.order.holding.symbol
     };
-    const data = await this.backtestService.getIntraday(requestBody).toPromise();
+
+    const data = await this.backtestService.getTestData(requestBody).toPromise();
+
     if (data.chart.result[0].timestamp) {
-      this.chart = new Chart({
-        chart: {
-          type: 'spline',
-          zoomType: 'x',
-          marginLeft: 40, // Keep all charts left aligned
-          spacingTop: 20,
-          spacingBottom: 20
-        },
-        title: {
-          text: this.order.holding.symbol
-        },
-        subtitle: {
-          text: this.order.holding.name
-        },
-        xAxis: {
-          type: 'datetime',
-          dateTimeLabelFormats: {
-            second: '%H:%M:%S',
-            minute: '%H:%M',
-            hour: '%H:%M'
-          },
-          labels: {
-            formatter: function () {
-              return moment(this.value).format('hh:mm');
-            }
-          }
-        },
-        yAxis: {
-          endOnTick: false,
-          startOnTick: false,
-          labels: {
-            enabled: false
-          },
-          title: {
-            text: null
-          },
-          tickPositions: [0]
-        },
-        tooltip: {
-          crosshairs: true,
-          shared: true,
-          formatter: function () {
-            return moment(this.x).format('hh:mm') + '<br><b>Price:</b> ' + this.y + '<br>';
-          }
-        },
-        plotOptions: {
-          spline: {
-            marker: {
-              radius: 1,
-              lineColor: '#666666',
-              lineWidth: 1
-            }
-          },
-          series: {
-            marker: {
-              enabled: true
-            }
-          }
-        },
-        series: [{
-          name: this.order.holding.symbol,
-          id: this.order.holding.symbol,
-          data: []
-        }]
-      });
+
+      this.chart = this.initPriceChart(this.order.holding.symbol, this.order.holding.name);
 
       const ohlc = [],
         volume = [],
@@ -146,20 +86,17 @@ export class BbCardComponent implements OnInit {
           const band = await this.getBBand(real);
 
           if (band.length === 3) {
-            const upper = band[0],
+            const upper = band[2],
               mid = band[1],
-              lower = band[2];
+              lower = band[0];
 
-            if (lower.length > 0 && closePrice < lower[lower.length - 1]) {
-              console.log('lower: ', closePrice, lower[lower.length - 1]);
+            if (lower.length > 0 && closePrice < lower[0]) {
               point.marker = {
                 symbol: 'triangle',
                 fillColor: 'green',
                 radius: 5
               };
-            } else if (upper.length > 0 && closePrice > upper[upper.length - 1]) {
-              console.log('upper: ', closePrice, lower[lower.length - 1]);
-
+            } else if (upper.length > 0 && closePrice > upper[0]) {
               point.marker = {
                 symbol: 'triangle-down',
                 fillColor: 'red',
@@ -177,46 +114,119 @@ export class BbCardComponent implements OnInit {
         });
       }
 
-      this.volumeChart = new Chart({
-        chart: {
-          type: 'column',
-          marginLeft: 40, // Keep all charts left aligned
-          spacingTop: 20,
-          spacingBottom: 20
-        },
-        xAxis: {
-          type: 'datetime',
-          labels: {
-            formatter: function () {
-              return moment(this.value).format('hh:mm');
-            }
-          }
-        },
-        yAxis: {
-          endOnTick: false,
-          startOnTick: false,
-          labels: {
-            enabled: false
-          },
-          title: {
-            text: null
-          },
-          tickPositions: [0]
-        },
-        tooltip: {
-          crosshairs: true,
-          shared: true,
-          formatter: function () {
-            return moment(this.x).format('hh:mm') + '<br><b>Volume:</b> ' + this.y + '<br>' + this.points[0].key;
-          }
-        },
-        series: [
-          {
-            name: 'Volume',
-            id: 'volume',
-            data: volume
-          }]
-      });
+      this.volumeChart = this.initVolumeChart('Volume', volume);
     }
+  }
+  initVolumeChart(title, data): Chart {
+    return new Chart({
+      chart: {
+        type: 'column',
+        marginLeft: 40, // Keep all charts left aligned
+        spacingTop: 20,
+        spacingBottom: 20
+      },
+      title: {
+        text: title
+      },
+      xAxis: {
+        type: 'datetime',
+        labels: {
+          formatter: function () {
+            return moment(this.value).format('hh:mm');
+          }
+        }
+      },
+      yAxis: {
+        endOnTick: false,
+        startOnTick: false,
+        labels: {
+          enabled: false
+        },
+        title: {
+          text: null
+        },
+        tickPositions: [0]
+      },
+      tooltip: {
+        crosshairs: true,
+        shared: true,
+        formatter: function () {
+          return moment(this.x).format('hh:mm') + '<br><b>Volume:</b> ' + this.y + '<br>' + this.points[0].key;
+        }
+      },
+      series: [
+        {
+          name: 'Volume',
+          id: 'volume',
+          data: data
+        }]
+    });
+  }
+  initPriceChart(title, subtitle): Chart {
+    return new Chart({
+      chart: {
+        type: 'spline',
+        zoomType: 'x',
+        marginLeft: 40, // Keep all charts left aligned
+        spacingTop: 20,
+        spacingBottom: 20
+      },
+      title: {
+        text: title
+      },
+      subtitle: {
+        text: subtitle
+      },
+      xAxis: {
+        type: 'datetime',
+        dateTimeLabelFormats: {
+          second: '%H:%M:%S',
+          minute: '%H:%M',
+          hour: '%H:%M'
+        },
+        labels: {
+          formatter: function () {
+            return moment(this.value).format('hh:mm');
+          }
+        }
+      },
+      yAxis: {
+        endOnTick: false,
+        startOnTick: false,
+        labels: {
+          enabled: false
+        },
+        title: {
+          text: null
+        },
+        tickPositions: [0]
+      },
+      tooltip: {
+        crosshairs: true,
+        shared: true,
+        formatter: function () {
+          return moment(this.x).format('hh:mm') + '<br><b>Price:</b> ' + this.y + '<br>';
+        }
+      },
+      plotOptions: {
+        spline: {
+          marker: {
+            radius: 1,
+            lineColor: '#666666',
+            lineWidth: 1
+          }
+        },
+        series: {
+          marker: {
+            enabled: true
+          }
+        }
+      },
+      series: [{
+        name: title,
+        id: title,
+        data: []
+      }]
+    });
   }
 }
