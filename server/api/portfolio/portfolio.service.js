@@ -82,6 +82,17 @@ class PortfolioService {
     })();
   }
 
+  getQuote(symbol, reply) {
+    return Robinhood().quote_data(symbol, (error, response, body) => {
+      if (error) {
+        console.error(error);
+        reply.status(500).send(error);
+      } else {
+        reply.status(200).send(body);
+      }
+    });
+  }
+
   sell(account, token, instrumentUrl, symbol, quantity, price, reply) {
     let headers = {
       'Accept': '*/*',
@@ -92,7 +103,7 @@ class PortfolioService {
       'X-Robinhood-API-Version': '1.152.0',
       'User-Agent': 'Robinhood/5.32.0 (com.robinhood.release.Robinhood; build:3814; iOS 10.3.3)',
       'Authorization': `Token ${token}`
-  };
+    };
 
     return request.post({
       uri: apiUrl + 'orders/',
@@ -124,7 +135,7 @@ class PortfolioService {
       'X-Robinhood-API-Version': '1.152.0',
       'User-Agent': 'Robinhood/5.32.0 (com.robinhood.release.Robinhood; build:3814; iOS 10.3.3)',
       'Authorization': `Token ${token}`
-  };
+    };
 
     return request.post({
       uri: apiUrl + 'orders/',

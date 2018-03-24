@@ -1,4 +1,5 @@
-import { Component, OnInit, EventEmitter, Input } from '@angular/core';
+import { Component, OnDestroy, EventEmitter, Input, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/concat';
 import 'rxjs/add/observable/defer';
@@ -7,6 +8,7 @@ import 'rxjs/add/observable/of';
 import 'rxjs/add/operator/concatMap';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/mergeMap';
+import 'rxjs/add/operator/takeWhile';
 
 import { Chart } from 'angular-highcharts';
 import { DataPoint, SeriesOptions } from 'highcharts';
@@ -14,22 +16,39 @@ import * as Highcharts from 'highcharts';
 
 import * as moment from 'moment';
 
-import { BacktestService } from '../shared';
+import { BacktestService, PortfolioService } from '../shared';
 import { Order } from '../shared/models/order';
+import { TimerObservable } from 'rxjs/observable/TimerObservable';
 
 @Component({
   selector: 'app-bb-card',
   templateUrl: './bb-card.component.html',
   styleUrls: ['./bb-card.component.css']
 })
-export class BbCardComponent implements OnInit {
+export class BbCardComponent implements OnDestroy, OnInit {
   @Input() order: Order;
-  chart;
-  volumeChart;
+  chart: Chart;
+  volumeChart: Chart;
+  display: boolean;
+  alive: boolean;
+  interval: number;
+  orders: Order[];
+  firstFormGroup: FormGroup;
+  secondFormGroup: FormGroup;
 
-  constructor(private backtestService: BacktestService) { }
+  constructor(private _formBuilder: FormBuilder, private backtestService: BacktestService, private portfolioService: PortfolioService) {
+    this.display = false;
+    this.alive = true;
+    this.interval = 300000;
+  }
 
   ngOnInit() {
+    this.firstFormGroup = this._formBuilder.group({
+      firstCtrl: ['', Validators.required]
+    });
+    this.secondFormGroup = this._formBuilder.group({
+      secondCtrl: ['', Validators.required]
+    });
   }
 
   async getBBand(real: any[]): Promise<any[]> {
@@ -42,7 +61,20 @@ export class BbCardComponent implements OnInit {
     return await this.backtestService.getBBands(body).toPromise();
   }
 
-  async load() {
+  goLive() {
+    TimerObservable.create(0, this.interval)
+      .takeWhile(() => this.alive)
+      .subscribe(() => {
+        this.portfolioService.getQuote(this.order.holding.symbol)
+          .subscribe((quote) => {
+            if (!this.display) {
+              this.display = true;
+            }
+          });
+      });
+  }
+
+  async play(live) {
     Highcharts.setOptions({
       global: {
         useUTC: false
@@ -56,62 +88,54 @@ export class BbCardComponent implements OnInit {
     const data = await this.backtestService.getTestData(requestBody).toPromise();
 
     if (data.chart.result[0].timestamp) {
-
-      this.chart = this.initPriceChart(this.order.holding.symbol, this.order.holding.name);
-
-      const ohlc = [],
-        volume = [],
-        batch = [],
+      const volume = [],
         timestamps = data.chart.result[0].timestamp,
         dataLength = timestamps.length,
         quotes = data.chart.result[0].indicators.quote[0];
 
-      let i = 0;
+      this.chart = this.initPriceChart(this.order.holding.symbol, this.order.holding.name);
 
-      for (i; i < dataLength; i += 1) {
+      for (let i = 0; i < dataLength; i += 1) {
         const closePrice = quotes.close[i];
-
-        volume.push([
-          moment.unix(timestamps[i]).valueOf(), // the date
-          quotes.volume[i] // the volume
-        ]);
 
         const point: DataPoint = {};
 
         point.x = moment.unix(timestamps[i]).valueOf(); // the date
         point.y = closePrice; // close
 
-        if (i > 80) {
-          const real = quotes.close.slice(i - 80, i + 1);
-          const band = await this.getBBand(real);
+        if (!live) {
+          if (i > 80) {
+            const real = quotes.close.slice(i - 80, i + 1);
+            const band = await this.getBBand(real);
 
-          if (band.length === 3) {
-            const upper = band[2],
-              mid = band[1],
-              lower = band[0];
+            if (band.length === 3) {
+              const upper = band[2],
+                mid = band[1],
+                lower = band[0];
 
-            if (lower.length > 0 && closePrice < lower[0]) {
-              point.marker = {
-                symbol: 'triangle',
-                fillColor: 'green',
-                radius: 5
-              };
-            } else if (upper.length > 0 && closePrice > upper[0]) {
-              point.marker = {
-                symbol: 'triangle-down',
-                fillColor: 'red',
-                radius: 5
-              };
+              if (lower.length > 0 && closePrice < lower[0]) {
+                point.marker = {
+                  symbol: 'triangle',
+                  fillColor: 'green',
+                  radius: 5
+                };
+              } else if (upper.length > 0 && closePrice > upper[0]) {
+                point.marker = {
+                  symbol: 'triangle-down',
+                  fillColor: 'red',
+                  radius: 5
+                };
+              }
             }
           }
         }
 
         this.chart.addPoint(point);
 
-        batch.push({
-          x: moment.unix(timestamps[i]).valueOf(), // the date
-          y: quotes.close[i] // close
-        });
+        volume.push([
+          moment.unix(timestamps[i]).valueOf(), // the date
+          quotes.volume[i] // the volume
+        ]);
       }
 
       this.volumeChart = this.initVolumeChart('Volume', volume);
@@ -162,6 +186,7 @@ export class BbCardComponent implements OnInit {
         }]
     });
   }
+
   initPriceChart(title, subtitle): Chart {
     return new Chart({
       chart: {
@@ -228,5 +253,9 @@ export class BbCardComponent implements OnInit {
         data: []
       }]
     });
+  }
+
+  ngOnDestroy() {
+    this.alive = false; // switches your TimerObservable off
   }
 }

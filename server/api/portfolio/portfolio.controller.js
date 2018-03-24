@@ -99,6 +99,10 @@ class PortfolioController extends BaseController {
       PortfolioService.getInstruments(request.body.symbol, response);
     }
   }
+
+  getQuote(request, response) {
+    PortfolioService.getQuote(request.query.symbol, response);
+  }
 }
 
 module.exports.PortfolioController = new PortfolioController();

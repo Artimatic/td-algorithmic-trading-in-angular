@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Http, Headers, RequestOptions, Response } from '@angular/http';
-import { Observable } from 'rxjs';
-import 'rxjs/add/operator/map'
+import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/operator/map';
 import { Account } from '../account';
 
 @Injectable()
@@ -11,7 +11,7 @@ export class AuthenticationService {
 
   constructor(private http: Http) {
     // set token if saved in local storage
-    var currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
     this.token = currentUser && currentUser.token;
   }
 
@@ -21,8 +21,7 @@ export class AuthenticationService {
         if (res) {
           if (res.status === 201) {
             return true;
-          }
-          else if (res.status === 200) {
+          } else if (res.status === 200) {
             return true;
           }
         } else {
@@ -35,7 +34,7 @@ export class AuthenticationService {
     return this.http.post('/api/portfolio/mfa', { username: username, password: password, code: code })
       .map((response: Response) => {
         // login successful if there's a jwt token in the response
-        let token = response.json() && response.json().token;
+        const token = response.json() && response.json().token;
         if (token) {
           // set token property
           this.token = token;
@@ -54,7 +53,7 @@ export class AuthenticationService {
   }
 
   loginInit() {
-    this.refreshAccount;
+    this.refreshAccount();
   }
 
   refreshAccount() {
@@ -62,8 +61,8 @@ export class AuthenticationService {
   }
 
   getPortfolioAccount(): Observable<Account> {
-    let headers = new Headers({ 'Authorization': 'Bearer ' + this.token });
-    let options = new RequestOptions({ headers: headers });
+    const headers = new Headers({ 'Authorization': 'Bearer ' + this.token });
+    const options = new RequestOptions({ headers: headers });
 
     return this.http.get('/api/portfolio', options)
       .map((response: Response) => {

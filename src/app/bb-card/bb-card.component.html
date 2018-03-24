@@ -1,19 +1,47 @@
 <mat-card *ngIf="order">
-  <div class="toolbar-content" fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px" fxLayoutGap.xs="0">
-    <div fxFlex="10%">
-      <mat-card-header>
-        <mat-card-title>{{order.holding.symbol}}</mat-card-title>
-        <mat-card-subtitle>{{order.quantity}} share</mat-card-subtitle>
-        <p mat-line>${{order.price}} </p>
-      </mat-card-header>
-    </div>
-    <div fxFlex="90%">
-      <div [chart]="chart"></div>
-      <div [chart]="volumeChart"></div>
-    </div>
-  </div>
-  <mat-card-actions>
-    <button mat-button color="warn" (click)="load()">GO LIVE</button>
-    <button mat-button color="primary" (click)="load()">Backtest</button>
-  </mat-card-actions>
+  <mat-horizontal-stepper [linear]="true" #stepper="matHorizontalStepper">
+    <mat-step [stepControl]="firstFormGroup">
+      <form [formGroup]="firstFormGroup">
+        <ng-template matStepLabel>Order</ng-template>
+        <mat-form-field>
+          <input matInput placeholder="Last name, First name" formControlName="firstCtrl" required>
+        </mat-form-field>
+        <div>
+          <button mat-button matStepperNext>Next</button>
+        </div>
+      </form>
+    </mat-step>
+    <mat-step [stepControl]="secondFormGroup">
+      <ng-template matStepLabel>Reading</ng-template>
+      <mat-card>
+        <div class="toolbar-content" fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px" fxLayoutGap.xs="0">
+          <div fxFlex="10%">
+            <mat-card-header>
+              <mat-card-title>{{order.holding.symbol}}</mat-card-title>
+              <mat-card-subtitle>{{order.quantity}} share</mat-card-subtitle>
+              <p mat-line>{{order.side}} </p>
+              <p mat-line>${{order.price}} </p>
+              <mat-icon mat-list-icon *ngIf="order.submitted==true">check_circle</mat-icon>
+            </mat-card-header>
+          </div>
+          <div fxFlex="90%">
+            <div [chart]="chart"></div>
+            <div [chart]="volumeChart"></div>
+          </div>
+        </div>
+        <mat-card-actions>
+          <button mat-button color="warn" (click)="play(true)">GO LIVE</button>
+          <button mat-button color="primary" (click)="play(false)">Backtest</button>
+        </mat-card-actions>
+      </mat-card>
+    </mat-step>
+    <mat-step>
+      <ng-template matStepLabel>Ordering</ng-template>
+      You are now done.
+      <div>
+        <button mat-button matStepperPrevious>Back</button>
+        <button mat-button (click)="stepper.reset()">Reset</button>
+      </div>
+    </mat-step>
+  </mat-horizontal-stepper>
 </mat-card>

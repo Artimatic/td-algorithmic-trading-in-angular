@@ -28,6 +28,7 @@ import {
   MatTabsModule,
   MatListModule,
   MatChipsModule,
+  MatStepperModule,
 } from '@angular/material';
 
 import {FlexLayoutModule} from '@angular/flex-layout';
@@ -114,6 +115,7 @@ import { BbCardComponent } from './bb-card/bb-card.component';
     MatTabsModule,
     MatListModule,
     MatChipsModule,
+    MatStepperModule,
   ],
   providers: [
     BacktestService,
