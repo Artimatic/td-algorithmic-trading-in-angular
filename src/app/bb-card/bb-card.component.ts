@@ -19,6 +19,7 @@ import * as moment from 'moment';
 import { BacktestService, PortfolioService } from '../shared';
 import { Order } from '../shared/models/order';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
+import { SmartOrder } from '../shared/models/smart-order';
 
 @Component({
   selector: 'app-bb-card',
@@ -26,17 +27,19 @@ import { TimerObservable } from 'rxjs/observable/TimerObservable';
   styleUrls: ['./bb-card.component.css']
 })
 export class BbCardComponent implements OnDestroy, OnInit {
-  @Input() order: Order;
+  @Input() order: SmartOrder;
   chart: Chart;
   volumeChart: Chart;
   display: boolean;
   alive: boolean;
   interval: number;
-  orders: Order[];
+  orders: Order[] = [];
   firstFormGroup: FormGroup;
   secondFormGroup: FormGroup;
 
-  constructor(private _formBuilder: FormBuilder, private backtestService: BacktestService, private portfolioService: PortfolioService) {
+  constructor(private _formBuilder: FormBuilder,
+    private backtestService: BacktestService,
+    private portfolioService: PortfolioService) {
     this.display = false;
     this.alive = true;
     this.interval = 300000;
@@ -44,7 +47,10 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
   ngOnInit() {
     this.firstFormGroup = this._formBuilder.group({
-      firstCtrl: ['', Validators.required]
+      quantity: [this.order.quantity, Validators.required],
+      lossThreshold: [0.07, Validators.required],
+      profitThreshold: [0.07, Validators.required],
+      orderSize: [this.order.quantity, Validators.required]
     });
     this.secondFormGroup = this._formBuilder.group({
       secondCtrl: ['', Validators.required]
@@ -102,7 +108,6 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
         point.x = moment.unix(timestamps[i]).valueOf(); // the date
         point.y = closePrice; // close
-
         if (!live) {
           if (i > 80) {
             const real = quotes.close.slice(i - 80, i + 1);
@@ -114,6 +119,19 @@ export class BbCardComponent implements OnDestroy, OnInit {
                 lower = band[0];
 
               if (lower.length > 0 && closePrice < lower[0]) {
+                if (this.order.side.toLocaleLowerCase() === 'buy') {
+                  if (this.orders.length < this.firstFormGroup.value.quantity) {
+                    const myOrder: Order = {
+                      holding: this.order.holding,
+                      quantity: this.firstFormGroup.value.orderSize,
+                      price: quotes.close[i].high,
+                      submitted: true,
+                      pending: true,
+                      side: 'buy'
+                    };
+                    this.orders.push(myOrder);
+                  }
+                }
                 point.marker = {
                   symbol: 'triangle',
                   fillColor: 'green',
@@ -137,6 +155,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
           quotes.volume[i] // the volume
         ]);
       }
+      console.log(this.orders);
 
       this.volumeChart = this.initVolumeChart('Volume', volume);
     }

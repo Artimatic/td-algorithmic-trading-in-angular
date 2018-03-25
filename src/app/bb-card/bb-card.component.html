@@ -3,16 +3,28 @@
     <mat-step [stepControl]="firstFormGroup">
       <form [formGroup]="firstFormGroup">
         <ng-template matStepLabel>Order</ng-template>
-        <mat-form-field>
-          <input matInput placeholder="Last name, First name" formControlName="firstCtrl" required>
+        <mat-chip>{{order.holding.symbol}}</mat-chip>
+        <p>{{order.holding.name}}</p>
+        <h3>{{order.side}}</h3>
+        <mat-form-field hintLabel="Quantity">
+          <input matInput type="number" placeholder="Quantity" formControlName="quantity" required>
+        </mat-form-field>
+        <mat-form-field hintLabel="Max loss tolerated">
+          <input matInput type="number" placeholder="Loss Threshold" formControlName="lossThreshold" required>
+        </mat-form-field>
+        <mat-form-field hintLabel="Max profit tolerated">
+          <input matInput type="number" placeholder="Profit Threshold" formControlName="profitThreshold" required>
+        </mat-form-field>
+        <mat-form-field hintLabel="Size of Each Order">
+          <input matInput type="number" placeholder="Orders" formControlName="orderSize" required>
         </mat-form-field>
         <div>
-          <button mat-button matStepperNext>Next</button>
+          <button mat-button matStepperNext>Submit</button>
         </div>
       </form>
     </mat-step>
     <mat-step [stepControl]="secondFormGroup">
-      <ng-template matStepLabel>Reading</ng-template>
+      <ng-template matStepLabel>Pricing</ng-template>
       <mat-card>
         <div class="toolbar-content" fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px" fxLayoutGap.xs="0">
           <div fxFlex="10%">
@@ -30,8 +42,8 @@
           </div>
         </div>
         <mat-card-actions>
-          <button mat-button color="warn" (click)="play(true)">GO LIVE</button>
           <button mat-button color="primary" (click)="play(false)">Backtest</button>
+          <button mat-button color="warn" (click)="play(true)">GO LIVE</button>
         </mat-card-actions>
       </mat-card>
     </mat-step>
