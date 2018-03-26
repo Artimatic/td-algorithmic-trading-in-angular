@@ -109,7 +109,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
       symbol: this.order.holding.symbol
     };
 
-    const data = await this.backtestService.getTestData(requestBody).toPromise();
+    const data = await this.backtestService.getIntraday(requestBody).toPromise();
 
     if (data.chart.result[0].timestamp) {
       const volume = [],
@@ -122,7 +122,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
         if (dataLength > 80) {
           const real = quotes.close.slice(dataLength - 80, dataLength + 1);
           const band = await this.getBBand(real);
-          const newOrder = this.buildOrder(band, quotes, timestamps, dataLength - 1);
+          const newOrder = this.buildOrder(band, quotes, timestamps, dataLength - 1, live);
           if (newOrder) {
             this.orders.push(newOrder);
           }
@@ -142,42 +142,41 @@ export class BbCardComponent implements OnDestroy, OnInit {
           if (i > 80) {
             const real = quotes.close.slice(i - 80, i + 1);
             const band = await this.getBBand(real);
-            const newOrder = this.buildOrder(band, quotes, timestamps, i);
-
-            if (newOrder.side.toLowerCase() === 'buy') {
-              point.marker = {
-                symbol: 'triangle',
-                fillColor: 'green',
-                radius: 5
-              };
-            } else if (newOrder.side.toLowerCase() === 'sell') {
-              point.marker = {
-                symbol: 'triangle-down',
-                fillColor: 'red',
-                radius: 5
-              };
+            const newOrder = this.buildOrder(band, quotes, timestamps, i, live);
+            if (newOrder) {
+              if (newOrder.side.toLowerCase() === 'buy') {
+                point.marker = {
+                  symbol: 'triangle',
+                  fillColor: 'green',
+                  radius: 5
+                };
+              } else if (newOrder.side.toLowerCase() === 'sell') {
+                point.marker = {
+                  symbol: 'triangle-down',
+                  fillColor: 'red',
+                  radius: 5
+                };
+              }
             }
           }
         } else {
           const foundOrder = this.orders.find((order) => {
             return point.x === order.timeSubmitted;
           });
-          if (foundOrder.side.toLowerCase() === 'buy') {
+          if (foundOrder && foundOrder.side.toLowerCase() === 'buy') {
             point.marker = {
               symbol: 'triangle',
               fillColor: 'green',
               radius: 5
             };
-          } else if (foundOrder.side.toLowerCase() === 'sell') {
+          } else if (foundOrder && foundOrder.side.toLowerCase() === 'sell') {
             point.marker = {
               symbol: 'triangle-down',
               fillColor: 'red',
               radius: 5
             };
           }
-          console.log('found: ', foundOrder);
         }
-
         this.chart.addPoint(point);
 
         volume.push([
@@ -194,8 +193,22 @@ export class BbCardComponent implements OnDestroy, OnInit {
       chart: {
         type: 'column',
         marginLeft: 40, // Keep all charts left aligned
+        marginTop: 0,
+        marginBottom: 0,
         width: 1600,
         height: 180
+      },
+      title: {
+        text: '',
+        style: {
+          display: 'none'
+        }
+      },
+      subtitle: {
+        text: '',
+        style: {
+          display: 'none'
+        }
       },
       xAxis: {
         type: 'datetime',
@@ -238,8 +251,22 @@ export class BbCardComponent implements OnDestroy, OnInit {
         type: 'spline',
         zoomType: 'x',
         marginLeft: 40, // Keep all charts left aligned
+        marginTop: 0,
+        marginBottom: 0,
         width: 1600,
         height: 180
+      },
+      title: {
+        text: '',
+        style: {
+          display: 'none'
+        }
+      },
+      subtitle: {
+        text: '',
+        style: {
+          display: 'none'
+        }
       },
       xAxis: {
         type: 'datetime',
@@ -298,19 +325,19 @@ export class BbCardComponent implements OnDestroy, OnInit {
     this.alive = false;
   }
 
-  buildOrder(band: any[], quotes, timestamps, i) {
+  buildOrder(band: any[], quotes, timestamps, i, live: boolean) {
     if (band.length !== 3) {
       return null;
     }
 
     if (this.order.side.toLowerCase() === 'buy') {
-      return this.makeBuyOrder(band, quotes.low[i], timestamps[i], quotes.close[i]);
+      return this.makeBuyOrder(band, quotes.low[i], timestamps[i], quotes.close[i], live);
     } else if (this.order.side.toLowerCase() === 'sell') {
-      return this.makeSellOrder(band, quotes.high[i], timestamps[i], quotes.close[i]);
+      return this.makeSellOrder(band, quotes.high[i], timestamps[i], quotes.close[i], live);
     }
   }
 
-  makeBuyOrder(band: any[], price, signalTime, signalPrice) {
+  makeBuyOrder(band: any[], price, signalTime, signalPrice, live: boolean) {
     const upper = band[2],
       mid = band[1],
       lower = band[0];
@@ -337,40 +364,62 @@ export class BbCardComponent implements OnDestroy, OnInit {
         timeSubmitted: moment().unix(),
         signalTime: signalTime
       };
+
+      if (live) {
+        this.portfolioService.buy(myOrder.holding, myOrder.quantity, myOrder.price).subscribe(
+          response => {
+            myOrder.submitted = true;
+          },
+          error => {
+            myOrder.submitted = false;
+          });
+      }
+
       return myOrder;
     }
 
     return null;
   }
 
-  makeSellOrder(band: any[], price, signalTime, signalPrice) {
+  makeSellOrder(band: any[], price, signalTime, signalPrice, live: boolean) {
     const upper = band[2],
       mid = band[1],
       lower = band[0];
 
-      if (this.orders.length >= this.firstFormGroup.value.quantity) {
-        return null;
-      }
-      if (lower.length < 1) {
-        return null;
-      }
+    if (this.orders.length >= this.firstFormGroup.value.quantity) {
+      return null;
+    }
+    if (lower.length < 1) {
+      return null;
+    }
 
-      if (signalPrice < upper[0]) {
-        return null;
-      }
+    if (signalPrice < upper[0]) {
+      return null;
+    }
 
-      if (signalPrice <= upper[0]) {
-        const myOrder: SmartOrder = {
+    if (signalPrice <= upper[0]) {
+      const myOrder: SmartOrder = {
         holding: this.order.holding,
         quantity: this.firstFormGroup.value.orderSize,
         price: price,
-        submitted: true,
-        pending: true,
+        submitted: false,
+        pending: false,
         side: 'Sell',
         timeSubmitted: moment().unix(),
         signalTime: signalTime
       };
+
+      if (live) {
+        this.portfolioService.sell(myOrder.holding, myOrder.quantity, myOrder.price).subscribe(
+          response => {
+            myOrder.submitted = true;
+          },
+          error => {
+            myOrder.submitted = false;
+          });
+      }
     }
+
     return null;
   }
 
