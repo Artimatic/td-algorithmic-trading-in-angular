@@ -26,6 +26,11 @@
     <mat-step [stepControl]="secondFormGroup">
       <ng-template matStepLabel>Pricing</ng-template>
       <mat-card>
+        <div *ngIf="live">
+          <mat-chip color="warn" selected="true">LIVE</mat-chip>
+          <mat-progress-bar mode="determinate" color="accent" value="progress()"></mat-progress-bar>
+          Orders Submitted: {{orders.length || 0}}/{{firstFormGroup.value.quantity || 0}}
+        </div>
         <div class="toolbar-content" fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px" fxLayoutGap.xs="0">
           <div fxFlex="10%">
             <mat-card-header>
@@ -42,8 +47,9 @@
           </div>
         </div>
         <mat-card-actions>
+          <button mat-raised-button color="warn" (click)="stop()">STOP</button>
           <button mat-button color="primary" (click)="play(false)">Backtest</button>
-          <button mat-button color="warn" (click)="play(true)">GO LIVE</button>
+          <button mat-button color="warn" (click)="openDialog()">GO LIVE</button>
         </mat-card-actions>
       </mat-card>
     </mat-step>

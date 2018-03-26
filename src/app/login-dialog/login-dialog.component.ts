@@ -10,8 +10,8 @@ import { AuthenticationService } from '../shared';
   styleUrls: ['./login-dialog.component.css']
 })
 export class LoginDialogComponent implements OnInit {
-  hide: boolean = true;
-  mfa: boolean = false;
+  hide = true;
+  mfa = false;
   model: any = {};
   loading = false;
   error = '';

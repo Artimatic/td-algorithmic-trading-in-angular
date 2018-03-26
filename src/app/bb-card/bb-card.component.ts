@@ -1,5 +1,6 @@
 import { Component, OnDestroy, EventEmitter, Input, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/concat';
 import 'rxjs/add/observable/defer';
@@ -20,6 +21,7 @@ import { BacktestService, PortfolioService } from '../shared';
 import { Order } from '../shared/models/order';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import { SmartOrder } from '../shared/models/smart-order';
+import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-bb-card',
@@ -32,17 +34,20 @@ export class BbCardComponent implements OnDestroy, OnInit {
   volumeChart: Chart;
   display: boolean;
   alive: boolean;
+  live: boolean;
   interval: number;
-  orders: Order[] = [];
+  orders: SmartOrder[] = [];
   firstFormGroup: FormGroup;
   secondFormGroup: FormGroup;
 
   constructor(private _formBuilder: FormBuilder,
     private backtestService: BacktestService,
-    private portfolioService: PortfolioService) {
+    private portfolioService: PortfolioService,
+    public dialog: MatDialog) {
     this.display = false;
     this.alive = true;
     this.interval = 300000;
+    this.live = false;
   }
 
   ngOnInit() {
@@ -57,6 +62,10 @@ export class BbCardComponent implements OnDestroy, OnInit {
     });
   }
 
+  progress() {
+    return 100 * Math.ceil(this.orders.length / this.firstFormGroup.value.quantity);
+  }
+
   async getBBand(real: any[]): Promise<any[]> {
     const body = {
       real: real,
@@ -67,16 +76,25 @@ export class BbCardComponent implements OnDestroy, OnInit {
     return await this.backtestService.getBBands(body).toPromise();
   }
 
+  openDialog(): void {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '250px',
+      data: { title: 'Confirm', message: 'Are you sure you want to execute this order?' }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.goLive();
+      }
+    });
+  }
+
   goLive() {
     TimerObservable.create(0, this.interval)
       .takeWhile(() => this.alive)
       .subscribe(() => {
-        this.portfolioService.getQuote(this.order.holding.symbol)
-          .subscribe((quote) => {
-            if (!this.display) {
-              this.display = true;
-            }
-          });
+        this.live = true;
+        this.play(true);
       });
   }
 
@@ -97,7 +115,19 @@ export class BbCardComponent implements OnDestroy, OnInit {
       const volume = [],
         timestamps = data.chart.result[0].timestamp,
         dataLength = timestamps.length,
-        quotes = data.chart.result[0].indicators.quote[0];
+        quotes = data.chart.result[0].indicators.quote[0],
+        side = this.order.side.toLowerCase();
+
+      if (live) {
+        if (dataLength > 80) {
+          const real = quotes.close.slice(dataLength - 80, dataLength + 1);
+          const band = await this.getBBand(real);
+          const newOrder = this.buildOrder(band, quotes, timestamps, dataLength - 1);
+          if (newOrder) {
+            this.orders.push(newOrder);
+          }
+        }
+      }
 
       this.chart = this.initPriceChart(this.order.holding.symbol, this.order.holding.name);
 
@@ -112,40 +142,40 @@ export class BbCardComponent implements OnDestroy, OnInit {
           if (i > 80) {
             const real = quotes.close.slice(i - 80, i + 1);
             const band = await this.getBBand(real);
+            const newOrder = this.buildOrder(band, quotes, timestamps, i);
 
-            if (band.length === 3) {
-              const upper = band[2],
-                mid = band[1],
-                lower = band[0];
-
-              if (lower.length > 0 && closePrice < lower[0]) {
-                if (this.order.side.toLocaleLowerCase() === 'buy') {
-                  if (this.orders.length < this.firstFormGroup.value.quantity) {
-                    const myOrder: Order = {
-                      holding: this.order.holding,
-                      quantity: this.firstFormGroup.value.orderSize,
-                      price: quotes.close[i].high,
-                      submitted: true,
-                      pending: true,
-                      side: 'buy'
-                    };
-                    this.orders.push(myOrder);
-                  }
-                }
-                point.marker = {
-                  symbol: 'triangle',
-                  fillColor: 'green',
-                  radius: 5
-                };
-              } else if (upper.length > 0 && closePrice > upper[0]) {
-                point.marker = {
-                  symbol: 'triangle-down',
-                  fillColor: 'red',
-                  radius: 5
-                };
-              }
+            if (newOrder.side.toLowerCase() === 'buy') {
+              point.marker = {
+                symbol: 'triangle',
+                fillColor: 'green',
+                radius: 5
+              };
+            } else if (newOrder.side.toLowerCase() === 'sell') {
+              point.marker = {
+                symbol: 'triangle-down',
+                fillColor: 'red',
+                radius: 5
+              };
             }
           }
+        } else {
+          const foundOrder = this.orders.find((order) => {
+            return point.x === order.timeSubmitted;
+          });
+          if (foundOrder.side.toLowerCase() === 'buy') {
+            point.marker = {
+              symbol: 'triangle',
+              fillColor: 'green',
+              radius: 5
+            };
+          } else if (foundOrder.side.toLowerCase() === 'sell') {
+            point.marker = {
+              symbol: 'triangle-down',
+              fillColor: 'red',
+              radius: 5
+            };
+          }
+          console.log('found: ', foundOrder);
         }
 
         this.chart.addPoint(point);
@@ -155,8 +185,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
           quotes.volume[i] // the volume
         ]);
       }
-      console.log(this.orders);
-
+      console.log(this.orders, moment().format('hh:mm'));
       this.volumeChart = this.initVolumeChart('Volume', volume);
     }
   }
@@ -165,11 +194,8 @@ export class BbCardComponent implements OnDestroy, OnInit {
       chart: {
         type: 'column',
         marginLeft: 40, // Keep all charts left aligned
-        spacingTop: 20,
-        spacingBottom: 20
-      },
-      title: {
-        text: title
+        width: 1600,
+        height: 180
       },
       xAxis: {
         type: 'datetime',
@@ -212,14 +238,8 @@ export class BbCardComponent implements OnDestroy, OnInit {
         type: 'spline',
         zoomType: 'x',
         marginLeft: 40, // Keep all charts left aligned
-        spacingTop: 20,
-        spacingBottom: 20
-      },
-      title: {
-        text: title
-      },
-      subtitle: {
-        text: subtitle
+        width: 1600,
+        height: 180
       },
       xAxis: {
         type: 'datetime',
@@ -274,7 +294,87 @@ export class BbCardComponent implements OnDestroy, OnInit {
     });
   }
 
+  stop() {
+    this.alive = false;
+  }
+
+  buildOrder(band: any[], quotes, timestamps, i) {
+    if (band.length !== 3) {
+      return null;
+    }
+
+    if (this.order.side.toLowerCase() === 'buy') {
+      return this.makeBuyOrder(band, quotes.low[i], timestamps[i], quotes.close[i]);
+    } else if (this.order.side.toLowerCase() === 'sell') {
+      return this.makeSellOrder(band, quotes.high[i], timestamps[i], quotes.close[i]);
+    }
+  }
+
+  makeBuyOrder(band: any[], price, signalTime, signalPrice) {
+    const upper = band[2],
+      mid = band[1],
+      lower = band[0];
+
+    if (this.orders.length >= this.firstFormGroup.value.quantity) {
+      return null;
+    }
+    if (lower.length < 1) {
+      return null;
+    }
+
+    if (signalPrice > lower[0]) {
+      return null;
+    }
+
+    if (signalPrice <= lower[0]) {
+      const myOrder: SmartOrder = {
+        holding: this.order.holding,
+        quantity: this.firstFormGroup.value.orderSize,
+        price: price,
+        submitted: true,
+        pending: true,
+        side: 'Buy',
+        timeSubmitted: moment().unix(),
+        signalTime: signalTime
+      };
+      return myOrder;
+    }
+
+    return null;
+  }
+
+  makeSellOrder(band: any[], price, signalTime, signalPrice) {
+    const upper = band[2],
+      mid = band[1],
+      lower = band[0];
+
+      if (this.orders.length >= this.firstFormGroup.value.quantity) {
+        return null;
+      }
+      if (lower.length < 1) {
+        return null;
+      }
+
+      if (signalPrice < upper[0]) {
+        return null;
+      }
+
+      if (signalPrice <= upper[0]) {
+        const myOrder: SmartOrder = {
+        holding: this.order.holding,
+        quantity: this.firstFormGroup.value.orderSize,
+        price: price,
+        submitted: true,
+        pending: true,
+        side: 'Sell',
+        timeSubmitted: moment().unix(),
+        signalTime: signalTime
+      };
+    }
+    return null;
+  }
+
   ngOnDestroy() {
-    this.alive = false; // switches your TimerObservable off
+    stop();
   }
 }
