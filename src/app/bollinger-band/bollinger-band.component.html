@@ -1,4 +1,7 @@
 <h3 mat-subheader>Shopping List</h3>
+<div *ngFor="let sell of cartService.sellOrders">
+  <app-bb-card [order]="sell"></app-bb-card>
+</div>
 <div *ngFor="let buy of cartService.buyOrders">
   <app-bb-card [order]="buy"></app-bb-card>
 </div>
