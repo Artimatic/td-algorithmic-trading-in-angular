@@ -117,7 +117,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
     const quoteRequestBody = {
       ticker: this.order.holding.symbol,
       interval: '2m',
-      range: '1d'
+      range: '5d'
     };
 
 
@@ -143,13 +143,13 @@ export class BbCardComponent implements OnDestroy, OnInit {
       //   return accumulator;
       // }, { timestamps: [], low: [], high: [], close: [], volume: [] });
 
-      this.historicalData.forEach((currentValue) => {
-        timestamps.unshift(moment(currentValue.date).unix());
-        quotes.low.unshift(currentValue.low);
-        quotes.high.unshift(currentValue.low);
-        quotes.close.unshift(currentValue.low);
-        quotes.volume.unshift(currentValue.low);
-      });
+      // this.historicalData.slice().reverse().forEach((currentValue) => {
+      //   timestamps.unshift(moment(currentValue.date).unix());
+      //   quotes.low.unshift(currentValue.low);
+      //   quotes.high.unshift(currentValue.high);
+      //   quotes.close.unshift(currentValue.close);
+      //   quotes.volume.unshift(currentValue.volume);
+      // });
 
       if (live) {
         if (dataLength > 80) {
