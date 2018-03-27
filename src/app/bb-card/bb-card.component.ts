@@ -387,7 +387,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
       orderQuantity = this.firstFormGroup.value.quantity - this.orders.length;
     }
 
-    if (lower.length < 1) {
+    if (lower.length === 0) {
       return null;
     }
 
@@ -433,7 +433,9 @@ export class BbCardComponent implements OnDestroy, OnInit {
       mid = band[1],
       lower = band[0];
 
-    let orderQuantity = 0;
+    console.log('SELLING: ', i, band, price, moment.unix(signalTime).format('hh:mm'), signalPrice);
+
+    let orderQuantity = this.firstFormGroup.value.orderSize;
 
     if (this.orders.length >= this.firstFormGroup.value.quantity) {
       return null;
@@ -443,7 +445,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
       orderQuantity = this.firstFormGroup.value.quantity - this.orders.length;
     }
 
-    if (lower.length < 1) {
+    if (upper.length === 0) {
       return null;
     }
 
