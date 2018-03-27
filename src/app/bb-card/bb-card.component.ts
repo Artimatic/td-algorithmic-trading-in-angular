@@ -377,7 +377,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
       lower = band[0];
     console.log('buying: ', i, band, price, moment.unix(signalTime).format('hh:mm'), signalPrice);
 
-    let orderQuantity = 0;
+    let orderQuantity = this.firstFormGroup.value.orderSize;
 
     if (this.orders.length >= this.firstFormGroup.value.quantity) {
       return null;
@@ -410,6 +410,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
         timeSubmitted: moment().unix(),
         signalTime: signalTime
       };
+      console.log('BOUGHT');
 
       if (live) {
         this.portfolioService.buy(myOrder.holding, myOrder.quantity, myOrder.price).subscribe(
