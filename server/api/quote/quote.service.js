@@ -9,11 +9,11 @@ import YahooFinanceAPI from 'yahoo-finance-data';
 
 import errors from '../../components/errors/baseErrors';
 import config from '../../config/environment';
-
-const api = new YahooFinanceAPI({
+const yahoo = {
   key: config.yahoo.key,
   secret: config.yahoo.secret
-});
+};
+const api = new YahooFinanceAPI(yahoo);
 
 const quandl = feedQuandl()
   .apiKey('5DsGxgTS3k9BepaWg_MD')

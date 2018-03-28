@@ -29,6 +29,7 @@ import {
   MatListModule,
   MatChipsModule,
   MatStepperModule,
+  MatSelectModule,
 } from '@angular/material';
 
 import {FlexLayoutModule} from '@angular/flex-layout';
@@ -119,6 +120,7 @@ import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.componen
     MatListModule,
     MatChipsModule,
     MatStepperModule,
+    MatSelectModule,
   ],
   providers: [
     BacktestService,

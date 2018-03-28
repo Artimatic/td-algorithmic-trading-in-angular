@@ -3,11 +3,14 @@ const _ = require('lodash');
 const fs = require('fs');
 
 let credentials = {}
-fs.exists('./credentials', function(exists) {
-  if (exists) {
-    credentials = require('./credentials');
-  }
-});
+
+try {
+  const stats = fs.statSync('./server/config/environment/credentials.js');
+  credentials = require('./credentials');
+}
+catch(err) {
+    console.log('Credentials are missing. Continuing without credentials.');
+}
 
 function requiredProcessEnv(name) {
   if(!process.env[name]) {

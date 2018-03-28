@@ -2,46 +2,56 @@
   <mat-horizontal-stepper [linear]="true" #stepper="matHorizontalStepper">
     <mat-step [stepControl]="firstFormGroup">
       <form [formGroup]="firstFormGroup">
-        <ng-template matStepLabel>Order</ng-template>
+        <ng-template matStepLabel>Edit Order</ng-template>
         <mat-chip>{{order.holding.symbol}}</mat-chip>
         <p>{{order.holding.name}}</p>
-        <h3>{{order.side}}</h3>
+        <mat-form-field>
+            <mat-select placeholder="Side" [(ngModel)]="order.side" [ngModelOptions]="{standalone: true}" name="side">
+              <mat-option *ngFor="let side of sides" [value]="side">
+                {{ side }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
         <mat-form-field hintLabel="Quantity">
           <input matInput type="number" placeholder="Quantity" formControlName="quantity" required>
         </mat-form-field>
         <mat-form-field hintLabel="Max loss tolerated">
-          <input matInput type="number" placeholder="Loss Threshold" formControlName="lossThreshold" required>
+          <input matInput type="number" placeholder="Loss Threshold" disabled>
         </mat-form-field>
         <mat-form-field hintLabel="Max profit tolerated">
-          <input matInput type="number" placeholder="Profit Threshold" formControlName="profitThreshold" required>
+          <input matInput type="number" placeholder="Profit Threshold" disabled>
         </mat-form-field>
         <mat-form-field hintLabel="Size of Each Order">
           <input matInput type="number" placeholder="Orders" formControlName="orderSize" required>
         </mat-form-field>
         <div>
-          <button mat-button matStepperNext>Submit</button>
+          <button mat-button matStepperNext>Go To Graph</button>
         </div>
       </form>
     </mat-step>
     <mat-step [stepControl]="secondFormGroup">
-      <ng-template matStepLabel>Pricing</ng-template>
+      <ng-template matStepLabel>Place Order</ng-template>
       <mat-card>
         <div *ngIf="live">
           <mat-chip color="warn" selected="true">LIVE</mat-chip>
           <mat-progress-bar mode="determinate" color="accent" value="progress()"></mat-progress-bar>
-          Orders Submitted: {{orders.length || 0}}/{{firstFormGroup.value.quantity || 0}}
+          Orders Submitted: {{orders.length || 0}}/{{firstFormGroup.value.quantity || 0}} shares
         </div>
+        <div *ngIf="!live">
+            <mat-chip>STAND BY</mat-chip>
+          </div>
         <div class="toolbar-content" fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px" fxLayoutGap.xs="0">
-          <div fxFlex="10%">
+          <div fxFlex="5%">
             <mat-card-header>
               <mat-card-title>{{order.holding.symbol}}</mat-card-title>
-              <mat-card-subtitle>{{order.quantity}} share</mat-card-subtitle>
-              <p mat-line>{{order.side}} </p>
-              <p mat-line>${{order.price}} </p>
-              <mat-icon mat-list-icon *ngIf="order.submitted==true">check_circle</mat-icon>
+              <mat-card-subtitle>
+                <button mat-fab *ngIf="order.side=='Buy'" color="primary">BUY</button>
+                <button mat-fab *ngIf="order.side=='Sell'" color="warn">SELL</button>
+                <button mat-fab *ngIf="order.side=='DayTrade'" color="accent">DAY</button>
+              </mat-card-subtitle>
             </mat-card-header>
           </div>
-          <div fxFlex="90%">
+          <div fxFlex="95%">
             <div [chart]="chart"></div>
             <div [chart]="volumeChart"></div>
           </div>
@@ -54,7 +64,7 @@
       </mat-card>
     </mat-step>
     <mat-step>
-      <ng-template matStepLabel>Ordering</ng-template>
+      <ng-template matStepLabel>Done</ng-template>
       You are now done.
       <div>
         <button mat-button matStepperPrevious>Back</button>

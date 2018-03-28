@@ -17,7 +17,7 @@ import * as Highcharts from 'highcharts';
 
 import * as moment from 'moment';
 
-import { BacktestService, PortfolioService } from '../shared';
+import { BacktestService, PortfolioService, AuthenticationService } from '../shared';
 import { Order } from '../shared/models/order';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import { SmartOrder } from '../shared/models/smart-order';
@@ -37,26 +37,35 @@ export class BbCardComponent implements OnDestroy, OnInit {
   live: boolean;
   interval: number;
   orders: SmartOrder[] = [];
+  buyCount: number;
+  sellCount: number;
   firstFormGroup: FormGroup;
   secondFormGroup: FormGroup;
   historicalData;
+  sub;
+  sides;
 
   constructor(private _formBuilder: FormBuilder,
     private backtestService: BacktestService,
     private portfolioService: PortfolioService,
+    private authenticationService: AuthenticationService,
     public dialog: MatDialog) {
     this.display = false;
     this.alive = true;
     this.interval = 300000;
     this.live = false;
+    this.sides = ['Buy', 'Sell', 'DayTrade'];
+    this.buyCount = 0;
+    this.sellCount = 0;
   }
 
   ngOnInit() {
     this.firstFormGroup = this._formBuilder.group({
       quantity: [this.order.quantity, Validators.required],
-      lossThreshold: [0.07, Validators.required],
-      profitThreshold: [0.07, Validators.required],
-      orderSize: [this.orderSizeEstimate(), Validators.required]
+      lossThreshold: [''],
+      profitThreshold: [''],
+      orderSize: [this.orderSizeEstimate(), Validators.required],
+      orderType: [this.order.side, Validators.required]
     });
     this.secondFormGroup = this._formBuilder.group({
       secondCtrl: ['', Validators.required]
@@ -95,7 +104,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
   }
 
   goLive() {
-    TimerObservable.create(0, this.interval)
+    this.sub = TimerObservable.create(0, this.interval)
       .takeWhile(() => this.alive)
       .subscribe(() => {
         this.live = true;
@@ -130,9 +139,9 @@ export class BbCardComponent implements OnDestroy, OnInit {
         quotes = data.chart.result[0].indicators.quote[0],
         side = this.order.side.toLowerCase();
 
-      if (!this.historicalData) {
-        this.historicalData = await this.backtestService.getQuote(quoteRequestBody).toPromise();
-      }
+      // if (!this.historicalData) {
+      //   this.historicalData = await this.backtestService.getQuote(quoteRequestBody).toPromise();
+      // }
 
       // this.historicalData.reduce((accumulator, currentValue) => {
       //   accumulator.timestamps.push(moment(currentValue.date).unix());
@@ -195,7 +204,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
           }
         } else {
           const foundOrder = this.orders.find((order) => {
-            return point.x === order.timeSubmitted;
+            return point.x === order.signalTime;
           });
           if (foundOrder && foundOrder.side.toLowerCase() === 'buy') {
             point.marker = {
@@ -243,6 +252,9 @@ export class BbCardComponent implements OnDestroy, OnInit {
         style: {
           display: 'none'
         }
+      },
+      legend: {
+        enabled: false
       },
       xAxis: {
         type: 'datetime',
@@ -301,6 +313,9 @@ export class BbCardComponent implements OnDestroy, OnInit {
           display: 'none'
         }
       },
+      legend: {
+        enabled: false
+      },
       xAxis: {
         type: 'datetime',
         dateTimeLabelFormats: {
@@ -357,6 +372,20 @@ export class BbCardComponent implements OnDestroy, OnInit {
   stop() {
     this.alive = false;
     this.live = false;
+    if (this.sub) {
+      this.sub.unsubscribe();
+    }
+  }
+
+  getOrderQuantity(maxAllowedOrders, orderSize, existingOrders) {
+    if (existingOrders >= maxAllowedOrders) {
+      return 0;
+    }
+
+    if (orderSize + existingOrders > maxAllowedOrders) {
+      return maxAllowedOrders - existingOrders;
+    }
+    return orderSize;
   }
 
   buildOrder(band: any[], quotes, timestamps, i, live: boolean) {
@@ -365,33 +394,100 @@ export class BbCardComponent implements OnDestroy, OnInit {
     }
 
     if (this.order.side.toLowerCase() === 'buy') {
-      return this.makeBuyOrder(band, quotes.low[i], timestamps[i], quotes.close[i], live, quotes, i);
+      const orderQuantity = this.getOrderQuantity(this.firstFormGroup.value.quantity,
+        this.firstFormGroup.value.orderSize,
+        this.buyCount);
+
+      if (orderQuantity <= 0) {
+        return null;
+      }
+
+      const buyOrder = this.makeBuyOrder(orderQuantity, band, quotes.low[i], timestamps[i], quotes.close[i], quotes, i);
+      if (live) {
+        this.portfolioService.buy(buyOrder.holding, buyOrder.quantity, buyOrder.price).subscribe(
+          response => {
+            buyOrder.submitted = true;
+          },
+          error => {
+            buyOrder.submitted = false;
+          });
+      }
+      return buyOrder;
     } else if (this.order.side.toLowerCase() === 'sell') {
-      return this.makeSellOrder(band, quotes.high[i], timestamps[i], quotes.close[i], live, quotes, i);
+      const orderQuantity = this.getOrderQuantity(this.firstFormGroup.value.quantity,
+        this.firstFormGroup.value.orderSize,
+        this.sellCount);
+
+      if (orderQuantity <= 0) {
+        return null;
+      }
+
+      const sellOrder = this.makeBuyOrder(orderQuantity, band, quotes.low[i], timestamps[i], quotes.close[i], quotes, i);
+
+      if (live) {
+        this.portfolioService.sell(sellOrder.holding, sellOrder.quantity, sellOrder.price).subscribe(
+          response => {
+            sellOrder.submitted = true;
+          },
+          error => {
+            sellOrder.submitted = false;
+          });
+      }
+      return sellOrder;
+    } else if (this.order.side.toLowerCase() === 'daytrade') {
+      const buyQuantity = this.getOrderQuantity(this.firstFormGroup.value.quantity,
+        this.firstFormGroup.value.orderSize,
+        this.buyCount);
+
+      let sellQuantity = this.firstFormGroup.value.orderSize <= this.buyCount ? this.firstFormGroup.value.orderSize : this.buyCount;
+
+      const buy: SmartOrder = buyQuantity <= 0 ? null :
+        this.makeBuyOrder(buyQuantity, band, quotes.low[i], timestamps[i], quotes.close[i], quotes, i);
+      const sell: SmartOrder = sellQuantity <= 0 ? null :
+        this.makeSellOrder(sellQuantity, band, quotes.high[i], timestamps[i], quotes.close[i], quotes, i);
+
+      if (sell) {
+        if (true || live) {
+          this.authenticationService.getPortfolioAccount().subscribe(account => {
+            this.portfolioService.getPortfolio()
+              .subscribe(result => {
+                const foundPosition = result.find((pos) => {
+                  return pos.instrument === this.order.holding.instrument;
+                });
+                console.log('Found position: ', foundPosition);
+                sellQuantity = sellQuantity < foundPosition.quantity ? sellQuantity : foundPosition.quantity;
+                this.portfolioService.sell(sell.holding, sellQuantity, sell.price).subscribe(
+                  response => {
+                    sell.submitted = true;
+                    this.orders.push(sell);
+                  },
+                  error => {
+                    sell.submitted = false;
+                  });
+              });
+          });
+        }
+        return sell;
+      } else if (buy) {
+        return buy;
+      } else {
+        return null;
+      }
     }
   }
 
-  makeBuyOrder(band: any[], price, signalTime, signalPrice, live: boolean, quotes, i) {
+  makeBuyOrder(orderQuantity: number, band: any[], price, signalTime, signalPrice, quotes, i) {
     const upper = band[2],
       mid = band[1],
       lower = band[0];
-    console.log('buying: ', i, band, price, moment.unix(signalTime).format('hh:mm'), signalPrice);
 
-    let orderQuantity = this.firstFormGroup.value.orderSize;
+    console.log('buy algo: ', i, band, price, moment.unix(signalTime).format('hh:mm'), signalPrice, orderQuantity);
 
-    if (this.orders.length >= this.firstFormGroup.value.quantity) {
+    if (orderQuantity <= 0) {
       return null;
-    }
-
-    if (this.firstFormGroup.value.orderSize + this.orders.length > this.firstFormGroup.value.quantity) {
-      orderQuantity = this.firstFormGroup.value.quantity - this.orders.length;
     }
 
     if (lower.length === 0) {
-      return null;
-    }
-
-    if (signalPrice > lower[0]) {
       return null;
     }
 
@@ -403,82 +499,54 @@ export class BbCardComponent implements OnDestroy, OnInit {
       const myOrder: SmartOrder = {
         holding: this.order.holding,
         quantity: orderQuantity,
-        price: price,
+        price: Number(price.toFixed(2)),
         submitted: true,
         pending: true,
         side: 'Buy',
         timeSubmitted: moment().unix(),
         signalTime: signalTime
       };
-      console.log('BOUGHT');
-
-      if (live) {
-        this.portfolioService.buy(myOrder.holding, myOrder.quantity, myOrder.price).subscribe(
-          response => {
-            myOrder.submitted = true;
-          },
-          error => {
-            myOrder.submitted = false;
-          });
-      }
-
+      console.log('BOUGHT', moment.unix(signalTime).format('hh:mm'));
+      this.buyCount++;
       return myOrder;
     }
 
     return null;
   }
 
-  makeSellOrder(band: any[], price, signalTime, signalPrice, live: boolean, quotes, i) {
+  makeSellOrder(orderQuantity: number, band: any[], price, signalTime, signalPrice, quotes, i) {
     const upper = band[2],
       mid = band[1],
       lower = band[0];
 
-    console.log('SELLING: ', i, band, price, moment.unix(signalTime).format('hh:mm'), signalPrice);
+    console.log('Sell Algo: ', i, band, price, moment.unix(signalTime).format('hh:mm'), signalPrice, orderQuantity);
 
-    let orderQuantity = this.firstFormGroup.value.orderSize;
-
-    if (this.orders.length >= this.firstFormGroup.value.quantity) {
+    if (orderQuantity <= 0) {
       return null;
-    }
-
-    if (this.firstFormGroup.value.orderSize + this.orders.length > this.firstFormGroup.value.quantity) {
-      orderQuantity = this.firstFormGroup.value.quantity - this.orders.length;
     }
 
     if (upper.length === 0) {
       return null;
     }
 
-    if (signalPrice < upper[0]) {
-      return null;
-    }
-    console.log('selling: ', i, band, price, moment.unix(signalTime).format('hh:mm'), signalPrice);
-
     if (!signalPrice || !price) {
       return null;
     }
 
-    if (signalPrice <= upper[0]) {
+    if (signalPrice >= upper[0]) {
       const myOrder: SmartOrder = {
         holding: this.order.holding,
         quantity: orderQuantity,
-        price: price,
+        price: Number(price.toFixed(2)),
         submitted: false,
         pending: false,
         side: 'Sell',
         timeSubmitted: moment().unix(),
         signalTime: signalTime
       };
-
-      if (live) {
-        this.portfolioService.sell(myOrder.holding, myOrder.quantity, myOrder.price).subscribe(
-          response => {
-            myOrder.submitted = true;
-          },
-          error => {
-            myOrder.submitted = false;
-          });
-      }
+      console.log('SOLD', moment.unix(signalTime).format('hh:mm'));
+      this.sellCount++;
+      return myOrder;
     }
 
     return null;
