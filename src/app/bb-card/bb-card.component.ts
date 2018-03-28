@@ -447,7 +447,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
         this.makeSellOrder(sellQuantity, band, quotes.high[i], timestamps[i], quotes.close[i], quotes, i);
 
       if (sell) {
-        if (true || live) {
+        if (live) {
           this.authenticationService.getPortfolioAccount().subscribe(account => {
             this.portfolioService.getPortfolio()
               .subscribe(result => {
