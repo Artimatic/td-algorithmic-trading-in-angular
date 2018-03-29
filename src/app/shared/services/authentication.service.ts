@@ -72,6 +72,7 @@ export class AuthenticationService {
   }
 
   logout(): void {
+    this.http.post('/api/portfolio/logout', { token: this.token }).subscribe();
     // clear token remove user from local storage to log user out
     this.token = null;
     localStorage.removeItem('currentUser');
