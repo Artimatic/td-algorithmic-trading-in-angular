@@ -1,4 +1,14 @@
 <mat-card *ngIf="order">
+  <div class="banner" *ngIf="error">
+    <div class="banner-content">
+      ERROR: {{error}}
+    </div>
+  </div>
+  <div class="banner-warning" *ngIf="warning">
+      <div class="banner-content-warning">
+        WARNING: {{warning}}
+      </div>
+    </div>
   <mat-horizontal-stepper [linear]="true" #stepper="matHorizontalStepper">
     <mat-step [stepControl]="firstFormGroup">
       <form [formGroup]="firstFormGroup">
@@ -6,17 +16,17 @@
         <mat-chip>{{order.holding.symbol}}</mat-chip>
         <p>{{order.holding.name}}</p>
         <mat-form-field>
-            <mat-select placeholder="Side" [(ngModel)]="order.side" [ngModelOptions]="{standalone: true}" name="side">
-              <mat-option *ngFor="let side of sides" [value]="side">
-                {{ side }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+          <mat-select placeholder="Side" [(ngModel)]="order.side" [ngModelOptions]="{standalone: true}" name="side">
+            <mat-option *ngFor="let side of sides" [value]="side">
+              {{ side }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
         <mat-form-field hintLabel="Quantity">
           <input matInput type="number" placeholder="Quantity" formControlName="quantity" required>
         </mat-form-field>
-        <mat-form-field hintLabel="Max loss tolerated">
-          <input matInput type="number" placeholder="Loss Threshold" disabled>
+        <mat-form-field hintLabel="Loss circuit breaker">
+          <input matInput type="number" placeholder="Loss Threshold" formControlName="lossThreshold" required>
         </mat-form-field>
         <mat-form-field hintLabel="Max profit tolerated">
           <input matInput type="number" placeholder="Profit Threshold" disabled>
@@ -25,7 +35,7 @@
           <input matInput type="number" placeholder="Orders" formControlName="orderSize" required>
         </mat-form-field>
         <div>
-          <button mat-button matStepperNext>Go To Graph</button>
+          <button mat-button matStepperNext>Next</button>
         </div>
       </form>
     </mat-step>
@@ -34,12 +44,16 @@
       <mat-card>
         <div *ngIf="live">
           <mat-chip color="warn" selected="true">LIVE</mat-chip>
-          <mat-progress-bar mode="determinate" color="accent" value="progress()"></mat-progress-bar>
-          Orders Submitted: {{orders.length || 0}}/{{firstFormGroup.value.quantity || 0}} shares
         </div>
         <div *ngIf="!live">
-            <mat-chip>STAND BY</mat-chip>
-          </div>
+          <button mat-raised-button disabled>STALLED</button>
+        </div>
+        <div>
+          <section class="example-section">
+            <mat-progress-bar class="progress-bar" [mode]="determinate" [color]="color" [value]="progress()"></mat-progress-bar>
+          </section>
+          Orders Submitted: {{orders.length || 0}}/{{firstFormGroup.value.quantity || 0}} shares
+        </div>
         <div class="toolbar-content" fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px" fxLayoutGap.xs="0">
           <div fxFlex="5%">
             <mat-card-header>

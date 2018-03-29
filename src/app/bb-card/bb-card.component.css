@@ -1,0 +1,40 @@
+.banner { 
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    background-color: #ff0000; 
+    width: 100%; 
+}
+
+.banner-content { 
+    width: 800px;
+    padding: 10px;
+    color: #ffffff;
+}
+
+.banner-warning { 
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    background-color: #FFD700; 
+    width: 100%; 
+}
+
+.banner-content-warning { 
+    width: 800px;
+    padding: 10px;
+    color: #000000;
+}
+
+.padded {
+    padding: 5px;
+    margin: auto;
+    position: absolute; 
+}
+
+.progress-bar {
+    display: flex;
+    align-content: center;
+    align-items: center;
+    height: 18px;
+  }
