@@ -546,10 +546,10 @@ export class BbCardComponent implements OnDestroy, OnInit {
     console.log('Buy ', orderQuantity, ' of ', this.order.holding.symbol, ' on ', moment.unix(signalTime).format('hh:mm'),
       ' @ ', price, '|',
       signalPrice, i, band);
-    const averageOrderPrice = ((signalPrice / this.estimateAverageBuyOrderPrice()) - 1) * 100;
+    const gains = this.getPercentChange(signalPrice);
 
-    if (averageOrderPrice <= (this.firstFormGroup.value.lossThreshold * (-1))) {
-      this.warning = 'Loss threshold met. Buying is stalled.';
+    if (gains <= (this.firstFormGroup.value.lossThreshold * (-1))) {
+      this.warning = `Loss threshold met. Buying is stalled. Estimated loss: ${gains}`;
       return null;
     } else {
       this.warning = '';
@@ -638,6 +638,10 @@ export class BbCardComponent implements OnDestroy, OnInit {
     }, { count: 0, sum: 0 });
 
     return Number((averagePrice.sum / averagePrice.count).toFixed(2));
+  }
+
+  getPercentChange(currentPrice) {
+    return ((currentPrice / this.estimateAverageBuyOrderPrice()) - 1) * 100;
   }
 
   ngOnDestroy() {
