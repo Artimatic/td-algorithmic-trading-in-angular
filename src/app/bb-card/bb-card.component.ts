@@ -1,4 +1,4 @@
-import { Component, OnDestroy, EventEmitter, Input, OnInit } from '@angular/core';
+import { Component, OnDestroy, EventEmitter, Input, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { Observable } from 'rxjs/Observable';
@@ -22,6 +22,7 @@ import { Order } from '../shared/models/order';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import { SmartOrder } from '../shared/models/smart-order';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
+import { Subscription } from 'rxjs/Subscription';
 
 @Component({
   selector: 'app-bb-card',
@@ -29,10 +30,10 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
   styleUrls: ['./bb-card.component.css']
 })
 export class BbCardComponent implements OnDestroy, OnInit {
+  @ViewChild('stepper') stepper;
   @Input() order: SmartOrder;
   chart: Chart;
   volumeChart: Chart;
-  display: boolean;
   alive: boolean;
   live: boolean;
   interval: number;
@@ -41,8 +42,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
   sellCount: number;
   firstFormGroup: FormGroup;
   secondFormGroup: FormGroup;
-  historicalData;
-  sub;
+  sub: Subscription;
   sides;
   error;
   color;
@@ -53,13 +53,10 @@ export class BbCardComponent implements OnDestroy, OnInit {
     private portfolioService: PortfolioService,
     private authenticationService: AuthenticationService,
     public dialog: MatDialog) {
-    this.display = false;
     this.alive = true;
     this.interval = 300000;
     this.live = false;
     this.sides = ['Buy', 'Sell', 'DayTrade'];
-    this.buyCount = 0;
-    this.sellCount = 0;
   }
 
   ngOnInit() {
@@ -70,20 +67,17 @@ export class BbCardComponent implements OnDestroy, OnInit {
       orderSize: [this.orderSizeEstimate(), Validators.required],
       orderType: [this.order.side, Validators.required]
     });
+
     this.secondFormGroup = this._formBuilder.group({
       secondCtrl: ['', Validators.required]
     });
 
-    switch (this.order.side) {
-      case 'Buy':
-        this.color = 'primary';
-        break;
-      case 'Sell':
-        this.color = 'warn';
-        break;
-      default:
-        this.color = 'accent';
-    }
+    this.setup();
+  }
+
+  resetStepper(stepper) {
+    stepper.selectedIndex = 0;
+    this.stop();
   }
 
   progress() {
@@ -128,6 +122,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
   }
 
   async play(live) {
+    this.setup();
     this.live = live;
     Highcharts.setOptions({
       global: {
@@ -152,8 +147,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
       const volume = [],
         timestamps = data.chart.result[0].timestamp,
         dataLength = timestamps.length,
-        quotes = data.chart.result[0].indicators.quote[0],
-        side = this.order.side.toLowerCase();
+        quotes = data.chart.result[0].indicators.quote[0];
 
       if (this.live) {
         if (dataLength > 80) {
@@ -201,18 +195,21 @@ export class BbCardComponent implements OnDestroy, OnInit {
           const foundOrder = this.orders.find((order) => {
             return point.x === order.signalTime;
           });
-          if (foundOrder && foundOrder.side.toLowerCase() === 'buy') {
-            point.marker = {
-              symbol: 'triangle',
-              fillColor: 'green',
-              radius: 5
-            };
-          } else if (foundOrder && foundOrder.side.toLowerCase() === 'sell') {
-            point.marker = {
-              symbol: 'triangle-down',
-              fillColor: 'red',
-              radius: 5
-            };
+
+          if (foundOrder) {
+            if (foundOrder.side.toLowerCase() === 'buy') {
+              point.marker = {
+                symbol: 'triangle',
+                fillColor: 'green',
+                radius: 5
+              };
+            } else if (foundOrder.side.toLowerCase() === 'sell') {
+              point.marker = {
+                symbol: 'triangle-down',
+                fillColor: 'red',
+                radius: 5
+              };
+            }
           }
         }
         this.chart.addPoint(point);
@@ -374,6 +371,24 @@ export class BbCardComponent implements OnDestroy, OnInit {
     this.orders = [];
   }
 
+  setup() {
+    this.buyCount = 0;
+    this.sellCount = 0;
+    this.orders = [];
+    this.error = '';
+    this.warning = '';
+
+    switch (this.firstFormGroup.value.orderType.side) {
+      case 'Buy':
+        this.color = 'primary';
+        break;
+      case 'Sell':
+        this.color = 'warn';
+        break;
+      default:
+        this.color = 'accent';
+    }
+  }
   getOrderQuantity(maxAllowedOrders, orderSize, existingOrders) {
     if (existingOrders >= maxAllowedOrders) {
       return 0;
@@ -434,29 +449,31 @@ export class BbCardComponent implements OnDestroy, OnInit {
   }
 
   sendVerifiedSell(sell) {
-    if (this.live) {
-      this.authenticationService.getPortfolioAccount().subscribe(account => {
-        this.portfolioService.getPortfolio()
-          .subscribe(result => {
-            const foundPosition = result.find((pos) => {
-              return pos.instrument === this.order.holding.instrument;
-            });
-            console.log('Found position: ', foundPosition);
-            sell.quantity = sell.quantity < foundPosition.quantity ? sell.quantity : foundPosition.quantity;
-            this.portfolioService.sell(sell.holding, sell.quantity, sell.price).subscribe(
-              response => {
-                this.incrementSell(sell.quantity);
-                sell.submitted = true;
-                this.orders.push(sell);
-              },
-              error => {
-                this.error = error;
-                this.stop();
+    if (sell) {
+      if (this.live) {
+        this.authenticationService.getPortfolioAccount().subscribe(account => {
+          this.portfolioService.getPortfolio()
+            .subscribe(result => {
+              const foundPosition = result.find((pos) => {
+                return pos.instrument === this.order.holding.instrument;
               });
-          });
-      });
-    } else {
-      this.incrementSell(sell.quantity);
+              console.log('Found position: ', foundPosition);
+              sell.quantity = sell.quantity < foundPosition.quantity ? sell.quantity : foundPosition.quantity;
+              this.portfolioService.sell(sell.holding, sell.quantity, sell.price).subscribe(
+                response => {
+                  this.incrementSell(sell.quantity);
+                  sell.submitted = true;
+                  this.orders.push(sell);
+                },
+                error => {
+                  this.error = error;
+                  this.stop();
+                });
+            });
+        });
+      } else {
+        this.incrementSell(sell.quantity);
+      }
     }
     return sell;
   }
@@ -466,7 +483,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
       return null;
     }
 
-    if (this.order.side.toLowerCase() === 'buy') {
+    if (this.firstFormGroup.value.orderType.toLowerCase() === 'buy') {
       const orderQuantity = this.getOrderQuantity(this.firstFormGroup.value.quantity,
         this.firstFormGroup.value.orderSize,
         this.buyCount);
@@ -479,7 +496,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
       const buyOrder = this.buildBuyOrder(orderQuantity, band, quotes.low[i], timestamps[i], quotes.close[i], quotes, i);
 
       return this.sendBuy(buyOrder);
-    } else if (this.order.side.toLowerCase() === 'sell') {
+    } else if (this.firstFormGroup.value.orderType.toLowerCase() === 'sell') {
       const orderQuantity = this.getOrderQuantity(this.firstFormGroup.value.quantity,
         this.firstFormGroup.value.orderSize,
         this.sellCount);
@@ -492,7 +509,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
       const sellOrder = this.buildSellOrder(orderQuantity, band, quotes.low[i], timestamps[i], quotes.close[i], quotes, i);
 
       return this.sendSell(sellOrder);
-    } else if (this.order.side.toLowerCase() === 'daytrade') {
+    } else if (this.firstFormGroup.value.orderType.toLowerCase() === 'daytrade') {
       if ((this.buyCount >= this.firstFormGroup.value.quantity) &&
         (this.sellCount >= this.firstFormGroup.value.quantity)) {
         this.stop();
@@ -511,7 +528,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
       const sell: SmartOrder = sellQuantity <= 0 ? null :
         this.buildSellOrder(sellQuantity, band, quotes.high[i], timestamps[i], quotes.close[i], quotes, i);
 
-      if (this.buyCount >= this.sellCount) {
+      if (sell && this.buyCount >= this.sellCount) {
         return this.sendVerifiedSell(sell);
       } else if (buy) {
         return this.sendBuy(buy);
