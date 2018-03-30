@@ -6,7 +6,7 @@
   </div>
   <div class="banner-warning" *ngIf="warning">
       <div class="banner-content-warning">
-        WARNING: {{warning}}
+        WARNING: {{warning}} Estimated loss: {{estimateAverageBuyPrice()}}
       </div>
     </div>
   <mat-horizontal-stepper [linear]="true" #stepper="matHorizontalStepper">
@@ -52,7 +52,7 @@
           <section class="example-section">
             <mat-progress-bar class="progress-bar" [mode]="determinate" [color]="color" [value]="progress()"></mat-progress-bar>
           </section>
-          Orders Submitted: {{orders.length || 0}}/{{firstFormGroup.value.quantity || 0}} shares
+          Orders Submitted: {{ buyCount + sellCount || 0}}/{{firstFormGroup.value.quantity || 0}} shares
         </div>
         <div class="toolbar-content" fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px" fxLayoutGap.xs="0">
           <div fxFlex="5%">
@@ -74,6 +74,8 @@
           <button mat-raised-button color="warn" (click)="stop()">STOP</button>
           <button mat-button color="primary" (click)="play(false)">Backtest</button>
           <button mat-button color="warn" (click)="openDialog()">GO LIVE</button>
+          <button mat-button color="warn" (click)="play(true)">TEST</button>
+
         </mat-card-actions>
       </mat-card>
     </mat-step>

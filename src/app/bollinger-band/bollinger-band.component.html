@@ -5,4 +5,7 @@
 <div *ngFor="let buy of cartService.buyOrders">
   <app-bb-card [order]="buy"></app-bb-card>
 </div>
+<div *ngFor="let other of cartService.otherOrders">
+  <app-bb-card [order]="other"></app-bb-card>
+</div>
 <app-bb-card [order]="test"></app-bb-card>

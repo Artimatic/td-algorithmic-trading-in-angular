@@ -105,6 +105,19 @@ class PortfolioService {
       'Authorization': `Token ${token}`
     };
 
+    console.log('Sell order: ',{
+      account: account,
+      instrument: instrumentUrl,
+      price: price,
+      stop_price: null,
+      quantity: quantity,
+      side: 'sell',
+      symbol: symbol,
+      time_in_force: 'gfd',
+      trigger: 'immediate',
+      type: 'limit'
+    });
+
     return request.post({
       uri: apiUrl + 'orders/',
       headers: headers,
@@ -136,6 +149,19 @@ class PortfolioService {
       'User-Agent': 'Robinhood/5.32.0 (com.robinhood.release.Robinhood; build:3814; iOS 10.3.3)',
       'Authorization': `Token ${token}`
     };
+
+    console.log('Buy order: ', {
+      account: account,
+      instrument: instrumentUrl,
+      price: price,
+      stop_price: null,
+      quantity: quantity,
+      side: 'buy',
+      symbol: symbol,
+      time_in_force: 'gfd',
+      trigger: 'immediate',
+      type: 'limit'
+    });
 
     return request.post({
       uri: apiUrl + 'orders/',

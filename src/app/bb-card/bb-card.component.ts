@@ -87,7 +87,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
   }
 
   progress() {
-    return Number((100 * (this.orders.length / this.firstFormGroup.value.quantity)).toFixed(2));
+    return Number((100 * (this.buyCount + this.sellCount / this.firstFormGroup.value.quantity)).toFixed(2));
   }
 
   orderSizeEstimate() {
@@ -128,6 +128,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
   }
 
   async play(live) {
+    this.live = live;
     Highcharts.setOptions({
       global: {
         useUTC: false
@@ -154,7 +155,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
         quotes = data.chart.result[0].indicators.quote[0],
         side = this.order.side.toLowerCase();
 
-      if (live) {
+      if (this.live) {
         if (dataLength > 80) {
           const real = quotes.close.slice(dataLength - 81, dataLength);
           const band = await this.getBBand(real);
@@ -174,7 +175,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
         point.x = moment.unix(timestamps[i]).valueOf(); // the date
         point.y = closePrice; // close
-        if (!live) {
+        if (!this.live) {
           if (i > 80) {
             const real = quotes.close.slice(i - 81, i);
             const band = await this.getBBand(real);
@@ -225,6 +226,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
       this.volumeChart = this.initVolumeChart('Volume', volume);
     }
   }
+
   initVolumeChart(title, data): Chart {
     return new Chart({
       chart: {
@@ -369,6 +371,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
     if (this.sub) {
       this.sub.unsubscribe();
     }
+    this.orders = [];
   }
 
   getOrderQuantity(maxAllowedOrders, orderSize, existingOrders) {
@@ -377,27 +380,85 @@ export class BbCardComponent implements OnDestroy, OnInit {
     }
 
     if (orderSize + existingOrders > maxAllowedOrders) {
+      console.log('maxAllowedOrders: ', maxAllowedOrders, existingOrders);
+
       return maxAllowedOrders - existingOrders;
     }
+
     return orderSize;
   }
 
+  incrementBuy(quantity) {
+    this.buyCount += quantity;
+  }
+
+  incrementSell(quantity) {
+    this.sellCount += quantity;
+  }
+
   sendBuy(buyOrder: SmartOrder) {
-    this.portfolioService.buy(buyOrder.holding, buyOrder.quantity, buyOrder.price).subscribe(
-      response => { },
-      error => {
-        this.error = error;
-        this.stop();
-      });
+    if (buyOrder) {
+      if (this.live) {
+        this.portfolioService.buy(buyOrder.holding, buyOrder.quantity, buyOrder.price).subscribe(
+          response => {
+            this.incrementBuy(buyOrder.quantity);
+          },
+          error => {
+            this.error = error;
+            this.stop();
+          });
+      } else {
+        this.incrementBuy(buyOrder.quantity);
+      }
+    }
+    return buyOrder;
   }
 
   sendSell(sellOrder: SmartOrder) {
-    this.portfolioService.buy(sellOrder.holding, sellOrder.quantity, sellOrder.price).subscribe(
-      response => { },
-      error => {
-        this.error = error;
-        this.stop();
+    if (sellOrder) {
+      if (this.live) {
+        this.portfolioService.sell(sellOrder.holding, sellOrder.quantity, sellOrder.price).subscribe(
+          response => {
+            this.incrementSell(sellOrder.quantity);
+          },
+          error => {
+            this.error = error;
+            this.stop();
+          });
+      } else {
+        this.incrementSell(sellOrder.quantity);
+      }
+    }
+
+    return sellOrder;
+  }
+
+  sendVerifiedSell(sell) {
+    if (this.live) {
+      this.authenticationService.getPortfolioAccount().subscribe(account => {
+        this.portfolioService.getPortfolio()
+          .subscribe(result => {
+            const foundPosition = result.find((pos) => {
+              return pos.instrument === this.order.holding.instrument;
+            });
+            console.log('Found position: ', foundPosition);
+            sell.quantity = sell.quantity < foundPosition.quantity ? sell.quantity : foundPosition.quantity;
+            this.portfolioService.sell(sell.holding, sell.quantity, sell.price).subscribe(
+              response => {
+                this.incrementSell(sell.quantity);
+                sell.submitted = true;
+                this.orders.push(sell);
+              },
+              error => {
+                this.error = error;
+                this.stop();
+              });
+          });
       });
+    } else {
+      this.incrementSell(sell.quantity);
+    }
+    return sell;
   }
 
   buildOrder(band: any[], quotes, timestamps, i, live: boolean) {
@@ -416,10 +477,8 @@ export class BbCardComponent implements OnDestroy, OnInit {
       }
 
       const buyOrder = this.buildBuyOrder(orderQuantity, band, quotes.low[i], timestamps[i], quotes.close[i], quotes, i);
-      if (live && buyOrder) {
-        this.sendBuy(buyOrder);
-      }
-      return buyOrder;
+
+      return this.sendBuy(buyOrder);
     } else if (this.order.side.toLowerCase() === 'sell') {
       const orderQuantity = this.getOrderQuantity(this.firstFormGroup.value.quantity,
         this.firstFormGroup.value.orderSize,
@@ -432,10 +491,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
       const sellOrder = this.buildSellOrder(orderQuantity, band, quotes.low[i], timestamps[i], quotes.close[i], quotes, i);
 
-      if (live && sellOrder) {
-        this.sendSell(sellOrder);
-      }
-      return sellOrder;
+      return this.sendSell(sellOrder);
     } else if (this.order.side.toLowerCase() === 'daytrade') {
       if ((this.buyCount >= this.firstFormGroup.value.quantity) &&
         (this.sellCount >= this.firstFormGroup.value.quantity)) {
@@ -447,41 +503,18 @@ export class BbCardComponent implements OnDestroy, OnInit {
         this.firstFormGroup.value.orderSize,
         this.buyCount);
 
-      let sellQuantity = this.firstFormGroup.value.orderSize <= this.buyCount ? this.firstFormGroup.value.orderSize : this.buyCount;
+      const sellQuantity = this.firstFormGroup.value.orderSize <= this.buyCount ? this.firstFormGroup.value.orderSize : this.buyCount;
 
       const buy: SmartOrder = buyQuantity <= 0 ? null :
         this.buildBuyOrder(buyQuantity, band, quotes.low[i], timestamps[i], quotes.close[i], quotes, i);
+
       const sell: SmartOrder = sellQuantity <= 0 ? null :
         this.buildSellOrder(sellQuantity, band, quotes.high[i], timestamps[i], quotes.close[i], quotes, i);
 
-      if (sell && this.buyCount >= this.sellCount) {
-        if (live) {
-          this.authenticationService.getPortfolioAccount().subscribe(account => {
-            this.portfolioService.getPortfolio()
-              .subscribe(result => {
-                const foundPosition = result.find((pos) => {
-                  return pos.instrument === this.order.holding.instrument;
-                });
-                console.log('Found position: ', foundPosition);
-                sellQuantity = sellQuantity < foundPosition.quantity ? sellQuantity : foundPosition.quantity;
-                this.portfolioService.sell(sell.holding, sellQuantity, sell.price).subscribe(
-                  response => {
-                    sell.submitted = true;
-                    this.orders.push(sell);
-                  },
-                  error => {
-                    this.error = error;
-                    this.stop();
-                  });
-              });
-          });
-        }
-        return sell;
+      if (this.buyCount >= this.sellCount) {
+        return this.sendVerifiedSell(sell);
       } else if (buy) {
-        if (live && buy) {
-          this.sendBuy(buy);
-        }
-        return buy;
+        return this.sendBuy(buy);
       } else {
         return null;
       }
@@ -528,8 +561,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
         timeSubmitted: moment().unix(),
         signalTime: signalTime
       };
-      console.log('BOUGHT', moment.unix(signalTime).format('hh:mm'));
-      this.buyCount++;
+      console.log('BUY SENT', moment.unix(signalTime).format('hh:mm'));
       return myOrder;
     }
 
@@ -568,8 +600,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
         timeSubmitted: moment().unix(),
         signalTime: signalTime
       };
-      console.log('SOLD', moment.unix(signalTime).format('hh:mm'));
-      this.sellCount++;
+      console.log('SELL SENT', moment.unix(signalTime).format('hh:mm'));
       return myOrder;
     }
 

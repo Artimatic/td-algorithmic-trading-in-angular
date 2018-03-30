@@ -7,6 +7,7 @@ import { MatSnackBar } from '@angular/material';
 export class CartService {
   sellOrders: Order[] = [];
   buyOrders: Order[] = [];
+  otherOrders: Order[] = [];
   sellTotal = 0;
   buyTotal = 0;
 
@@ -24,6 +25,11 @@ export class CartService {
       } else if (order.side.toLowerCase() === 'buy') {
         this.buyOrders.push(order);
         this.snackBar.open('Buy order added to cart', 'Dismiss', {
+          duration: 2000,
+        });
+      } else {
+        this.otherOrders.push(order);
+        this.snackBar.open(`${order.side} order added to cart`, 'Dismiss', {
           duration: 2000,
         });
       }
