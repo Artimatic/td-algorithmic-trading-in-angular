@@ -59,9 +59,9 @@
             <mat-card-header>
               <mat-card-title>{{order.holding.symbol}}</mat-card-title>
               <mat-card-subtitle>
-                <button mat-fab *ngIf="orderType=='Buy'" color="primary">BUY</button>
-                <button mat-fab *ngIf="orderType=='Sell'" color="warn">SELL</button>
-                <button mat-fab *ngIf="orderType=='DayTrade'" color="accent">DAY</button>
+                <button mat-fab *ngIf="firstFormGroup.value.orderType=='Buy'" color="primary">BUY</button>
+                <button mat-fab *ngIf="firstFormGroup.value.orderType=='Sell'" color="warn">SELL</button>
+                <button mat-fab *ngIf="firstFormGroup.value.orderType=='DayTrade'" color="accent">DAY</button>
               </mat-card-subtitle>
             </mat-card-header>
           </div>
