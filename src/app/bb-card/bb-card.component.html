@@ -6,7 +6,7 @@
   </div>
   <div class="banner-warning" *ngIf="warning">
       <div class="banner-content-warning">
-        WARNING: {{warning}} Estimated loss: {{estimateAverageBuyPrice()}}
+        WARNING: {{warning}} Estimated loss: {{estimateAverageBuyOrderPrice()}}
       </div>
     </div>
   <mat-horizontal-stepper [linear]="true" #stepper="matHorizontalStepper">
@@ -16,7 +16,7 @@
         <mat-chip>{{order.holding.symbol}}</mat-chip>
         <p>{{order.holding.name}}</p>
         <mat-form-field>
-          <mat-select placeholder="Side" [(ngModel)]="order.side" [ngModelOptions]="{standalone: true}" name="side">
+          <mat-select placeholder="Side" formControlName="orderType" name="side" required>
             <mat-option *ngFor="let side of sides" [value]="side">
               {{ side }}
             </mat-option>
@@ -59,9 +59,9 @@
             <mat-card-header>
               <mat-card-title>{{order.holding.symbol}}</mat-card-title>
               <mat-card-subtitle>
-                <button mat-fab *ngIf="order.side=='Buy'" color="primary">BUY</button>
-                <button mat-fab *ngIf="order.side=='Sell'" color="warn">SELL</button>
-                <button mat-fab *ngIf="order.side=='DayTrade'" color="accent">DAY</button>
+                <button mat-fab *ngIf="orderType=='Buy'" color="primary">BUY</button>
+                <button mat-fab *ngIf="orderType=='Sell'" color="warn">SELL</button>
+                <button mat-fab *ngIf="orderType=='DayTrade'" color="accent">DAY</button>
               </mat-card-subtitle>
             </mat-card-header>
           </div>
