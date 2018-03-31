@@ -47,6 +47,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
   error;
   color;
   warning;
+  backtestLive;
 
   constructor(private _formBuilder: FormBuilder,
     private backtestService: BacktestService,
@@ -57,12 +58,15 @@ export class BbCardComponent implements OnDestroy, OnInit {
     this.interval = 300000;
     this.live = false;
     this.sides = ['Buy', 'Sell', 'DayTrade'];
+    this.error = '';
+    this.warning = '';
+    this.backtestLive = false;
   }
 
   ngOnInit() {
     this.firstFormGroup = this._formBuilder.group({
       quantity: [this.order.quantity, Validators.required],
-      lossThreshold: [0.03, Validators.required],
+      lossThreshold: [3.03, Validators.required],
       profitThreshold: [''],
       orderSize: [this.orderSizeEstimate(), Validators.required],
       orderType: [this.order.side, Validators.required]
@@ -111,19 +115,33 @@ export class BbCardComponent implements OnDestroy, OnInit {
     });
   }
 
+  confirmLiveBacktest(): void {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '250px',
+      data: { title: 'Confirm', message: 'Are you sure you want to send real orders in backtest?' }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.play(false, true);
+      }
+    });
+  }
+
   goLive() {
     this.alive = true;
     this.sub = TimerObservable.create(0, this.interval)
       .takeWhile(() => this.alive)
       .subscribe(() => {
         this.live = true;
-        this.play(true);
+        this.play(true, this.backtestLive);
       });
   }
 
-  async play(live) {
+  async play(live, backtestLive) {
     this.setup();
     this.live = live;
+    this.backtestLive = backtestLive;
     Highcharts.setOptions({
       global: {
         useUTC: false
@@ -375,8 +393,6 @@ export class BbCardComponent implements OnDestroy, OnInit {
     this.buyCount = 0;
     this.sellCount = 0;
     this.orders = [];
-    this.error = '';
-    this.warning = '';
 
     switch (this.firstFormGroup.value.orderType.side) {
       case 'Buy':
@@ -413,13 +429,13 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
   sendBuy(buyOrder: SmartOrder) {
     if (buyOrder) {
-      if (this.live) {
+      if (this.backtestLive || this.live) {
         this.portfolioService.buy(buyOrder.holding, buyOrder.quantity, buyOrder.price).subscribe(
           response => {
             this.incrementBuy(buyOrder.quantity);
           },
           error => {
-            this.error = error;
+            this.error = error.message;
             this.stop();
           });
       } else {
@@ -431,13 +447,13 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
   sendSell(sellOrder: SmartOrder) {
     if (sellOrder) {
-      if (this.live) {
+      if (this.backtestLive || this.live) {
         this.portfolioService.sell(sellOrder.holding, sellOrder.quantity, sellOrder.price).subscribe(
           response => {
             this.incrementSell(sellOrder.quantity);
           },
           error => {
-            this.error = error;
+            this.error = error.message;
             this.stop();
           });
       } else {
@@ -448,9 +464,9 @@ export class BbCardComponent implements OnDestroy, OnInit {
     return sellOrder;
   }
 
-  sendVerifiedSell(sell) {
+  sendVerifiedSell(sell: SmartOrder) {
     if (sell) {
-      if (this.live) {
+      if (this.backtestLive || this.live) {
         this.authenticationService.getPortfolioAccount().subscribe(account => {
           this.portfolioService.getPortfolio()
             .subscribe(result => {
@@ -458,17 +474,21 @@ export class BbCardComponent implements OnDestroy, OnInit {
                 return pos.instrument === this.order.holding.instrument;
               });
               console.log('Found position: ', foundPosition);
-              sell.quantity = sell.quantity < foundPosition.quantity ? sell.quantity : foundPosition.quantity;
-              this.portfolioService.sell(sell.holding, sell.quantity, sell.price).subscribe(
-                response => {
-                  this.incrementSell(sell.quantity);
-                  sell.submitted = true;
-                  this.orders.push(sell);
-                },
-                error => {
-                  this.error = error;
-                  this.stop();
-                });
+              if (foundPosition) {
+                sell.quantity = sell.quantity < foundPosition.quantity ? sell.quantity : foundPosition.quantity;
+                this.portfolioService.sell(sell.holding, sell.quantity, sell.price).subscribe(
+                  response => {
+                    this.incrementSell(sell.quantity);
+                    sell.submitted = true;
+                    this.orders.push(sell);
+                  },
+                  error => {
+                    this.error = error.message;
+                    this.stop();
+                  });
+              } else {
+                this.warning = `Trying to sell ${sell.holding.symbol} position that doesn\'t exists`'`;
+              }
             });
         });
       } else {
