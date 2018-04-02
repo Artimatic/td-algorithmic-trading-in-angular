@@ -487,7 +487,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
                     this.stop();
                   });
               } else {
-                this.warning = `Trying to sell ${sell.holding.symbol} position that doesn\'t exists`'`;
+                this.warning = `Trying to sell ${sell.holding.symbol} position that doesn\'t exists`;
               }
             });
         });
