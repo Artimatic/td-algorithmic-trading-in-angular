@@ -430,9 +430,9 @@ export class BbCardComponent implements OnDestroy, OnInit {
   sendBuy(buyOrder: SmartOrder) {
     if (buyOrder) {
       if (this.backtestLive || this.live) {
+        this.incrementBuy(buyOrder.quantity);
         this.portfolioService.buy(buyOrder.holding, buyOrder.quantity, buyOrder.price).subscribe(
           response => {
-            this.incrementBuy(buyOrder.quantity);
           },
           error => {
             this.error = error.message;
@@ -563,9 +563,9 @@ export class BbCardComponent implements OnDestroy, OnInit {
       mid = band[1],
       lower = band[0];
 
-    console.log('Buy ', orderQuantity, ' of ', this.order.holding.symbol, ' on ', moment.unix(signalTime).format('hh:mm'),
-      ' @ ', price, '|',
-      signalPrice, i, band);
+    // console.log('Buy ', orderQuantity, ' of ', this.order.holding.symbol, ' on ', moment.unix(signalTime).format('hh:mm'),
+    //   ' @ ', price, '|',
+    //   signalPrice, i, band);
     const gains = this.getPercentChange(signalPrice);
 
     if (gains <= (this.firstFormGroup.value.lossThreshold * (-1))) {
@@ -610,9 +610,9 @@ export class BbCardComponent implements OnDestroy, OnInit {
       mid = band[1],
       lower = band[0];
 
-    console.log('Sell ', orderQuantity, ' of ', this.order.holding.symbol, ' on ', moment.unix(signalTime).format('hh:mm'),
-      ' @ ', price, '|',
-      signalPrice, i, band);
+    // console.log('Sell ', orderQuantity, ' of ', this.order.holding.symbol, ' on ', moment.unix(signalTime).format('hh:mm'),
+    //   ' @ ', price, '|',
+    //   signalPrice, i, band);
 
     if (orderQuantity <= 0) {
       return null;
