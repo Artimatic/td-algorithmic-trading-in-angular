@@ -429,8 +429,9 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
   sendBuy(buyOrder: SmartOrder) {
     if (buyOrder) {
+      this.incrementBuy(buyOrder.quantity);
+
       if (this.backtestLive || this.live) {
-        this.incrementBuy(buyOrder.quantity);
         this.portfolioService.buy(buyOrder.holding, buyOrder.quantity, buyOrder.price).subscribe(
           response => {
           },
@@ -438,8 +439,6 @@ export class BbCardComponent implements OnDestroy, OnInit {
             this.error = error.message;
             this.stop();
           });
-      } else {
-        this.incrementBuy(buyOrder.quantity);
       }
     }
     return buyOrder;
@@ -447,17 +446,17 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
   sendSell(sellOrder: SmartOrder) {
     if (sellOrder) {
+      this.incrementSell(sellOrder.quantity);
+
       if (this.backtestLive || this.live) {
+
         this.portfolioService.sell(sellOrder.holding, sellOrder.quantity, sellOrder.price).subscribe(
           response => {
-            this.incrementSell(sellOrder.quantity);
           },
           error => {
             this.error = error.message;
             this.stop();
           });
-      } else {
-        this.incrementSell(sellOrder.quantity);
       }
     }
 
@@ -474,13 +473,14 @@ export class BbCardComponent implements OnDestroy, OnInit {
                 return pos.instrument === this.order.holding.instrument;
               });
               console.log('Found position: ', foundPosition);
+              this.incrementSell(sell.quantity);
+              this.orders.push(sell);
+
               if (foundPosition) {
                 sell.quantity = sell.quantity < foundPosition.quantity ? sell.quantity : foundPosition.quantity;
                 this.portfolioService.sell(sell.holding, sell.quantity, sell.price).subscribe(
                   response => {
-                    this.incrementSell(sell.quantity);
                     sell.submitted = true;
-                    this.orders.push(sell);
                   },
                   error => {
                     this.error = error.message;
