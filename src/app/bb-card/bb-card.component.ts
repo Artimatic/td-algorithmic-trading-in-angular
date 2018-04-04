@@ -66,7 +66,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
   ngOnInit() {
     this.firstFormGroup = this._formBuilder.group({
       quantity: [this.order.quantity, Validators.required],
-      lossThreshold: [3.03, Validators.required],
+      lossThreshold: [0.33, Validators.required],
       profitThreshold: [''],
       orderSize: [this.orderSizeEstimate(), Validators.required],
       orderType: [this.order.side, Validators.required]
