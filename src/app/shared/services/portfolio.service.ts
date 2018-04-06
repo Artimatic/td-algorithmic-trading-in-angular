@@ -30,6 +30,9 @@ export class PortfolioService {
   }
 
   sell(holding: Holding, quantity: number, price: number): Observable<any> {
+    if (quantity === 0) {
+      throw new Error('Order Quantity is 0');
+    }
     const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.token });
     const options = new RequestOptions({ headers: headers });
     const body = {
@@ -39,14 +42,18 @@ export class PortfolioService {
       'quantity': quantity,
       'price': price
     };
+    return Observable.of({});
 
-    return this.http.post('/api/portfolio/sell', body, options)
-      .map((response: Response) => {
-        return response.json();
-      });
+    // return this.http.post('/api/portfolio/sell', body, options)
+    //   .map((response: Response) => {
+    //     return response.json();
+    //   });
   }
 
   buy(holding: Holding, quantity: number, price: number): Observable<any> {
+    if (quantity === 0) {
+      throw new Error('Order Quantity is 0');
+    }
     const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.token });
     const options = new RequestOptions({ headers: headers });
     const body = {
@@ -56,11 +63,12 @@ export class PortfolioService {
       'quantity': quantity,
       'price': price
     };
+    return Observable.of({});
 
-    return this.http.post('/api/portfolio/buy', body, options)
-      .map((response: Response) => {
-        return response.json();
-      });
+    // return this.http.post('/api/portfolio/buy', body, options)
+    //   .map((response: Response) => {
+    //     return response.json();
+    //   });
   }
 
   getInstruments(symbol: string): Observable<any> {
