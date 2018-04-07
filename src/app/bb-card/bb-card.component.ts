@@ -177,7 +177,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
         if (dataLength > 80) {
           const real = quotes.close.slice(dataLength - 81, dataLength);
           const band = await this.getBBand(real);
-          this.buildOrder(band, quotes, timestamps, dataLength - 2, live);
+          this.buildOrder(band, quotes, timestamps, dataLength - 1, live);
         }
       }
 
@@ -197,10 +197,13 @@ export class BbCardComponent implements OnDestroy, OnInit {
             this.buildOrder(band, quotes, timestamps, i - 1, live);
 
             const foundOrder = this.orders.find((order) => {
+              console.log('match time: ', point.x, order.signalTime);
               return point.x === order.signalTime;
             });
 
             if (foundOrder) {
+              console.log('matched: ', foundOrder);
+
               if (foundOrder.side.toLowerCase() === 'buy') {
                 point.marker = {
                   symbol: 'triangle',
@@ -480,6 +483,9 @@ export class BbCardComponent implements OnDestroy, OnInit {
               }
             });
         });
+      } else {
+        console.log('BUY SENT', moment().format('hh:mm'));
+        this.orders.push(buyOrder);
       }
     }
     return buyOrder;
@@ -533,7 +539,8 @@ export class BbCardComponent implements OnDestroy, OnInit {
             });
         });
       } else {
-        this.incrementSell(sell.quantity);
+        console.log('SELL SENT', moment().format('hh:mm'));
+        this.orders.push(sell);
       }
     }
     return sell;
@@ -547,7 +554,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
     if (this.firstFormGroup.value.orderType.toLowerCase() === 'buy') {
       const orderQuantity = this.getOrderQuantity(this.firstFormGroup.value.quantity,
         this.firstFormGroup.value.orderSize,
-        this.buyCount);
+        this.orders.length);
 
       if (orderQuantity <= 0) {
         this.stop();
@@ -560,7 +567,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
     } else if (this.firstFormGroup.value.orderType.toLowerCase() === 'sell') {
       const orderQuantity = this.getOrderQuantity(this.firstFormGroup.value.quantity,
         this.firstFormGroup.value.orderSize,
-        this.sellCount);
+        this.orders.length);
 
       if (orderQuantity <= 0) {
         this.stop();
@@ -579,7 +586,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
       const buyQuantity = this.getOrderQuantity(this.firstFormGroup.value.quantity,
         this.firstFormGroup.value.orderSize,
-        this.buyCount);
+        this.orders.length);
 
       const sellQuantity = this.firstFormGroup.value.orderSize <= this.buyCount ? this.firstFormGroup.value.orderSize : this.buyCount;
 
@@ -637,7 +644,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
         pending: true,
         side: 'Buy',
         timeSubmitted: moment().unix(),
-        signalTime: signalTime
+        signalTime: moment.unix(signalTime).valueOf()
       };
       return myOrder;
     }
@@ -675,7 +682,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
         pending: false,
         side: 'Sell',
         timeSubmitted: moment().unix(),
-        signalTime: signalTime
+        signalTime: moment.unix(signalTime).valueOf()
       };
       return myOrder;
     }
