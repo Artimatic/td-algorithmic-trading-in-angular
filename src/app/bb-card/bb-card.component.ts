@@ -190,48 +190,19 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
         point.x = moment.unix(timestamps[i]).valueOf(); // the date
         point.y = closePrice; // close
-        if (!this.live) {
-          if (i > 80) {
-            const real = quotes.close.slice(i - 81, i);
-            const band = await this.getBBand(real);
-            this.buildOrder(band, quotes, timestamps, i - 1, live);
 
-            const foundOrder = this.orders.find((order) => {
-              console.log('match time: ', point.x, order.signalTime);
-              return point.x === order.signalTime;
-            });
-
-            if (foundOrder) {
-              console.log('matched: ', foundOrder);
-
-              if (foundOrder.side.toLowerCase() === 'buy') {
-                point.marker = {
-                  symbol: 'triangle',
-                  fillColor: 'green',
-                  radius: 5
-                };
-              } else if (foundOrder.side.toLowerCase() === 'sell') {
-                point.marker = {
-                  symbol: 'triangle-down',
-                  fillColor: 'red',
-                  radius: 5
-                };
-              }
-            }
-          }
-        } else {
-          const foundOrder = this.orders.find((order) => {
-            return point.x === order.signalTime;
-          });
-
-          if (foundOrder) {
-            if (foundOrder.side.toLowerCase() === 'buy') {
+        if (!this.live && i > 80) {
+          const real = quotes.close.slice(i - 81, i);
+          const band = await this.getBBand(real);
+          const order = this.buildOrder(band, quotes, timestamps, i - 1, live);
+          if (order) {
+            if (order.side.toLowerCase() === 'buy') {
               point.marker = {
                 symbol: 'triangle',
                 fillColor: 'green',
                 radius: 5
               };
-            } else if (foundOrder.side.toLowerCase() === 'sell') {
+            } else if (order.side.toLowerCase() === 'sell') {
               point.marker = {
                 symbol: 'triangle-down',
                 fillColor: 'red',
@@ -240,6 +211,27 @@ export class BbCardComponent implements OnDestroy, OnInit {
             }
           }
         }
+
+        const foundOrder = this.orders.find((order) => {
+          return point.x === order.signalTime;
+        });
+
+        if (foundOrder) {
+          if (foundOrder.side.toLowerCase() === 'buy') {
+            point.marker = {
+              symbol: 'triangle',
+              fillColor: 'green',
+              radius: 5
+            };
+          } else if (foundOrder.side.toLowerCase() === 'sell') {
+            point.marker = {
+              symbol: 'triangle-down',
+              fillColor: 'red',
+              radius: 5
+            };
+          }
+        }
+
         this.chart.addPoint(point);
 
         volume.push([
@@ -365,7 +357,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
         crosshairs: true,
         shared: true,
         formatter: function () {
-          return moment(this.x).format('hh:mm') + '<br><b>Price:</b> ' + this.y + '<br>';
+          return moment(this.x).format('hh:mm') + '<br><b>Price:</b> ' + this.y + '<br>' + this.x;
         }
       },
       plotOptions: {
@@ -396,7 +388,6 @@ export class BbCardComponent implements OnDestroy, OnInit {
     if (this.sub) {
       this.sub.unsubscribe();
     }
-    this.orders = [];
   }
 
   setup() {
@@ -415,11 +406,11 @@ export class BbCardComponent implements OnDestroy, OnInit {
         this.color = 'accent';
     }
   }
+
   getOrderQuantity(maxAllowedOrders, orderSize, existingOrders) {
     if (existingOrders >= maxAllowedOrders) {
       return 0;
     }
-
     if (orderSize + existingOrders > maxAllowedOrders) {
       console.log('maxAllowedOrders: ', maxAllowedOrders, existingOrders);
 
@@ -429,25 +420,20 @@ export class BbCardComponent implements OnDestroy, OnInit {
     return orderSize;
   }
 
-  incrementBuy(quantity) {
-    this.buyCount += quantity;
+  incrementBuy(order) {
+    this.orders.push(order);
+    this.buyCount += order.quantity;
   }
 
-  incrementSell(quantity) {
-    this.sellCount += quantity;
+  incrementSell(order) {
+    this.orders.push(order);
+    this.sellCount += order.quantity;
   }
 
   sendBuy(buyOrder: SmartOrder) {
     if (buyOrder) {
       if (this.backtestLive || this.live) {
-        this.portfolioService.buy(buyOrder.holding, buyOrder.quantity, buyOrder.price).subscribe(
-          response => {
-          },
-          error => {
-            this.error = error.message;
-            this.stop();
-          });
-
+        this.incrementBuy(buyOrder);
         this.authenticationService.getPortfolioAccount().subscribe(account => {
           this.portfolioService.getPortfolio()
             .subscribe(result => {
@@ -457,62 +443,38 @@ export class BbCardComponent implements OnDestroy, OnInit {
               console.log('Found position: ', foundPosition);
 
               if (foundPosition) {
-                buyOrder.quantity = ((buyOrder.quantity + foundPosition.quantity) < this.firstFormGroup.value.quantity) ?
-                  buyOrder.quantity : 0;
-
                 const gains = this.getPercentChange(buyOrder.price, foundPosition.average_buy_price);
 
-                if (gains <= (this.firstFormGroup.value.lossThreshold * (-1))) {
+                if (gains > (this.firstFormGroup.value.lossThreshold * (-1))) {
+                  this.warning = '';
+                } else {
                   this.warning = `Loss threshold met. Buying is stalled. Estimated loss: ${gains}%`;
                   return null;
                 }
               }
-
-              if (buyOrder.quantity > 0) {
-                this.incrementBuy(buyOrder.quantity);
-                this.warning = '';
-                this.portfolioService.buy(buyOrder.holding, buyOrder.quantity, buyOrder.price).subscribe(
-                  response => {
-                    console.log('BUY SENT', moment().format('hh:mm'));
-                    this.orders.push(buyOrder);
-                  },
-                  error => {
-                    this.error = error.message;
-                    this.stop();
-                  });
-              }
+              this.warning = '';
+              this.portfolioService.buy(buyOrder.holding, buyOrder.quantity, buyOrder.price).subscribe(
+                response => {
+                  console.log('BUY SENT', moment().format('hh:mm'));
+                },
+                error => {
+                  this.error = error.message;
+                  this.stop();
+                });
             });
         });
       } else {
         console.log('BUY SENT', moment().format('hh:mm'));
-        this.orders.push(buyOrder);
+        this.incrementBuy(buyOrder);
       }
     }
     return buyOrder;
   }
 
-  sendUnverifiedSell(sellOrder: SmartOrder) {
-    if (sellOrder) {
-      this.incrementSell(sellOrder.quantity);
-
-      if (this.backtestLive || this.live) {
-
-        this.portfolioService.sell(sellOrder.holding, sellOrder.quantity, sellOrder.price).subscribe(
-          response => {
-          },
-          error => {
-            this.error = error.message;
-            this.stop();
-          });
-      }
-    }
-
-    return sellOrder;
-  }
-
   sendSell(sell: SmartOrder) {
     if (sell) {
       if (this.backtestLive || this.live) {
+        this.incrementSell(sell);
         this.authenticationService.getPortfolioAccount().subscribe(account => {
           this.portfolioService.getPortfolio()
             .subscribe(result => {
@@ -520,14 +482,12 @@ export class BbCardComponent implements OnDestroy, OnInit {
                 return pos.instrument === this.order.holding.instrument;
               });
               console.log('Found position: ', foundPosition);
-              this.incrementSell(sell.quantity);
 
               if (foundPosition) {
                 sell.quantity = sell.quantity < foundPosition.quantity ? sell.quantity : foundPosition.quantity;
                 this.portfolioService.sell(sell.holding, sell.quantity, sell.price).subscribe(
                   response => {
                     console.log('SELL SENT', moment().format('hh:mm'));
-                    this.orders.push(sell);
                   },
                   error => {
                     this.error = error.message;
@@ -540,7 +500,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
         });
       } else {
         console.log('SELL SENT', moment().format('hh:mm'));
-        this.orders.push(sell);
+        this.incrementSell(sell);
       }
     }
     return sell;
@@ -554,7 +514,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
     if (this.firstFormGroup.value.orderType.toLowerCase() === 'buy') {
       const orderQuantity = this.getOrderQuantity(this.firstFormGroup.value.quantity,
         this.firstFormGroup.value.orderSize,
-        this.orders.length);
+        this.buyCount);
 
       if (orderQuantity <= 0) {
         this.stop();
@@ -567,7 +527,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
     } else if (this.firstFormGroup.value.orderType.toLowerCase() === 'sell') {
       const orderQuantity = this.getOrderQuantity(this.firstFormGroup.value.quantity,
         this.firstFormGroup.value.orderSize,
-        this.orders.length);
+        this.sellCount);
 
       if (orderQuantity <= 0) {
         this.stop();
@@ -611,16 +571,13 @@ export class BbCardComponent implements OnDestroy, OnInit {
       mid = band[1],
       lower = band[0];
 
-    console.log('Buy ', orderQuantity, ' of ', this.order.holding.symbol, ' on ', moment.unix(signalTime).format('hh:mm'),
-      ' @ ', price, '|',
-      signalPrice, i, band);
     const gains = this.getPercentChange(signalPrice, this.estimateAverageBuyOrderPrice());
 
-    if (gains <= (this.firstFormGroup.value.lossThreshold * (-1))) {
+    if (gains > (this.firstFormGroup.value.lossThreshold * (-1))) {
+      this.warning = '';
+    } else {
       this.warning = `Loss threshold met. Buying is stalled. Estimated loss: ${gains}%`;
       return null;
-    } else {
-      this.warning = '';
     }
 
     if (orderQuantity <= 0) {
@@ -634,6 +591,10 @@ export class BbCardComponent implements OnDestroy, OnInit {
     if (!signalPrice || !price) {
       return null;
     }
+
+    console.log(moment.unix(signalTime).format('hh:mm'), ' Buy ', orderQuantity, ' of ', this.order.holding.symbol,
+      ' @ ', price, '|',
+      signalPrice, i, band);
 
     if (signalPrice <= lower[0]) {
       const myOrder: SmartOrder = {
@@ -657,10 +618,6 @@ export class BbCardComponent implements OnDestroy, OnInit {
       mid = band[1],
       lower = band[0];
 
-    console.log('Sell ', orderQuantity, ' of ', this.order.holding.symbol, ' on ', moment.unix(signalTime).format('hh:mm'),
-      ' @ ', price, '|',
-      signalPrice, i, band);
-
     if (orderQuantity <= 0) {
       return null;
     }
@@ -672,6 +629,10 @@ export class BbCardComponent implements OnDestroy, OnInit {
     if (!signalPrice || !price) {
       return null;
     }
+
+    console.log(moment.unix(signalTime).format('hh:mm'), ' Sell ', orderQuantity, ' of ', this.order.holding.symbol,
+      ' @ ', price, '|',
+      signalPrice, i, band);
 
     if (signalPrice >= upper[0]) {
       const myOrder: SmartOrder = {

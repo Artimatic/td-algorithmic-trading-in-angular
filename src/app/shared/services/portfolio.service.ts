@@ -42,12 +42,12 @@ export class PortfolioService {
       'quantity': quantity,
       'price': price
     };
-    return Observable.of({});
+    // return Observable.of({});
 
-    // return this.http.post('/api/portfolio/sell', body, options)
-    //   .map((response: Response) => {
-    //     return response.json();
-    //   });
+    return this.http.post('/api/portfolio/sell', body, options)
+      .map((response: Response) => {
+        return response.json();
+      });
   }
 
   buy(holding: Holding, quantity: number, price: number): Observable<any> {
@@ -63,12 +63,12 @@ export class PortfolioService {
       'quantity': quantity,
       'price': price
     };
-    return Observable.of({});
+    // return Observable.of({});
 
-    // return this.http.post('/api/portfolio/buy', body, options)
-    //   .map((response: Response) => {
-    //     return response.json();
-    //   });
+    return this.http.post('/api/portfolio/buy', body, options)
+      .map((response: Response) => {
+        return response.json();
+      });
   }
 
   getInstruments(symbol: string): Observable<any> {
