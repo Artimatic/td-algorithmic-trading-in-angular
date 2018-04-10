@@ -546,7 +546,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
       const buyQuantity = this.getOrderQuantity(this.firstFormGroup.value.quantity,
         this.firstFormGroup.value.orderSize,
-        this.orders.length);
+        this.buyCount);
 
       const sellQuantity = this.firstFormGroup.value.orderSize <= this.buyCount ? this.firstFormGroup.value.orderSize : this.buyCount;
 
@@ -652,7 +652,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
   }
 
   estimateAverageBuyOrderPrice(): number {
-    if (this.orders.length === 0) {
+    if (this.buyCount === 0) {
       return 0;
     }
 
