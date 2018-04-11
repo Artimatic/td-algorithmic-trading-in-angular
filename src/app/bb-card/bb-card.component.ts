@@ -668,6 +668,9 @@ export class BbCardComponent implements OnDestroy, OnInit {
   }
 
   getPercentChange(currentPrice, boughtPrice) {
+    if (boughtPrice === 0) {
+      return 0;
+    }
     return ((currentPrice / boughtPrice) - 1) * 100;
   }
 
