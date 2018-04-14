@@ -521,7 +521,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
         return null;
       }
 
-      const buyOrder = this.buildBuyOrder(orderQuantity, band, quotes.low[i], timestamps[i], quotes.close[i], quotes, i);
+      const buyOrder = this.buildBuyOrder(orderQuantity, band, quotes.low[i], timestamps[i], quotes.low[i], quotes, i);
 
       return this.sendBuy(buyOrder);
     } else if (this.firstFormGroup.value.orderType.toLowerCase() === 'sell') {
@@ -534,7 +534,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
         return null;
       }
 
-      const sellOrder = this.buildSellOrder(orderQuantity, band, quotes.low[i], timestamps[i], quotes.close[i], quotes, i);
+      const sellOrder = this.buildSellOrder(orderQuantity, band, quotes.high[i], timestamps[i], quotes.high[i], quotes, i);
 
       return this.sendSell(sellOrder);
     } else if (this.firstFormGroup.value.orderType.toLowerCase() === 'daytrade') {
@@ -551,10 +551,10 @@ export class BbCardComponent implements OnDestroy, OnInit {
       const sellQuantity = this.firstFormGroup.value.orderSize <= this.buyCount ? this.firstFormGroup.value.orderSize : this.buyCount;
 
       const buy: SmartOrder = buyQuantity <= 0 ? null :
-        this.buildBuyOrder(buyQuantity, band, quotes.low[i], timestamps[i], quotes.close[i], quotes, i);
+        this.buildBuyOrder(buyQuantity, band, quotes.low[i], timestamps[i], quotes.low[i], quotes, i);
 
       const sell: SmartOrder = sellQuantity <= 0 ? null :
-        this.buildSellOrder(sellQuantity, band, quotes.high[i], timestamps[i], quotes.close[i], quotes, i);
+        this.buildSellOrder(sellQuantity, band, quotes.high[i], timestamps[i], quotes.high[i], quotes, i);
 
       if (sell && this.buyCount >= this.sellCount) {
         return this.sendSell(sell);
@@ -670,8 +670,13 @@ export class BbCardComponent implements OnDestroy, OnInit {
   getPercentChange(currentPrice, boughtPrice) {
     if (boughtPrice === 0) {
       return 0;
+    } else if (currentPrice > boughtPrice) {
+      return ((currentPrice / boughtPrice) - 1);
+    } else if (currentPrice < boughtPrice) {
+      return (1 - (currentPrice / boughtPrice));
+    } else {
+      return 0;
     }
-    return ((currentPrice / boughtPrice) - 1) * 100;
   }
 
   ngOnDestroy() {
