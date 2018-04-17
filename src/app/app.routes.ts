@@ -4,12 +4,12 @@ import { Routes, Route, ActivatedRouteSnapshot } from '@angular/router';
 
 export const routes: Routes = [
   {
-    path: 'console',
+    path: 'home',
     component: MainViewComponent
   },
   {
     path: '**',
-    redirectTo: '/console',
+    redirectTo: '/home',
     pathMatch: 'full'
   }
 ];

@@ -17,6 +17,7 @@ import * as Highcharts from 'highcharts';
 
 import * as moment from 'moment';
 
+import { OrderPref } from '../shared/enums/order-pref.enum';
 import { BacktestService, PortfolioService, AuthenticationService } from '../shared';
 import { Order } from '../shared/models/order';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
@@ -43,12 +44,14 @@ export class BbCardComponent implements OnDestroy, OnInit {
   firstFormGroup: FormGroup;
   secondFormGroup: FormGroup;
   sub: Subscription;
-  sides;
-  error;
-  color;
-  warning;
-  backtestLive;
-  lastPrice;
+  sides: string[];
+  error: string;
+  color: string;
+  warning: string;
+  backtestLive: boolean;
+  lastPrice: number;
+  preferenceList: any[];
+  preferences: any[];
 
   constructor(private _formBuilder: FormBuilder,
     private backtestService: BacktestService,
@@ -62,15 +65,18 @@ export class BbCardComponent implements OnDestroy, OnInit {
     this.error = '';
     this.warning = '';
     this.backtestLive = false;
+    this.preferenceList = ['test', '2'];
+    this.preferences = [OrderPref.TakeProfit, OrderPref.PanicSell];
   }
 
   ngOnInit() {
     this.firstFormGroup = this._formBuilder.group({
       quantity: [this.order.quantity, Validators.required],
-      lossThreshold: [0.33, Validators.required],
-      profitThreshold: [''],
+      lossThreshold: [0.01, Validators.required],
+      profitThreshold: {value: '', disabled: true},
       orderSize: [this.orderSizeEstimate(), Validators.required],
-      orderType: [this.order.side, Validators.required]
+      orderType: [this.order.side, Validators.required],
+      preferences: ''
     });
 
     this.secondFormGroup = this._formBuilder.group({

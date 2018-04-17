@@ -29,13 +29,21 @@
           <input matInput type="number" placeholder="Loss Threshold" formControlName="lossThreshold" required>
           <span matSuffix>% &nbsp;</span>
         </mat-form-field>
-        <mat-form-field hintLabel="Max profit tolerated">
-          <input matInput type="number" placeholder="Profit Threshold" disabled>
+        <mat-form-field hintLabel="Max profit">
+          <input matInput type="number" placeholder="Profit Threshold" formControlName="profitThreshold">
         </mat-form-field>
         <mat-form-field hintLabel="Size of Each Order">
           <input matInput type="number" placeholder="Orders" formControlName="orderSize" required>
         </mat-form-field>
+        <mat-form-field>
+            <mat-select placeholder="Preferences" formControlName="preferences" name="preferences" multiple>
+              <mat-option *ngFor="let pref of preferenceList" [value]="pref">
+                {{ pref }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
         <div>
+          {{this.firstFormGroup.value.preferences}}
           <button mat-button matStepperNext>Next</button>
         </div>
       </form>
