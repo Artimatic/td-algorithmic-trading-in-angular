@@ -1,4 +1,4 @@
 export enum OrderPref {
-    TakeProfit = 0,
-    PanicSell = 1,
+    TakeProfit = 'Take Profit',
+    StopLoss = 'Stop Loss',
 }
