@@ -41,6 +41,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
   orders: SmartOrder[] = [];
   buyCount: number;
   sellCount: number;
+  holdingCount: number;
   firstFormGroup: FormGroup;
   secondFormGroup: FormGroup;
   sub: Subscription;
@@ -71,7 +72,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
   ngOnInit() {
     this.firstFormGroup = this._formBuilder.group({
       quantity: [this.order.quantity, Validators.required],
-      lossThreshold: [0.01, Validators.required],
+      lossThreshold: [-0.01, Validators.required],
       profitThreshold: [{ value: 0.01, disabled: false }, Validators.required],
       orderSize: [this.orderSizeEstimate(), Validators.required],
       orderType: [this.order.side, Validators.required],
@@ -469,7 +470,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
               if (foundPosition) {
                 const gains = this.getPercentChange(buyOrder.price, foundPosition.average_buy_price);
 
-                if (gains > (this.firstFormGroup.value.lossThreshold * (-1))) {
+                if (gains > this.firstFormGroup.value.lossThreshold) {
                   this.warning = '';
                 } else {
                   this.warning = `Loss threshold met. Buying is stalled. Estimated loss: ${gains * 100}%`;
@@ -530,9 +531,56 @@ export class BbCardComponent implements OnDestroy, OnInit {
     return sell;
   }
 
-  buildOrder(band: any[], quotes, timestamps, i) {
+  sendStopLoss(order: SmartOrder) {
+    if (order) {
+      if (this.backtestLive || this.live) {
+        this.authenticationService.getPortfolioAccount().subscribe(account => {
+          this.portfolioService.getPortfolio()
+            .subscribe(result => {
+              const foundPosition = result.find((pos) => {
+                return pos.instrument === this.order.holding.instrument;
+              });
+              console.log('Found position: ', foundPosition);
+
+              if (foundPosition) {
+                const gains = this.getPercentChange(order.price,
+                  foundPosition.average_buy_price);
+
+                if (gains > this.firstFormGroup.value.lossThreshold) {
+                  this.warning = '';
+                  return null;
+                } else {
+                  this.warning = `Loss threshold met. Stop loss sent. Estimated loss: ${gains * 100}%`;
+                  this.portfolioService.sell(order.holding, order.quantity, order.price).subscribe(
+                    response => {
+                      this.incrementSell(order);
+                      console.log('STOP LOSS SELL SENT', order.holding, order.quantity, order.price, moment().format('hh:mm'));
+                    },
+                    error => {
+                      this.error = error.message;
+                      this.stop();
+                    });
+                }
+              }
+            });
+        });
+      } else {
+        console.log('STOP LOSS SELL SENT', order.holding, order.quantity, order.price, moment().format('hh:mm'));
+        this.incrementSell(order);
+      }
+    }
+    return order;
+  }
+
+  buildOrder(band: any[], quotes, timestamps, idx) {
     if (band.length !== 3) {
       return null;
+    }
+
+    const specialOrder = this.processSpecialRules(quotes.close[idx], timestamps[idx]);
+
+    if (specialOrder) {
+      return specialOrder;
     }
 
     if (this.firstFormGroup.value.orderType.toLowerCase() === 'buy') {
@@ -545,14 +593,12 @@ export class BbCardComponent implements OnDestroy, OnInit {
         return null;
       }
 
-      const buyOrder
-        = this.buildBuyOrder(orderQuantity,
-          band,
-          quotes.low[i],
-          timestamps[i],
-          quotes.low[i],
-          quotes,
-          i);
+      const buyOrder = this.buildBuyOrder(orderQuantity,
+        band,
+        quotes.low[idx],
+        timestamps[idx],
+        quotes.low[idx],
+        quotes);
 
       return this.sendBuy(buyOrder);
     } else if (this.firstFormGroup.value.orderType.toLowerCase() === 'sell') {
@@ -567,11 +613,10 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
       const sellOrder = this.buildSellOrder(orderQuantity,
         band,
-        quotes.high[i],
-        timestamps[i],
-        quotes.high[i],
-        quotes,
-        i);
+        quotes.high[idx],
+        timestamps[idx],
+        quotes.high[idx],
+        quotes);
 
       return this.sendSell(sellOrder);
     } else if (this.firstFormGroup.value.orderType.toLowerCase() === 'daytrade') {
@@ -589,10 +634,10 @@ export class BbCardComponent implements OnDestroy, OnInit {
         this.firstFormGroup.value.orderSize : this.buyCount;
 
       const buy: SmartOrder = buyQuantity <= 0 ? null :
-        this.buildBuyOrder(buyQuantity, band, quotes.low[i], timestamps[i], quotes.low[i], quotes, i);
+        this.buildBuyOrder(buyQuantity, band, quotes.low[idx], timestamps[idx], quotes.low[idx], quotes);
 
       const sell: SmartOrder = sellQuantity <= 0 ? null :
-        this.buildSellOrder(sellQuantity, band, quotes.high[i], timestamps[i], quotes.high[i], quotes, i);
+        this.buildSellOrder(sellQuantity, band, quotes.high[idx], timestamps[idx], quotes.high[idx], quotes);
 
       if (sell && this.buyCount >= this.sellCount) {
         return this.sendSell(sell);
@@ -604,14 +649,14 @@ export class BbCardComponent implements OnDestroy, OnInit {
     }
   }
 
-  buildBuyOrder(orderQuantity: number, band: any[], price, signalTime, signalPrice, quotes, i) {
+  buildBuyOrder(orderQuantity: number, band: any[], price, signalTime, signalPrice, quotes) {
     const upper = band[2],
       mid = band[1],
       lower = band[0];
 
     const gains = this.getPercentChange(signalPrice, this.estimateAverageBuyOrderPrice());
 
-    if (gains > (this.firstFormGroup.value.lossThreshold * (-1))) {
+    if (gains > this.firstFormGroup.value.lossThreshold) {
       this.warning = '';
     } else {
       this.warning = `Loss threshold met. Buying is stalled. Estimated loss: ${gains * 100}%`;
@@ -635,23 +680,13 @@ export class BbCardComponent implements OnDestroy, OnInit {
       signalPrice, JSON.stringify(band));
 
     if (signalPrice <= lower[0]) {
-      const myOrder: SmartOrder = {
-        holding: this.order.holding,
-        quantity: orderQuantity,
-        price: Number(price.toFixed(2)),
-        submitted: true,
-        pending: true,
-        side: 'Buy',
-        timeSubmitted: moment().unix(),
-        signalTime: moment.unix(signalTime).valueOf()
-      };
-      return myOrder;
+      return this.createOrder('Buy', orderQuantity, price, signalTime);
     }
 
     return null;
   }
 
-  buildSellOrder(orderQuantity: number, band: any[], price, signalTime, signalPrice, quotes, i) {
+  buildSellOrder(orderQuantity: number, band: any[], price, signalTime, signalPrice, quotes) {
     const upper = band[2],
       mid = band[1],
       lower = band[0];
@@ -673,37 +708,49 @@ export class BbCardComponent implements OnDestroy, OnInit {
       signalPrice, JSON.stringify(band));
 
     if (signalPrice >= upper[0]) {
-      const myOrder: SmartOrder = {
-        holding: this.order.holding,
-        quantity: orderQuantity,
-        price: Number(price.toFixed(2)),
-        submitted: false,
-        pending: false,
-        side: 'Sell',
-        timeSubmitted: moment().unix(),
-        signalTime: moment.unix(signalTime).valueOf()
-      };
-      return myOrder;
+      return this.createOrder('Sell', orderQuantity, price, signalTime);
     }
 
     return null;
   }
 
-  specialOrderCheck(idx, quotes, signalPrice) {
+  createOrder(side, quantity, price, signalTime): SmartOrder {
+    return {
+      holding: this.order.holding,
+      quantity: quantity,
+      price: Number(price.toFixed(2)),
+      submitted: false,
+      pending: false,
+      side: side,
+      timeSubmitted: moment().unix(),
+      signalTime: moment.unix(signalTime).valueOf()
+    };
+  }
+
+  processSpecialRules(signalPrice, signalTime) {
     const estimatedPrice = this.estimateAverageBuyOrderPrice();
     const gains = this.getPercentChange(signalPrice, estimatedPrice);
 
     if (this.config.StopLoss) {
-      if (gains > (this.firstFormGroup.value.lossThreshold * (-1))) {
+      if (gains >= this.firstFormGroup.value.lossThreshold) {
         this.warning = '';
       } else {
         this.warning = `Loss threshold met. Creating stop loss order. Estimated loss: ${gains * 100}%`;
+        const stopLossOrder = this.createOrder('Sell', this.buyCount, signalPrice, signalTime);
+        return this.sendStopLoss(stopLossOrder);
       }
     }
 
     if (this.config.TakeProfit) {
-
+      if (gains >= this.firstFormGroup.value.profitThreshold) {
+        this.warning = `Profits met. Realizing profits. Estimated gain: ${gains * 100}%`;
+        const sellOrder = this.createOrder('Sell', this.buyCount, signalPrice, signalTime);
+        return this.sendSell(sellOrder);
+      } else {
+        this.warning = '';
+      }
     }
+    return null;
   }
 
   estimateAverageBuyOrderPrice(): number {
@@ -723,14 +770,10 @@ export class BbCardComponent implements OnDestroy, OnInit {
   }
 
   getPercentChange(currentPrice, boughtPrice) {
-    if (boughtPrice === 0) {
+    if (boughtPrice === 0 || currentPrice === boughtPrice) {
       return 0;
-    } else if (currentPrice > boughtPrice) {
-      return ((currentPrice / boughtPrice) - 1);
-    } else if (currentPrice < boughtPrice) {
-      return (1 - (currentPrice / boughtPrice));
     } else {
-      return 0;
+      return ((currentPrice / boughtPrice) - 1);
     }
   }
 

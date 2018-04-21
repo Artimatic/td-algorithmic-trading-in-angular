@@ -1,6 +1,6 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
-import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 import { RouterModule, NavigationError } from '@angular/router';
 import { ChartModule } from 'angular-highcharts';
@@ -32,14 +32,20 @@ import {
   MatSelectModule,
 } from '@angular/material';
 
-import {FlexLayoutModule} from '@angular/flex-layout';
+import { FlexLayoutModule } from '@angular/flex-layout';
 
 import { routes } from './app.routes';
 import { AppComponent } from './app.component';
 import { BulkBacktestComponent } from './bulk-backtest';
 import { XlsImportComponent } from './xls-import/xls-import.component';
 import { RhTableComponent } from './rh-table';
-import { BacktestService, AuthenticationService, PortfolioService } from './shared';
+import {
+  BacktestService,
+  AuthenticationService,
+  PortfolioService,
+  DaytradeService,
+  ReportingService
+} from './shared';
 import { ChartDialogComponent } from './chart-dialog';
 
 import { RhInputComponent } from './rh-input/rh-input.component';
@@ -58,7 +64,6 @@ import { BollingerBandComponent } from './bollinger-band/bollinger-band.componen
 import { RealtimeChartComponent } from './realtime-chart/realtime-chart.component';
 import { BbCardComponent } from './bb-card/bb-card.component';
 import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.component';
-
 
 @NgModule({
   declarations: [
@@ -127,7 +132,9 @@ import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.componen
     AuthenticationService,
     PortfolioService,
     CartService,
-    ExcelService
+    ExcelService,
+    DaytradeService,
+    ReportingService,
   ],
   bootstrap: [AppComponent]
 })
