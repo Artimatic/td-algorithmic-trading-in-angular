@@ -464,38 +464,14 @@ export class BbCardComponent implements OnDestroy, OnInit {
       if (this.backtestLive || this.live) {
         this.incrementBuy(buyOrder);
         this.authenticationService.getPortfolioAccount().subscribe(account => {
-          this.portfolioService.getPortfolio()
-            .subscribe(result => {
-              const foundPosition = result.find((pos) => {
-                return pos.instrument === this.order.holding.instrument;
-              });
-
-              if (foundPosition) {
-                console.log('Found position: ', foundPosition);
-
-                const gains = this.getPercentChange(buyOrder.price, foundPosition.average_buy_price);
-
-                if (gains <= this.firstFormGroup.value.lossThreshold) {
-                  this.warning = `Loss threshold met. Buying is stalled. Estimated loss: ${this.convertToFixedNumber(gains)}%`;
-
-                  this.removeOrder(buyOrder);
-                  this.incrementSell(buyOrder);
-                  return null;
-                }
-              }
-              this.portfolioService.buy(buyOrder.holding, buyOrder.quantity, buyOrder.price).subscribe(
-                response => {
-                  console.log('BUY SENT', buyOrder.holding, buyOrder.quantity, buyOrder.price, moment().format('hh:mm'));
-                },
-                error => {
-                  this.error = error.message;
-                  this.stop();
-                });
+          this.portfolioService.buy(buyOrder.holding, buyOrder.quantity, buyOrder.price).subscribe(
+            response => {
+              console.log('BUY SENT', buyOrder.holding, buyOrder.quantity, buyOrder.price, moment().format('hh:mm'));
             },
-              error => {
-                this.error = error.message;
-                this.stop();
-              });
+            error => {
+              this.error = error.message;
+              this.stop();
+            });
         });
       } else {
         console.log('BUY SENT', buyOrder.holding, buyOrder.quantity, buyOrder.price, moment().format('hh:mm'));
@@ -531,9 +507,6 @@ export class BbCardComponent implements OnDestroy, OnInit {
                   });
               } else {
                 this.removeOrder(sellOrder);
-
-                this.incrementBuy(sellOrder);
-
                 this.warning = `Trying to sell ${sellOrder.holding.symbol} position that doesn\'t exists`;
               }
             });
@@ -563,24 +536,14 @@ export class BbCardComponent implements OnDestroy, OnInit {
               console.log('Found position: ', foundPosition);
 
               if (foundPosition) {
-                const gains = this.getPercentChange(order.price,
-                  foundPosition.average_buy_price);
-
-                if (gains > this.firstFormGroup.value.lossThreshold) {
-                  this.removeOrder(order);
-                  this.incrementBuy(order);
-                  return null;
-                } else {
-                  this.warning = `Loss threshold met. Stop loss sent. Estimated loss: ${this.convertToFixedNumber(gains) * 100}%`;
-                  this.portfolioService.sell(order.holding, order.quantity, order.price).subscribe(
-                    response => {
-                      console.log('STOP LOSS SELL SENT', order.holding, order.quantity, order.price, moment().format('hh:mm'));
-                    },
-                    error => {
-                      this.error = error.message;
-                      this.stop();
-                    });
-                }
+                this.portfolioService.sell(order.holding, order.quantity, order.price).subscribe(
+                  response => {
+                    console.log('STOP LOSS SELL SENT', order.holding, order.quantity, order.price, moment().format('hh:mm'));
+                  },
+                  error => {
+                    this.error = error.message;
+                    this.stop();
+                  });
               }
             },
               error => {
@@ -589,7 +552,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
               });
         });
       } else {
-        console.log('STOP LOSS SELL SENT', order.holding, order.quantity, order.price, moment().format('hh:mm'));
+        console.log('stop loss sent', order.holding, order.quantity, order.price, moment().format('hh:mm'));
         this.incrementSell(order);
       }
     }
@@ -613,7 +576,6 @@ export class BbCardComponent implements OnDestroy, OnInit {
         this.buyCount);
 
       if (orderQuantity <= 0) {
-        this.stop();
         return null;
       }
 
@@ -631,7 +593,6 @@ export class BbCardComponent implements OnDestroy, OnInit {
         this.sellCount);
 
       if (orderQuantity <= 0) {
-        this.stop();
         return null;
       }
 
@@ -644,8 +605,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
       return this.sendSell(sellOrder);
     } else if (this.firstFormGroup.value.orderType.toLowerCase() === 'daytrade') {
-      if ((this.buyCount >= this.firstFormGroup.value.quantity) &&
-        (this.sellCount >= this.firstFormGroup.value.quantity)) {
+      if (this.hasReachedOrderLimit()) {
         this.stop();
         return null;
       }
@@ -757,8 +717,8 @@ export class BbCardComponent implements OnDestroy, OnInit {
       if (this.config.StopLoss) {
         if (gains < this.firstFormGroup.value.lossThreshold) {
           console.log('STOP LOSS TRIGGERED');
-          this.warning = `Loss threshold met. Creating stop loss order. Estimated loss: ${this.convertToFixedNumber(gains)}%`;
-          const stopLossOrder = this.createOrder('Sell', this.buyCount, closePrice, signalTime);
+          this.warning = `Loss threshold met. Sending stop loss order. Estimated loss: ${this.convertToFixedNumber(gains)}%`;
+          const stopLossOrder = this.createOrder('Sell', this.positionCount, closePrice, signalTime);
           return this.sendStopLoss(stopLossOrder);
         }
       }
@@ -767,7 +727,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
         if (gains >= this.firstFormGroup.value.profitThreshold) {
           console.log('PROFIT HARVEST TRIGGERED');
           this.warning = `Profits met. Realizing profits. Estimated gain: ${this.convertToFixedNumber(gains)}%`;
-          const sellOrder = this.createOrder('Sell', this.buyCount, upperPrice, signalTime);
+          const sellOrder = this.createOrder('Sell', this.positionCount, upperPrice, signalTime);
           return this.sendSell(sellOrder);
         }
       }
@@ -785,8 +745,10 @@ export class BbCardComponent implements OnDestroy, OnInit {
     }
     if (oldOrder.side.toLowerCase() === 'sell') {
       this.sellCount -= oldOrder.quantity;
+      this.positionCount += oldOrder.quantity;
     } else if (oldOrder.side.toLowerCase() === 'buy') {
       this.buyCount -= oldOrder.quantity;
+      this.positionCount -= oldOrder.quantity;
     }
   }
 
@@ -816,6 +778,11 @@ export class BbCardComponent implements OnDestroy, OnInit {
     } else {
       return ((currentPrice / boughtPrice) - 1);
     }
+  }
+
+  hasReachedOrderLimit() {
+    return (this.buyCount >= this.firstFormGroup.value.quantity) &&
+    (this.sellCount >= this.firstFormGroup.value.quantity);
   }
 
   ngOnDestroy() {
