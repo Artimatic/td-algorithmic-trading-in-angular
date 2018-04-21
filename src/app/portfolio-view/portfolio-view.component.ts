@@ -25,7 +25,6 @@ export class PortfolioViewComponent implements AfterViewInit {
   private portfolioTableComponent: PortfolioTableComponent;
 
   portfolioData: Holding[];
-  showPortfolio = false;
 
   constructor(
     private portfolioService: PortfolioService,
