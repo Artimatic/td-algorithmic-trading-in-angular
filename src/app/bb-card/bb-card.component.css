@@ -38,3 +38,8 @@
     align-items: center;
     height: 18px;
   }
+
+.order-log {
+    height: auto;
+    width: auto;
+}

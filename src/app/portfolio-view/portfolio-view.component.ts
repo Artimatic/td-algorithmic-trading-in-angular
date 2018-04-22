@@ -12,6 +12,7 @@ import { Order } from '../shared/models/order';
 import { OrderRow } from '../shared/models/order-row';
 import { MatSnackBar } from '@angular/material';
 import { ExcelService } from '../shared/services/excel-service.service';
+import { SmartOrder } from '../shared/models/smart-order';
 
 @Component({
   selector: 'app-portfolio-view',
@@ -40,11 +41,11 @@ export class PortfolioViewComponent implements AfterViewInit {
     this.sidenav.close();
   }
 
-  deleteSellOrder(deleteOrder: Order) {
+  deleteSellOrder(deleteOrder: SmartOrder) {
     this.cartService.deleteSell(deleteOrder);
   }
 
-  deleteBuyOrder(deleteOrder: Order) {
+  deleteBuyOrder(deleteOrder: SmartOrder) {
     this.cartService.deleteBuy(deleteOrder);
   }
 
@@ -71,7 +72,7 @@ export class PortfolioViewComponent implements AfterViewInit {
           name: instruments.name
         };
 
-        const order: Order = {
+        const order: SmartOrder = {
           holding: newHolding,
           quantity: row.quantity,
           price: row.price,

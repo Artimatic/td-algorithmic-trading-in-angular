@@ -138,8 +138,8 @@ class QuoteService {
     return api.getRealtimeQuotes(symbols.join(','));
   }
 
-  getIntradayData(symbol) {
-    return api.getIntradayChartData(symbol, '2m', true);
+  getIntradayData(symbol, interval) {
+    return api.getIntradayChartData(symbol, interval, true);
   }
 
   getCompanySummary(symbol) {

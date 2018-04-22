@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { PortfolioService } from './portfolio.service';
 import { Order } from '../models/order';
 import { MatSnackBar } from '@angular/material';
+import { SmartOrder } from '../models/smart-order';
 
 @Injectable()
 export class CartService {
-  sellOrders: Order[] = [];
-  buyOrders: Order[] = [];
-  otherOrders: Order[] = [];
+  sellOrders: SmartOrder[] = [];
+  buyOrders: SmartOrder[] = [];
+  otherOrders: SmartOrder[] = [];
   sellTotal = 0;
   buyTotal = 0;
 
@@ -15,7 +16,7 @@ export class CartService {
     private portfolioService: PortfolioService,
     public snackBar: MatSnackBar) { }
 
-  addToCart(order: Order) {
+  addToCart(order: SmartOrder) {
     if (order.quantity > 0) {
       if (order.side.toLowerCase() === 'sell') {
         this.sellOrders.push(order);
@@ -37,7 +38,7 @@ export class CartService {
     this.calculateTotals();
   }
 
-  deleteSell(deleteOrder: Order) {
+  deleteSell(deleteOrder: SmartOrder) {
     const index = this.sellOrders.findIndex((order) => {
       if (deleteOrder.price === order.price
         && deleteOrder.holding.symbol === order.holding.symbol
@@ -50,7 +51,7 @@ export class CartService {
     this.calculateTotals();
   }
 
-  deleteBuy(deleteOrder: Order) {
+  deleteBuy(deleteOrder: SmartOrder) {
     const index = this.buyOrders.findIndex((order) => {
       if (deleteOrder.price === order.price
         && deleteOrder.holding.symbol === order.holding.symbol

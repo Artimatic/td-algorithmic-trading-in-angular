@@ -53,7 +53,7 @@ class QuoteController extends BaseController {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     }
     else {
-      QuoteService.getIntradayData(request.body.symbol)
+      QuoteService.getIntradayData(request.body.symbol, request.body.interval)
         .then((data) => BaseController.requestGetSuccessHandler(response, data))
         .catch((e) => BaseController.requestErrorHandler(response, e));
     }

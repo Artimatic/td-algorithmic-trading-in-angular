@@ -5,10 +5,10 @@
     </div>
   </div>
   <div class="banner-warning" *ngIf="warning">
-      <div class="banner-content-warning">
-        WARNING: {{warning}}
-      </div>
+    <div class="banner-content-warning">
+      WARNING: {{warning}}
     </div>
+  </div>
   <mat-horizontal-stepper [linear]="true" #stepper="matHorizontalStepper">
     <mat-step [stepControl]="firstFormGroup">
       <form [formGroup]="firstFormGroup">
@@ -36,12 +36,12 @@
           <input matInput type="number" placeholder="Orders" formControlName="orderSize" required>
         </mat-form-field>
         <mat-form-field>
-            <mat-select placeholder="Preferences" formControlName="preferences" name="preferences" multiple>
-              <mat-option *ngFor="let pref of preferenceList" [value]="pref">
-                {{ pref }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+          <mat-select placeholder="Preferences" formControlName="preferences" name="preferences" multiple>
+            <mat-option *ngFor="let pref of preferenceList" [value]="pref">
+              {{ pref }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
         <div>
           {{this.firstFormGroup.value.preferences}}
           <button mat-button matStepperNext>Next</button>
@@ -73,10 +73,28 @@
                 <button mat-fab *ngIf="firstFormGroup.value.orderType=='DayTrade'" color="accent">DAY</button>
               </mat-card-subtitle>
             </mat-card-header>
+            <mat-checkbox [(ngModel)]="showGraph">Chart</mat-checkbox>
           </div>
           <div fxFlex="95%">
-            <div [chart]="chart"></div>
-            <div [chart]="volumeChart"></div>
+            <div *ngIf="showGraph">
+              <div [chart]="chart"></div>
+              <div [chart]="volumeChart"></div>
+            </div>
+            <div class="order-log" *ngIf="!showGraph">
+              <mat-grid-list cols="5" rowHeight="150px">
+                <mat-grid-tile *ngFor="let tile of tiles" [colspan]="tile.cols" [rowspan]="tile.rows">
+                  <table>
+                    <tr *ngFor="let order of tile.orders">
+                      <td>{{order.signalTime}}</td>
+                      <td>{{order.action}}</td>
+                      <td>{{order.quantity}}@</td>
+                      <td>${{order.price}}</td>
+                      <td> on {{order.timeSubmitted}}</td>
+                    </tr>
+                  </table>
+                </mat-grid-tile>
+              </mat-grid-list>
+            </div>
           </div>
         </div>
         <mat-card-actions>
