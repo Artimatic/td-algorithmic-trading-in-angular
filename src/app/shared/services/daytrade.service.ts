@@ -82,13 +82,12 @@ export class DaytradeService {
           if (foundPosition) {
             const positionCount = Number(foundPosition.quantity);
             sellOrder.quantity = sellOrder.quantity < positionCount ? sellOrder.quantity : positionCount;
-
             this.portfolioService.sell(sellOrder.holding, sellOrder.quantity, sellOrder.price).subscribe(
               response => {
-                resolve();
+                resolve(response);
               },
               error => {
-                reject();
+                reject(error);
               });
           } else {
             handleNotFound();
@@ -114,14 +113,14 @@ export class DaytradeService {
       }
       const orderRow = {
         timeSubmitted: moment.unix(orders[i].timeSubmitted).format('hh:mm'),
-        signalTime: moment.unix(orders[i].signalTime).format('hh:mm'),
+        signalTime: moment(orders[i].signalTime).format('hh:mm'),
         quantity: orders[i].quantity,
         price: orders[i].price,
         action
       };
 
       currentList.push(orderRow);
-      if (currentList.length > 9) {
+      if (currentList.length >= 5) {
         tiles.push({ orders: currentList, cols: 1, rows: 1 });
         currentList = [];
       }

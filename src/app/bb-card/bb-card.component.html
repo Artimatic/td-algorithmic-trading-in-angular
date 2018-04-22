@@ -81,7 +81,7 @@
               <div [chart]="volumeChart"></div>
             </div>
             <div class="order-log" *ngIf="!showGraph">
-              <mat-grid-list cols="5" rowHeight="150px">
+              <mat-grid-list cols="3" rowHeight="150px">
                 <mat-grid-tile *ngFor="let tile of tiles" [colspan]="tile.cols" [rowspan]="tile.rows">
                   <table>
                     <tr *ngFor="let order of tile.orders">

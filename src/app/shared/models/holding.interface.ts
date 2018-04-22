@@ -12,4 +12,5 @@ export interface Holding {
     realtime_chg_percent?: number;
     gainz?: number;
     diversification?: number;
+    shares_held_for_sells?: number;
 }

@@ -22,7 +22,8 @@ import {
   BacktestService,
   PortfolioService,
   AuthenticationService,
-  DaytradeService
+  DaytradeService,
+  ReportingService
 } from '../shared';
 import { Order } from '../shared/models/order';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
@@ -66,6 +67,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
     private portfolioService: PortfolioService,
     private authenticationService: AuthenticationService,
     private daytradeService: DaytradeService,
+    private reportingService: ReportingService,
     public dialog: MatDialog) {
     this.alive = true;
     this.interval = 300000;
@@ -240,6 +242,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
           quotes.volume[i] // the volume
         ]);
       }
+
       console.log(this.orders, moment().format('hh:mm'));
 
       this.tiles = this.daytradeService.buildTileList(this.orders);
@@ -436,7 +439,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
         };
 
         const reject = (error) => {
-          this.error = error.message;
+          this.error = error._body;
           this.stop();
         };
         this.daytradeService.sendBuy(buyOrder, resolve, reject);
@@ -457,7 +460,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
         };
 
         const reject = (error) => {
-          this.error = error.message;
+          this.error = error._body;
           this.stop();
         };
 
@@ -486,7 +489,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
         };
 
         const reject = (error) => {
-          this.error = error.message;
+          this.error = error._body;
           this.stop();
         };
 
