@@ -243,7 +243,6 @@ export class BbCardComponent implements OnDestroy, OnInit {
       console.log(this.orders, moment().format('hh:mm'));
 
       this.tiles = this.daytradeService.buildTileList(this.orders);
-      console.log('tiles: ', this.tiles);
       this.volumeChart = this.initVolumeChart('Volume', volume);
     }
   }
