@@ -92,6 +92,7 @@ export class PortfolioViewComponent implements AfterViewInit {
 
   exportPortfolio() {
     const today = moment().format('MM-DD-YY');
+    console.log('export data: ', this.portfolioTableComponent.dataSource.data);
     this.excelService.exportAsExcelFile(this.portfolioTableComponent.dataSource.data, `portfolio_${today}`);
   }
 }

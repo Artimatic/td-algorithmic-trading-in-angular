@@ -61,6 +61,8 @@ export class BbCardComponent implements OnDestroy, OnInit {
   config;
   showGraph;
   tiles;
+  bbandPeriod;
+  dataInterval;
 
   constructor(private _formBuilder: FormBuilder,
     private backtestService: BacktestService,
@@ -82,6 +84,8 @@ export class BbCardComponent implements OnDestroy, OnInit {
       }
     });
     this.showGraph = false;
+    this.bbandPeriod = 80;
+    this.dataInterval = '1m';
   }
 
   ngOnInit() {
@@ -158,12 +162,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
     const requestBody = {
       symbol: this.order.holding.symbol,
-      interval: '2m'
-    };
-
-    const quoteRequestBody = {
-      ticker: this.order.holding.symbol,
-      interval: '2m'
+      interval: this.dataInterval
     };
 
     const data = await this.backtestService.getIntraday(requestBody).toPromise();
@@ -175,12 +174,10 @@ export class BbCardComponent implements OnDestroy, OnInit {
         quotes = data.chart.result[0].indicators.quote[0];
 
       if (this.live) {
-        if (moment().format('hh:mm') === '04:00') {
-          if (dataLength > 80) {
-            const real = quotes.close.slice(dataLength - 81, dataLength);
-            const band = await this.daytradeService.getBBand(real);
-            this.buildOrder(band, quotes, timestamps, dataLength - 1);
-          }
+        if (dataLength > this.bbandPeriod) {
+          const real = quotes.close.slice(dataLength - this.bbandPeriod, dataLength);
+          const band = await this.daytradeService.getBBand(real, this.bbandPeriod);
+          this.buildOrder(band, quotes, timestamps, dataLength - 1);
         }
       }
 
@@ -194,10 +191,10 @@ export class BbCardComponent implements OnDestroy, OnInit {
         point.x = moment.unix(timestamps[i]).valueOf(); // the date
         point.y = closePrice; // close
 
-        if (!this.live && i > 80) {
-          const real = quotes.close.slice(i - 81, i);
-          const band = await this.daytradeService.getBBand(real);
-          const order = this.buildOrder(band, quotes, timestamps, i - 1);
+        if (!this.live && i > this.bbandPeriod) {
+          const real = quotes.close.slice(i - this.bbandPeriod, i);
+          const band = await this.daytradeService.getBBand(real, this.bbandPeriod);
+          const order = this.buildOrder(band, quotes, timestamps, i);
           if (order) {
             if (order.side.toLowerCase() === 'buy') {
               point.marker = {
@@ -242,8 +239,6 @@ export class BbCardComponent implements OnDestroy, OnInit {
           quotes.volume[i] // the volume
         ]);
       }
-
-      console.log(this.orders, moment().format('hh:mm'));
 
       this.tiles = this.daytradeService.buildTileList(this.orders);
       this.volumeChart = this.initVolumeChart('Volume', volume);
@@ -431,11 +426,14 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
   sendBuy(buyOrder: SmartOrder) {
     if (buyOrder) {
+      const log = `ORDER SENT ${buyOrder.side} ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
+
       if (this.backtestLive || this.live) {
         this.incrementBuy(buyOrder);
 
         const resolve = (response) => {
-          console.log('BUY SENT', buyOrder.holding, buyOrder.quantity, buyOrder.price, moment().format('hh:mm'));
+          console.log(`${moment().format('hh:mm')} ${log}`);
+          this.reportingService.addAuditLog(log);
         };
 
         const reject = (error) => {
@@ -444,8 +442,9 @@ export class BbCardComponent implements OnDestroy, OnInit {
         };
         this.daytradeService.sendBuy(buyOrder, resolve, reject);
       } else {
-        console.log('BUY SENT', buyOrder.holding, buyOrder.quantity, buyOrder.price, moment().format('hh:mm'));
         this.incrementBuy(buyOrder);
+        console.log(`${moment().format('hh:mm')} ${log}`);
+        this.reportingService.addAuditLog(log);
       }
     }
     return buyOrder;
@@ -453,10 +452,12 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
   sendSell(sellOrder: SmartOrder) {
     if (sellOrder) {
+      const log = `ORDER SENT ${sellOrder.side} ${sellOrder.holding.symbol} ${sellOrder.quantity} ${sellOrder.price}`;
       if (this.backtestLive || this.live) {
         this.incrementSell(sellOrder);
         const resolve = (response) => {
-          console.log('SELL SENT', sellOrder.holding, sellOrder.quantity, sellOrder.price, moment().format('hh:mm'));
+          console.log(`${moment().format('hh:mm')} ${log}`);
+          this.reportingService.addAuditLog(log);
         };
 
         const reject = (error) => {
@@ -466,14 +467,15 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
         const handleNotFound = () => {
           this.removeOrder(sellOrder);
-          this.warning = `Trying to sell ${sellOrder.holding.symbol} position that doesn\'t exists`;
+          this.setWarning(`Trying to sell ${sellOrder.holding.symbol} position that doesn\'t exists`);
         };
 
         this.daytradeService.sendSell(sellOrder, resolve, reject, handleNotFound);
 
       } else {
-        console.log('SELL SENT', sellOrder.holding, sellOrder.quantity, sellOrder.price, moment().format('hh:mm'));
         this.incrementSell(sellOrder);
+        console.log(`${moment().format('hh:mm')} ${log}`);
+        this.reportingService.addAuditLog(log);
       }
     }
     return sellOrder;
@@ -481,11 +483,13 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
   sendStopLoss(order: SmartOrder) {
     if (order) {
+      const log = `STOP LOSS ORDER SENT ${order.side} ${order.holding.symbol} ${order.quantity} ${order.price}`;
       if (this.backtestLive || this.live) {
         this.incrementSell(order);
 
         const resolve = (response) => {
-          console.log('STOP LOSS SELL SENT', order.holding, order.quantity, order.price, moment().format('hh:mm'));
+          console.log(`${moment().format('hh:mm')} ${log}`);
+          this.reportingService.addAuditLog(log);
         };
 
         const reject = (error) => {
@@ -495,13 +499,14 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
         const handleNotFound = () => {
           this.removeOrder(order);
-          this.warning = `Trying to sell ${order.holding.symbol} position that doesn\'t exists`;
+          this.setWarning(`Trying to sell ${order.holding.symbol} position that doesn\'t exists`);
         };
 
         this.daytradeService.sendSell(order, resolve, reject, handleNotFound);
       } else {
-        console.log('stop loss sent', order.holding, order.quantity, order.price, moment().format('hh:mm'));
         this.incrementSell(order);
+        console.log(`${moment().format('hh:mm')} ${log}`);
+        this.reportingService.addAuditLog(log);
       }
     }
     return order;
@@ -589,7 +594,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
     const gains = this.getPercentChange(signalPrice, this.estimateAverageBuyOrderPrice());
 
     if (gains <= this.firstFormGroup.value.lossThreshold) {
-      this.warning = `Loss threshold met. Buying is stalled. Estimated loss: ${this.convertToFixedNumber(gains) * 100}%`;
+      this.setWarning(`Loss threshold met. Buying is stalled. Estimated loss: ${this.convertToFixedNumber(gains) * 100}%`);
       return null;
     }
 
@@ -604,10 +609,10 @@ export class BbCardComponent implements OnDestroy, OnInit {
     if (!signalPrice || !price) {
       return null;
     }
-
-    console.log(moment.unix(signalTime).format('hh:mm'), ' Buy ', orderQuantity, ' of ', this.order.holding.symbol,
-      ' @ ', price, '\t',
-      signalPrice, band);
+    const log = `Building Buy ${moment.unix(signalTime).format('hh:mm')} - ` +
+                `${this.order.holding.symbol} for ${orderQuantity}@${price}|${signalPrice}` +
+                `\t Band: ${lower}<${mid}<${upper}`;
+    this.reportingService.addAuditLog(log);
 
     if (signalPrice <= lower[0]) {
       return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
@@ -633,9 +638,11 @@ export class BbCardComponent implements OnDestroy, OnInit {
       return null;
     }
 
-    console.log(moment.unix(signalTime).format('hh:mm'), ' Sell ', orderQuantity, ' of ', this.order.holding.symbol,
-      ' @ ', price, '\t',
-      signalPrice, band);
+    const log = `Building Sell ${moment.unix(signalTime).format('hh:mm')} - ` +
+                `${this.order.holding.symbol} for ${orderQuantity}@${price}|${signalPrice}` +
+                `\t Band: ${lower}<${mid}<${upper}`;
+
+    this.reportingService.addAuditLog(log);
 
     if (signalPrice >= upper[0]) {
       return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
@@ -651,8 +658,8 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
       if (this.config.StopLoss) {
         if (gains < this.firstFormGroup.value.lossThreshold) {
-          console.log('STOP LOSS TRIGGERED');
-          this.warning = `Loss threshold met. Sending stop loss order. Estimated loss: ${this.convertToFixedNumber(gains)}%`;
+          console.log('STOP LOSS TRIGGERED', this.order.holding.symbol);
+          this.setWarning(`Loss threshold met. Sending stop loss order. Estimated loss: ${this.convertToFixedNumber(gains)}%`);
           const stopLossOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
           return this.sendStopLoss(stopLossOrder);
         }
@@ -660,8 +667,8 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
       if (this.config.TakeProfit) {
         if (gains >= this.firstFormGroup.value.profitThreshold) {
-          console.log('PROFIT HARVEST TRIGGERED');
-          this.warning = `Profits met. Realizing profits. Estimated gain: ${this.convertToFixedNumber(gains)}%`;
+          console.log('PROFIT HARVEST TRIGGERED', this.order.holding.symbol);
+          this.setWarning(`Profits met. Realizing profits. Estimated gain: ${this.convertToFixedNumber(gains)}%`);
           const sellOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, upperPrice, signalTime);
           return this.sendSell(sellOrder);
         }
@@ -718,6 +725,11 @@ export class BbCardComponent implements OnDestroy, OnInit {
   hasReachedOrderLimit() {
     return (this.buyCount >= this.firstFormGroup.value.quantity) &&
       (this.sellCount >= this.firstFormGroup.value.quantity);
+  }
+
+  setWarning(message) {
+    this.warning = message;
+    this.reportingService.addAuditLog(`${this.order.holding.symbol} - ${message}`);
   }
 
   ngOnDestroy() {

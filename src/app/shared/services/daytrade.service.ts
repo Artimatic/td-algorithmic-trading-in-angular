@@ -18,10 +18,10 @@ export class DaytradeService {
     return Math.ceil(quantity / 3);
   }
 
-  async getBBand(real: any[]): Promise<any[]> {
+  async getBBand(real: any[], period): Promise<any[]> {
     const body = {
       real: real,
-      period: 80,
+      period: period,
       stddev: 2
     };
 
@@ -50,8 +50,6 @@ export class DaytradeService {
       return 0;
     }
     if (orderSize + ordersAlreadyMade > maxAllowedOrders) {
-      console.log('maxAllowedOrders: ', maxAllowedOrders, ordersAlreadyMade);
-
       return maxAllowedOrders - ordersAlreadyMade;
     }
 

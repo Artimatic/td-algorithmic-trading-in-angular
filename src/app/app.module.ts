@@ -64,6 +64,7 @@ import { BollingerBandComponent } from './bollinger-band/bollinger-band.componen
 import { RealtimeChartComponent } from './realtime-chart/realtime-chart.component';
 import { BbCardComponent } from './bb-card/bb-card.component';
 import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.component';
+import { ReportingComponent } from './reporting/reporting.component';
 
 @NgModule({
   declarations: [
@@ -86,6 +87,7 @@ import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.componen
     RealtimeChartComponent,
     BbCardComponent,
     ConfirmDialogComponent,
+    ReportingComponent,
   ],
   entryComponents: [
     ChartDialogComponent,

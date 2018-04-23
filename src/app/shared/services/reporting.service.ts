@@ -11,13 +11,13 @@ export class ReportingService {
   }
 
   addAuditLog(log) {
-    const currentTime = moment().format('hh:mm');
-    this.logs.push(log);
+    const currentTime = moment().format('DD.MM.YYYY hh:mm');
+    this.logs.push({time: currentTime, message: `${log}`});
   }
 
   exportAuditHistory() {
     const today = moment().format('MM-DD-YY');
-
-    this.excelService.exportAsExcelFile([], `portfolio_${today}`);
+    console.log('printing logs: ', this.logs);
+    this.excelService.exportAsExcelFile(this.logs, `logs_${today}`);
   }
 }
