@@ -175,9 +175,9 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
       if (this.live) {
         if (dataLength > this.bbandPeriod) {
-          const real = quotes.close.slice(dataLength - this.bbandPeriod, dataLength);
-          const band = await this.daytradeService.getBBand(real, this.bbandPeriod);
-          this.buildOrder(band, quotes, timestamps, dataLength - 1);
+          const lastIndex = dataLength - 1;
+          const firstIndex = dataLength - this.bbandPeriod;
+          this.runStrategy(quotes, timestamps, firstIndex, lastIndex);
         }
       }
 
@@ -192,9 +192,10 @@ export class BbCardComponent implements OnDestroy, OnInit {
         point.y = closePrice; // close
 
         if (!this.live && i > this.bbandPeriod) {
-          const real = quotes.close.slice(i - this.bbandPeriod, i);
-          const band = await this.daytradeService.getBBand(real, this.bbandPeriod);
-          const order = this.buildOrder(band, quotes, timestamps, i);
+          const lastIndex = i;
+          const firstIndex = i - this.bbandPeriod;
+          const order = await this.runStrategy(quotes, timestamps, firstIndex, lastIndex);
+
           if (order) {
             if (order.side.toLowerCase() === 'buy') {
               point.marker = {
@@ -242,6 +243,19 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
       this.tiles = this.daytradeService.buildTileList(this.orders);
       this.volumeChart = this.initVolumeChart('Volume', volume);
+    }
+
+    if (moment().utcOffset('-0400').format('HH:mm') === '16:00') {
+      this.reportingService.addAuditLog(`Final Orders ${this.order.holding.name}`);
+
+      this.tiles.forEach((tile) => {
+        tile.orders.forEach((order) => {
+          const orderStr = JSON.parse(order);
+          this.reportingService.addAuditLog(`Order: ${orderStr}`);
+        });
+      });
+
+      this.stop();
     }
   }
 
@@ -591,10 +605,12 @@ export class BbCardComponent implements OnDestroy, OnInit {
       mid = band[1],
       lower = band[0];
 
-    const gains = this.getPercentChange(signalPrice, this.estimateAverageBuyOrderPrice());
+    const pricePaid = this.estimateAverageBuyOrderPrice();
+    const gains = this.getPercentChange(signalPrice, pricePaid);
 
-    if (gains <= this.firstFormGroup.value.lossThreshold) {
+    if (gains < this.firstFormGroup.value.lossThreshold) {
       this.setWarning(`Loss threshold met. Buying is stalled. Estimated loss: ${this.convertToFixedNumber(gains) * 100}%`);
+      this.reportingService.addAuditLog(`Loss circuit breaker triggered. Current: ${signalPrice}, Paid: ${pricePaid}, Gains: ${gains}`);
       return null;
     }
 
@@ -610,8 +626,8 @@ export class BbCardComponent implements OnDestroy, OnInit {
       return null;
     }
     const log = `Building Buy ${moment.unix(signalTime).format('hh:mm')} - ` +
-                `${this.order.holding.symbol} for ${orderQuantity}@${price}|${signalPrice}` +
-                `\t Band: ${lower}<${mid}<${upper}`;
+      `${this.order.holding.symbol} for ${orderQuantity}@${price}|${signalPrice}` +
+      `\t Band: ${lower}<${mid}<${upper}`;
     this.reportingService.addAuditLog(log);
 
     if (signalPrice <= lower[0]) {
@@ -639,8 +655,8 @@ export class BbCardComponent implements OnDestroy, OnInit {
     }
 
     const log = `Building Sell ${moment.unix(signalTime).format('hh:mm')} - ` +
-                `${this.order.holding.symbol} for ${orderQuantity}@${price}|${signalPrice}` +
-                `\t Band: ${lower}<${mid}<${upper}`;
+      `${this.order.holding.symbol} for ${orderQuantity}@${price}|${signalPrice}` +
+      `\t Band: ${lower}<${mid}<${upper}`;
 
     this.reportingService.addAuditLog(log);
 
@@ -666,7 +682,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
       }
 
       if (this.config.TakeProfit) {
-        if (gains >= this.firstFormGroup.value.profitThreshold) {
+        if (gains > this.firstFormGroup.value.profitThreshold) {
           console.log('PROFIT HARVEST TRIGGERED', this.order.holding.symbol);
           this.setWarning(`Profits met. Realizing profits. Estimated gain: ${this.convertToFixedNumber(gains)}%`);
           const sellOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, upperPrice, signalTime);
@@ -694,6 +710,33 @@ export class BbCardComponent implements OnDestroy, OnInit {
     }
   }
 
+  async runStrategy(quotes, timestamps, firstIdx, lastIdx) {
+    const { firstIndex, lastIndex } = this.findCurrentQuoteIndex(quotes, firstIdx, lastIdx);
+    const reals = quotes.close.slice(firstIndex, lastIndex + 1);
+    const band = await this.daytradeService.getBBand(reals, this.bbandPeriod);
+    return this.buildOrder(band, quotes, timestamps, lastIndex);
+  }
+
+  findCurrentQuoteIndex(quotes, firstIndex, lastIndex) {
+    // TODO: Replace with real time quote
+    let ctr = 0,
+      tFirstIndex = firstIndex,
+      tLastIndex = lastIndex;
+
+    while (!quotes[tLastIndex] && quotes[tFirstIndex] && ++ctr < 3) {
+      tFirstIndex -= ctr;
+      tLastIndex -= ctr;
+      if (quotes[firstIndex] && quotes[lastIndex]) {
+        firstIndex = tFirstIndex;
+        lastIndex = tLastIndex;
+        break;
+      } else if (!quotes[tFirstIndex]) {
+        break;
+      }
+    }
+    return { firstIndex, lastIndex };
+  }
+
   estimateAverageBuyOrderPrice(): number {
     if (this.positionCount === 0) {
       return 0;
@@ -718,7 +761,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
     if (boughtPrice === 0 || currentPrice === boughtPrice) {
       return 0;
     } else {
-      return ((currentPrice / boughtPrice) - 1);
+      return (currentPrice / boughtPrice) - 1);
     }
   }
 
