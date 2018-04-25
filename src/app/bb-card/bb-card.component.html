@@ -30,13 +30,13 @@
           <span matSuffix>% &nbsp;</span>
         </mat-form-field>
         <mat-form-field hintLabel="Profit exit">
-          <input matInput type="number" placeholder="Profit Threshold" formControlName="profitThreshold">
+          <input matInput type="number" placeholder="Profit Target" formControlName="profitTarget">
         </mat-form-field>
         <mat-form-field hintLabel="Size of Each Order">
           <input matInput type="number" placeholder="Orders" formControlName="orderSize" required>
         </mat-form-field>
         <mat-form-field>
-          <mat-select placeholder="Preferences" formControlName="preferences" name="preferences" multiple>
+          <mat-select placeholder="Preferences" formControlName="preferences" [(ngModel)]="myPreferences" name="preferences" multiple>
             <mat-option *ngFor="let pref of preferenceList" [value]="pref">
               {{ pref }}
             </mat-option>
@@ -61,7 +61,7 @@
           <section class="example-section">
             <mat-progress-bar class="progress-bar" [mode]="determinate" [color]="color" [value]="progress()"></mat-progress-bar>
           </section>
-          Orders Submitted: {{ buyCount + sellCount || 0}}/{{firstFormGroup.value.quantity || 0}} shares
+          Orders Submitted: {{ buyCount + sellCount}}/{{firstFormGroup.value.quantity || 0}} shares
         </div>
         <div class="toolbar-content" fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px" fxLayoutGap.xs="0">
           <div fxFlex="5%">

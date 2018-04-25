@@ -130,7 +130,8 @@ export class DaytradeService {
     return tiles;
   }
 
-  createOrder(holding, side, quantity, price, signalTime): SmartOrder {
+  createOrder(holding, side: string, quantity: number, price: number, signalTime: number): SmartOrder {
+    console.log('create order: ', quantity, typeof quantity);
     return {
       holding: holding,
       quantity: quantity,

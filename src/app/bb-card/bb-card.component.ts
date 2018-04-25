@@ -63,6 +63,8 @@ export class BbCardComponent implements OnDestroy, OnInit {
   tiles;
   bbandPeriod;
   dataInterval;
+  myPreferences;
+  endTime;
 
   constructor(private _formBuilder: FormBuilder,
     private backtestService: BacktestService,
@@ -83,6 +85,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
         useUTC: false
       }
     });
+    this.endTime = moment('4:00pm', 'h:mma');
     this.showGraph = false;
     this.bbandPeriod = 80;
     this.dataInterval = '1m';
@@ -91,12 +94,14 @@ export class BbCardComponent implements OnDestroy, OnInit {
   ngOnInit() {
     this.firstFormGroup = this._formBuilder.group({
       quantity: [this.order.quantity, Validators.required],
-      lossThreshold: [-0.01, Validators.required],
-      profitThreshold: [{ value: 0.01, disabled: false }, Validators.required],
-      orderSize: [this.daytradeService.getDefaultOrderSize(this.order.quantity), Validators.required],
+      lossThreshold: [this.order.lossThreshold || -0.03, Validators.required],
+      profitTarget: [{ value: this.order.profitTarget || 0.03, disabled: false }, Validators.required],
+      orderSize: [this.order.orderSize || this.daytradeService.getDefaultOrderSize(this.order.quantity), Validators.required],
       orderType: [this.order.side, Validators.required],
-      preferences: ''
+      preferences: []
     });
+
+    this.myPreferences = this.initPreferences();
 
     this.secondFormGroup = this._formBuilder.group({
       secondCtrl: ['', Validators.required]
@@ -245,7 +250,9 @@ export class BbCardComponent implements OnDestroy, OnInit {
       this.volumeChart = this.initVolumeChart('Volume', volume);
     }
 
-    if (moment().utcOffset('-0400').format('HH:mm') === '16:00') {
+    console.log('Time: ', moment().format('HH:mm'));
+    // TODO: Use moment timezones
+    if (moment().isAfter(this.endTime)) {
       this.reportingService.addAuditLog(`Final Orders ${this.order.holding.name}`);
 
       this.tiles.forEach((tile) => {
@@ -565,30 +572,30 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
       const sellOrder = this.buildSellOrder(orderQuantity,
         band,
-        quotes.high[idx],
+        quotes.close[idx],
         timestamps[idx],
         quotes.high[idx],
         quotes);
 
       return this.sendSell(sellOrder);
     } else if (this.firstFormGroup.value.orderType.toLowerCase() === 'daytrade') {
-      if (this.hasReachedOrderLimit()) {
+      if (this.hasReachedDayTradeOrderLimit()) {
         this.stop();
         return null;
       }
 
-      const buyQuantity = this.daytradeService.getOrderQuantity(this.firstFormGroup.value.quantity,
+      const buyQuantity: number = this.daytradeService.getOrderQuantity(this.firstFormGroup.value.quantity,
         this.firstFormGroup.value.orderSize,
         this.buyCount);
 
-      const sellQuantity = this.firstFormGroup.value.orderSize <= this.positionCount ?
+      const sellQuantity: number = this.firstFormGroup.value.orderSize <= this.positionCount ?
         this.firstFormGroup.value.orderSize : this.positionCount;
 
       const buy: SmartOrder = buyQuantity <= 0 ? null :
         this.buildBuyOrder(buyQuantity, band, quotes.low[idx], timestamps[idx], quotes.low[idx], quotes);
 
       const sell: SmartOrder = sellQuantity <= 0 ? null :
-        this.buildSellOrder(sellQuantity, band, quotes.high[idx], timestamps[idx], quotes.high[idx], quotes);
+        this.buildSellOrder(sellQuantity, band, quotes.close[idx], timestamps[idx], quotes.high[idx], quotes);
 
       if (sell && this.buyCount >= this.sellCount) {
         return this.sendSell(sell);
@@ -682,7 +689,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
       }
 
       if (this.config.TakeProfit) {
-        if (gains > this.firstFormGroup.value.profitThreshold) {
+        if (gains > this.firstFormGroup.value.profitTarget) {
           console.log('PROFIT HARVEST TRIGGERED', this.order.holding.symbol);
           this.setWarning(`Profits met. Realizing profits. Estimated gain: ${this.convertToFixedNumber(gains)}%`);
           const sellOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, upperPrice, signalTime);
@@ -754,18 +761,18 @@ export class BbCardComponent implements OnDestroy, OnInit {
   }
 
   convertToFixedNumber(num) {
-    return Number(num.toFixed(2));
+    return num.toFixed(2) * 1;
   }
 
   getPercentChange(currentPrice, boughtPrice) {
     if (boughtPrice === 0 || currentPrice === boughtPrice) {
       return 0;
     } else {
-      return (currentPrice / boughtPrice) - 1);
+      return (currentPrice / boughtPrice) - 1;
     }
   }
 
-  hasReachedOrderLimit() {
+  hasReachedDayTradeOrderLimit() {
     return (this.buyCount >= this.firstFormGroup.value.quantity) &&
       (this.sellCount >= this.firstFormGroup.value.quantity);
   }
@@ -773,6 +780,19 @@ export class BbCardComponent implements OnDestroy, OnInit {
   setWarning(message) {
     this.warning = message;
     this.reportingService.addAuditLog(`${this.order.holding.symbol} - ${message}`);
+  }
+
+  initPreferences() {
+    const pref = [];
+    if (this.order.useTakeProfit) {
+      pref.push(OrderPref.TakeProfit);
+    }
+
+    if (this.order.useStopLoss) {
+      pref.push(OrderPref.StopLoss);
+    }
+
+    return pref;
   }
 
   ngOnDestroy() {

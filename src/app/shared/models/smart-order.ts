@@ -6,5 +6,8 @@ export interface SmartOrder extends Order {
     timeSubmitted?: number;
     signalTime?: number;
     lossThreshold?: number;
-    profitThreshold?: number;
+    profitTarget?: number;
+    useStopLoss?: boolean;
+    useTakeProfit?: boolean;
+    orderSize?: number;
 }

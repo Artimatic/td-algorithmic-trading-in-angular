@@ -74,11 +74,16 @@ export class PortfolioViewComponent implements AfterViewInit {
 
         const order: SmartOrder = {
           holding: newHolding,
-          quantity: row.quantity,
+          quantity: row.quantity * 1,
           price: row.price,
           submitted: false,
           pending: false,
-          side: row.side
+          side: row.side,
+          lossThreshold: row.Stop * 1 || null,
+          profitTarget: row.Target * 1 || null,
+          useStopLoss: row.StopLoss || null,
+          useTakeProfit: row.TakeProfit || null,
+          orderSize: row.OrderSize * 1 || null
         };
         this.cartService.addToCart(order);
       },
