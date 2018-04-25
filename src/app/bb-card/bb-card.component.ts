@@ -718,13 +718,13 @@ export class BbCardComponent implements OnDestroy, OnInit {
   }
 
   async runStrategy(quotes, timestamps, firstIdx, lastIdx) {
-    const { firstIndex, lastIndex } = this.findCurrentQuoteIndex(quotes, firstIdx, lastIdx);
+    const { firstIndex, lastIndex } = this.findMostCurrentQuoteIndex(quotes, firstIdx, lastIdx);
     const reals = quotes.close.slice(firstIndex, lastIndex + 1);
     const band = await this.daytradeService.getBBand(reals, this.bbandPeriod);
     return this.buildOrder(band, quotes, timestamps, lastIndex);
   }
 
-  findCurrentQuoteIndex(quotes, firstIndex, lastIndex) {
+  findMostCurrentQuoteIndex(quotes, firstIndex, lastIndex) {
     // TODO: Replace with real time quote
     let ctr = 0,
       tFirstIndex = firstIndex,

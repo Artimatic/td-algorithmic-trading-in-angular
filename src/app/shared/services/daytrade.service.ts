@@ -18,14 +18,25 @@ export class DaytradeService {
     return Math.ceil(quantity / 3);
   }
 
-  async getBBand(real: any[], period): Promise<any[]> {
+  async getBBand(reals: number[], period): Promise<any[]> {
     const body = {
-      real: real,
+      real: this.fillInMissingReals(reals),
       period: period,
       stddev: 2
     };
 
     return await this.backtestService.getBBands(body).toPromise();
+  }
+
+  fillInMissingReals(reals: number[]) {
+    for (let i = 1, length = reals.length; i < length; i++) {
+      if (!reals[i]) {
+        if (reals[i - 1] && reals[i + 1]) {
+          reals[i] = (reals[i - 1] + reals[i + 1]) / 2;
+        }
+      }
+    }
+    return reals;
   }
 
   parsePreferences(preferences) {
