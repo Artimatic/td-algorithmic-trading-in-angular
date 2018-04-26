@@ -258,7 +258,8 @@ export class BbCardComponent implements OnDestroy, OnInit {
       this.tiles.forEach((tile) => {
         tile.orders.forEach((order) => {
           const orderStr = JSON.parse(order);
-          this.reportingService.addAuditLog(`Order: ${orderStr}`);
+          console.log(`Order: ${orderStr}`);
+          // this.reportingService.addAuditLog(`Order: ${orderStr}`);
         });
       });
 
@@ -718,7 +719,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
   }
 
   async runStrategy(quotes, timestamps, firstIdx, lastIdx) {
-    const { firstIndex, lastIndex } = this.findMostCurrentQuoteIndex(quotes, firstIdx, lastIdx);
+    const { firstIndex, lastIndex } = this.findMostCurrentQuoteIndex(quotes.close, firstIdx, lastIdx);
     const reals = quotes.close.slice(firstIndex, lastIndex + 1);
     const band = await this.daytradeService.getBBand(reals, this.bbandPeriod);
     return this.buildOrder(band, quotes, timestamps, lastIndex);
@@ -726,20 +727,21 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
   findMostCurrentQuoteIndex(quotes, firstIndex, lastIndex) {
     // TODO: Replace with real time quote
-    let ctr = 0,
+    let ctr = 1,
       tFirstIndex = firstIndex,
       tLastIndex = lastIndex;
 
-    while (!quotes[tLastIndex] && quotes[tFirstIndex] && ++ctr < 3) {
-      tFirstIndex -= ctr;
-      tLastIndex -= ctr;
-      if (quotes[firstIndex] && quotes[lastIndex]) {
+    while (!quotes[tLastIndex] && quotes[tFirstIndex] && ctr < 3) {
+      tFirstIndex = firstIndex - ctr;
+      tLastIndex = lastIndex - ctr;
+      if (quotes[tFirstIndex] && quotes[tLastIndex]) {
         firstIndex = tFirstIndex;
         lastIndex = tLastIndex;
         break;
       } else if (!quotes[tFirstIndex]) {
         break;
       }
+      ctr++;
     }
     return { firstIndex, lastIndex };
   }
