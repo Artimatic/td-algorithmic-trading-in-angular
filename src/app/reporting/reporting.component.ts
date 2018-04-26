@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { MatDialog, MatDialogRef } from '@angular/material';
+import { Component, Inject } from '@angular/core';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { AuthenticationService, ReportingService } from '../shared';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 
@@ -8,26 +8,34 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
   templateUrl: './reporting.component.html',
   styleUrls: ['./reporting.component.css']
 })
-export class ReportingComponent implements OnInit {
-
+export class ReportingComponent {
+  signout = true;
   constructor(public dialog: MatDialog,
     private authenticationService: AuthenticationService,
     private reportingService: ReportingService) { }
 
-  ngOnInit() {
-  }
-
   openDialog() {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+    const dialogRef = this.dialog.open(ReportDialogComponent, {
       width: '500px',
       height: '500px',
-      data: { title: 'Confirm', message: 'Download logs?' }
+      data: { signout: this.signout }
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.reportingService.exportAuditHistory();
+        if (result.signout) {
+          this.authenticationService.logout();
+        }
       }
     });
   }
+}
+
+@Component({
+  selector: 'app-report-dialog',
+  templateUrl: './report-dialog.component.html',
+})
+export class ReportDialogComponent {
+  constructor(@Inject(MAT_DIALOG_DATA) public data: any) { }
 }
