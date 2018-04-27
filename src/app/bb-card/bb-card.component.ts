@@ -253,11 +253,11 @@ export class BbCardComponent implements OnDestroy, OnInit {
     console.log('Time: ', moment().format('HH:mm'));
     // TODO: Use moment timezones
     if (moment().isAfter(this.endTime)) {
-      this.reportingService.addAuditLog(`Final Orders ${this.order.holding.name}`);
+      this.reportingService.addAuditLog(this.order.holding.symbol, `Final Orders ${this.order.holding.name}`);
 
       this.tiles.forEach((tile) => {
         tile.orders.forEach((order) => {
-          const orderStr = JSON.parse(order);
+          const orderStr = JSON.stringify(order);
           console.log(`Order: ${orderStr}`);
           // this.reportingService.addAuditLog(`Order: ${orderStr}`);
         });
@@ -455,7 +455,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
         const resolve = (response) => {
           console.log(`${moment().format('hh:mm')} ${log}`);
-          this.reportingService.addAuditLog(log);
+          this.reportingService.addAuditLog(this.order.holding.symbol, log);
         };
 
         const reject = (error) => {
@@ -466,7 +466,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
       } else {
         this.incrementBuy(buyOrder);
         console.log(`${moment().format('hh:mm')} ${log}`);
-        this.reportingService.addAuditLog(log);
+        this.reportingService.addAuditLog(this.order.holding.symbol, log);
       }
     }
     return buyOrder;
@@ -479,7 +479,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
         this.incrementSell(sellOrder);
         const resolve = (response) => {
           console.log(`${moment().format('hh:mm')} ${log}`);
-          this.reportingService.addAuditLog(log);
+          this.reportingService.addAuditLog(this.order.holding.symbol, log);
         };
 
         const reject = (error) => {
@@ -497,7 +497,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
       } else {
         this.incrementSell(sellOrder);
         console.log(`${moment().format('hh:mm')} ${log}`);
-        this.reportingService.addAuditLog(log);
+        this.reportingService.addAuditLog(this.order.holding.symbol, log);
       }
     }
     return sellOrder;
@@ -511,7 +511,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
         const resolve = (response) => {
           console.log(`${moment().format('hh:mm')} ${log}`);
-          this.reportingService.addAuditLog(log);
+          this.reportingService.addAuditLog(this.order.holding.symbol, log);
         };
 
         const reject = (error) => {
@@ -528,7 +528,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
       } else {
         this.incrementSell(order);
         console.log(`${moment().format('hh:mm')} ${log}`);
-        this.reportingService.addAuditLog(log);
+        this.reportingService.addAuditLog(this.order.holding.symbol, log);
       }
     }
     return order;
@@ -539,7 +539,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
       return null;
     }
 
-    const specialOrder = this.processSpecialRules(quotes.low[idx], quotes.close[idx], quotes.high[idx], timestamps[idx]);
+    const specialOrder = this.processSpecialRules(quotes.close[idx], timestamps[idx]);
 
     if (specialOrder) {
       return specialOrder;
@@ -617,8 +617,9 @@ export class BbCardComponent implements OnDestroy, OnInit {
     const gains = this.getPercentChange(signalPrice, pricePaid);
 
     if (gains < this.firstFormGroup.value.lossThreshold) {
-      this.setWarning(`Loss threshold met. Buying is stalled. Estimated loss: ${this.convertToFixedNumber(gains) * 100}%`);
-      this.reportingService.addAuditLog(`Loss circuit breaker triggered. Current: ${signalPrice}, Paid: ${pricePaid}, Gains: ${gains}`);
+      this.setWarning(`Loss threshold met. Buying is stalled. Estimated loss: ${this.convertToFixedNumber(gains, 3) * 100}%`);
+      this.reportingService.addAuditLog(this.order.holding.symbol,
+        `Loss circuit breaker triggered. Current: ${signalPrice}, Paid: ${pricePaid}, Gains: ${gains}`);
       return null;
     }
 
@@ -636,7 +637,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
     const log = `Building Buy ${moment.unix(signalTime).format('hh:mm')} - ` +
       `${this.order.holding.symbol} for ${orderQuantity}@${price}|${signalPrice}` +
       `\t Band: ${lower}<${mid}<${upper}`;
-    this.reportingService.addAuditLog(log);
+    this.reportingService.addAuditLog(this.order.holding.symbol, log);
 
     if (signalPrice <= lower[0]) {
       return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
@@ -666,7 +667,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
       `${this.order.holding.symbol} for ${orderQuantity}@${price}|${signalPrice}` +
       `\t Band: ${lower}<${mid}<${upper}`;
 
-    this.reportingService.addAuditLog(log);
+    this.reportingService.addAuditLog(this.order.holding.symbol, log);
 
     if (signalPrice >= upper[0]) {
       return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
@@ -675,15 +676,16 @@ export class BbCardComponent implements OnDestroy, OnInit {
     return null;
   }
 
-  processSpecialRules(lowerPrice, closePrice, upperPrice, signalTime) {
-    if (this.positionCount > 0) {
+  processSpecialRules(closePrice: number, signalTime) {
+    if (this.positionCount > 0 && closePrice) {
       const estimatedPrice = this.estimateAverageBuyOrderPrice();
       const gains = this.getPercentChange(closePrice, estimatedPrice);
 
       if (this.config.StopLoss) {
         if (gains < this.firstFormGroup.value.lossThreshold) {
-          console.log('STOP LOSS TRIGGERED', this.order.holding.symbol);
-          this.setWarning(`Loss threshold met. Sending stop loss order. Estimated loss: ${this.convertToFixedNumber(gains)}%`);
+          this.setWarning(`Loss threshold met. Sending stop loss order. Estimated loss: ${this.convertToFixedNumber(gains, 3)}%`);
+          this.reportingService.addAuditLog(this.order.holding.symbol,
+            `${this.order.holding.symbol} Stop Loss triggered: ${closePrice}/${estimatedPrice}`);
           const stopLossOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
           return this.sendStopLoss(stopLossOrder);
         }
@@ -691,9 +693,10 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
       if (this.config.TakeProfit) {
         if (gains > this.firstFormGroup.value.profitTarget) {
-          console.log('PROFIT HARVEST TRIGGERED', this.order.holding.symbol);
-          this.setWarning(`Profits met. Realizing profits. Estimated gain: ${this.convertToFixedNumber(gains)}%`);
-          const sellOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, upperPrice, signalTime);
+          this.setWarning(`Profits met. Realizing profits. Estimated gain: ${this.convertToFixedNumber(gains, 3)}%`);
+          this.reportingService.addAuditLog(this.order.holding.symbol,
+            `${this.order.holding.symbol} PROFIT HARVEST TRIGGERED: ${closePrice}/${estimatedPrice}`);
+          const sellOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
           return this.sendSell(sellOrder);
         }
       }
@@ -758,15 +761,14 @@ export class BbCardComponent implements OnDestroy, OnInit {
         return { count: count - value.quantity, sum: sum - (value.price * value.quantity) };
       }
     }, { count: 0, sum: 0 });
-
     return Number((averagePrice.sum / averagePrice.count).toFixed(2));
   }
 
-  convertToFixedNumber(num) {
-    return num.toFixed(2) * 1;
+  convertToFixedNumber(num, sig) {
+    return Number(num.toFixed(sig));
   }
 
-  getPercentChange(currentPrice, boughtPrice) {
+  getPercentChange(currentPrice: number, boughtPrice: number) {
     if (boughtPrice === 0 || currentPrice === boughtPrice) {
       return 0;
     } else {
@@ -781,7 +783,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
   setWarning(message) {
     this.warning = message;
-    this.reportingService.addAuditLog(`${this.order.holding.symbol} - ${message}`);
+    this.reportingService.addAuditLog(this.order.holding.symbol, `${this.order.holding.symbol} - ${message}`);
   }
 
   initPreferences() {
