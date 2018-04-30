@@ -573,7 +573,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
       const sellOrder = this.buildSellOrder(orderQuantity,
         band,
-        quotes.close[idx],
+        quotes.high[idx],
         timestamps[idx],
         quotes.high[idx],
         quotes);
@@ -724,6 +724,11 @@ export class BbCardComponent implements OnDestroy, OnInit {
   async runStrategy(quotes, timestamps, firstIdx, lastIdx) {
     const { firstIndex, lastIndex } = this.findMostCurrentQuoteIndex(quotes.close, firstIdx, lastIdx);
     const reals = quotes.close.slice(firstIndex, lastIndex + 1);
+    if (!quotes.close[lastIndex]) {
+      const log = `Quote data is missing ${reals.toString()}`;
+      this.reportingService.addAuditLog(this.order.holding.symbol, log);
+      return null;
+    }
     const band = await this.daytradeService.getBBand(reals, this.bbandPeriod);
     return this.buildOrder(band, quotes, timestamps, lastIndex);
   }
