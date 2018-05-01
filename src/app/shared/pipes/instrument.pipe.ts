@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { PortfolioService } from '../services'
+import { PortfolioService } from '../services';
 
 @Pipe({
   name: 'instrument',

@@ -614,7 +614,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
       lower = band[0];
 
     const pricePaid = this.estimateAverageBuyOrderPrice();
-    const gains = this.getPercentChange(signalPrice, pricePaid);
+    const gains = this.daytradeService.getPercentChange(signalPrice, pricePaid);
 
     if (gains < this.firstFormGroup.value.lossThreshold) {
       this.setWarning(`Loss threshold met. Buying is stalled. Estimated loss: ${this.convertToFixedNumber(gains, 3) * 100}%`);
@@ -679,11 +679,11 @@ export class BbCardComponent implements OnDestroy, OnInit {
   processSpecialRules(closePrice: number, signalTime) {
     if (this.positionCount > 0 && closePrice) {
       const estimatedPrice = this.estimateAverageBuyOrderPrice();
-      const gains = this.getPercentChange(closePrice, estimatedPrice);
+      const gains = this.daytradeService.getPercentChange(closePrice, estimatedPrice);
 
       if (this.config.StopLoss) {
         if (gains < this.firstFormGroup.value.lossThreshold) {
-          this.setWarning(`Loss threshold met. Sending stop loss order. Estimated loss: ${this.convertToFixedNumber(gains, 3)}%`);
+          this.setWarning(`Loss threshold met. Sending stop loss order. Estimated loss: ${this.convertToFixedNumber(gains, 3) * 100}%`);
           this.reportingService.addAuditLog(this.order.holding.symbol,
             `${this.order.holding.symbol} Stop Loss triggered: ${closePrice}/${estimatedPrice}`);
           const stopLossOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
@@ -693,7 +693,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
       if (this.config.TakeProfit) {
         if (gains > this.firstFormGroup.value.profitTarget) {
-          this.setWarning(`Profits met. Realizing profits. Estimated gain: ${this.convertToFixedNumber(gains, 3)}%`);
+          this.setWarning(`Profits met. Realizing profits. Estimated gain: ${this.convertToFixedNumber(gains, 3) * 100}%`);
           this.reportingService.addAuditLog(this.order.holding.symbol,
             `${this.order.holding.symbol} PROFIT HARVEST TRIGGERED: ${closePrice}/${estimatedPrice}`);
           const sellOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
@@ -771,14 +771,6 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
   convertToFixedNumber(num, sig) {
     return Number(num.toFixed(sig));
-  }
-
-  getPercentChange(currentPrice: number, boughtPrice: number) {
-    if (boughtPrice === 0 || currentPrice === boughtPrice) {
-      return 0;
-    } else {
-      return (currentPrice / boughtPrice) - 1;
-    }
   }
 
   hasReachedDayTradeOrderLimit() {

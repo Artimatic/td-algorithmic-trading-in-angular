@@ -153,4 +153,12 @@ export class DaytradeService {
       signalTime: moment.unix(signalTime).valueOf()
     };
   }
+
+  getPercentChange(currentPrice: number, boughtPrice: number) {
+    if (boughtPrice === 0 || currentPrice === boughtPrice) {
+      return 0;
+    } else {
+      return (currentPrice - boughtPrice) / boughtPrice;
+    }
+  }
 }
