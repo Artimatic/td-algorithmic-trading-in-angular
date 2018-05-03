@@ -9,11 +9,11 @@ import YahooFinanceAPI from 'yahoo-finance-data';
 
 import errors from '../../components/errors/baseErrors';
 import config from '../../config/environment';
-
-const api = new YahooFinanceAPI({
+const yahoo = {
   key: config.yahoo.key,
   secret: config.yahoo.secret
-});
+};
+const api = new YahooFinanceAPI(yahoo);
 
 const quandl = feedQuandl()
   .apiKey('5DsGxgTS3k9BepaWg_MD')
@@ -31,30 +31,12 @@ function checkDate(toDate, fromDate) {
 }
 
 class QuoteService {
-  getData(ticker, toDate, fromDate) {
-    let { to, from } = checkDate(toDate, fromDate);
-
-    let diff = Math.abs(to.diff(from, 'days'));
-
-    let intervalOption;
-
-    if (diff <= 5) {
-      intervalOption = '5d';
-    } else if (diff <= 30) {
-      intervalOption = '1mo';
-    } else if (diff <= 90) {
-      intervalOption = '3mo';
-    } else if (diff <= 365) {
-      intervalOption = '1y';
-    } else if (diff <= 730) {
-      intervalOption = '2y';
-    } else if (diff <= 1825) {
-      intervalOption = '5y';
-    } else {
-      intervalOption = '10y';
-    }
-
-    return api.getHistoricalData(ticker, '1d', intervalOption)
+  /*
+  * Interval: ["2m", "1d"]
+  * Range: ["1d","5d","1mo","3mo","6mo","1y","2y","5y","10y","ytd","max"]
+  */
+  getData(symbol, interval = '1d', range) {
+    return api.getHistoricalData(symbol, interval, range)
       .then((data) => {
         let quotes = _.get(data, 'chart.result[0].indicators.quote[0]', []);
         let timestamps = _.get(data, 'chart.result[0].timestamp', []);
@@ -62,7 +44,7 @@ class QuoteService {
 
         timestamps.forEach((val, idx) => {
           let quote = {
-            symbol: ticker,
+            symbol: symbol,
             date: moment.unix(val).toISOString(),
             open: quotes.open[idx],
             high: quotes.high[idx],
@@ -77,33 +59,11 @@ class QuoteService {
       });
   }
 
-  getRawData(ticker, toDate, fromDate) {
-    let { to, from } = checkDate(toDate, fromDate);
-
-    let diff = Math.abs(to.diff(from, 'days'));
-
-    let intervalOption;
-
-    if (diff <= 5) {
-      intervalOption = '5d';
-    } else if (diff <= 30) {
-      intervalOption = '1mo';
-    } else if (diff <= 90) {
-      intervalOption = '3mo';
-    } else if (diff <= 365) {
-      intervalOption = '1y';
-    } else if (diff <= 730) {
-      intervalOption = '2y';
-    } else if (diff <= 1825) {
-      intervalOption = '5y';
-    } else {
-      intervalOption = '10y';
-    }
-
-    return api.getHistoricalData(ticker, '1d', intervalOption);
+  getRawData(symbol, interval = '1d', range) {
+    return api.getHistoricalData(symbol, interval, range);
   }
 
-  getDataQuandl(ticker, startDate, endDate) {
+  getDataQuandl(symbol, startDate, endDate) {
     let { start, end } = checkDate(startDate, endDate);
 
     if (!start.isValid() || !end.isValid()) {
@@ -111,7 +71,7 @@ class QuoteService {
     }
 
     let quote = quandl
-      .dataset(ticker)
+      .dataset(symbol)
       .start(start.toDate())
       .end(end.toDate())
       .descending(true)
@@ -128,7 +88,7 @@ class QuoteService {
     })
   }
 
-  getLocalQuotes(ticker, toDate, fromDate) {
+  getDailyQuotes(symbol, toDate, fromDate) {
     let { to, from } = checkDate(toDate, fromDate);
 
     const diff = Math.abs(to.diff(from, 'days'));
@@ -136,7 +96,7 @@ class QuoteService {
     to = to.format('YYYY-MM-DD');
     from = from.format('YYYY-MM-DD');
 
-    const query = `http://localhost:8080/backtest?ticker=${ticker}&to=${to}&from=${from}`;
+    const query = `http://localhost:8080/backtest?ticker=${symbol}&to=${to}&from=${from}`;
     const options = {
       method: 'POST',
       uri: query
@@ -146,12 +106,44 @@ class QuoteService {
       .then((data) => {
         let arr = JSON.parse(data);
         return arr;
+      })
+      .catch(() => {
+        let { to, from } = checkDate(toDate, fromDate);
+
+        let diff = Math.abs(to.diff(from, 'days'));
+
+        let range;
+
+        if (diff <= 5) {
+          range = '5d';
+        } else if (diff <= 30) {
+          range = '1mo';
+        } else if (diff <= 90) {
+          range = '3mo';
+        } else if (diff <= 365) {
+          range = '1y';
+        } else if (diff <= 730) {
+          range = '2y';
+        } else if (diff <= 1825) {
+          range = '5y';
+        } else {
+          range = '10y';
+        }
+
+        return this.getData(symbol, '1d', range);
       });
   }
 
-  getLastPrice(tickers) {
-    return api
-      .getRealtimeQuotes(tickers.join(','));
+  getLastPrice(symbols) {
+    return api.getRealtimeQuotes(symbols.join(','));
+  }
+
+  getIntradayData(symbol, interval) {
+    return api.getIntradayChartData(symbol, interval, true);
+  }
+
+  getCompanySummary(symbol) {
+    return api.quoteSummary(symbol);
   }
 }
 

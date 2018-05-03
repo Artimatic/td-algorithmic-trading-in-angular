@@ -2,9 +2,5 @@
   <mat-icon>account_circle</mat-icon>
 </button>
 <div *ngIf=authenticated>
-  <mat-progress-bar mode="buffer" color="accent"></mat-progress-bar>
-  <button mat-icon-button (click)="logout()">
-    <mat-icon>exit_to_app</mat-icon>
-  </button>
-  <mat-progress-bar mode="buffer" color="accent"></mat-progress-bar>
+  <button mat-raised-button color="warn" (click)="logout()">LOGOUT</button>
 </div>

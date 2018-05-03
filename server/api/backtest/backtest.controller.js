@@ -42,6 +42,20 @@ class BacktestController extends BaseController {
     }
   }
 
+  getIndicator(request, response) {
+    BaseController.requestGetSuccessHandler(response, BacktestService.getIndicator())
+  }
+
+  getBollingerBands(request, response) {
+    if (_.isEmpty(request.body)) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    }
+    else {
+      BacktestService.getBBands(request.body.real, request.body.period, request.body.stddev)
+        .then((data) => BaseController.requestGetSuccessHandler(response, data))
+        .catch((err) => BaseController.requestErrorHandler(response, err));
+    }
+  }
 }
 
 module.exports.BacktestController = new BacktestController();

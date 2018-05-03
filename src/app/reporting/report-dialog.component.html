@@ -1,0 +1,12 @@
+<h2 mat-dialog-title>Audit logs</h2>
+<mat-dialog-content>
+    <p>
+        <mat-checkbox [(ngModel)]="data.signout">
+            Sign Me Out
+        </mat-checkbox>
+    </p>
+</mat-dialog-content>
+<mat-dialog-actions>
+    <button mat-button mat-dialog-close>Cancel</button>
+    <button mat-button [mat-dialog-close]="data">Download logs</button>
+</mat-dialog-actions>

@@ -20,7 +20,7 @@ class QuoteController extends BaseController {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     }
     else {
-      QuoteService.getData(request.body.ticker, request.body.start, request.body.end)
+      QuoteService.getData(request.body.ticker, request.body.interval, request.body.range)
         .then((data) => BaseController.requestGetSuccessHandler(response, data))
         .catch((e) => BaseController.requestErrorHandler(response, e));
     }
@@ -42,7 +42,29 @@ class QuoteController extends BaseController {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     }
     else {
-      QuoteService.getRawData(request.body.ticker, request.body.start, request.body.end)
+      QuoteService.getRawData(request.body.ticker, request.body.interval, request.body.range)
+        .then((data) => BaseController.requestGetSuccessHandler(response, data))
+        .catch((e) => BaseController.requestErrorHandler(response, e));
+    }
+  }
+
+  getIntraday(request, response) {
+    if (_.isEmpty(request.body)) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    }
+    else {
+      QuoteService.getIntradayData(request.body.symbol, request.body.interval)
+        .then((data) => BaseController.requestGetSuccessHandler(response, data))
+        .catch((e) => BaseController.requestErrorHandler(response, e));
+    }
+  }
+
+  getCompanySummary(request, response) {
+    if (_.isEmpty(request.body)) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    }
+    else {
+      QuoteService.getCompanySummary(request.body.symbol)
         .then((data) => BaseController.requestGetSuccessHandler(response, data))
         .catch((e) => BaseController.requestErrorHandler(response, e));
     }

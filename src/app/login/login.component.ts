@@ -9,7 +9,7 @@ import { AuthenticationService } from '../shared';
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent implements OnInit {
-  authenticated: boolean = false;
+  authenticated = false;
 
   constructor(public dialog: MatDialog,
     private authenticationService: AuthenticationService) { }
@@ -17,8 +17,9 @@ export class LoginComponent implements OnInit {
   ngOnInit() {
     this.checkAuthenticated();
   }
+
   openDialog(): void {
-    let dialogRef = this.dialog.open(LoginDialogComponent, {
+    const dialogRef = this.dialog.open(LoginDialogComponent, {
       width: '500px',
       height: '500px'
     });
@@ -40,5 +41,4 @@ export class LoginComponent implements OnInit {
     this.authenticationService.logout();
     window.location.reload();
   }
-
 }

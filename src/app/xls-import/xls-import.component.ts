@@ -15,8 +15,8 @@ export class XlsImportComponent implements OnInit {
   }
 
   upload() {
-    let reader = new FileReader();
-    let fileBrowser = this.fileInput.nativeElement;
+    const reader = new FileReader();
+    const fileBrowser = this.fileInput.nativeElement;
     const component = this;
 
     const overwriteOnload = function (evt: any) {

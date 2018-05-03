@@ -22,7 +22,7 @@ export class RhTableComponent implements OnInit, OnChanges {
   @Input() displayedColumns: string[];
   rhDatabase = new RhDatabase();
   dataSource: RhDataSource | null;
-  recommendation: string = '';
+  recommendation = '';
 
   constructor(
     private algo: BacktestService,
@@ -63,7 +63,7 @@ export class RhTableComponent implements OnInit, OnChanges {
       long: event.longTerm
     };
 
-    let dialogRef = this.dialog.open(ChartDialogComponent, {
+    const dialogRef = this.dialog.open(ChartDialogComponent, {
       width: '200%',
       height: '100%',
       data: requestBody
@@ -88,20 +88,20 @@ export class RhTableComponent implements OnInit, OnChanges {
 
   order(row: Stock, side: string): void {
     this.portfolioService.getInstruments(row.stock).subscribe((response) => {
-      let instruments = response.results[0];
-      let newHolding: Holding = {
+      const instruments = response.results[0];
+      const newHolding: Holding = {
         instrument: instruments.url,
         symbol: instruments.symbol,
         name: instruments.name,
         realtime_price: row.lastPrice
       };
 
-      let dialogRef = this.dialog.open(OrderDialogComponent, {
+      const dialogRef = this.dialog.open(OrderDialogComponent, {
         width: '500px',
         height: '500px',
         data: { holding: newHolding, side: side }
       });
-      
+
       dialogRef.afterClosed().subscribe(result => {
         console.log('Closed dialog', result);
       });
@@ -139,8 +139,8 @@ export class RhDataSource extends DataSource<any> {
 
     return Observable.merge(...displayDataChanges).map(() => {
       return this._rhDatabase.data.slice().filter((item: Stock) => {
-        let searchStr = JSON.stringify(item).toLowerCase();
-        return searchStr.indexOf(this.filter.toLowerCase()) != -1;
+        const searchStr = JSON.stringify(item).toLowerCase();
+        return searchStr.indexOf(this.filter.toLowerCase()) !== -1;
       });
     });
   }

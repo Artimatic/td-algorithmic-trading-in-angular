@@ -28,12 +28,9 @@ class ReversionService {
 
   getData(ticker, currentDate, startDate) {
     let { to, from } = this.getDateRanges(currentDate, startDate);
-    return QuoteService.getLocalQuotes(ticker, to, from)
+    return QuoteService.getDailyQuotes(ticker, to, from)
       .then(data => {
         return data;
-      })
-      .catch((error) => {
-        return QuoteService.getData(ticker, to, from);
       });
   }
 

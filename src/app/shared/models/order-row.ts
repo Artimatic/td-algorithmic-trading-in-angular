@@ -3,4 +3,9 @@ export interface OrderRow {
     quantity: number;
     price: number;
     side: string;
+    Stop?: number;
+    Target?: number;
+    StopLoss?: boolean;
+    TakeProfit?: boolean;
+    OrderSize?: number;
 }

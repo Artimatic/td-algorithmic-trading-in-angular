@@ -1,0 +1,14 @@
+<h3 mat-subheader>Shopping List</h3>
+<p>Smart Ordering will attempt to buy at the intraday highs and sell at the intraday lows. 
+  *Satisfaction not guaranteed.
+</p>
+<div *ngFor="let sell of cartService.sellOrders">
+  <app-bb-card [order]="sell"></app-bb-card>
+</div>
+<div *ngFor="let buy of cartService.buyOrders">
+  <app-bb-card [order]="buy"></app-bb-card>
+</div>
+<div *ngFor="let other of cartService.otherOrders">
+  <app-bb-card [order]="other"></app-bb-card>
+</div>
+<app-bb-card [order]="test"></app-bb-card>

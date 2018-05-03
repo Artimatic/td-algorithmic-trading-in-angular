@@ -5,6 +5,7 @@ const router = express.Router();
 
 router.get('/', handler.portfolio);
 router.get('/positions', handler.positions);
+router.get('/quote', handler.quote);
 router.post('/login', handler.login);
 router.post('/mfa', handler.mfaLogin);
 router.post('/logout', handler.logout);

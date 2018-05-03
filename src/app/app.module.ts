@@ -1,6 +1,6 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
-import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 import { RouterModule, NavigationError } from '@angular/router';
 import { ChartModule } from 'angular-highcharts';
@@ -28,16 +28,24 @@ import {
   MatTabsModule,
   MatListModule,
   MatChipsModule,
+  MatStepperModule,
+  MatSelectModule,
 } from '@angular/material';
 
-import {FlexLayoutModule} from '@angular/flex-layout';
+import { FlexLayoutModule } from '@angular/flex-layout';
 
 import { routes } from './app.routes';
 import { AppComponent } from './app.component';
 import { BulkBacktestComponent } from './bulk-backtest';
 import { XlsImportComponent } from './xls-import/xls-import.component';
 import { RhTableComponent } from './rh-table';
-import { BacktestService, AuthenticationService, PortfolioService } from './shared';
+import {
+  BacktestService,
+  AuthenticationService,
+  PortfolioService,
+  DaytradeService,
+  ReportingService
+} from './shared';
 import { ChartDialogComponent } from './chart-dialog';
 
 import { RhInputComponent } from './rh-input/rh-input.component';
@@ -52,7 +60,11 @@ import { CartComponent } from './cart/cart.component';
 import { OrderDialogComponent } from './order-dialog/order-dialog.component';
 import { CartService } from './shared/services/cart.service';
 import { ExcelService } from './shared/services/excel-service.service';
-
+import { BollingerBandComponent } from './bollinger-band/bollinger-band.component';
+import { RealtimeChartComponent } from './realtime-chart/realtime-chart.component';
+import { BbCardComponent } from './bb-card/bb-card.component';
+import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.component';
+import { ReportingComponent, ReportDialogComponent } from './reporting/reporting.component';
 
 @NgModule({
   declarations: [
@@ -71,11 +83,19 @@ import { ExcelService } from './shared/services/excel-service.service';
     InstrumentPipe,
     CartComponent,
     OrderDialogComponent,
+    BollingerBandComponent,
+    RealtimeChartComponent,
+    BbCardComponent,
+    ConfirmDialogComponent,
+    ReportingComponent,
+    ReportDialogComponent,
   ],
   entryComponents: [
     ChartDialogComponent,
     LoginDialogComponent,
-    OrderDialogComponent
+    OrderDialogComponent,
+    ConfirmDialogComponent,
+    ReportDialogComponent
   ],
   imports: [
     BrowserModule,
@@ -108,15 +128,18 @@ import { ExcelService } from './shared/services/excel-service.service';
     MatTabsModule,
     MatListModule,
     MatChipsModule,
+    MatStepperModule,
+    MatSelectModule,
   ],
   providers: [
     BacktestService,
     AuthenticationService,
     PortfolioService,
     CartService,
-    ExcelService
+    ExcelService,
+    DaytradeService,
+    ReportingService,
   ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
-

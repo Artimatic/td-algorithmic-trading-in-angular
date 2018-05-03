@@ -1,9 +1,15 @@
 const path = require('path');
 const _ = require('lodash');
-var fs = require('fs');
-var credentials;
-if (fs.existsSync('./credentials')) {
+const fs = require('fs');
+
+let credentials = {}
+
+try {
+  const stats = fs.statSync('./server/config/environment/credentials.js');
   credentials = require('./credentials');
+}
+catch(err) {
+    console.log('Credentials are missing. Continuing without credentials.');
 }
 
 function requiredProcessEnv(name) {
@@ -15,7 +21,7 @@ function requiredProcessEnv(name) {
 
 // All configurations will extend these options
 // ============================================
-var all = {
+const all = {
   env: process.env.NODE_ENV,
 
   // Root path of server
@@ -25,7 +31,7 @@ var all = {
   port: process.env.PORT || 9000,
   yahoo: {
     key: _.get(credentials, 'yahoo.key', null),
-    secret: _.get(credentials, 'yahoo.key', null)
+    secret: _.get(credentials, 'yahoo.secret', null)
   }
 };
 

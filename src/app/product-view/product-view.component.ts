@@ -13,7 +13,7 @@ import { BacktestService, Stock, AlgoParam } from '../shared';
 })
 export class ProductViewComponent implements OnInit {
   chart;
-  resolving: boolean = false;
+  resolving = false;
   stock: string;
 
   constructor(
@@ -54,10 +54,10 @@ export class ProductViewComponent implements OnInit {
 
     this.algo.getBacktest(requestBody)
       .map(result => {
-        let time = [],
-          seriesData = [],
-          signal: DataPoint;
-          
+        const time = [],
+          seriesData = [];
+        let signal: DataPoint;
+
         result.forEach(day => {
           time.push(day.date);
           if (this.triggerCondition(day.close, day.shortTermAvg, day.longTermAvg, data.deviation)) {
@@ -167,16 +167,16 @@ export class ProductViewComponent implements OnInit {
         return result;
       })
       .subscribe(
-      response => {
-        this.stock = data.stock;
-        this.resolving = false;
-      },
-      err => {
-        this.resolving = false;
-        this.snackBar.open('There was an error.', 'Dismiss', {
-          duration: 2000,
-        });
-      }
+        response => {
+          this.stock = data.stock;
+          this.resolving = false;
+        },
+        err => {
+          this.resolving = false;
+          this.snackBar.open('There was an error.', 'Dismiss', {
+            duration: 2000,
+          });
+        }
       );
   }
 }

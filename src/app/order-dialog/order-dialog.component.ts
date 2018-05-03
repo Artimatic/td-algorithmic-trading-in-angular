@@ -16,7 +16,7 @@ import { Order } from '../shared/models/order';
 })
 export class OrderDialogComponent implements OnInit {
   options: FormGroup;
-  loading: boolean = false;
+  loading = false;
   chipColor: string;
   constructor(
     fb: FormBuilder,
@@ -26,13 +26,12 @@ export class OrderDialogComponent implements OnInit {
     private portfolioService: PortfolioService,
     private cartService: CartService) {
     this.options = fb.group({
-      'quantity': ['', Validators.min(0)],
+      'quantity': [1, Validators.min(0)],
       'price': [this.data.holding.realtime_price, Validators.min(0)],
     });
   }
 
   ngOnInit() {
-    this.data.holding
     if (this.data.side === 'Sell') {
       this.chipColor = 'warn';
     } else if (this.data.side === 'Buy') {
@@ -83,7 +82,7 @@ export class OrderDialogComponent implements OnInit {
   }
 
   addSellOrder() {
-    let order: Order = {
+    const order: Order = {
       holding: this.data.holding,
       quantity: this.options.value.quantity,
       price: this.options.value.price,
@@ -96,7 +95,7 @@ export class OrderDialogComponent implements OnInit {
   }
 
   addBuyOrder() {
-    let order: Order = {
+    const order: Order = {
       holding: this.data.holding,
       quantity: this.options.value.quantity,
       price: this.options.value.price,
@@ -114,7 +113,7 @@ export class OrderDialogComponent implements OnInit {
     } if (this.data.side === 'Sell') {
       this.addSellOrder();
     }
-    this.snackBar.open("Order added to cart", 'Dismiss', {
+    this.snackBar.open('Order added to cart', 'Dismiss', {
       duration: 2000,
     });
   }

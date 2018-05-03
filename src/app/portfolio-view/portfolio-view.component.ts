@@ -12,6 +12,7 @@ import { Order } from '../shared/models/order';
 import { OrderRow } from '../shared/models/order-row';
 import { MatSnackBar } from '@angular/material';
 import { ExcelService } from '../shared/services/excel-service.service';
+import { SmartOrder } from '../shared/models/smart-order';
 
 @Component({
   selector: 'app-portfolio-view',
@@ -34,18 +35,17 @@ export class PortfolioViewComponent implements AfterViewInit {
     public snackBar: MatSnackBar) { }
 
   ngAfterViewInit() {
-    this.refresh();
   }
 
   close(reason: string) {
     this.sidenav.close();
   }
 
-  deleteSellOrder(deleteOrder: Order) {
+  deleteSellOrder(deleteOrder: SmartOrder) {
     this.cartService.deleteSell(deleteOrder);
   }
 
-  deleteBuyOrder(deleteOrder: Order) {
+  deleteBuyOrder(deleteOrder: SmartOrder) {
     this.cartService.deleteBuy(deleteOrder);
   }
 
@@ -59,37 +59,45 @@ export class PortfolioViewComponent implements AfterViewInit {
         .subscribe(result => {
           this.portfolioTableComponent.setData(result);
         });
-    })
+    });
   }
 
   import(file) {
     file.forEach((row: OrderRow) => {
       this.portfolioService.getInstruments(row.symbol).subscribe((response) => {
-        let instruments = response.results[0];
-        let newHolding: Holding = {
+        const instruments = response.results[0];
+        const newHolding: Holding = {
           instrument: instruments.url,
           symbol: instruments.symbol,
           name: instruments.name
         };
 
-        let order: Order = {
+        const order: SmartOrder = {
           holding: newHolding,
-          quantity: row.quantity,
+          quantity: row.quantity * 1,
           price: row.price,
           submitted: false,
           pending: false,
-          side: row.side
+          side: row.side,
+          lossThreshold: row.Stop * 1 || null,
+          profitTarget: row.Target * 1 || null,
+          useStopLoss: row.StopLoss || null,
+          useTakeProfit: row.TakeProfit || null,
+          orderSize: row.OrderSize * 1 || null
         };
         this.cartService.addToCart(order);
       },
-        (error) => {this.snackBar.open("Error getting instruments", 'Dismiss', {
-          duration: 2000,
-        });});
+        (error) => {
+          this.snackBar.open('Error getting instruments', 'Dismiss', {
+            duration: 2000,
+          });
+        });
     });
   }
 
   exportPortfolio() {
-    let today = moment().format('MM-DD-YY');
-    this.excelService.exportAsExcelFile(this.portfolioTableComponent.dataSource.data,`portfolio_${today}`)
+    const today = moment().format('MM-DD-YY');
+    console.log('export data: ', this.portfolioTableComponent.dataSource.data);
+    this.excelService.exportAsExcelFile(this.portfolioTableComponent.dataSource.data, `portfolio_${today}`);
   }
 }
