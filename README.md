@@ -1,4 +1,4 @@
-# Merchant of Nottingham
+# Robinhood Station
 
 
 ## Development server
@@ -10,11 +10,11 @@ Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app w
 Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
 
 ## Install
-Create a file called 'credentials.js' in 'C:\Users\dvxch\Documents\robinhood-merchant\server\config\environment\credentials.js'
+Create file 'credentials.js' in '\server\config\environment\credentials.js'
 
-Get Yahoo developer credentials here: https://developer.yahoo.com/apps/create/
+Get Yahoo developer credentials: https://developer.yahoo.com/apps/create/
 
-Add Yahoo Finance app credentials: 
+Add Yahoo Finance app credentials to credentials.js: 
 module.exports = {
     yahoo: {
         key: 'Your key here',
