@@ -492,7 +492,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
           this.setWarning(`Trying to sell ${sellOrder.holding.symbol} position that doesn\'t exists`);
         };
 
-        this.daytradeService.sendSell(sellOrder, resolve, reject, handleNotFound);
+        this.daytradeService.sendSell(sellOrder, 'limit', resolve, reject, handleNotFound);
 
       } else {
         this.incrementSell(sellOrder);
@@ -524,7 +524,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
           this.setWarning(`Trying to sell ${order.holding.symbol} position that doesn\'t exists`);
         };
 
-        this.daytradeService.sendSell(order, resolve, reject, handleNotFound);
+        this.daytradeService.sendSell(order, 'market', resolve, reject, handleNotFound);
       } else {
         this.incrementSell(order);
         console.log(`${moment().format('hh:mm')} ${log}`);

@@ -69,7 +69,7 @@ export class DaytradeService {
 
   sendBuy(buyOrder: SmartOrder, resolve, reject) {
     this.authenticationService.getPortfolioAccount().subscribe(account => {
-      this.portfolioService.buy(buyOrder.holding, buyOrder.quantity, buyOrder.price).subscribe(
+      this.portfolioService.buy(buyOrder.holding, buyOrder.quantity, buyOrder.price, 'limit').subscribe(
         response => {
           resolve(response);
         },
@@ -80,7 +80,7 @@ export class DaytradeService {
     return buyOrder;
   }
 
-  sendSell(sellOrder: SmartOrder, resolve: Function, reject: Function, handleNotFound: Function): SmartOrder {
+  sendSell(sellOrder: SmartOrder, type: string, resolve: Function, reject: Function, handleNotFound: Function): SmartOrder {
     this.authenticationService.getPortfolioAccount().subscribe(account => {
       this.portfolioService.getPortfolio()
         .subscribe(result => {
@@ -91,7 +91,7 @@ export class DaytradeService {
           if (foundPosition) {
             const positionCount = Number(foundPosition.quantity);
             sellOrder.quantity = sellOrder.quantity < positionCount ? sellOrder.quantity : positionCount;
-            this.portfolioService.sell(sellOrder.holding, sellOrder.quantity, sellOrder.price).subscribe(
+            this.portfolioService.sell(sellOrder.holding, sellOrder.quantity, sellOrder.price, type).subscribe(
               response => {
                 resolve(response);
               },

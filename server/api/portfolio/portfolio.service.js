@@ -93,7 +93,7 @@ class PortfolioService {
     });
   }
 
-  sell(account, token, instrumentUrl, symbol, quantity, price, reply) {
+  sell(account, token, instrumentUrl, symbol, quantity, price, type = 'limit', reply) {
     let headers = {
       'Accept': '*/*',
       'Accept-Encoding': 'gzip, deflate',
@@ -115,7 +115,7 @@ class PortfolioService {
       symbol: symbol,
       time_in_force: 'gfd',
       trigger: 'immediate',
-      type: 'limit'
+      type: type
     });
 
     return request.post({
@@ -133,12 +133,12 @@ class PortfolioService {
         symbol: symbol,
         time_in_force: 'gfd',
         trigger: 'immediate',
-        type: 'limit'
+        type: type
       }
     });
   }
 
-  buy(account, token, instrumentUrl, symbol, quantity, price, reply) {
+  buy(account, token, instrumentUrl, symbol, quantity, price, type = 'limit', reply) {
     let headers = {
       'Accept': '*/*',
       'Accept-Encoding': 'gzip, deflate',
@@ -160,7 +160,7 @@ class PortfolioService {
       symbol: symbol,
       time_in_force: 'gfd',
       trigger: 'immediate',
-      type: 'limit'
+      type: type
     });
 
     return request.post({
@@ -178,7 +178,7 @@ class PortfolioService {
         symbol: symbol,
         time_in_force: 'gfd',
         trigger: 'immediate',
-        type: 'limit'
+        type: type
       }
     });
   }

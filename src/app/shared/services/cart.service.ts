@@ -78,7 +78,7 @@ export class CartService {
     this.sellOrders.forEach((sell) => {
       sell.pending = true;
       if (!sell.submitted && sell.quantity > 0) {
-        this.portfolioService.sell(sell.holding, sell.quantity, sell.price).subscribe(
+        this.portfolioService.sell(sell.holding, sell.quantity, sell.price, 'limit').subscribe(
           response => {
             this.snackBar.open('Sell order sent', 'Dismiss', {
               duration: 2000,
@@ -99,7 +99,7 @@ export class CartService {
     this.buyOrders.forEach((buy) => {
       buy.pending = true;
       if (!buy.submitted && buy.quantity > 0) {
-        this.portfolioService.buy(buy.holding, buy.quantity, buy.price).subscribe(
+        this.portfolioService.buy(buy.holding, buy.quantity, buy.price, 'limit').subscribe(
           response => {
             this.snackBar.open('Buy order sent', 'Dismiss', {
               duration: 2000,
