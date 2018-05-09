@@ -250,7 +250,6 @@ export class BbCardComponent implements OnDestroy, OnInit {
       this.volumeChart = this.initVolumeChart('Volume', volume);
     }
 
-    console.log('Time: ', moment().format('HH:mm'));
     // TODO: Use moment timezones
     if (moment().isAfter(this.endTime)) {
       this.reportingService.addAuditLog(this.order.holding.symbol, `Final Orders ${this.order.holding.name}`);
