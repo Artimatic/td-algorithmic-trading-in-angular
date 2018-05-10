@@ -30,6 +30,7 @@ import {
   MatChipsModule,
   MatStepperModule,
   MatSelectModule,
+  MatTooltipModule,
 } from '@angular/material';
 
 import { FlexLayoutModule } from '@angular/flex-layout';
@@ -65,6 +66,7 @@ import { RealtimeChartComponent } from './realtime-chart/realtime-chart.componen
 import { BbCardComponent } from './bb-card/bb-card.component';
 import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.component';
 import { ReportingComponent, ReportDialogComponent } from './reporting/reporting.component';
+import { ResearchViewComponent } from './research-view/research-view.component';
 
 @NgModule({
   declarations: [
@@ -89,6 +91,7 @@ import { ReportingComponent, ReportDialogComponent } from './reporting/reporting
     ConfirmDialogComponent,
     ReportingComponent,
     ReportDialogComponent,
+    ResearchViewComponent,
   ],
   entryComponents: [
     ChartDialogComponent,
@@ -130,6 +133,7 @@ import { ReportingComponent, ReportDialogComponent } from './reporting/reporting
     MatChipsModule,
     MatStepperModule,
     MatSelectModule,
+    MatTooltipModule,
   ],
   providers: [
     BacktestService,

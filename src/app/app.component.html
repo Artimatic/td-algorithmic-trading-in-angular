@@ -17,9 +17,23 @@
 </mat-sidenav-container>
 <mat-sidenav-container>
   <mat-sidenav mode="side" opened>
-    <button mat-icon-button>
-      <mat-icon>account_balance</mat-icon>
-    </button>
+    <mat-list role="list">
+      <mat-list-item role="listitem">
+        <button mat-icon-button>
+          <a routerLink="/home" matTooltip="trade" [matTooltipPosition]="'after'">
+            <mat-icon>shop</mat-icon>
+          </a>
+        </button>
+      </mat-list-item>
+      <mat-list-item role="listitem">
+        <button mat-icon-button>
+          <a routerLink="/research" matTooltip="research" [matTooltipPosition]="'after'">
+            <mat-icon>assessment</mat-icon>
+          </a>
+        </button>
+      </mat-list-item>
+    </mat-list>
+
   </mat-sidenav>
   <mat-sidenav-content>
     <router-outlet></router-outlet>
