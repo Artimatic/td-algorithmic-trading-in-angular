@@ -555,7 +555,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
       const buyOrder = this.buildBuyOrder(orderQuantity,
         band,
-        quotes.low[idx],
+        quotes.close[idx],
         timestamps[idx],
         quotes.low[idx],
         quotes);
@@ -572,7 +572,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
       const sellOrder = this.buildSellOrder(orderQuantity,
         band,
-        quotes.high[idx],
+        quotes.close[idx],
         timestamps[idx],
         quotes.high[idx],
         quotes);
@@ -592,7 +592,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
         this.firstFormGroup.value.orderSize : this.positionCount;
 
       const buy: SmartOrder = buyQuantity <= 0 ? null :
-        this.buildBuyOrder(buyQuantity, band, quotes.low[idx], timestamps[idx], quotes.low[idx], quotes);
+        this.buildBuyOrder(buyQuantity, band, quotes.close[idx], timestamps[idx], quotes.low[idx], quotes);
 
       const sell: SmartOrder = sellQuantity <= 0 ? null :
         this.buildSellOrder(sellQuantity, band, quotes.close[idx], timestamps[idx], quotes.high[idx], quotes);
