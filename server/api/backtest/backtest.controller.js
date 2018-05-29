@@ -37,6 +37,12 @@ class BacktestController extends BaseController {
         parseFloat(request.body.deviation),
         request.body.short,
         request.body.long)
+        .then((data) => {
+          if (data.length > 500) {
+            return data.slice(data.length - 500, data.length);
+          }
+          return data;
+        })
         .then((data) => BaseController.requestGetSuccessHandler(response, data))
         .catch((err) => BaseController.requestErrorHandler(response, err));
     }

@@ -196,18 +196,7 @@ class ReversionService {
       close
     };
   }
-
-  getClosingPrices(history) {
-    let lastQuote = moment().add('days', 1);
-    return history.reduce((accumulator, current, currentIdx) => {
-      if (moment(current.date).isBefore(lastQuote)) {
-        accumulator.push(current.close);
-      }
-      lastQuote = current;
-      return accumulator;
-    }, []);
-  }
-
+  
   getMA(history, rangeStart, rangeEnd) {
     let date          = moment(history[history.length - 1].date).valueOf(),
         close         = history[history.length - 1].close,

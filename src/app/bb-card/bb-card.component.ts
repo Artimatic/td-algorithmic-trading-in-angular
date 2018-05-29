@@ -64,6 +64,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
   bbandPeriod;
   dataInterval;
   myPreferences;
+  startTime;
   endTime;
 
   constructor(private _formBuilder: FormBuilder,
@@ -85,6 +86,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
         useUTC: false
       }
     });
+    this.startTime = moment('9:30am', 'h:mma');
     this.endTime = moment('4:00pm', 'h:mma');
     this.showGraph = false;
     this.bbandPeriod = 80;
@@ -152,7 +154,10 @@ export class BbCardComponent implements OnDestroy, OnInit {
       .takeWhile(() => this.alive)
       .subscribe(() => {
         this.live = true;
-        this.play(true, this.backtestLive);
+        // TODO: Use moment timezones
+        if (moment().isAfter(this.startTime)) {
+          this.play(true, this.backtestLive);
+        }
       });
   }
 
