@@ -3,7 +3,7 @@ import { DataSource } from '@angular/cdk/collections';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/of';
 
-import { BacktestService, Stock, AlgoParam, Row } from '../shared';
+import { Stock, AlgoParam, Row } from '../shared';
 import * as moment from 'moment';
 
 @Component({
@@ -14,15 +14,12 @@ import * as moment from 'moment';
 export class BulkBacktestComponent implements OnInit {
   private stocks: AlgoParam[] = [];
   headers: Array<string>;
+  selectedAlgo = 'v1';
 
-  constructor(private algo: BacktestService) {}
+  constructor() {}
 
   ngOnInit() {
     this.headers = ['stock', 'totalReturns', 'lastVolume', 'lastPrice', 'totalTrades', 'trending'];
-
-  }
-
-  runAlgo() {
   }
 
   import(event) {
@@ -42,7 +39,6 @@ export class BulkBacktestComponent implements OnInit {
   }
 
   query(param) {
-    console.log('stock: ', param);
     this.stocks = [];
     const params = {
       ticker: param.query,

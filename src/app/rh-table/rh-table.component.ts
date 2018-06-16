@@ -20,6 +20,8 @@ import { Holding } from '../shared/models';
 export class RhTableComponent implements OnInit, OnChanges {
   @Input() data: AlgoParam[];
   @Input() displayedColumns: string[];
+  @Input() selectedAlgo: string;
+
   rhDatabase = new RhDatabase();
   dataSource: RhDataSource | null;
   recommendation = '';

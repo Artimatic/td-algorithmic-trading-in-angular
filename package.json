@@ -54,6 +54,7 @@
     "moving-averages": "^4.0.5",
     "path": "^0.12.7",
     "qs": "^6.5.1",
+    "recurrent-js-gpu": "^1.4.9",
     "request-promise": "^4.2.2",
     "robinhood": "1.1.2",
     "robinhood-api": "1.2.3",

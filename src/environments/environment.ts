@@ -6,5 +6,6 @@
 export const environment = {
   production: false,
   envName: 'dev',
-  appUrl: 'http://localhost:9000/'
+  appUrl: 'http://localhost:9000/',
+  computationUrl: 'http://localhost:8080/'
 };
