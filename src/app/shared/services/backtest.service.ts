@@ -1,12 +1,12 @@
 import { Http } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
 import { Injectable } from '@angular/core';
-import {
-    Stock
-} from './../../shared';
+import { Stock } from './../../shared';
 
 import { environment } from '../../../environments/environment';
-import { HttpParams } from '@angular/common/http';
+
+import * as moment from 'moment';
+import { AlgoChartV2 } from '../models/algo-chart-v2';
 
 const BASE_URL = environment.appUrl;
 const GOLIATH_URL = environment.computationUrl;
@@ -21,25 +21,37 @@ export class BacktestService {
             .map(r => r.json());
     }
 
-    getInfoV2(symbol: string, to: Date, from: Date,
-        short: number, long: number, deviation: number,
-        period: number): Observable<Stock> {
-        let params = new HttpParams();
+    getInfoV2(symbol: string, to: string = null, from: string = null,
+        short: number = 30, long: number = 90, deviation: number = 0.03,
+        period: number = 80): Observable<Stock> {
 
-        params = params.append('symbol', symbol);
-        params = params.append('to', to.toLocaleDateString());
-        params = params.append('from', from.toLocaleDateString());
-        params = params.append('s', short.toString());
-        params = params.append('l', long.toString());
-        params = params.append('d', deviation.toString());
-        params = params.append('p', period.toString());
+        const data = {
+            symbol,
+            to,
+            from
+        };
 
-        return this.http.get(`${GOLIATH_URL}api/mean-reversion/info`, { params: params })
+        return this.http.post(`${BASE_URL}api/backtest/infov2`, data, {})
             .map(r => r.json());
     }
 
-    getBacktest(data: any): Observable<any[]> {
-        return this.http.post(`${BASE_URL}backtest/strategy/mean-reversion/chart`, data, {})
+    getInfoV2Chart(symbol: string, to: string = null, from: string = null,
+        short: number = 30, long: number = 90, deviation: number = 0.03,
+        period: number = 80): Observable<AlgoChartV2[]> {
+
+        const data = {
+            symbol,
+            to,
+            from
+        };
+
+        return this.http.post(`${BASE_URL}api/backtest/infov2chart`, data, {})
+            .map(r => r.json());
+    }
+
+
+    getBacktestChart(data: any): Observable<any[]> {
+        return this.http.post(`${BASE_URL}api/backtest/chart`, data, {})
             .map(r => r.json());
     }
 

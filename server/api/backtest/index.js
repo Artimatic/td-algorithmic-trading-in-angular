@@ -7,5 +7,7 @@ router.post('/', handler.backtest);
 router.post('/indicator', handler.indicator);
 router.post('/chart', handler.getMeanReversionChart);
 router.post('/bbands', handler.bollingerBands);
+router.post('/infov2', handler.infoV2);
+router.post('/infov2chart', handler.infoV2Chart);
 
 module.exports = router;

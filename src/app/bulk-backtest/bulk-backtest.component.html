@@ -22,12 +22,5 @@
         <app-rh-input (onQuery)="query($event)"></app-rh-input>
     </mat-expansion-panel>
 </mat-accordion>
-<mat-form-field>
-    <mat-select [(value)]="selectedAlgo">
-      <mat-option>None</mat-option>
-      <mat-option value="v1">V1</mat-option>
-      <mat-option value="v2">V2</mat-option>
-    </mat-select>
-  </mat-form-field>
   
-<app-rh-table [data]="stocks" [displayedColumns]="headers" [selectedAlgo]="selectedAlgo"></app-rh-table>
+<app-rh-table [data]="stocks" [displayedColumns]="headers"></app-rh-table>

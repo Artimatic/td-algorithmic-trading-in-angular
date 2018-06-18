@@ -62,6 +62,18 @@ class BacktestController extends BaseController {
         .catch((err) => BaseController.requestErrorHandler(response, err));
     }
   }
+
+  getInfoV2(request, response) {
+    BacktestService.getInfoV2(request.body.symbol)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+  getInfoV2Chart(request, response) {
+    BacktestService.getInfoV2Chart(request.body.symbol, request.body.to, request.body.from)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
 }
 
 module.exports.BacktestController = new BacktestController();

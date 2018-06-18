@@ -5,6 +5,7 @@ import * as moment from 'moment';
 import { MatSnackBar } from '@angular/material';
 
 import { BacktestService, Stock, AlgoParam } from '../shared';
+import { removeSummaryDuplicates } from '@angular/compiler';
 
 @Component({
   selector: 'app-product-view',
@@ -52,7 +53,7 @@ export class ProductViewComponent implements OnInit {
       long: data.longTerm
     };
 
-    this.algo.getBacktest(requestBody)
+    this.algo.getBacktestChart(requestBody)
       .map(result => {
         const time = [],
           seriesData = [];
@@ -104,66 +105,8 @@ export class ProductViewComponent implements OnInit {
           seriesData.push(signal);
         });
 
-        this.chart = new Chart({
-          chart: {
-            type: 'spline',
-            zoomType: 'x'
-          },
-          title: {
-            text: data.stock
-          },
-          subtitle: {
-            text: 'Daily Price'
-          },
-          xAxis: {
-            type: 'datetime',
-            dateTimeLabelFormats: {
-              month: '%e. %b',
-              year: '%b'
-            },
-            labels: {
-              formatter: function () {
-                return moment(this.value).format('MMM D');
-              }
-            },
-            categories: time
-          },
-          yAxis: {
-            title: {
-              text: 'Price'
-            },
-            labels: {
-              formatter: function () {
-                return '$' + this.value;
-              }
-            }
-          },
-          tooltip: {
-            crosshairs: true,
-            shared: true,
-            formatter: function () {
-              return '<b>Date:</b>' + moment(this.x).format('YYYY-MM-DD') + '<br><b>Price:</b> ' + this.y + '<br>' + this.points[0].key;
-            }
-          },
-          plotOptions: {
-            spline: {
-              marker: {
-                radius: 1,
-                lineColor: '#666666',
-                lineWidth: 1
-              }
-            },
-            series: {
-              marker: {
-                enabled: true
-              }
-            }
-          },
-          series: [{
-            name: 'Stock',
-            data: seriesData
-          }]
-        });
+        this.initChart (data.stock, time, seriesData);
+
         return result;
       })
       .subscribe(
@@ -178,5 +121,156 @@ export class ProductViewComponent implements OnInit {
           });
         }
       );
+  }
+
+  loadV2Chart(data, endDate): void {
+    this.resolving = true;
+
+    const currentDate = moment(endDate).format('YYYY-MM-DD');
+    const startDate = moment(endDate).subtract(350, 'days').format('YYYY-MM-DD');
+
+    this.algo.getInfoV2Chart(data.stock, currentDate, startDate)
+      .map(result => {
+        const time = [],
+          seriesData = [];
+        let signal: DataPoint;
+        result.forEach(day => {
+          time.push(day.date);
+          switch (day.action) {
+            case 'SELL':
+              signal = {
+                y: day.close,
+                marker: {
+                  symbol: 'triangle-down',
+                  fillColor: 'pink',
+                  radius: 3
+                },
+                name: '<br><b>Volume:</b> ' + day.volume
+              };
+              break;
+            case 'STRONGSELL':
+              signal = {
+                y: day.close,
+                marker: {
+                  symbol: 'triangle-down',
+                  fillColor: 'red',
+                  radius: 6
+                },
+                name: '<br><b>Volume:</b> ' + day.volume
+              };
+              break;
+            case 'BUY':
+              signal = {
+                y: day.close,
+                marker: {
+                  symbol: 'triangle',
+                  fillColor: 'green',
+                  radius: 3
+                },
+                name: '<br><b>Volume:</b> ' + day.volume
+              };
+              break;
+            case 'STRONGBUY':
+              signal = {
+                y: day.close,
+                marker: {
+                  symbol: 'triangle',
+                  fillColor: 'green',
+                  radius: 6
+                },
+                name: '<br><b>Volume:</b> ' + day.volume
+              };
+              break;
+            case 'INDETERMINANT':
+              signal = {
+                y: day.close,
+                name: '<br><b>Volume:</b> ' + day.volume
+              };
+              break;
+            default:
+              throw new Error(`Unknown signal: ${day.action}`);
+          }
+
+          seriesData.push(signal);
+
+          this.initChart (data.stock, time, seriesData);
+        });
+      })
+      .subscribe(
+        response => {
+          this.stock = data.stock;
+          this.resolving = false;
+        },
+        err => {
+          this.resolving = false;
+          this.snackBar.open(`Error: ${err}`, 'Dismiss', {
+            duration: 20000,
+          });
+        }
+      );
+  }
+
+  initChart (title, timeArr, seriesData) {
+    this.chart = new Chart({
+      chart: {
+        type: 'spline',
+        zoomType: 'x'
+      },
+      title: {
+        text: title
+      },
+      subtitle: {
+        text: 'Daily Price'
+      },
+      xAxis: {
+        type: 'datetime',
+        dateTimeLabelFormats: {
+          month: '%e. %b',
+          year: '%b'
+        },
+        labels: {
+          formatter: function () {
+            return moment(this.value).format('MMM D');
+          }
+        },
+        categories: timeArr
+      },
+      yAxis: {
+        title: {
+          text: 'Price'
+        },
+        labels: {
+          formatter: function () {
+            return '$' + this.value;
+          }
+        }
+      },
+      tooltip: {
+        crosshairs: true,
+        shared: true,
+        formatter: function () {
+          return '<b>Date:</b>' + moment(this.x).format('YYYY-MM-DD') + '<br><b>Price:</b> ' + this.y + '<br>' + this.points[0].key;
+        }
+      },
+      plotOptions: {
+        spline: {
+          marker: {
+            radius: 1,
+            lineColor: '#666666',
+            lineWidth: 1
+          }
+        },
+        series: {
+          marker: {
+            enabled: true
+          }
+        }
+      },
+      series: [{
+        name: 'Stock',
+        data: seriesData
+      }]
+    });
+
   }
 }

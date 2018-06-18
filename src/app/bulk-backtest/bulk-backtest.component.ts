@@ -14,7 +14,6 @@ import * as moment from 'moment';
 export class BulkBacktestComponent implements OnInit {
   private stocks: AlgoParam[] = [];
   headers: Array<string>;
-  selectedAlgo = 'v1';
 
   constructor() {}
 

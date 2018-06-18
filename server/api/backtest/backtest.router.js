@@ -15,3 +15,11 @@ export let indicator = (request, response) => {
 export let bollingerBands = (request, response) => {
   BacktestController.getBollingerBands(request, response);
 }
+
+export let infoV2 = (request, response) => {
+  BacktestController.getInfoV2(request, response);
+}
+
+export let infoV2Chart = (request, response) => {
+  BacktestController.getInfoV2Chart(request, response);
+}

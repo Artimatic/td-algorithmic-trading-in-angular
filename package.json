@@ -27,6 +27,7 @@
     "@angular/platform-browser-dynamic": "^5.1.2",
     "@angular/router": "^5.1.2",
     "@types/jquery": "^3.3.1",
+    "@types/lodash": "^4.14.109",
     "ajv": "^5.5.2",
     "algebra.js": "^0.2.6",
     "angular-highcharts": "^5.2.0",

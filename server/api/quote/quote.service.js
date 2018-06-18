@@ -13,6 +13,9 @@ const yahoo = {
   key: config.yahoo.key,
   secret: config.yahoo.secret
 };
+
+const appUrl = config.apps.goliath;
+
 const api = new YahooFinanceAPI(yahoo);
 
 const quandl = feedQuandl()
@@ -96,7 +99,7 @@ class QuoteService {
     to = to.format('YYYY-MM-DD');
     from = from.format('YYYY-MM-DD');
 
-    const query = `http://localhost:8080/backtest?ticker=${symbol}&to=${to}&from=${from}`;
+    const query = `${appUrl}backtest?ticker=${symbol}&to=${to}&from=${from}`;
     const options = {
       method: 'POST',
       uri: query

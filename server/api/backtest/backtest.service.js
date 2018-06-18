@@ -1,6 +1,7 @@
 import moment from 'moment';
 import json2csv from 'json2csv';
 import fs from 'fs';
+import RequestPromise from 'request-promise';
 
 import { QuoteService } from './../quote/quote.service';
 import { ReversionService } from './../mean-reversion/reversion.service';
@@ -8,6 +9,9 @@ import * as DecisionService from './../mean-reversion/reversion-decision.service
 
 import * as errors from '../../components/errors/baseErrors';
 import * as tulind from 'tulind';
+import configuations from '../../config/environment';
+
+const appUrl = configuations.apps.goliath;
 
 const config = {
   shortTerm: [3, 85],
@@ -23,7 +27,7 @@ class BacktestService {
   }
 
   getBBands(real, period, stddev) {
-      return tulind.indicators.bbands.indicator([real], [period, stddev]);
+    return tulind.indicators.bbands.indicator([real], [period, stddev]);
   }
 
   evaluateStrategyAll(ticker, end, start) {
@@ -120,6 +124,53 @@ class BacktestService {
     return Math.ceil(days * workDaysPerWeek - holidays);
   }
 
+  getInfoV2(symbol) {
+    const to = moment().format('YYYY-MM-DD');
+    const from = moment().subtract(0.5, 'years').format('YYYY-MM-DD');
+
+
+    const query = `${appUrl}backtest/strategy/mean-reversion/train?` +
+      `symbol=${symbol}&to=${to}&from=${from}` +
+      `&s=30&l=90&d=0.03&p=80`;
+
+    const options = {
+      method: 'GET',
+      uri: query
+    };
+
+    return RequestPromise(options)
+      .then((data) => {
+        let arr = JSON.parse(data);
+        return arr;
+      })
+      .catch((error) => {
+        console.log('Error: ', error);
+      });
+  }
+
+  getInfoV2Chart(symbol, endDate, startDate) {
+    const to = moment(endDate).format('YYYY-MM-DD');
+    const from = moment(startDate).format('YYYY-MM-DD');
+  
+    console.log('to: ', to, ' from:', from);
+    const query = `${appUrl}backtest/strategy/mean-reversion/chart?` +
+      `symbol=${symbol}&to=${to}&from=${from}` +
+      `&s=30&l=90&d=0.03&p=80`;
+
+    const options = {
+      method: 'GET',
+      uri: query
+    };
+
+    return RequestPromise(options)
+      .then((data) => {
+        let arr = JSON.parse(data);
+        return arr;
+      })
+      .catch((error) => {
+        console.log('Error: ', error);
+      });
+  }
 }
 
 module.exports.BacktestService = new BacktestService();

@@ -4,8 +4,10 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/of';
 import 'rxjs/add/observable/merge';
-import { MatDialog, MatDialogRef, MatTableDataSource } from '@angular/material';
+import 'rxjs/add/operator/finally';
+import { MatDialog, MatDialogRef } from '@angular/material';
 import * as moment from 'moment';
+import * as _ from 'lodash';
 
 import { BacktestService, Stock, AlgoParam, PortfolioService } from '../shared';
 import { ChartDialogComponent } from '../chart-dialog';
@@ -20,11 +22,10 @@ import { Holding } from '../shared/models';
 export class RhTableComponent implements OnInit, OnChanges {
   @Input() data: AlgoParam[];
   @Input() displayedColumns: string[];
-  @Input() selectedAlgo: string;
 
-  rhDatabase = new RhDatabase();
-  dataSource: RhDataSource | null;
-  recommendation = '';
+  recommendation = 'buy';
+  stocks: Stock[] = [];
+  endDate;
 
   constructor(
     private algo: BacktestService,
@@ -32,8 +33,8 @@ export class RhTableComponent implements OnInit, OnChanges {
     private portfolioService: PortfolioService) { }
 
   ngOnInit() {
-    this.dataSource = new RhDataSource(this.rhDatabase);
     this.filterRecommendation();
+    this.endDate = new Date();
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -43,11 +44,24 @@ export class RhTableComponent implements OnInit, OnChanges {
   }
 
   getData(algoParams) {
+    const currentDate = moment(this.endDate).format('YYYY-MM-DD');
+    const startDate = moment(this.endDate).subtract(350, 'days').format('YYYY-MM-DD');
+
     algoParams.forEach((param) => {
-      this.algo.getInfo(param).subscribe((stockData) => {
+      this.algo.getInfo(param)
+      .subscribe((stockData: Stock) => {
         stockData.stock = param.ticker;
         stockData.totalReturns = +((stockData.totalReturns * 100).toFixed(2));
-        this.rhDatabase.addStock(stockData);
+
+        this.algo.getInfoV2(stockData.stock, currentDate, startDate).subscribe(
+          results => {
+            stockData.recommendation = results.recommendation;
+            stockData.returns = results.returns;
+            this.stocks.push(stockData);
+          }, error => {
+            console.log('error: ', error);
+            this.stocks.push(stockData);
+          });
       });
     });
   }
@@ -77,7 +91,6 @@ export class RhTableComponent implements OnInit, OnChanges {
   }
 
   filterRecommendation() {
-    this.dataSource.filter = `${this.recommendation}`;
   }
 
   sell(row: Stock): void {
@@ -109,43 +122,4 @@ export class RhTableComponent implements OnInit, OnChanges {
       });
     });
   }
-}
-
-export class RhDatabase {
-  dataChange: BehaviorSubject<Stock[]> = new BehaviorSubject<Stock[]>([]);
-  get data(): Stock[] { return this.dataChange.value; }
-
-  constructor() { }
-
-  addStock(stock: Stock) {
-    const copiedData = this.data.slice();
-    copiedData.push(stock);
-    this.dataChange.next(copiedData);
-  }
-}
-
-export class RhDataSource extends DataSource<any> {
-  _filterChange = new BehaviorSubject('');
-  get filter(): string { return this._filterChange.value; }
-  set filter(filter: string) { this._filterChange.next(filter); }
-
-  constructor(private _rhDatabase: RhDatabase) {
-    super();
-  }
-
-  connect(): Observable<Stock[]> {
-    const displayDataChanges = [
-      this._rhDatabase.dataChange,
-      this._filterChange,
-    ];
-
-    return Observable.merge(...displayDataChanges).map(() => {
-      return this._rhDatabase.data.slice().filter((item: Stock) => {
-        const searchStr = JSON.stringify(item).toLowerCase();
-        return searchStr.indexOf(this.filter.toLowerCase()) !== -1;
-      });
-    });
-  }
-
-  disconnect() { }
 }
