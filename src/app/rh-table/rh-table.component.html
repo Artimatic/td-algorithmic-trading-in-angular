@@ -7,9 +7,11 @@
     </div>
     <div class="table-controls">
       <mat-radio-group [(ngModel)]="recommendation" (change)="filterRecommendation()">
+        <mat-radio-button value="strongbuy">Strong Buy</mat-radio-button>
         <mat-radio-button value="buy">Buy</mat-radio-button>
-        <mat-radio-button value="sell">Sell</mat-radio-button>
         <mat-radio-button value="">Any</mat-radio-button>
+        <mat-radio-button value="sell">Sell</mat-radio-button>
+        <mat-radio-button value="strongsell">Strong Sell</mat-radio-button>
       </mat-radio-group>
     </div>
     <div id="tableContainer" class="tableContainer">
@@ -27,7 +29,7 @@
           </tr>
         </thead>
         <tbody class="scrollContent">
-          <tr *ngFor="let element of stocks">
+          <tr *ngFor="let element of currentList">
             <td>
               <span> {{element.stock}}
               </span>

@@ -23,8 +23,9 @@ export class RhTableComponent implements OnInit, OnChanges {
   @Input() data: AlgoParam[];
   @Input() displayedColumns: string[];
 
-  recommendation = 'buy';
+  recommendation = 'strongbuy';
   stocks: Stock[] = [];
+  currentList: Stock[] = [];
   endDate;
 
   constructor(
@@ -47,22 +48,23 @@ export class RhTableComponent implements OnInit, OnChanges {
     const currentDate = moment(this.endDate).format('YYYY-MM-DD');
     const startDate = moment(this.endDate).subtract(350, 'days').format('YYYY-MM-DD');
 
-    algoParams.forEach((param) => {
-      this.algo.getInfo(param)
-      .subscribe((stockData: Stock) => {
-        stockData.stock = param.ticker;
-        stockData.totalReturns = +((stockData.totalReturns * 100).toFixed(2));
+    // algoParams.forEach((param) => {
+    //   this.algo.getInfo(param)
+    //   .subscribe((stockData: Stock) => {
+    //     stockData.stock = param.ticker;
+    //     stockData.totalReturns = +((stockData.totalReturns * 100).toFixed(2));
+    //     this.stocks.push(stockData);
+    //   });
+    // });
 
-        this.algo.getInfoV2(stockData.stock, currentDate, startDate).subscribe(
-          results => {
-            stockData.recommendation = results.recommendation;
-            stockData.returns = results.returns;
-            this.stocks.push(stockData);
-          }, error => {
-            console.log('error: ', error);
-            this.stocks.push(stockData);
-          });
-      });
+    algoParams.forEach((param) => {
+      this.algo.getInfoV2(param.ticker, currentDate, startDate).subscribe(
+        result => {
+          result.stock = param.ticker;
+          this.addToList(result);
+        }, error => {
+          console.log('error: ', error);
+        });
     });
   }
 
@@ -91,6 +93,20 @@ export class RhTableComponent implements OnInit, OnChanges {
   }
 
   filterRecommendation() {
+    if (!this.recommendation) {
+      this.currentList = this.stocks;
+    } else {
+      this.currentList = _.filter(this.stocks, (stock) => {
+        return stock.recommendation.toLowerCase() === this.recommendation;
+      });
+    }
+  }
+
+  addToList(stock: Stock) {
+    this.stocks.push(stock);
+    if (!this.recommendation || stock.recommendation.toLowerCase() === this.recommendation ) {
+      this.currentList.push(stock);
+    }
   }
 
   sell(row: Stock): void {
