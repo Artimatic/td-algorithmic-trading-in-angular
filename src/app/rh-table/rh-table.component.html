@@ -1,19 +1,32 @@
 <app-product-view #product></app-product-view>
 <mat-card>
   <div class="table-container mat-elevation-z8">
-    <div>
-      End Date
-      <input type="date" [ngModel] ="endDate | date:'yyyy-MM-dd'" (ngModelChange)="endDate = $event">
-    </div>
-    <div class="table-controls">
-      <mat-radio-group [(ngModel)]="recommendation" (change)="filterRecommendation()">
-        <mat-radio-button value="strongbuy">Strong Buy</mat-radio-button>
-        <mat-radio-button value="buy">Buy</mat-radio-button>
-        <mat-radio-button value="">Any</mat-radio-button>
-        <mat-radio-button value="sell">Sell</mat-radio-button>
-        <mat-radio-button value="strongsell">Strong Sell</mat-radio-button>
-      </mat-radio-group>
-    </div>
+    <mat-grid-list cols="3" rowHeight="76px">
+      <mat-grid-tile>
+        <div>
+          End Date
+          <input type="date" [ngModel]="endDate | date:'yyyy-MM-dd'" (ngModelChange)="endDate = $event">
+        </div>
+      </mat-grid-tile>
+      <mat-grid-tile>
+        <mat-radio-group [(ngModel)]="recommendation" (change)="filterRecommendation()">
+          <mat-radio-button value="strongbuy">Strong Buy</mat-radio-button>
+          <mat-radio-button value="buy">Buy</mat-radio-button>
+          <mat-radio-button value="">Any</mat-radio-button>
+          <mat-radio-button value="sell">Sell</mat-radio-button>
+          <mat-radio-button value="strongsell">Strong Sell</mat-radio-button>
+        </mat-radio-group>
+      </mat-grid-tile>
+      <mat-grid-tile>
+        <mat-form-field>
+          <mat-select placeholder="Trading Algorithm">
+            <mat-option *ngFor="let algo of algos" [value]="algo.value">
+              {{ algo.viewValue }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </mat-grid-tile>
+    </mat-grid-list>
     <div id="tableContainer" class="tableContainer">
       <table border="0" cellpadding="0" cellspacing="0" width="100%" class="scrollTable">
         <thead class="fixedHeader">
@@ -34,7 +47,7 @@
               </span>
             </td>
             <td>
-              <span> 
+              <span>
                 {{element.returns}}%
                 <button mat-button color="primary" (click)="buy(element)">BUY</button>
               </span>
