@@ -23,7 +23,6 @@
             <th>Last Volume</th>
             <th>Last Price</th>
             <th>Trades</th>
-            <th>Algorithm 2 Returns</th>
             <th>Algorithm 1</th>
             <th>Algorithm 2</th>
           </tr>
@@ -35,7 +34,8 @@
               </span>
             </td>
             <td>
-              <span> {{element.totalReturns}}%
+              <span> 
+                {{element.returns}}%
                 <button mat-button color="primary" (click)="buy(element)">BUY</button>
               </span>
             </td>
@@ -54,11 +54,6 @@
                 {{element.totalTrades}}
               </span>
             </td>
-            <td>
-                <span> 
-                  {{element.returns}}%
-                </span>
-              </td>
             <td>
               <span>
                 {{element.trending}}
@@ -79,5 +74,7 @@
         </tbody>
       </table>
     </div>
+    Progress: {{progress}}
+    <mat-progress-bar mode="determinate" value="{{progress}}"></mat-progress-bar>
   </div>
 </mat-card>

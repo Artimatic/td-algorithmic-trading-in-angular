@@ -124,9 +124,9 @@ class BacktestService {
     return Math.ceil(days * workDaysPerWeek - holidays);
   }
 
-  getInfoV2(symbol) {
-    const to = moment().format('YYYY-MM-DD');
-    const from = moment().subtract(0.5, 'years').format('YYYY-MM-DD');
+  getInfoV2(symbol, endDate, startDate) {
+    const to = moment(endDate).format('YYYY-MM-DD');
+    const from = moment(startDate).format('YYYY-MM-DD');
 
 
     const query = `${appUrl}backtest/strategy/mean-reversion/train?` +

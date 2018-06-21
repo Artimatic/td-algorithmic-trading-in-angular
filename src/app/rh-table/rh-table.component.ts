@@ -5,7 +5,7 @@ import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/of';
 import 'rxjs/add/observable/merge';
 import 'rxjs/add/operator/finally';
-import { MatDialog, MatDialogRef } from '@angular/material';
+import { MatSnackBar, MatDialog, MatDialogRef } from '@angular/material';
 import * as moment from 'moment';
 import * as _ from 'lodash';
 
@@ -27,8 +27,10 @@ export class RhTableComponent implements OnInit, OnChanges {
   stocks: Stock[] = [];
   currentList: Stock[] = [];
   endDate;
+  progress = 0;
 
   constructor(
+    public snackBar: MatSnackBar,
     private algo: BacktestService,
     public dialog: MatDialog,
     private portfolioService: PortfolioService) { }
@@ -56,14 +58,19 @@ export class RhTableComponent implements OnInit, OnChanges {
     //     this.stocks.push(stockData);
     //   });
     // });
+    this.progress = 5;
+    const increment = +((1 / algoParams.length).toFixed(2)) * 100;
 
     algoParams.forEach((param) => {
       this.algo.getInfoV2(param.ticker, currentDate, startDate).subscribe(
         result => {
           result.stock = param.ticker;
           this.addToList(result);
+          this.progress += increment;
         }, error => {
           console.log('error: ', error);
+          this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
+          this.progress += increment;
         });
     });
   }

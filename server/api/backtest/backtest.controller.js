@@ -64,7 +64,7 @@ class BacktestController extends BaseController {
   }
 
   getInfoV2(request, response) {
-    BacktestService.getInfoV2(request.body.symbol)
+    BacktestService.getInfoV2(request.body.symbol, request.body.to, request.body.from)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
