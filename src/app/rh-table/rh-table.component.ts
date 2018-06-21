@@ -28,6 +28,10 @@ export class RhTableComponent implements OnInit, OnChanges {
   currentList: Stock[] = [];
   endDate;
   progress = 0;
+  algos = [
+    {value: 'v1', viewValue: 'Mean Reversion - Moving Average Crossover'},
+    {value: 'v2', viewValue: 'Mean Reversion - Bollinger Band'}
+  ];
 
   constructor(
     public snackBar: MatSnackBar,
