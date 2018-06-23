@@ -19,7 +19,7 @@
       </mat-grid-tile>
       <mat-grid-tile>
         <mat-form-field>
-          <mat-select placeholder="Trading Algorithm">
+          <mat-select placeholder="Trading Algorithm" [(ngModel)]="selectedAlgo" name="algorithm">
             <mat-option *ngFor="let algo of algos" [value]="algo.value">
               {{ algo.viewValue }}
             </mat-option>
@@ -36,25 +36,24 @@
             <th>Last Volume</th>
             <th>Last Price</th>
             <th>Trades</th>
-            <th>Algorithm 1</th>
-            <th>Algorithm 2</th>
+            <th>Recommendation</th>
           </tr>
         </thead>
         <tbody class="scrollContent">
           <tr *ngFor="let element of currentList">
             <td>
               <span> {{element.stock}}
+                  <button mat-button color="primary" (click)="buy(element)">BUY</button>
+                  <button mat-button color="warn" (click)="sell(element)">SELL</button>
               </span>
             </td>
             <td>
               <span>
                 {{element.returns}}%
-                <button mat-button color="primary" (click)="buy(element)">BUY</button>
               </span>
             </td>
             <td>
               <span> {{element.lastVolume | number}}
-                <button mat-button color="warn" (click)="sell(element)">SELL</button>
               </span>
             </td>
             <td>
@@ -69,18 +68,17 @@
             </td>
             <td>
               <span>
-                {{element.trending}}
-                <button mat-icon-button (click)="product.load(element)">
-                  <mat-icon>show_chart</mat-icon>
-                </button>
-              </span>
-            </td>
-            <td>
-              <span>
                 {{element.recommendation}}
-                <button mat-icon-button (click)="product.loadV2Chart(element, endDate)">
-                  <mat-icon>show_chart</mat-icon>
-                </button>
+                <span *ngIf="selectedAlgo==='v1'">
+                  <button mat-icon-button (click)="product.load(element, endDate)">
+                    <mat-icon>show_chart</mat-icon>
+                  </button>
+                </span>
+                <span *ngIf="selectedAlgo==='v2'">
+                  <button mat-icon-button (click)="product.loadV2Chart(element, endDate)">
+                    <mat-icon>show_chart</mat-icon>
+                  </button>
+                </span>
               </span>
             </td>
           </tr>

@@ -32,6 +32,7 @@ export class RhTableComponent implements OnInit, OnChanges {
     {value: 'v1', viewValue: 'Mean Reversion - Moving Average Crossover'},
     {value: 'v2', viewValue: 'Mean Reversion - Bollinger Band'}
   ];
+  selectedAlgo = 'v2';
 
   constructor(
     public snackBar: MatSnackBar,
@@ -54,29 +55,37 @@ export class RhTableComponent implements OnInit, OnChanges {
     const currentDate = moment(this.endDate).format('YYYY-MM-DD');
     const startDate = moment(this.endDate).subtract(350, 'days').format('YYYY-MM-DD');
 
-    // algoParams.forEach((param) => {
-    //   this.algo.getInfo(param)
-    //   .subscribe((stockData: Stock) => {
-    //     stockData.stock = param.ticker;
-    //     stockData.totalReturns = +((stockData.totalReturns * 100).toFixed(2));
-    //     this.stocks.push(stockData);
-    //   });
-    // });
     this.progress = 5;
     const increment = +((1 / algoParams.length).toFixed(2)) * 100;
 
-    algoParams.forEach((param) => {
-      this.algo.getInfoV2(param.ticker, currentDate, startDate).subscribe(
-        result => {
-          result.stock = param.ticker;
-          this.addToList(result);
-          this.progress += increment;
-        }, error => {
-          console.log('error: ', error);
-          this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
-          this.progress += increment;
+    switch (this.selectedAlgo) {
+      case 'v1':
+        algoParams.forEach((param) => {
+          this.algo.getInfo(param)
+          .subscribe((stockData: Stock) => {
+            stockData.stock = param.ticker;
+            stockData.recommendation = stockData.trending;
+            stockData.returns = +((stockData.totalReturns * 100).toFixed(2));
+            this.addToList(stockData);
+          });
         });
-    });
+      break;
+      case 'v2':
+        algoParams.forEach((param) => {
+          this.algo.getInfoV2(param.ticker, currentDate, startDate).subscribe(
+            result => {
+              result.stock = param.ticker;
+              result.returns = +((result.returns * 100).toFixed(2));
+              this.addToList(result);
+              this.progress += increment;
+            }, error => {
+              console.log('error: ', error);
+              this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
+              this.progress += increment;
+            });
+        });
+      break;
+    }
   }
 
   openDialog(event, index): void {
