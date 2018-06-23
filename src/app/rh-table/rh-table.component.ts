@@ -67,6 +67,11 @@ export class RhTableComponent implements OnInit, OnChanges {
             stockData.recommendation = stockData.trending;
             stockData.returns = +((stockData.totalReturns * 100).toFixed(2));
             this.addToList(stockData);
+            this.progress += increment;
+          }, error => {
+            console.log('error: ', error);
+            this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
+            this.progress += increment;
           });
         });
       break;
