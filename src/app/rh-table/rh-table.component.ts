@@ -55,8 +55,12 @@ export class RhTableComponent implements OnInit, OnChanges {
     const currentDate = moment(this.endDate).format('YYYY-MM-DD');
     const startDate = moment(this.endDate).subtract(350, 'days').format('YYYY-MM-DD');
 
-    this.progress = 5;
-    const increment = +((1 / algoParams.length).toFixed(2)) * 100;
+    this.progress = 0;
+    let increment = +((1 / algoParams.length).toFixed(2)) * 100;
+
+    if (increment < 1) {
+      increment = 1;
+    }
 
     switch (this.selectedAlgo) {
       case 'v1':
@@ -83,8 +87,8 @@ export class RhTableComponent implements OnInit, OnChanges {
               result.returns = +((result.returns * 100).toFixed(2));
               this.addToList(result);
               this.progress += increment;
+              console.log('Progress: ', this.progress, increment);
             }, error => {
-              console.log('error: ', error);
               this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
               this.progress += increment;
             });
