@@ -24,10 +24,19 @@ export class RhTableComponent implements OnInit, OnChanges {
   @Input() displayedColumns: string[];
 
   recommendation = 'strongbuy';
-  stocks: Stock[] = [];
+  stockList: Stock[] = [];
   currentList: Stock[] = [];
+  algoReport = {
+    totalReturns: 0,
+    totalTrades: 0,
+    averageReturns: 0,
+    averageTrades: 0
+  };
+
   endDate;
+  progressPct = 0;
   progress = 0;
+  totalStocks = 0;
   algos = [
     {value: 'v1', viewValue: 'Mean Reversion - Moving Average Crossover'},
     {value: 'v2', viewValue: 'Mean Reversion - Bollinger Band'}
@@ -53,29 +62,32 @@ export class RhTableComponent implements OnInit, OnChanges {
 
   getData(algoParams) {
     const currentDate = moment(this.endDate).format('YYYY-MM-DD');
-    const startDate = moment(this.endDate).subtract(350, 'days').format('YYYY-MM-DD');
+    const startDate = moment(this.endDate).subtract(700, 'days').format('YYYY-MM-DD');
 
     this.progress = 0;
-    let increment = +((1 / algoParams.length).toFixed(2)) * 100;
-
-    if (increment < 1) {
-      increment = 1;
-    }
+    this.totalStocks = algoParams.length;
 
     switch (this.selectedAlgo) {
       case 'v1':
         algoParams.forEach((param) => {
+          if (!param.start) {
+            param.start = startDate;
+          }
+          if (!param.end) {
+            param.end = currentDate;
+          }
           this.algo.getInfo(param)
           .subscribe((stockData: Stock) => {
             stockData.stock = param.ticker;
             stockData.recommendation = stockData.trending;
             stockData.returns = +((stockData.totalReturns * 100).toFixed(2));
             this.addToList(stockData);
-            this.progress += increment;
+            this.incrementProgress();
+            this.updateAlgoReport(stockData);
           }, error => {
             console.log('error: ', error);
             this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
-            this.progress += increment;
+            this.incrementProgress();
           });
         });
       break;
@@ -86,15 +98,31 @@ export class RhTableComponent implements OnInit, OnChanges {
               result.stock = param.ticker;
               result.returns = +((result.returns * 100).toFixed(2));
               this.addToList(result);
-              this.progress += increment;
-              console.log('Progress: ', this.progress, increment);
+              this.incrementProgress();
+              this.updateAlgoReport(result);
             }, error => {
               this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
-              this.progress += increment;
+              this.incrementProgress();
             });
         });
       break;
     }
+  }
+
+  incrementProgress() {
+    this.progress++;
+    this.progressPct = this.convertToPercent(this.progress, this.totalStocks);
+  }
+
+  convertToPercent(firstVal, secondVal) {
+    return +(Math.round(firstVal / secondVal).toFixed(2)) * 100;
+  }
+
+  updateAlgoReport(result: Stock) {
+    this.algoReport.totalReturns += result.returns;
+    this.algoReport.totalTrades += result.totalTrades;
+    this.algoReport.averageReturns = +((this.algoReport.totalReturns / this.totalStocks).toFixed(5));
+    this.algoReport.averageTrades = +((this.algoReport.totalTrades / this.totalStocks).toFixed(5));
   }
 
   openDialog(event, index): void {
@@ -122,18 +150,18 @@ export class RhTableComponent implements OnInit, OnChanges {
   }
 
   filterRecommendation() {
-    if (!this.recommendation) {
-      this.currentList = this.stocks;
+    if (this.recommendation === '') {
+      this.currentList = _.clone(this.stockList);
     } else {
-      this.currentList = _.filter(this.stocks, (stock) => {
+      this.currentList = _.filter(this.stockList, (stock) => {
         return stock.recommendation.toLowerCase() === this.recommendation;
       });
     }
   }
 
   addToList(stock: Stock) {
-    this.stocks.push(stock);
-    if (!this.recommendation || stock.recommendation.toLowerCase() === this.recommendation ) {
+    this.stockList.push(stock);
+    if (this.recommendation === '' || stock.recommendation.toLowerCase() === this.recommendation ) {
       this.currentList.push(stock);
     }
   }

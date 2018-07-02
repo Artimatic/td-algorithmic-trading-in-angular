@@ -43,7 +43,7 @@ export class ProductViewComponent implements OnInit {
     this.resolving = true;
 
     const currentDate = moment().format('YYYY-MM-DD');
-    const pastDate = moment().subtract(1, 'years').format('YYYY-MM-DD');
+    const pastDate = moment().subtract(700, 'days').format('YYYY-MM-DD');
     const requestBody = {
       ticker: data.stock,
       start: pastDate,
@@ -127,7 +127,7 @@ export class ProductViewComponent implements OnInit {
     this.resolving = true;
 
     const currentDate = moment(endDate).format('YYYY-MM-DD');
-    const startDate = moment(endDate).subtract(350, 'days').format('YYYY-MM-DD');
+    const startDate = moment(endDate).subtract(700, 'days').format('YYYY-MM-DD');
 
     this.algo.getInfoV2Chart(data.stock, currentDate, startDate)
       .map(result => {
@@ -263,7 +263,8 @@ export class ProductViewComponent implements OnInit {
         series: {
           marker: {
             enabled: true
-          }
+          },
+          turboThreshold: 5000
         }
       },
       series: [{

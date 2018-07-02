@@ -85,7 +85,9 @@
         </tbody>
       </table>
     </div>
-    Progress: {{progress}}
-    <mat-progress-bar mode="determinate" value="{{progress}}"></mat-progress-bar>
+    Progress: {{progress}}/{{totalStocks}}
+    <mat-progress-bar mode="determinate" value="{{progressPct}}"></mat-progress-bar>
+    Average Trades: {{algoReport.averageTrades}}
+    Average Returns: {{algoReport.averageReturns}}%
   </div>
 </mat-card>
