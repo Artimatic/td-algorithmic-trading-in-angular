@@ -133,8 +133,8 @@ class ReversionService {
           trending = yesterdayDecision.trending;
         }
 
-        let quoteInfo = { lastPrice, lastVolume, trending };
-        return { ...algoStats, ...quoteInfo };
+        let additionalInfo = { algo: 'MACrossover',lastPrice, lastVolume, trending };
+        return { ...algoStats, ...additionalInfo };
       })
       .catch(err => {
         console.log('ERROR! backtest snapshot', err, ticker);

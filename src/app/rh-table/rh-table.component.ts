@@ -66,7 +66,12 @@ export class RhTableComponent implements OnInit, OnChanges {
 
     this.progress = 0;
     this.totalStocks = algoParams.length;
-
+    this.algoReport = {
+      totalReturns: 0,
+      totalTrades: 0,
+      averageReturns: 0,
+      averageTrades: 0
+    };
     switch (this.selectedAlgo) {
       case 'v1':
         algoParams.forEach((param) => {
@@ -160,11 +165,41 @@ export class RhTableComponent implements OnInit, OnChanges {
   }
 
   addToList(stock: Stock) {
-    this.stockList.push(stock);
+    this.findAndUpdate(stock, this.stockList);
     if (this.recommendation === '' || stock.recommendation.toLowerCase() === this.recommendation ) {
-      this.currentList.push(stock);
+      this.findAndUpdate(stock, this.currentList);
     }
   }
+
+  findAndUpdate(stock: Stock, list: any[]) {
+    const idx = _.findIndex(list, (s) => s.stock === stock.stock);
+
+    console.log('f: ', idx);
+    if (idx > -1) {
+      list[idx] = this.updateRecommendationCount(stock);
+    } else {
+      list.push(this.updateRecommendationCount(stock));
+    }
+  }
+
+  updateRecommendationCount(stock: Stock): Stock {
+    switch (stock.recommendation.toLowerCase()) {
+      case 'strongbuy':
+        stock.strongbuys.push(stock.algo);
+      break;
+      case 'buy':
+        stock.buys.push(stock.algo);
+      break;
+      case 'strongsell':
+        stock.strongsells.push(stock.algo);
+      break;
+      case 'sell':
+        stock.sells.push(stock.algo);
+      break;
+    }
+
+  return stock;
+}
 
   sell(row: Stock): void {
     this.order(row, 'Sell');
