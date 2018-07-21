@@ -38,8 +38,8 @@ export class RhTableComponent implements OnInit, OnChanges {
   progress = 0;
   totalStocks = 0;
   algos = [
-    {value: 'v1', viewValue: 'Mean Reversion - Moving Average Crossover'},
-    {value: 'v2', viewValue: 'Mean Reversion - Bollinger Band'}
+    { value: 'v1', viewValue: 'Mean Reversion - Moving Average Crossover' },
+    { value: 'v2', viewValue: 'Mean Reversion - Bollinger Band' }
   ];
   selectedAlgo = 'v2';
 
@@ -82,20 +82,20 @@ export class RhTableComponent implements OnInit, OnChanges {
             param.end = currentDate;
           }
           this.algo.getInfo(param)
-          .subscribe((stockData: Stock) => {
-            stockData.stock = param.ticker;
-            stockData.recommendation = stockData.trending;
-            stockData.returns = +((stockData.totalReturns * 100).toFixed(2));
-            this.addToList(stockData);
-            this.incrementProgress();
-            this.updateAlgoReport(stockData);
-          }, error => {
-            console.log('error: ', error);
-            this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
-            this.incrementProgress();
-          });
+            .subscribe((stockData: Stock) => {
+              stockData.stock = param.ticker;
+              stockData.recommendation = stockData.trending;
+              stockData.returns = +((stockData.totalReturns * 100).toFixed(2));
+              this.addToList(stockData);
+              this.incrementProgress();
+              this.updateAlgoReport(stockData);
+            }, error => {
+              console.log('error: ', error);
+              this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
+              this.incrementProgress();
+            });
         });
-      break;
+        break;
       case 'v2':
         algoParams.forEach((param) => {
           this.algo.getInfoV2(param.ticker, currentDate, startDate).subscribe(
@@ -110,7 +110,7 @@ export class RhTableComponent implements OnInit, OnChanges {
               this.incrementProgress();
             });
         });
-      break;
+        break;
     }
   }
 
@@ -166,7 +166,7 @@ export class RhTableComponent implements OnInit, OnChanges {
 
   addToList(stock: Stock) {
     this.findAndUpdate(stock, this.stockList);
-    if (this.recommendation === '' || stock.recommendation.toLowerCase() === this.recommendation ) {
+    if (this.recommendation === '' || stock.recommendation.toLowerCase() === this.recommendation) {
       this.findAndUpdate(stock, this.currentList);
     }
   }
@@ -174,32 +174,35 @@ export class RhTableComponent implements OnInit, OnChanges {
   findAndUpdate(stock: Stock, list: any[]) {
     const idx = _.findIndex(list, (s) => s.stock === stock.stock);
 
-    console.log('f: ', idx);
     if (idx > -1) {
-      list[idx] = this.updateRecommendationCount(stock);
+      list[idx] = this.updateRecommendationCount(list[idx], stock);
     } else {
-      list.push(this.updateRecommendationCount(stock));
+      list.push(this.updateRecommendationCount(null, stock));
     }
   }
 
-  updateRecommendationCount(stock: Stock): Stock {
-    switch (stock.recommendation.toLowerCase()) {
+  updateRecommendationCount(current: Stock, incomingStock: Stock): Stock {
+    if (!current) {
+      current = incomingStock;
+    }
+    console.log('current: ', current, incomingStock);
+    switch (incomingStock.recommendation.toLowerCase()) {
       case 'strongbuy':
-        stock.strongbuys.push(stock.algo);
-      break;
+        current.strongbuys.push(incomingStock.algo);
+        break;
       case 'buy':
-        stock.buys.push(stock.algo);
-      break;
+        current.buys.push(incomingStock.algo);
+        break;
       case 'strongsell':
-        stock.strongsells.push(stock.algo);
-      break;
+        current.strongsells.push(incomingStock.algo);
+        break;
       case 'sell':
-        stock.sells.push(stock.algo);
-      break;
+        current.sells.push(incomingStock.algo);
+        break;
     }
 
-  return stock;
-}
+    return current;
+  }
 
   sell(row: Stock): void {
     this.order(row, 'Sell');

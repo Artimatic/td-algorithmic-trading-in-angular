@@ -37,6 +37,10 @@
             <th>Last Price</th>
             <th>Trades</th>
             <th>Recommendation</th>
+            <th>Strong Buy</th>
+            <th>Buy</th>
+            <th>Sell</th>
+            <th>Strong Sell</th>
           </tr>
         </thead>
         <tbody class="scrollContent">
@@ -79,6 +83,26 @@
                     <mat-icon>show_chart</mat-icon>
                   </button>
                 </span>
+              </span>
+            </td>
+            <td>
+              <span>
+                {{element.strongbuys.length}}
+              </span>
+            </td>
+            <td>
+              <span>
+                {{element.buys.length}}
+              </span>
+            </td>
+            <td>
+              <span>
+                {{element.sells.length}}
+              </span>
+            </td>
+            <td>
+              <span>
+                {{element.strongsells}}
               </span>
             </td>
           </tr>
