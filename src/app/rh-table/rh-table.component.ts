@@ -185,19 +185,31 @@ export class RhTableComponent implements OnInit, OnChanges {
     if (!current) {
       current = incomingStock;
     }
+    if (!current.strongbuySignals) {
+      current.strongbuySignals = [];
+    }
+    if (!current.buySignals) {
+      current.buySignals = [];
+    }
+    if (!current.strongsellSignals) {
+      current.strongsellSignals = [];
+    }
+    if (!current.sellSignals) {
+      current.sellSignals = [];
+    }
     console.log('current: ', current, incomingStock);
     switch (incomingStock.recommendation.toLowerCase()) {
       case 'strongbuy':
-        current.strongbuys.push(incomingStock.algo);
+        current.strongbuySignals.push(incomingStock.algo);
         break;
       case 'buy':
-        current.buys.push(incomingStock.algo);
+        current.buySignals.push(incomingStock.algo);
         break;
       case 'strongsell':
-        current.strongsells.push(incomingStock.algo);
+        current.strongsellSignals.push(incomingStock.algo);
         break;
       case 'sell':
-        current.sells.push(incomingStock.algo);
+        current.sellSignals.push(incomingStock.algo);
         break;
     }
 

@@ -86,23 +86,23 @@
               </span>
             </td>
             <td>
-              <span>
-                {{element.strongbuys.length}}
+              <span *ngIf="element.strongbuySignals">
+                {{element.strongbuySignals.length}}
               </span>
             </td>
             <td>
-              <span>
-                {{element.buys.length}}
+              <span *ngIf="element.buySignals">
+                {{element.buySignals.length}}
               </span>
             </td>
             <td>
-              <span>
-                {{element.sells.length}}
+              <span *ngIf="element.sellSignals">
+                {{element.sellSignals.length}}
               </span>
             </td>
             <td>
-              <span>
-                {{element.strongsells}}
+              <span *ngIf="element.strongsellSignals">
+                {{element.strongsellSignals}}
               </span>
             </td>
           </tr>
