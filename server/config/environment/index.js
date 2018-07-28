@@ -34,7 +34,7 @@ const all = {
     secret: _.get(credentials, 'yahoo.secret', null)
   },
   apps: {
-    goliath: 'http://localhost:8090/'
+    goliath: 'http://localhost:8100/'
   }
 };
 

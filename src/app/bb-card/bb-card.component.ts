@@ -464,7 +464,9 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
         const reject = (error) => {
           this.error = error._body;
-          this.stop();
+          if (error.status !== 400) {
+            this.stop();
+          }
         };
         this.daytradeService.sendBuy(buyOrder, resolve, reject);
       } else {
@@ -488,7 +490,9 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
         const reject = (error) => {
           this.error = error._body;
-          this.stop();
+          if (error.status !== 400) {
+            this.stop();
+          }
         };
 
         const handleNotFound = () => {

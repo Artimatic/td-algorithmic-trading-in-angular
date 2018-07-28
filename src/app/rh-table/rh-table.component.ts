@@ -165,20 +165,23 @@ export class RhTableComponent implements OnInit, OnChanges {
   }
 
   addToList(stock: Stock) {
-    this.findAndUpdate(stock, this.stockList);
+    stock = this.findAndUpdate(stock, this.stockList);
     if (this.recommendation === '' || stock.recommendation.toLowerCase() === this.recommendation) {
       this.findAndUpdate(stock, this.currentList);
     }
   }
 
-  findAndUpdate(stock: Stock, list: any[]) {
+  findAndUpdate(stock: Stock, list: any[]): Stock {
     const idx = _.findIndex(list, (s) => s.stock === stock.stock);
-
+    let updateStock;
     if (idx > -1) {
-      list[idx] = this.updateRecommendationCount(list[idx], stock);
+      updateStock = this.updateRecommendationCount(list[idx], stock);
+      list[idx] = updateStock;
     } else {
-      list.push(this.updateRecommendationCount(null, stock));
+      updateStock = this.updateRecommendationCount(null, stock);
+      list.push(updateStock);
     }
+    return updateStock;
   }
 
   updateRecommendationCount(current: Stock, incomingStock: Stock): Stock {
@@ -197,7 +200,7 @@ export class RhTableComponent implements OnInit, OnChanges {
     if (!current.sellSignals) {
       current.sellSignals = [];
     }
-    console.log('current: ', current, incomingStock);
+
     switch (incomingStock.recommendation.toLowerCase()) {
       case 'strongbuy':
         current.strongbuySignals.push(incomingStock.algo);

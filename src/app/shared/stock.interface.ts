@@ -8,8 +8,8 @@ export interface Stock {
   recommendation?: string;
   algo ?: string;
   returns ?: number;
-  strongbuys ?: string[];
-  strongsells ?: string[];
-  buys ?: string[];
-  sells ?: string[];
+  strongbuySignals ?: string[];
+  strongsellSignals ?: string[];
+  buySignals ?: string[];
+  sellSignals ?: string[];
 }

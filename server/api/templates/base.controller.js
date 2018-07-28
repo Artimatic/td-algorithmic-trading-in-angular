@@ -26,7 +26,11 @@ export default class BaseController {
 
   static requestErrorHandler(reply, error) {
     console.log("Error: ", error);
-    reply.status(Boom.badImplementation().output.statusCode).send(error);
+    if (error && error.message && error.message.substring(0, 3) === "400") {
+      reply.status(400).send(error.message);
+    } else {
+      reply.status(Boom.badImplementation().output.statusCode).send(error);
+    }
   }
 
   static notFoundErrorHandler(reply, error) {
