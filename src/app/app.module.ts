@@ -67,6 +67,7 @@ import { BbCardComponent } from './bb-card/bb-card.component';
 import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.component';
 import { ReportingComponent, ReportDialogComponent } from './reporting/reporting.component';
 import { ResearchViewComponent } from './research-view/research-view.component';
+import { OptionsViewComponent } from './options-view/options-view.component';
 
 @NgModule({
   declarations: [
@@ -92,6 +93,7 @@ import { ResearchViewComponent } from './research-view/research-view.component';
     ReportingComponent,
     ReportDialogComponent,
     ResearchViewComponent,
+    OptionsViewComponent,
   ],
   entryComponents: [
     ChartDialogComponent,

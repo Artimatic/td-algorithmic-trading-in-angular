@@ -145,9 +145,10 @@ class QuoteService {
     return api.getIntradayChartData(symbol, interval, true);
   }
 
-  getCompanySummary(symbol) {
-    return api.quoteSummary(symbol);
+  getOptionChain(symbol) {
+    return api.optionChain(symbol);
   }
+  
 }
 
 module.exports.QuoteService = new QuoteService();

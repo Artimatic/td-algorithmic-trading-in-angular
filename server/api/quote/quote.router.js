@@ -22,3 +22,7 @@ exports.intraday = function (req, res, next) {
 exports.companySummary = function (req, res, next) {
   QuoteController.getCompanySummary(req, res);
 };
+
+exports.optionChain = function (req, res, next) {
+  QuoteController.getOptionChain(req, res);
+};

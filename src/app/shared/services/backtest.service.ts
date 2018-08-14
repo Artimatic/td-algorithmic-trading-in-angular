@@ -70,6 +70,12 @@ export class BacktestService {
             .map(r => r.json());
     }
 
+    getOptionChain(symbol: String): Observable<any> {
+        const body = { symbol: symbol };
+        return this.http.post(`${BASE_URL}api/quote/optionchain`, body, {})
+        .map(r => r.json());
+    }
+
     getBBands(data: any): Observable<any> {
         return this.http.post(`${BASE_URL}api/backtest/bbands`, data, {})
             .map(r => r.json());
