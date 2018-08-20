@@ -45,7 +45,8 @@ import {
   AuthenticationService,
   PortfolioService,
   DaytradeService,
-  ReportingService
+  ReportingService,
+  ScoreKeeperService
 } from './shared';
 import { ChartDialogComponent } from './chart-dialog';
 
@@ -145,6 +146,7 @@ import { OptionsViewComponent } from './options-view/options-view.component';
     ExcelService,
     DaytradeService,
     ReportingService,
+    ScoreKeeperService,
   ],
   bootstrap: [AppComponent]
 })

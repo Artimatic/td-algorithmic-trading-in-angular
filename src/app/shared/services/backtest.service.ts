@@ -9,7 +9,6 @@ import * as moment from 'moment';
 import { AlgoChartV2 } from '../models/algo-chart-v2';
 
 const BASE_URL = environment.appUrl;
-const GOLIATH_URL = environment.computationUrl;
 
 @Injectable()
 export class BacktestService {

@@ -23,7 +23,8 @@ import {
   PortfolioService,
   AuthenticationService,
   DaytradeService,
-  ReportingService
+  ReportingService,
+  ScoreKeeperService
 } from '../shared';
 import { Order } from '../shared/models/order';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
@@ -73,6 +74,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
     private authenticationService: AuthenticationService,
     private daytradeService: DaytradeService,
     private reportingService: ReportingService,
+    private scoringService: ScoreKeeperService,
     public dialog: MatDialog) {
     this.alive = true;
     this.interval = 300000;
@@ -483,6 +485,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
       const log = `ORDER SENT ${sellOrder.side} ${sellOrder.holding.symbol} ${sellOrder.quantity} ${sellOrder.price}`;
       if (this.backtestLive || this.live) {
         this.incrementSell(sellOrder);
+
         const resolve = (response) => {
           console.log(`${moment().format('hh:mm')} ${log}`);
           this.reportingService.addAuditLog(this.order.holding.symbol, log);

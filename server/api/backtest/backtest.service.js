@@ -151,7 +151,7 @@ class BacktestService {
   getInfoV2Chart(symbol, endDate, startDate) {
     const to = moment(endDate).format('YYYY-MM-DD');
     const from = moment(startDate).format('YYYY-MM-DD');
-  
+
     console.log('to: ', to, ' from:', from);
     const query = `${appUrl}backtest/strategy/mean-reversion/chart?` +
       `symbol=${symbol}&to=${to}&from=${from}` +
