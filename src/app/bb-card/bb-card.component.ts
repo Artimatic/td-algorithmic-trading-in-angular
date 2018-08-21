@@ -737,6 +737,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
     const reals = quotes.close.slice(firstIndex, lastIndex + 1);
     if (!quotes.close[lastIndex]) {
       const log = `Quote data is missing ${reals.toString()}`;
+      console.log('Data missing for ', this.order.holding.symbol, ' ', reals.toString());
       this.reportingService.addAuditLog(this.order.holding.symbol, log);
       return null;
     }
