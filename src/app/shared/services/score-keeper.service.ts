@@ -9,6 +9,7 @@ export class ScoreKeeperService {
   numLosses: number;
   profitLoss: number;
   profitLossHash = {};
+  costEstimates = {};
   trades: Trade[];
 
   constructor() { }
@@ -17,16 +18,24 @@ export class ScoreKeeperService {
     const score: StockScore = {stock: stock, profitLoss: sum};
     if (this.profitLossHash[stock]) {
       this.profitLossHash[stock] += sum;
+    } else {
+      this.profitLossHash[stock] = sum;
     }
-
-    this.profitLoss += sum;
   }
 
   getProfitLoss() {
     return this.profitLoss;
   }
 
-  processTrade() {
+  updateCostEstimate(stock: string, price: number) {
+    this.costEstimates[stock] = price;
+  }
 
+  addSell(stock: string, quantity: number, price: number) {
+    const avgCost: number = this.costEstimates[stock];
+    if (avgCost) {
+      const gains = (quantity * price) - (avgCost * quantity);
+      this.addProfitLoss(stock, gains);
+    }
   }
 }

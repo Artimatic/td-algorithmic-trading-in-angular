@@ -460,7 +460,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
         this.incrementBuy(buyOrder);
 
         const resolve = (response) => {
-          console.log(`${moment().format('hh:mm')} ${log}`);
+          console.log(`${moment().format('hh:mm')} ${log} ${response}`);
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
         };
 
@@ -487,7 +487,8 @@ export class BbCardComponent implements OnDestroy, OnInit {
         this.incrementSell(sellOrder);
 
         const resolve = (response) => {
-          console.log(`${moment().format('hh:mm')} ${log}`);
+          this.scoringService.addSell(this.order.holding.symbol, sellOrder.quantity, sellOrder.price);
+          console.log(`${moment().format('hh:mm')} ${log} ${response}`);
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
         };
 
@@ -521,7 +522,8 @@ export class BbCardComponent implements OnDestroy, OnInit {
         this.incrementSell(order);
 
         const resolve = (response) => {
-          console.log(`${moment().format('hh:mm')} ${log}`);
+          this.scoringService.addSell(this.order.holding.symbol, order.quantity, order.price);
+          console.log(`${moment().format('hh:mm')} ${log} ${response}`);
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
         };
 
@@ -690,10 +692,13 @@ export class BbCardComponent implements OnDestroy, OnInit {
   processSpecialRules(closePrice: number, signalTime) {
     if (this.positionCount > 0 && closePrice) {
       const estimatedPrice = this.estimateAverageBuyOrderPrice();
-      const gains = this.daytradeService.getPercentChange(closePrice, estimatedPrice);
+      const gainsPct = this.daytradeService.getPercentChange(closePrice, estimatedPrice);
+      const gains = estimatedPrice - closePrice;
+
+      this.scoringService.updateCostEstimate(this.order.holding.symbol, estimatedPrice);
 
       if (this.config.StopLoss) {
-        if (gains < this.firstFormGroup.value.lossThreshold) {
+        if (gainsPct < this.firstFormGroup.value.lossThreshold) {
           this.setWarning(`Loss threshold met. Sending stop loss order. Estimated loss: ${this.convertToFixedNumber(gains, 4) * 100}%`);
           this.reportingService.addAuditLog(this.order.holding.symbol,
             `${this.order.holding.symbol} Stop Loss triggered: ${closePrice}/${estimatedPrice}`);
@@ -703,7 +708,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
       }
 
       if (this.config.TakeProfit) {
-        if (gains > this.firstFormGroup.value.profitTarget) {
+        if (gainsPct > this.firstFormGroup.value.profitTarget) {
           this.setWarning(`Profits met. Realizing profits. Estimated gain: ${this.convertToFixedNumber(gains, 4) * 100}%`);
           this.reportingService.addAuditLog(this.order.holding.symbol,
             `${this.order.holding.symbol} PROFIT HARVEST TRIGGERED: ${closePrice}/${estimatedPrice}`);
