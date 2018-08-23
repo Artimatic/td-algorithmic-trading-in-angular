@@ -21,6 +21,7 @@ export class ScoreKeeperService {
     } else {
       this.profitLossHash[stock] = sum;
     }
+    console.log(`${stock}: ${this.profitLossHash[stock]}`);
   }
 
   getProfitLoss() {
