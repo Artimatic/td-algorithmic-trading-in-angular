@@ -174,11 +174,11 @@ export class DaytradeService {
     const averagePrice = orders.reduce(({ count, sum }, value) => {
       if (value.side.toLowerCase() === 'buy') {
         return { count: count + value.quantity, sum: sum + (value.price * value.quantity) };
-      } else if (value.side.toLowerCase() === 'sell') {
-        return { count: count - value.quantity, sum: sum - (value.price * value.quantity) };
+      } else {
+        return { count, sum };
       }
     }, { count: 0, sum: 0 });
-    console.log('final: ', averagePrice);
+
     if (averagePrice.count <= 0 || averagePrice.sum <= 0) {
       return 0;
     }
