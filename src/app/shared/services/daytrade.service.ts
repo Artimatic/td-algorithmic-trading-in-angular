@@ -165,4 +165,23 @@ export class DaytradeService {
       return (currentPrice - boughtPrice) / boughtPrice;
     }
   }
+
+  estimateAverageBuyOrderPrice(positionCount: number, orders: SmartOrder[]): number {
+    if (positionCount === 0) {
+      return 0;
+    }
+
+    const averagePrice = orders.reduce(({ count, sum }, value) => {
+      if (value.side.toLowerCase() === 'buy') {
+        return { count: count + value.quantity, sum: sum + (value.price * value.quantity) };
+      } else if (value.side.toLowerCase() === 'sell') {
+        return { count: count - value.quantity, sum: sum - (value.price * value.quantity) };
+      }
+    }, { count: 0, sum: 0 });
+    console.log('final: ', averagePrice);
+    if (averagePrice.count <= 0 || averagePrice.sum <= 0) {
+      return 0;
+    }
+    return Number((averagePrice.sum / averagePrice.count).toFixed(2));
+  }
 }

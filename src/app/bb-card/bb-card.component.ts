@@ -457,9 +457,8 @@ export class BbCardComponent implements OnDestroy, OnInit {
       const log = `ORDER SENT ${buyOrder.side} ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
 
       if (this.backtestLive || this.live) {
-        this.incrementBuy(buyOrder);
-
         const resolve = (response) => {
+          this.incrementBuy(buyOrder);
           console.log(`${moment().format('hh:mm')} ${log} ${response}`);
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
         };
@@ -484,9 +483,9 @@ export class BbCardComponent implements OnDestroy, OnInit {
     if (sellOrder) {
       const log = `ORDER SENT ${sellOrder.side} ${sellOrder.holding.symbol} ${sellOrder.quantity} ${sellOrder.price}`;
       if (this.backtestLive || this.live) {
-        this.incrementSell(sellOrder);
 
         const resolve = (response) => {
+          this.incrementSell(sellOrder);
           this.scoringService.addSell(this.order.holding.symbol, sellOrder.quantity, sellOrder.price);
           console.log(`${moment().format('hh:mm')} ${log} ${response}`);
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
@@ -519,9 +518,9 @@ export class BbCardComponent implements OnDestroy, OnInit {
     if (order) {
       const log = `STOP LOSS ORDER SENT ${order.side} ${order.holding.symbol} ${order.quantity} ${order.price}`;
       if (this.backtestLive || this.live) {
-        this.incrementSell(order);
 
         const resolve = (response) => {
+          this.incrementSell(order);
           this.scoringService.addSell(this.order.holding.symbol, order.quantity, order.price);
           console.log(`${moment().format('hh:mm')} ${log} ${response}`);
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
@@ -626,7 +625,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
       mid = band[1],
       lower = band[0];
 
-    const pricePaid = this.estimateAverageBuyOrderPrice();
+    const pricePaid = this.daytradeService.estimateAverageBuyOrderPrice(this.positionCount, this.orders);
     const gains = this.daytradeService.getPercentChange(signalPrice, pricePaid);
 
     if (gains < this.firstFormGroup.value.lossThreshold) {
@@ -691,7 +690,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
   processSpecialRules(closePrice: number, signalTime) {
     if (this.positionCount > 0 && closePrice) {
-      const estimatedPrice = this.estimateAverageBuyOrderPrice();
+      const estimatedPrice = this.daytradeService.estimateAverageBuyOrderPrice(this.positionCount, this.orders);
       const gainsPct = this.daytradeService.getPercentChange(closePrice, estimatedPrice);
       const gains = estimatedPrice - closePrice;
 
@@ -741,8 +740,8 @@ export class BbCardComponent implements OnDestroy, OnInit {
     const { firstIndex, lastIndex } = this.findMostCurrentQuoteIndex(quotes.close, firstIdx, lastIdx);
     const reals = quotes.close.slice(firstIndex, lastIndex + 1);
     if (!quotes.close[lastIndex]) {
-      const log = `Quote data is missing ${reals.toString()}`;
-      console.log('Data missing for ', this.order.holding.symbol, ' ', reals.toString());
+      const log = `Quote data is missing ${this.order.holding.symbol}`;
+      console.log('Data missing for ', this.order.holding.symbol);
       this.reportingService.addAuditLog(this.order.holding.symbol, log);
       return null;
     }
@@ -769,21 +768,6 @@ export class BbCardComponent implements OnDestroy, OnInit {
       ctr++;
     }
     return { firstIndex, lastIndex };
-  }
-
-  estimateAverageBuyOrderPrice(): number {
-    if (this.positionCount === 0) {
-      return 0;
-    }
-
-    const averagePrice = this.orders.reduce(({ count, sum }, value) => {
-      if (value.side === 'Buy') {
-        return { count: count + value.quantity, sum: sum + (value.price * value.quantity) };
-      } else if (value.side === 'Sell') {
-        return { count: count - value.quantity, sum: sum - (value.price * value.quantity) };
-      }
-    }, { count: 0, sum: 0 });
-    return Number((averagePrice.sum / averagePrice.count).toFixed(2));
   }
 
   convertToFixedNumber(num, sig) {

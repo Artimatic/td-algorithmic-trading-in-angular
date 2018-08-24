@@ -5,7 +5,7 @@ import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/of';
 import 'rxjs/add/observable/merge';
 import 'rxjs/add/operator/finally';
-import { MatSnackBar, MatDialog, MatDialogRef } from '@angular/material';
+import { MatSnackBar, MatDialog, MatGridListModule } from '@angular/material';
 import * as moment from 'moment';
 import * as _ from 'lodash';
 

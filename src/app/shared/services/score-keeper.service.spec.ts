@@ -9,7 +9,7 @@ describe('ScoreKeeperService', () => {
     });
   });
 
-  it('should be created', inject([ScoreKeeperService], (service: ScoreKeeperService) => {
+  xit('createshould be created', inject([ScoreKeeperService], (service: ScoreKeeperService) => {
     expect(service).toBeTruthy();
   }));
 });
