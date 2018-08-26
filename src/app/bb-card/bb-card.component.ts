@@ -624,7 +624,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
       mid = band[1],
       lower = band[0];
 
-    const pricePaid = this.estimateAverageBuyOrderPrice();
+    const pricePaid = this.daytradeService.estimateAverageBuyOrderPrice(this.positionCount, this.orders);
     const gains = this.daytradeService.getPercentChange(signalPrice, pricePaid);
 
     if (gains < this.firstFormGroup.value.lossThreshold) {
@@ -689,7 +689,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
   processSpecialRules(closePrice: number, signalTime) {
     if (this.positionCount > 0 && closePrice) {
-      const estimatedPrice = this.estimateAverageBuyOrderPrice();
+      const estimatedPrice = this.daytradeService.estimateAverageBuyOrderPrice(this.positionCount, this.orders);
       const gains = this.daytradeService.getPercentChange(closePrice, estimatedPrice);
 
       if (this.config.StopLoss) {
@@ -763,21 +763,6 @@ export class BbCardComponent implements OnDestroy, OnInit {
       ctr++;
     }
     return { firstIndex, lastIndex };
-  }
-
-  estimateAverageBuyOrderPrice(): number {
-    if (this.positionCount === 0) {
-      return 0;
-    }
-
-    const averagePrice = this.orders.reduce(({ count, sum }, value) => {
-      if (value.side === 'Buy') {
-        return { count: count + value.quantity, sum: sum + (value.price * value.quantity) };
-      } else if (value.side === 'Sell') {
-        return { count: count - value.quantity, sum: sum - (value.price * value.quantity) };
-      }
-    }, { count: 0, sum: 0 });
-    return Number((averagePrice.sum / averagePrice.count).toFixed(2));
   }
 
   convertToFixedNumber(num, sig) {

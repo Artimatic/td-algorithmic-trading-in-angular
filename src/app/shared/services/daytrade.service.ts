@@ -6,6 +6,7 @@ import { OrderPref } from '../enums/order-pref.enum';
 import { SmartOrder } from '../models/smart-order';
 
 import * as moment from 'moment';
+import * as _ from 'lodash';
 
 @Injectable()
 export class DaytradeService {
@@ -170,34 +171,38 @@ export class DaytradeService {
     if (positionCount === 0 || orders.length === 0) {
       return 0;
     }
-
+console.log('testimate', positionCount, orders);
     let currIdx = 0;
-    let end = orders.length - 1;
+    let end = orders.length;
     let debitPostion: number = 0;
     let finalPositions: SmartOrder[] = [];
 
-    while (currIdx <= end) {
-      const currentOrder: SmartOrder = orders[currIdx];
+    _.forEach(orders, (currentOrder: SmartOrder) => {
       if (currentOrder.side.toLowerCase() === 'sell') {
-        if (finalPositions.length > 0) {
-          finalPositions[0]
+        let sellSize: number = currentOrder.quantity;
+        while (sellSize > 0) {
+          for (let i = 0, c = finalPositions.length; i < c; i++) {
+            if (finalPositions[i].quantity === sellSize) {
+              finalPositions.shift();
+            } else {
+              finalPositions[i].quantity -= sellSize;
+            }
+            sellSize -= finalPositions[i].quantity;
+          }
         }
       } else if (currentOrder.side.toLowerCase() === 'buy'){
-
+        finalPositions.push(currentOrder);
       }
-    }
+      currIdx++;
+    });
 
-    const averagePrice = orders.reduce(({ count, sum }, value) => {
-      if (value.side.toLowerCase() === 'buy') {
-        return { count: count + value.quantity, sum: sum + (value.price * value.quantity) };
-      } else {
-        return { count, sum };
-      }
-    }, { count: 0, sum: 0 });
+    let sum: number;
+    let size: number;
+    _.forEach(finalPositions, (pos: SmartOrder) => {
+      sum += _.multiply(pos.quantity, pos.price);
+      size += pos.quantity;
+    });
 
-    if (averagePrice.count <= 0 || averagePrice.sum <= 0) {
-      return 0;
-    }
-    return Number((averagePrice.sum / averagePrice.count).toFixed(2));
+    return _.round(_.divide(6, sum), 2);
   }
 }
