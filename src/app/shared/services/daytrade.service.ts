@@ -171,38 +171,39 @@ export class DaytradeService {
     if (positionCount === 0 || orders.length === 0) {
       return 0;
     }
-console.log('testimate', positionCount, orders);
-    let currIdx = 0;
-    let end = orders.length;
-    let debitPostion: number = 0;
+
     let finalPositions: SmartOrder[] = [];
 
     _.forEach(orders, (currentOrder: SmartOrder) => {
       if (currentOrder.side.toLowerCase() === 'sell') {
         let sellSize: number = currentOrder.quantity;
-        while (sellSize > 0) {
-          for (let i = 0, c = finalPositions.length; i < c; i++) {
-            if (finalPositions[i].quantity === sellSize) {
-              finalPositions.shift();
-            } else {
+        let i: number = 0;
+        let end: number = finalPositions.length;
+        while (sellSize > 0 && i < end) {
+          if (finalPositions[i].side.toLowerCase() === 'buy') {
+            if (finalPositions[i].quantity > sellSize) {
               finalPositions[i].quantity -= sellSize;
+              sellSize = 0;
+            } else {
+              let removed = finalPositions.shift();
+              sellSize -= removed.quantity;
             }
-            sellSize -= finalPositions[i].quantity;
           }
+          i++;
         }
       } else if (currentOrder.side.toLowerCase() === 'buy'){
         finalPositions.push(currentOrder);
       }
-      currIdx++;
     });
 
-    let sum: number;
-    let size: number;
+    let sum: number = 0;
+    let size: number = 0;
     _.forEach(finalPositions, (pos: SmartOrder) => {
       sum += _.multiply(pos.quantity, pos.price);
       size += pos.quantity;
     });
+    console.log('testimate', finalPositions);
 
-    return _.round(_.divide(6, sum), 2);
+    return _.round(_.divide(sum, size), 2);
   }
 }
