@@ -167,8 +167,24 @@ export class DaytradeService {
   }
 
   estimateAverageBuyOrderPrice(positionCount: number, orders: SmartOrder[]): number {
-    if (positionCount === 0) {
+    if (positionCount === 0 || orders.length === 0) {
       return 0;
+    }
+
+    let currIdx = 0;
+    let end = orders.length - 1;
+    let debitPostion: number = 0;
+    let finalPositions: SmartOrder[] = [];
+
+    while (currIdx <= end) {
+      const currentOrder: SmartOrder = orders[currIdx];
+      if (currentOrder.side.toLowerCase() === 'sell') {
+        if (finalPositions.length > 0) {
+          finalPositions[0]
+        }
+      } else if (currentOrder.side.toLowerCase() === 'buy'){
+
+      }
     }
 
     const averagePrice = orders.reduce(({ count, sum }, value) => {
