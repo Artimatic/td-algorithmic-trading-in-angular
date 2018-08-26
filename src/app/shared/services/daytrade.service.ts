@@ -202,7 +202,11 @@ export class DaytradeService {
       sum += _.multiply(pos.quantity, pos.price);
       size += pos.quantity;
     });
-    console.log('testimate', finalPositions);
+    console.log('testimate', finalPositions, sum, size);
+
+    if (sum === 0 || size === 0) {
+      return 0;
+    }
 
     return _.round(_.divide(sum, size), 2);
   }
