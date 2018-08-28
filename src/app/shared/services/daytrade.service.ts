@@ -172,21 +172,21 @@ export class DaytradeService {
       return 0;
     }
 
-    let finalPositions: SmartOrder[] = [];
+    const finalPositions: SmartOrder[] = [];
 
     _.forEach(orders, (currentOrder: SmartOrder) => {
       if (currentOrder.side.toLowerCase() === 'sell') {
         let sellSize: number = currentOrder.quantity;
-        let i: number = 0;
-        let end: number = finalPositions.length;
-        while (sellSize > 0 && i < end) {
+        let i = 0;
+        while (sellSize > 0 && i < finalPositions.length) {
           if (finalPositions[i].side.toLowerCase() === 'buy') {
             if (finalPositions[i].quantity > sellSize) {
               finalPositions[i].quantity -= sellSize;
               sellSize = 0;
             } else {
-              let removed = finalPositions.shift();
+              const removed = finalPositions.shift();
               sellSize -= removed.quantity;
+              i--;
             }
           }
           i++;
@@ -196,13 +196,12 @@ export class DaytradeService {
       }
     });
 
-    let sum: number = 0;
-    let size: number = 0;
+    let sum = 0;
+    let size = 0;
     _.forEach(finalPositions, (pos: SmartOrder) => {
       sum += _.multiply(pos.quantity, pos.price);
       size += pos.quantity;
     });
-    console.log('testimate', finalPositions, sum, size);
 
     if (sum === 0 || size === 0) {
       return 0;
