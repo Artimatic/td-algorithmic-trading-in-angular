@@ -42,7 +42,7 @@ describe('DaytradeService', () => {
       }
     ];
 
-    const estimate = service.estimateAverageBuyOrderPrice(1, testOrders);
+    const estimate = service.estimateAverageBuyOrderPrice(testOrders);
     expect(estimate).toEqual(49.52);
   }));
 
@@ -78,7 +78,7 @@ describe('DaytradeService', () => {
       }
     ];
 
-    const estimate = service.estimateAverageBuyOrderPrice(1, testOrders);
+    const estimate = service.estimateAverageBuyOrderPrice(testOrders);
     expect(estimate).toEqual(0);
   }));
 
@@ -128,7 +128,7 @@ describe('DaytradeService', () => {
       }
     ];
 
-    const estimate = service.estimateAverageBuyOrderPrice(1, testOrders);
+    const estimate = service.estimateAverageBuyOrderPrice(testOrders);
     expect(estimate).toEqual(0);
   }));
 
@@ -178,7 +178,7 @@ describe('DaytradeService', () => {
       }
     ];
 
-    const estimate = service.estimateAverageBuyOrderPrice(1, testOrders);
+    const estimate = service.estimateAverageBuyOrderPrice(testOrders);
     expect(estimate).toEqual(51.94);
   }));
 
@@ -228,7 +228,57 @@ describe('DaytradeService', () => {
       }
     ];
 
-    const estimate = service.estimateAverageBuyOrderPrice(1, testOrders);
+    const estimate = service.estimateAverageBuyOrderPrice(testOrders);
     expect(estimate).toEqual(51.97);
+  }));
+
+  it('should calculate correct profit loss', inject([DaytradeService], (service: DaytradeService) => {
+    const testOrders: SmartOrder[] = [
+      {
+        holding:
+          {
+            instrument: '',
+            symbol: 'SPXL',
+            name: 'Direxion Daily S&P 500  Bull 3x Shares',
+            realtime_price: 49.52
+          },
+        quantity: 20, price: 51.98,
+        submitted: false, pending: false,
+        side: 'Buy',
+        useTakeProfit: true,
+        useStopLoss: true
+      },
+      {
+        holding:
+          {
+            instrument: '',
+            symbol: 'SPXL',
+            name: 'Direxion Daily S&P 500  Bull 3x Shares',
+            realtime_price: 51.90
+          },
+        quantity: 18, price: 51.90,
+        submitted: false, pending: false,
+        side: 'BUY',
+        useTakeProfit: true,
+        useStopLoss: true
+      },
+      {
+        holding:
+          {
+            instrument: '',
+            symbol: 'SPXL',
+            name: 'Direxion Daily S&P 500  Bull 3x Shares',
+            realtime_price: 49.52
+          },
+        quantity: 30, price: 51.61,
+        submitted: false, pending: false,
+        side: 'Sell',
+        useTakeProfit: true,
+        useStopLoss: true
+      }
+    ];
+
+    const estimate = service.estimateSellProfitLoss(testOrders);
+    expect(estimate).toEqual(-10.30);
   }));
 });

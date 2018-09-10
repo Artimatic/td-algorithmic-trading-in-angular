@@ -167,8 +167,8 @@ export class DaytradeService {
     }
   }
 
-  estimateAverageBuyOrderPrice(positionCount: number, orders: SmartOrder[]): number {
-    if (positionCount === 0 || orders.length === 0) {
+  estimateAverageBuyOrderPrice(orders: SmartOrder[]): number {
+    if (orders.length === 0) {
       return 0;
     }
 
@@ -198,10 +198,79 @@ export class DaytradeService {
 
     let sum = 0;
     let size = 0;
+
     _.forEach(finalPositions, (pos: SmartOrder) => {
       sum += _.multiply(pos.quantity, pos.price);
       size += pos.quantity;
     });
+
+    if (sum === 0 || size === 0) {
+      return 0;
+    }
+
+    return _.round(_.divide(sum, size), 2);
+  }
+
+  /*
+  * Estimate the profit/loss of the last sell order
+  */
+  estimateSellProfitLoss(orders: SmartOrder[]) {
+    const len = orders.length;
+    if (len < 2) {
+      return 0;
+    }
+
+    const lastOrder = orders[len - 1];
+
+    if (lastOrder.side.toLowerCase() !== 'sell') {
+      throw new Error(`Estimating sell p/l: ${orders[orders.length - 1]} is not a sell order.`);
+    }
+
+    const finalPositions: SmartOrder[] = [];
+
+    for (let i = 0, c = len - 1; i < c; i++) {
+      let currentOrder: SmartOrder = orders[i];
+      if (currentOrder.side.toLowerCase() === 'sell') {
+        let sellSize: number = currentOrder.quantity;
+        let i = 0;
+        while (sellSize > 0 && i < finalPositions.length) {
+          if (finalPositions[i].side.toLowerCase() === 'buy') {
+            if (finalPositions[i].quantity > sellSize) {
+              finalPositions[i].quantity -= sellSize;
+              sellSize = 0;
+            } else {
+              const removed = finalPositions.shift();
+              sellSize -= removed.quantity;
+              i--;
+            }
+          }
+          i++;
+        }
+      } else if (currentOrder.side.toLowerCase() === 'buy'){
+        finalPositions.push(currentOrder);
+      }
+    }
+
+    let size = lastOrder.quantity;
+    let sum = 0;
+
+    console.log('finalpos: ', finalPositions);
+
+    _.forEach(finalPositions, (pos: SmartOrder) => {
+      if (pos.quantity > size) {
+        sum += _.multiply(size, pos.price);
+        size = 0;
+      } else {
+        sum += _.multiply(pos.quantity, pos.price);
+        size -= pos.quantity;
+      }
+
+      if (size <= 0) {
+        return false;
+      }
+    });
+
+    console.log('sum/size: ', sum, ' ', size);
 
     if (sum === 0 || size === 0) {
       return 0;

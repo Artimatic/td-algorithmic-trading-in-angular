@@ -8,7 +8,7 @@ export class ScoreKeeperService {
   numWins: number;
   numLosses: number;
   profitLoss: number;
-  profitLossHash = {};
+  public profitLossHash = {};
   costEstimates = {};
   trades: Trade[];
 

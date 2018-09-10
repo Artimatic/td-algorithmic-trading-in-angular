@@ -69,6 +69,7 @@ import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.componen
 import { ReportingComponent, ReportDialogComponent } from './reporting/reporting.component';
 import { ResearchViewComponent } from './research-view/research-view.component';
 import { OptionsViewComponent } from './options-view/options-view.component';
+import { ScoreBoardComponent } from './score-board/score-board.component';
 
 @NgModule({
   declarations: [
@@ -95,6 +96,7 @@ import { OptionsViewComponent } from './options-view/options-view.component';
     ReportDialogComponent,
     ResearchViewComponent,
     OptionsViewComponent,
+    ScoreBoardComponent,
   ],
   entryComponents: [
     ChartDialogComponent,

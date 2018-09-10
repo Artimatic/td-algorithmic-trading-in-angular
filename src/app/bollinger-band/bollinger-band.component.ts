@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CartService } from '../shared/services/cart.service';
 import { SmartOrder } from '../shared/models/smart-order';
+import { ScoreKeeperService } from '../shared';
 
 @Component({
   selector: 'app-bollinger-band',
@@ -13,7 +14,8 @@ export class BollingerBandComponent implements OnInit {
   spxl: SmartOrder;
   vxx: SmartOrder;
   uvxy: SmartOrder;
-  constructor(private cartService: CartService) { }
+
+  constructor(private cartService: CartService, public scoreKeeperService: ScoreKeeperService) { }
 
   ngOnInit() {
     this.spxl = {

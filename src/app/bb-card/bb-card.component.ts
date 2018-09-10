@@ -457,9 +457,9 @@ export class BbCardComponent implements OnDestroy, OnInit {
       const log = `ORDER SENT ${buyOrder.side} ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
 
       if (this.backtestLive || this.live) {
-        this.incrementBuy(buyOrder);
-
         const resolve = (response) => {
+          this.incrementBuy(buyOrder);
+
           console.log(`${moment().format('hh:mm')} ${log}`);
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
         };
@@ -484,9 +484,8 @@ export class BbCardComponent implements OnDestroy, OnInit {
     if (sellOrder) {
       const log = `ORDER SENT ${sellOrder.side} ${sellOrder.holding.symbol} ${sellOrder.quantity} ${sellOrder.price}`;
       if (this.backtestLive || this.live) {
-        this.incrementSell(sellOrder);
-
         const resolve = (response) => {
+          this.incrementSell(sellOrder);
           console.log(`${moment().format('hh:mm')} ${log}`);
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
         };
@@ -518,9 +517,10 @@ export class BbCardComponent implements OnDestroy, OnInit {
     if (order) {
       const log = `STOP LOSS ORDER SENT ${order.side} ${order.holding.symbol} ${order.quantity} ${order.price}`;
       if (this.backtestLive || this.live) {
-        this.incrementSell(order);
 
         const resolve = (response) => {
+          this.incrementSell(order);
+
           console.log(`${moment().format('hh:mm')} ${log}`);
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
         };
@@ -567,9 +567,9 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
       const buyOrder = this.buildBuyOrder(orderQuantity,
         band,
-        quotes.low[idx],
+        quotes.close[idx],
         timestamps[idx],
-        quotes.low[idx],
+        quotes.low[idx] || quotes.close[idx],
         quotes);
 
       return this.sendBuy(buyOrder);
@@ -584,9 +584,9 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
       const sellOrder = this.buildSellOrder(orderQuantity,
         band,
-        quotes.high[idx],
+        quotes.close[idx],
         timestamps[idx],
-        quotes.high[idx],
+        quotes.high[idx] || quotes.close[idx],
         quotes);
 
       return this.sendSell(sellOrder);
@@ -604,10 +604,10 @@ export class BbCardComponent implements OnDestroy, OnInit {
         this.firstFormGroup.value.orderSize : this.positionCount;
 
       const buy: SmartOrder = buyQuantity <= 0 ? null :
-        this.buildBuyOrder(buyQuantity, band, quotes.low[idx], timestamps[idx], quotes.low[idx], quotes);
+        this.buildBuyOrder(buyQuantity, band, quotes.close[idx], timestamps[idx], quotes.low[idx] || quotes.close[idx], quotes);
 
       const sell: SmartOrder = sellQuantity <= 0 ? null :
-        this.buildSellOrder(sellQuantity, band, quotes.high[idx], timestamps[idx], quotes.high[idx], quotes);
+        this.buildSellOrder(sellQuantity, band, quotes.close[idx], timestamps[idx], quotes.high[idx] || quotes.close[idx], quotes);
 
       if (sell && this.buyCount >= this.sellCount) {
         return this.sendSell(sell);
@@ -624,7 +624,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
       mid = band[1],
       lower = band[0];
 
-    const pricePaid = this.daytradeService.estimateAverageBuyOrderPrice(this.positionCount, this.orders);
+    const pricePaid = this.daytradeService.estimateAverageBuyOrderPrice(this.orders);
     const gains = this.daytradeService.getPercentChange(signalPrice, pricePaid);
 
     if (gains < this.firstFormGroup.value.lossThreshold) {
@@ -689,7 +689,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
   processSpecialRules(closePrice: number, signalTime) {
     if (this.positionCount > 0 && closePrice) {
-      const estimatedPrice = this.daytradeService.estimateAverageBuyOrderPrice(this.positionCount, this.orders);
+      const estimatedPrice = this.daytradeService.estimateAverageBuyOrderPrice(this.orders);
       const gains = this.daytradeService.getPercentChange(closePrice, estimatedPrice);
 
       if (this.config.StopLoss) {
