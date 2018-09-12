@@ -3,7 +3,7 @@
   *Satisfaction not guaranteed.
 </p>
 <div *ngFor="let other of cartService.otherOrders">
-  <app-score-board [score]="scoreKeeperService.profitLossHash[other.holding.symbol]"></app-score-board>
+  <app-score-board [stock]="other.holding.symbol" [score]="scoreKeeperService.profitLossHash[other.holding.symbol]"></app-score-board>
 </div>
 <div *ngFor="let sell of cartService.sellOrders">
   <app-bb-card [order]="sell"></app-bb-card>
@@ -14,8 +14,4 @@
 <div *ngFor="let other of cartService.otherOrders">
   <app-bb-card [order]="other"></app-bb-card>
 </div>
-<app-bb-card [order]="spxl"></app-bb-card>
 <app-bb-card [order]="uvxy"></app-bb-card>
-<app-bb-card [order]="vti"></app-bb-card>
-<app-bb-card [order]="vxx"></app-bb-card>
-<app-bb-card [order]="mu"></app-bb-card>

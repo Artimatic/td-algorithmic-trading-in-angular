@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnChanges, Input, SimpleChanges } from '@angular/core';
 import * as _ from 'lodash';
 import { SmartOrder } from '../shared/models/smart-order';
 
@@ -7,17 +7,15 @@ import { SmartOrder } from '../shared/models/smart-order';
   templateUrl: './score-board.component.html',
   styleUrls: ['./score-board.component.css']
 })
-export class ScoreBoardComponent implements OnInit {
-  @Input() score: any;
+export class ScoreBoardComponent implements OnChanges {
+  @Input() stock: string;
+  @Input() score: number;
 
   constructor() { }
 
-  ngOnInit() {
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes.score) {
+      this.score = changes.score.currentValue;
+    }
   }
-
-  ngOnChanges(changes: any) {
-    console.log('changes: ', changes);
-
-  }
-
 }

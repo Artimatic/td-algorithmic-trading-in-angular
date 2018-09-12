@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { Trade } from '../models/trade';
 import { StockScore } from '../models/stock-score';
 
+import * as _ from 'lodash';
+
 @Injectable()
 export class ScoreKeeperService {
   numTrades: number;
@@ -21,6 +23,8 @@ export class ScoreKeeperService {
     } else {
       this.profitLossHash[stock] = sum;
     }
+
+    this.profitLossHash[stock] = _.round(this.profitLossHash[stock], 2);
     console.log(`${stock}: ${this.profitLossHash[stock]}`);
   }
 

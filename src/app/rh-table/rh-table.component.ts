@@ -1,7 +1,4 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges, Inject } from '@angular/core';
-import { DataSource } from '@angular/cdk/collections';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Observable } from 'rxjs/Observable';
+import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
 import 'rxjs/add/observable/of';
 import 'rxjs/add/observable/merge';
 import 'rxjs/add/operator/finally';

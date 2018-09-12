@@ -486,6 +486,10 @@ export class BbCardComponent implements OnDestroy, OnInit {
       if (this.backtestLive || this.live) {
         const resolve = (response) => {
           this.incrementSell(sellOrder);
+
+          const pl = this.daytradeService.estimateSellProfitLoss(this.orders);
+          this.scoringService.addProfitLoss(this.order.holding.symbol, pl);
+
           console.log(`${moment().format('hh:mm')} ${log}`);
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
         };
@@ -506,6 +510,10 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
       } else {
         this.incrementSell(sellOrder);
+
+        const pl = this.daytradeService.estimateSellProfitLoss(this.orders);
+        this.scoringService.addProfitLoss(this.order.holding.symbol, pl);
+
         console.log(`${moment().format('hh:mm')} ${log}`);
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
       }
@@ -520,6 +528,9 @@ export class BbCardComponent implements OnDestroy, OnInit {
 
         const resolve = (response) => {
           this.incrementSell(order);
+
+          const pl = this.daytradeService.estimateSellProfitLoss(this.orders);
+          this.scoringService.addProfitLoss(this.order.holding.symbol, pl);
 
           console.log(`${moment().format('hh:mm')} ${log}`);
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
@@ -538,6 +549,10 @@ export class BbCardComponent implements OnDestroy, OnInit {
         this.daytradeService.sendSell(order, 'market', resolve, reject, handleNotFound);
       } else {
         this.incrementSell(order);
+
+        const pl = this.daytradeService.estimateSellProfitLoss(this.orders);
+        this.scoringService.addProfitLoss(this.order.holding.symbol, pl);
+
         console.log(`${moment().format('hh:mm')} ${log}`);
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
       }

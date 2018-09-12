@@ -228,8 +228,8 @@ export class DaytradeService {
 
     const finalPositions: SmartOrder[] = [];
 
-    for (let i = 0, c = len - 1; i < c; i++) {
-      let currentOrder: SmartOrder = orders[i];
+    for (let j = 0, c = len - 1; j < c; j++) {
+      const currentOrder: SmartOrder = orders[j];
       if (currentOrder.side.toLowerCase() === 'sell') {
         let sellSize: number = currentOrder.quantity;
         let i = 0;
@@ -246,22 +246,20 @@ export class DaytradeService {
           }
           i++;
         }
-      } else if (currentOrder.side.toLowerCase() === 'buy'){
+      } else if (currentOrder.side.toLowerCase() === 'buy') {
         finalPositions.push(currentOrder);
       }
     }
 
     let size = lastOrder.quantity;
-    let sum = 0;
-
-    console.log('finalpos: ', finalPositions);
+    let cost = 0;
 
     _.forEach(finalPositions, (pos: SmartOrder) => {
       if (pos.quantity > size) {
-        sum += _.multiply(size, pos.price);
+        cost += _.multiply(size, pos.price);
         size = 0;
       } else {
-        sum += _.multiply(pos.quantity, pos.price);
+        cost += _.multiply(pos.quantity, pos.price);
         size -= pos.quantity;
       }
 
@@ -270,12 +268,8 @@ export class DaytradeService {
       }
     });
 
-    console.log('sum/size: ', sum, ' ', size);
+    const lastOrderCost = _.multiply(lastOrder.quantity, lastOrder.price);
 
-    if (sum === 0 || size === 0) {
-      return 0;
-    }
-
-    return _.round(_.divide(sum, size), 2);
+    return _.round(_.subtract(lastOrderCost, cost), 2);
   }
 }
