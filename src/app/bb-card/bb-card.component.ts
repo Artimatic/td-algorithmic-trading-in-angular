@@ -37,7 +37,7 @@ import { Subscription } from 'rxjs/Subscription';
   templateUrl: './bb-card.component.html',
   styleUrls: ['./bb-card.component.css']
 })
-export class BbCardComponent implements OnDestroy, OnInit {
+export class BbCardComponent implements OnInit {
   @ViewChild('stepper') stepper;
   @Input() order: SmartOrder;
   chart: Chart;
