@@ -88,7 +88,7 @@ export class BbCardComponent implements OnDestroy, OnInit {
         useUTC: false
       }
     });
-    this.startTime = moment('9:30am', 'h:mma');
+    this.startTime = moment('10:10am', 'h:mma');
     this.endTime = moment('4:00pm', 'h:mma');
     this.showGraph = false;
     this.bbandPeriod = 80;
@@ -805,9 +805,5 @@ export class BbCardComponent implements OnDestroy, OnInit {
     }
 
     return pref;
-  }
-
-  ngOnDestroy() {
-    stop();
   }
 }
