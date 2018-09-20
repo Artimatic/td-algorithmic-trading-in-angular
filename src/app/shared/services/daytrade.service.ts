@@ -95,7 +95,14 @@ export class DaytradeService {
               handleNotFound();
             } else {
               sellOrder.quantity = sellOrder.quantity < positionCount ? sellOrder.quantity : positionCount;
-              this.portfolioService.sell(sellOrder.holding, sellOrder.quantity, sellOrder.price, type).subscribe(
+
+              let price = sellOrder.price;
+
+              if (type === 'market') {
+                price = null;
+              }
+
+              this.portfolioService.sell(sellOrder.holding, sellOrder.quantity, price, type).subscribe(
                 response => {
                   resolve(response);
                 },

@@ -40,9 +40,12 @@ export class PortfolioService {
       'url': holding.instrument,
       'symbol': holding.symbol,
       'quantity': quantity,
-      'price': price,
       'type': type
     };
+
+    if (price) {
+      body['price'] = price;
+    }
 
     return this.http.post('/api/portfolio/sell', body, options)
       .map((response: Response) => {

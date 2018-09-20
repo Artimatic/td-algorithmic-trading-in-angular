@@ -546,6 +546,7 @@ export class BbCardComponent implements OnInit {
           this.setWarning(`Trying to sell ${order.holding.symbol} position that doesn\'t exists`);
         };
 
+
         this.daytradeService.sendSell(order, 'market', resolve, reject, handleNotFound);
       } else {
         this.incrementSell(order);
