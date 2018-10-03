@@ -20,7 +20,7 @@ export class OptionsViewComponent implements OnInit {
     this.backtestService.getOptionChain('AA').subscribe((chain) => {
       console.log('chain: ', chain);
 
-      _.forEach(chain.result.expirationDates, (expiry: number) => {
+      _.forEach(chain.optionChain.result.expirationDates, (expiry: number) => {
         this.expirationDates.push(moment.unix(expiry).format());
       });
     });

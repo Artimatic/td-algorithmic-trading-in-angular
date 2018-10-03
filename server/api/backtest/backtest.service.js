@@ -171,6 +171,31 @@ class BacktestService {
         console.log('Error: ', error);
       });
   }
+
+  getHistoricalMatches(symbol, endDate, startDate) {
+    const to = moment(endDate).format('YYYY-MM-DD');
+    const from = moment(startDate).format('YYYY-MM-DD');
+
+    console.log('to: ', to, ' from:', from);
+    const post = `${appUrl}backtest/train/find`;
+
+    const options = {
+      method: 'POST',
+      uri: post,
+      body: {
+        symbol: "SPY",
+        to: to,
+        from:from,
+        save: false
+      },
+      json: true
+    };
+
+    return RequestPromise(options)
+      .catch((error) => {
+        console.log('Error: ', error);
+      });
+  }
 }
 
 module.exports.BacktestService = new BacktestService();

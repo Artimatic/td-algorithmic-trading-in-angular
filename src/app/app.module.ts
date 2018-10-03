@@ -70,6 +70,7 @@ import { ReportingComponent, ReportDialogComponent } from './reporting/reporting
 import { ResearchViewComponent } from './research-view/research-view.component';
 import { OptionsViewComponent } from './options-view/options-view.component';
 import { ScoreBoardComponent } from './score-board/score-board.component';
+import { TimelineViewComponent } from './timeline-view/timeline-view.component';
 
 @NgModule({
   declarations: [
@@ -97,6 +98,7 @@ import { ScoreBoardComponent } from './score-board/score-board.component';
     ResearchViewComponent,
     OptionsViewComponent,
     ScoreBoardComponent,
+    TimelineViewComponent,
   ],
   entryComponents: [
     ChartDialogComponent,

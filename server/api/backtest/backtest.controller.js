@@ -74,6 +74,12 @@ class BacktestController extends BaseController {
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
+
+  getHistoricalMatches(request, response) {
+    BacktestService.getHistoricalMatches(request.body.symbol, request.body.to, request.body.from)
+    .then((data) => BaseController.requestGetSuccessHandler(response, data))
+    .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
 }
 
 module.exports.BacktestController = new BacktestController();

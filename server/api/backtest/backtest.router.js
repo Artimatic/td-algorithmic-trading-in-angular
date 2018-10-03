@@ -23,3 +23,7 @@ export let infoV2 = (request, response) => {
 export let infoV2Chart = (request, response) => {
   BacktestController.getInfoV2Chart(request, response);
 }
+
+export let timeline = (request, response) => {
+  BacktestController.getHistoricalMatches(request, response);
+}

@@ -48,6 +48,17 @@ export class BacktestService {
             .map(r => r.json());
     }
 
+    getTimeline(symbol: string, from: string = null, to: string = null): Observable<any[]> {
+
+        const data = {
+            symbol,
+            to,
+            from
+        };
+
+        return this.http.post(`${BASE_URL}api/backtest/timeline`, data, {})
+            .map(r => r.json());
+    }
 
     getBacktestChart(data: any): Observable<any[]> {
         return this.http.post(`${BASE_URL}api/backtest/chart`, data, {})

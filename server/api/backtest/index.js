@@ -9,5 +9,6 @@ router.post('/chart', handler.getMeanReversionChart);
 router.post('/bbands', handler.bollingerBands);
 router.post('/infov2', handler.infoV2);
 router.post('/infov2chart', handler.infoV2Chart);
+router.post('/timeline', handler.timeline);
 
 module.exports = router;
