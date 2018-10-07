@@ -30,7 +30,7 @@ export class RhTableComponent implements OnInit, OnChanges {
     averageTrades: 0
   };
 
-  endDate;
+  endDate: moment.Moment;
   progressPct = 0;
   progress = 0;
   totalStocks = 0;
@@ -48,7 +48,7 @@ export class RhTableComponent implements OnInit, OnChanges {
 
   ngOnInit() {
     this.filterRecommendation();
-    this.endDate = new Date();
+    this.endDate = moment(this.endDate).format('YYYY-MM-DD');
   }
 
   ngOnChanges(changes: SimpleChanges) {

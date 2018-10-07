@@ -5,7 +5,7 @@
       <mat-grid-tile>
         <div>
           End Date
-          <input type="date" [ngModel]="endDate | date:'yyyy-MM-dd'" (ngModelChange)="endDate = $event">
+          <input name="endDate" type="date" [ngModel]="endDate" (ngModelChange)="endDate = $event">
         </div>
       </mat-grid-tile>
       <mat-grid-tile>
