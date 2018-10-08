@@ -35,8 +35,8 @@ export class TimelineViewComponent implements OnInit {
   findTimeline(): void {
     const endDate = moment(this.endDate).format('YYYY-MM-DD');
     const startDate = moment(this.startDate).format('YYYY-MM-DD');
-
-    this.backtestService.getTimeline(this.symbol, startDate, endDate)
+    
+    this.backtestService.getTimeline(this.form.value.query, startDate, endDate)
     .map(result => {
       const greenSeries = [],
             redSeries = [],

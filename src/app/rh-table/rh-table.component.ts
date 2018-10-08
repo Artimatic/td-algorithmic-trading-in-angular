@@ -30,7 +30,7 @@ export class RhTableComponent implements OnInit, OnChanges {
     averageTrades: 0
   };
 
-  endDate: moment.Moment;
+  endDate: string;
   progressPct = 0;
   progress = 0;
   totalStocks = 0;

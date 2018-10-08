@@ -16,6 +16,7 @@ import { DataPoint, SeriesOptions } from 'highcharts';
 import * as Highcharts from 'highcharts';
 
 import * as moment from 'moment';
+import * as _ from 'lodash';
 
 import { OrderPref } from '../shared/enums/order-pref.enum';
 import {
@@ -67,6 +68,9 @@ export class BbCardComponent implements OnInit {
   myPreferences;
   startTime;
   endTime;
+  testDate: string;
+  selectedRange: string;
+  backtestQuotes;
 
   constructor(private _formBuilder: FormBuilder,
     private backtestService: BacktestService,
@@ -168,22 +172,73 @@ export class BbCardComponent implements OnInit {
     this.play(live, backtestLive);
   }
 
+  async requestQuotes() {
+    const requestBody = {
+      ticker: this.order.holding.symbol,
+      interval: this.dataInterval,
+      range: this.selectedRange
+    };
+
+    this.backtestQuotes = await this.backtestService.getQuote(requestBody).toPromise();
+  }
+
   async play(live, backtestLive) {
     this.live = live;
     this.backtestLive = backtestLive;
 
-    const requestBody = {
-      symbol: this.order.holding.symbol,
-      interval: this.dataInterval
-    };
 
-    const data = await this.backtestService.getIntraday(requestBody).toPromise();
 
-    if (data.chart.result[0].timestamp) {
+    let data;
+
+    if (!this.testDate) {
+      const requestBody = {
+        symbol: this.order.holding.symbol,
+        interval: this.dataInterval
+      };
+
+      data = await this.backtestService.getIntraday(requestBody).toPromise();
+    } else if (this.backtestQuotes.length) {
+      data = {
+        chart: {
+          result: [
+            {
+              timestamp: [],
+              indicators: {
+                quote: [
+                  {
+                    low: [],
+                    volume: [],
+                    open: [],
+                    high: [],
+                    close: []
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      };
+
+      _.forEach(this.backtestQuotes, (historicalData) => {
+        const date = moment(historicalData.date);
+        if (moment(this.testDate).format('YYYY-MM-DD') === date.format('YYYY-MM-DD')) {
+          data.chart.result[0].timestamp.push(date.unix());
+          data.chart.result[0].indicators.quote[0].close.push(historicalData.close);
+          data.chart.result[0].indicators.quote[0].low.push(historicalData.low);
+          data.chart.result[0].indicators.quote[0].volume.push(historicalData.volume);
+          data.chart.result[0].indicators.quote[0].open.push(historicalData.open);
+          data.chart.result[0].indicators.quote[0].high.push(historicalData.high);
+        }
+      });
+    }
+
+    const dataFound: boolean = _.has(data, 'chart.result[0].timestamp');
+
+    if (dataFound) {
       const volume = [],
-        timestamps = data.chart.result[0].timestamp,
+        timestamps = _.get(data, 'chart.result[0].timestamp'),
         dataLength = timestamps.length,
-        quotes = data.chart.result[0].indicators.quote[0];
+        quotes = _.get(data, 'chart.result[0].indicators.quote[0]');
 
       if (this.live) {
         if (dataLength > this.bbandPeriod) {
@@ -261,8 +316,8 @@ export class BbCardComponent implements OnInit {
     if (moment().isAfter(this.endTime)) {
       this.reportingService.addAuditLog(this.order.holding.symbol, `Final Orders ${this.order.holding.name}`);
 
-      this.tiles.forEach((tile) => {
-        tile.orders.forEach((order) => {
+      _.forEach(this.tiles, (tile) => {
+        _.forEach(tile.orders, (order) => {
           const orderStr = JSON.stringify(order);
           console.log(`Order: ${orderStr}`);
           // this.reportingService.addAuditLog(`Order: ${orderStr}`);
@@ -586,7 +641,8 @@ export class BbCardComponent implements OnInit {
         quotes.close[idx],
         timestamps[idx],
         quotes.low[idx] || quotes.close[idx],
-        quotes);
+        quotes,
+        idx);
 
       return this.sendBuy(buyOrder);
     } else if (this.firstFormGroup.value.orderType.toLowerCase() === 'sell') {
@@ -602,8 +658,7 @@ export class BbCardComponent implements OnInit {
         band,
         quotes.close[idx],
         timestamps[idx],
-        quotes.high[idx] || quotes.close[idx],
-        quotes);
+        quotes.high[idx] || quotes.close[idx]);
 
       return this.sendSell(sellOrder);
     } else if (this.firstFormGroup.value.orderType.toLowerCase() === 'daytrade') {
@@ -620,10 +675,10 @@ export class BbCardComponent implements OnInit {
         this.firstFormGroup.value.orderSize : this.positionCount;
 
       const buy: SmartOrder = buyQuantity <= 0 ? null :
-        this.buildBuyOrder(buyQuantity, band, quotes.close[idx], timestamps[idx], quotes.low[idx] || quotes.close[idx], quotes);
+        this.buildBuyOrder(buyQuantity, band, quotes.close[idx], timestamps[idx], quotes.low[idx] || quotes.close[idx], quotes, idx);
 
       const sell: SmartOrder = sellQuantity <= 0 ? null :
-        this.buildSellOrder(sellQuantity, band, quotes.close[idx], timestamps[idx], quotes.high[idx] || quotes.close[idx], quotes);
+        this.buildSellOrder(sellQuantity, band, quotes.close[idx], timestamps[idx], quotes.high[idx] || quotes.close[idx]);
 
       if (sell && this.buyCount >= this.sellCount) {
         return this.sendSell(sell);
@@ -635,7 +690,7 @@ export class BbCardComponent implements OnInit {
     }
   }
 
-  buildBuyOrder(orderQuantity: number, band: any[], price, signalTime, signalPrice, quotes) {
+  buildBuyOrder(orderQuantity: number, band: any[], price, signalTime, signalPrice, quotes, idx: number) {
     const upper = band[2],
       mid = band[1],
       lower = band[0];
@@ -667,13 +722,15 @@ export class BbCardComponent implements OnInit {
     this.reportingService.addAuditLog(this.order.holding.symbol, log);
 
     if (signalPrice <= lower[0]) {
-      return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
+      if (idx - 1 >= 0 && quotes.close[idx - 1] < signalPrice) {
+        return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
+      }
     }
 
     return null;
   }
 
-  buildSellOrder(orderQuantity: number, band: any[], price, signalTime, signalPrice, quotes) {
+  buildSellOrder(orderQuantity: number, band: any[], price, signalTime, signalPrice) {
     const upper = band[2],
       mid = band[1],
       lower = band[0];

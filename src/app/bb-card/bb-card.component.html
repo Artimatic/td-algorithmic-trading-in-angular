@@ -9,7 +9,7 @@
       WARNING: {{warning}}
     </div>
   </div>
-  <mat-horizontal-stepper [linear]="true" #stepper="matHorizontalStepper">
+  <mat-horizontal-stepper [linear]="false" #stepper="matHorizontalStepper">
     <mat-step [stepControl]="firstFormGroup">
       <form [formGroup]="firstFormGroup">
         <ng-template matStepLabel>Edit Order</ng-template>
@@ -99,20 +99,50 @@
         </div>
         <mat-card-actions>
           <button mat-raised-button color="warn" (click)="resetStepper(stepper)">STOP</button>
-          <button mat-button color="primary" (click)="newRun(false, false)">Backtest</button>
           <button mat-button color="warn" (click)="openDialog()">GO LIVE</button>
-          <button mat-button color="warn" (click)="confirmLiveBacktest()">TEST LIVE</button>
-
         </mat-card-actions>
       </mat-card>
     </mat-step>
     <mat-step>
-      <ng-template matStepLabel>Done</ng-template>
-      You are now done.
-      <div>
+      <ng-template matStepLabel>Backtest</ng-template>
+      <mat-grid-list cols="2" rowHeight="50px">
+        <mat-grid-tile [colspan]="2" [rowspan]="1">
+            <mat-checkbox [(ngModel)]="showBacktestOptions">Options</mat-checkbox>
+        </mat-grid-tile>
+        <span *ngIf="showBacktestOptions">
+          <mat-grid-tile [colspan]="1" [rowspan]="2">
+            <div class="date-picker">
+              Test Date
+              <input name="testDate" type="date" [ngModel]="testDate" (ngModelChange)="testDate = $event">
+            </div>
+          </mat-grid-tile>
+          <mat-grid-tile [colspan]="1" [rowspan]="2">
+            <mat-form-field>
+              <mat-label>Date Range</mat-label>
+              <mat-select [(value)]="selectedRange">
+                <mat-option value="1d">1 day</mat-option>
+                <mat-option value="5d">5 days</mat-option>
+                <mat-option value="1mo">1 month</mat-option>
+                <mat-option value="3mo">3 months</mat-option>
+                <mat-option value="6mo">6 months</mat-option>
+                <mat-option value="1y">1 year</mat-option>
+                <mat-option value="2y">2 years</mat-option>
+                <mat-option value="5y">5 years</mat-option>
+                <mat-option value="10y">10 years</mat-option>
+                <mat-option value="ytd">year to date</mat-option>
+                <mat-option value="max">max</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </mat-grid-tile>
+        </span>
+      </mat-grid-list>
+      <mat-card-actions>
         <button mat-button matStepperPrevious>Back</button>
         <button mat-button (click)="stepper.reset()">Reset</button>
-      </div>
+        <button mat-button (click)="requestQuotes()">Request Quotes</button>
+        <button mat-button color="primary" (click)="newRun(false, false)">Backtest</button>
+        <button mat-button color="warn" (click)="confirmLiveBacktest()">TEST LIVE</button>
+      </mat-card-actions>
     </mat-step>
   </mat-horizontal-stepper>
 </mat-card>
