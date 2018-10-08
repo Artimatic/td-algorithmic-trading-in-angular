@@ -183,9 +183,9 @@ class BacktestService {
       method: 'POST',
       uri: post,
       body: {
-        symbol: "SPY",
+        symbol: symbol,
         to: to,
-        from:from,
+        from: from,
         save: false
       },
       json: true
