@@ -21,8 +21,6 @@ import * as _ from 'lodash';
 import { OrderPref } from '../shared/enums/order-pref.enum';
 import {
   BacktestService,
-  PortfolioService,
-  AuthenticationService,
   DaytradeService,
   ReportingService,
   ScoreKeeperService
@@ -74,8 +72,6 @@ export class BbCardComponent implements OnInit {
 
   constructor(private _formBuilder: FormBuilder,
     private backtestService: BacktestService,
-    private portfolioService: PortfolioService,
-    private authenticationService: AuthenticationService,
     private daytradeService: DaytradeService,
     private reportingService: ReportingService,
     private scoringService: ScoreKeeperService,
