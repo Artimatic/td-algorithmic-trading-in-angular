@@ -7,5 +7,7 @@ export interface OrderRow {
     Target?: number;
     StopLoss?: boolean;
     TakeProfit?: boolean;
+    UseMomentum1?: boolean;
+    UseMomentum2?: boolean;
     OrderSize?: number;
 }

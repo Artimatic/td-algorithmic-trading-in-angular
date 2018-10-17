@@ -41,7 +41,13 @@ export class DaytradeService {
   }
 
   parsePreferences(preferences) {
-    const config = { TakeProfit: false, StopLoss: false };
+    const config = {
+      TakeProfit: false,
+      StopLoss: false,
+      UseMomentum1: false,
+      UseMomentum2: false
+    };
+
     if (preferences) {
       preferences.forEach((value) => {
         switch (value) {
@@ -50,6 +56,12 @@ export class DaytradeService {
             break;
           case OrderPref.StopLoss:
             config.StopLoss = true;
+            break;
+          case OrderPref.UseMomentum1:
+            config.UseMomentum1 = true;
+            break;
+          case OrderPref.UseMomentum2:
+            config.UseMomentum2 = true;
             break;
         }
       });
@@ -198,7 +210,7 @@ export class DaytradeService {
           }
           i++;
         }
-      } else if (currentOrder.side.toLowerCase() === 'buy'){
+      } else if (currentOrder.side.toLowerCase() === 'buy') {
         finalPositions.push(currentOrder);
       }
     });
@@ -278,5 +290,39 @@ export class DaytradeService {
     const lastOrderCost = _.multiply(lastOrder.quantity, lastOrder.price);
 
     return _.round(_.subtract(lastOrderCost, cost), 2);
+  }
+
+  momentumV1(quotes, period, idx) {
+    const beginningIdx = idx - period;
+    if (beginningIdx >= 0) {
+      if (quotes.close[idx] > quotes.close[beginningIdx]) {
+        return 'buy';
+      } else {
+        return 'sell';
+      }
+    }
+    return null;
+  }
+
+  momentumV2(quotes, period, idx) {
+    const beginningIdx = idx - period;
+    let smallSpreadCount = 0;
+    if (beginningIdx >= 0) {
+      for (let i = beginningIdx; i < idx; i++) {
+        if (_.subtract(_.round(quotes.close[i], 2), _.round(quotes.open[i], 2)) === 0) {
+          smallSpreadCount++;
+        }
+      }
+      if (smallSpreadCount > 1 && smallSpreadCount < 4) {
+        if (quotes.close[idx] > quotes.close[beginningIdx]) {
+          return 'buy';
+        } else {
+          return 'sell';
+        }
+      } else {
+        return 'unknown';
+      }
+    }
+    return null;
   }
 }
