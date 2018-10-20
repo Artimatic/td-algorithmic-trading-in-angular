@@ -75,6 +75,11 @@ export class BacktestService {
             .map(r => r.json());
     }
 
+    getIntraday2(data: any): Observable<any> {
+        return this.http.post(`${BASE_URL}api/quote/intraday2`, data, {})
+            .map(r => r.json());
+    }
+
     getQuote(data: any): Observable<any> {
         return this.http.post(`${BASE_URL}api/quote`, data, {})
             .map(r => r.json());

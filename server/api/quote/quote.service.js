@@ -1,14 +1,14 @@
-import google from '../../components/google-finance';
 import _ from 'lodash';
 import moment from 'moment';
-import boom from 'boom';
 import RequestPromise from 'request-promise';
 
 import { feedQuandl } from 'd3fc-financial-feed';
 import YahooFinanceAPI from 'yahoo-finance-data';
+import * as algotrader from 'algotrader';
 
 import errors from '../../components/errors/baseErrors';
 import config from '../../config/environment';
+
 const yahoo = {
   key: config.yahoo.key,
   secret: config.yahoo.secret
@@ -17,6 +17,8 @@ const yahoo = {
 const appUrl = config.apps.goliath;
 
 const api = new YahooFinanceAPI(yahoo);
+const AlphaVantage = algotrader.Data.AlphaVantage;
+const av = new AlphaVantage(config.alpha.key);
 
 const quandl = feedQuandl()
   .apiKey('5DsGxgTS3k9BepaWg_MD')
@@ -143,6 +145,43 @@ class QuoteService {
 
   getIntradayData(symbol, interval) {
     return api.getIntradayChartData(symbol, interval, true);
+  }
+
+  getIntradayDataV2(symbol, interval) {
+    console.log('interval:', interval);
+    return av.timeSeriesIntraday(symbol, interval).then(quotes => {
+      const data = {
+        chart: {
+          result: [
+            {
+              timestamp: [],
+              indicators: {
+                quote: [
+                  {
+                    low: [],
+                    volume: [],
+                    open: [],
+                    high: [],
+                    close: []
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      };
+
+      _.forEach(quotes, (quote) => {
+        data.chart.result[0].timestamp.push(moment(quote.date));
+        data.chart.result[0].indicators.quote[0].close.push(quote.price.close);
+        data.chart.result[0].indicators.quote[0].low.push(quote.price.low);
+        data.chart.result[0].indicators.quote[0].volume.push(quote.price.volume);
+        data.chart.result[0].indicators.quote[0].open.push(quote.price.open);
+        data.chart.result[0].indicators.quote[0].high.push(quote.price.high);
+      });
+
+      return quotes;
+    });
   }
 
   getOptionChain(symbol) {

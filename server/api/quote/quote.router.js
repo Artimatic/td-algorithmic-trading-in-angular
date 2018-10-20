@@ -19,6 +19,11 @@ exports.intraday = function (req, res, next) {
   QuoteController.getIntraday(req, res);
 };
 
+exports.intradayv2 = function (req, res, next) {
+  QuoteController.getIntradayV2(req, res);
+};
+
+
 exports.companySummary = function (req, res, next) {
   QuoteController.getCompanySummary(req, res);
 };

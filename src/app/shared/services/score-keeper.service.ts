@@ -6,13 +6,8 @@ import * as _ from 'lodash';
 
 @Injectable()
 export class ScoreKeeperService {
-  numTrades: number;
-  numWins: number;
-  numLosses: number;
-  profitLoss: number;
   public profitLossHash = {};
   costEstimates = {};
-  trades: Trade[];
 
   constructor() { }
 
@@ -26,10 +21,6 @@ export class ScoreKeeperService {
 
     this.profitLossHash[stock] = _.round(this.profitLossHash[stock], 2);
     console.log(`${stock}: ${this.profitLossHash[stock]}`);
-  }
-
-  getProfitLoss() {
-    return this.profitLoss;
   }
 
   updateCostEstimate(stock: string, price: number) {

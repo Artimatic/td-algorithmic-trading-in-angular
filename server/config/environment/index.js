@@ -33,6 +33,9 @@ const all = {
     key: _.get(credentials, 'yahoo.key', null),
     secret: _.get(credentials, 'yahoo.secret', null)
   },
+  alpha: {
+    key: _.get(credentials, 'alpha.key', null),
+  },
   apps: {
     goliath: 'http://localhost:8100/'
   }

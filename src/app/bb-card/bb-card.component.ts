@@ -82,6 +82,7 @@ export class BbCardComponent implements OnInit {
     this.sides = ['Buy', 'Sell', 'DayTrade'];
     this.error = '';
     this.backtestLive = false;
+    this.selectedRange = '1d';
     this.preferenceList = [OrderPref.TakeProfit, OrderPref.StopLoss, OrderPref.UseMomentum1, OrderPref.UseMomentum2];
     Highcharts.setOptions({
       global: {
@@ -182,8 +183,6 @@ export class BbCardComponent implements OnInit {
     this.live = live;
     this.backtestLive = backtestLive;
 
-
-
     let data;
 
     if (!this.testDate) {
@@ -192,7 +191,7 @@ export class BbCardComponent implements OnInit {
         interval: this.dataInterval
       };
 
-      data = await this.backtestService.getIntraday(requestBody).toPromise();
+      data = await this.backtestService.getIntraday2(requestBody).toPromise();
     } else if (this.backtestQuotes.length) {
       data = {
         chart: {
@@ -617,7 +616,7 @@ export class BbCardComponent implements OnInit {
       return null;
     }
 
-    const specialOrder = this.processSpecialRules(quotes.close[idx], timestamps[idx]);
+    const specialOrder = this.processSpecialRules(quotes.close[idx], timestamps[idx], quotes, idx);
 
     if (specialOrder) {
       return specialOrder;
@@ -767,15 +766,6 @@ export class BbCardComponent implements OnInit {
 
     this.reportingService.addAuditLog(this.order.holding.symbol, log);
 
-    if (this.config.UseMomentum2) {
-      const momentum = this.daytradeService.momentumV2(quotes, 10, idx);
-      if ( momentum === 'buy') {
-        return null;
-      } else if (momentum === 'sell') {
-        return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
-      }
-    }
-
     if (signalPrice >= upper[0]) {
       return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
     }
@@ -783,7 +773,7 @@ export class BbCardComponent implements OnInit {
     return null;
   }
 
-  processSpecialRules(closePrice: number, signalTime) {
+  processSpecialRules(closePrice: number, signalTime, quotes, idx) {
     if (this.positionCount > 0 && closePrice) {
       const estimatedPrice = this.daytradeService.estimateAverageBuyOrderPrice(this.orders);
       const gains = this.daytradeService.getPercentChange(closePrice, estimatedPrice);
@@ -795,6 +785,13 @@ export class BbCardComponent implements OnInit {
             `${this.order.holding.symbol} Stop Loss triggered: ${closePrice}/${estimatedPrice}`);
           const stopLossOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
           return this.sendStopLoss(stopLossOrder);
+        }
+      }
+
+      if (this.config.UseMomentum2) {
+        const momentum = this.daytradeService.momentumV2(quotes, 10, idx);
+        if (momentum === 'sell') {
+          return this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
         }
       }
 

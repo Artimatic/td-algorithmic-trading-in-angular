@@ -313,6 +313,7 @@ export class DaytradeService {
           smallSpreadCount++;
         }
       }
+
       if (smallSpreadCount > 1 && smallSpreadCount < 4) {
         if (quotes.close[idx] > quotes.close[beginningIdx]) {
           return 'buy';
