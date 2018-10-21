@@ -1,7 +1,6 @@
 import { Component, OnDestroy, EventEmitter, Input, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
-import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/concat';
 import 'rxjs/add/observable/defer';
 import 'rxjs/add/observable/merge';
@@ -774,6 +773,18 @@ export class BbCardComponent implements OnInit {
   }
 
   processSpecialRules(closePrice: number, signalTime, quotes, idx) {
+    const score = this.scoringService.getScore(this.order.holding.symbol);
+    if (score.total > 2) {
+      const scorePct = _.round(_.divide(score.win, score.total), 2);
+      if (scorePct < 0.5) {
+        this.stop();
+        const msg = 'Too many losses. Halting trading in Wins:' +
+        `${this.order.holding.symbol} ${score.win} Loss: ${score.loss}`;
+
+        this.reportingService.addAuditLog(this.order.holding.symbol, msg);
+        console.log(msg);
+      }
+    }
     if (this.positionCount > 0 && closePrice) {
       const estimatedPrice = this.daytradeService.estimateAverageBuyOrderPrice(this.orders);
       const gains = this.daytradeService.getPercentChange(closePrice, estimatedPrice);
