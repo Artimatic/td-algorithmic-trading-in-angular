@@ -176,7 +176,7 @@ export class BbCardComponent implements OnInit, OnChanges {
   async requestQuotes() {
     const requestBody = {
       ticker: this.order.holding.symbol,
-      interval: this.dataInterval,
+      interval: '1m',
       range: this.selectedRange
     };
 

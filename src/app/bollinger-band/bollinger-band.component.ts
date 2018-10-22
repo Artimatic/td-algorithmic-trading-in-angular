@@ -123,16 +123,17 @@ export class BollingerBandComponent implements OnInit {
   }
 
   triggerOrder(orders: SmartOrder[]) {
-    this.ordersStarted++;
-    _.forEach(this.cartService.otherOrders, (order: SmartOrder) => {
-      let startDelay = 60000;
-      if (this.ordersStarted >= 5) {
-        startDelay *= _.round(this.ordersStarted / 5, 0);
-      }
+    _.forEach(orders, (order: SmartOrder) => {
+      const startDelay = 60000 * _.round(this.ordersStarted / 5, 0);
+
+      console.log(`trigger start: ${order.holding.symbol} ${new Date()} ${startDelay}`);
 
       setTimeout(() => {
+        console.log(`triggered: ${order.holding.symbol} ${new Date()} `);
         order.triggered = true;
       }, startDelay);
+
+      this.ordersStarted++;
     });
   }
 
