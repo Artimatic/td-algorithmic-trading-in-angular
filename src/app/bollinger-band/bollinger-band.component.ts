@@ -17,12 +17,14 @@ export class BollingerBandComponent implements OnInit {
   spxl: SmartOrder;
   vxx: SmartOrder;
   uvxy: SmartOrder;
+  ordersStarted: number;
 
   constructor(private cartService: CartService,
     public scoreKeeperService: ScoreKeeperService,
     public dialog: MatDialog) { }
 
   ngOnInit() {
+    this.ordersStarted = 0;
     this.spxl = {
       holding:
         {
@@ -121,8 +123,16 @@ export class BollingerBandComponent implements OnInit {
   }
 
   triggerOrder(orders: SmartOrder[]) {
+    this.ordersStarted++;
     _.forEach(this.cartService.otherOrders, (order: SmartOrder) => {
+      let startDelay = 60000;
+      if (this.ordersStarted >= 5) {
+        startDelay *= _.round(this.ordersStarted / 5, 0);
+      }
+
+      setTimeout(() => {
         order.triggered = true;
+      }, startDelay);
     });
   }
 
