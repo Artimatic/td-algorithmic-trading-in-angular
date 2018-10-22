@@ -1,4 +1,4 @@
-import { Component, OnDestroy, EventEmitter, Input, OnInit, ViewChild } from '@angular/core';
+import { Component, OnChanges, Input, OnInit, ViewChild, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import 'rxjs/add/observable/concat';
@@ -11,7 +11,7 @@ import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/operator/takeWhile';
 
 import { Chart } from 'angular-highcharts';
-import { DataPoint, SeriesOptions } from 'highcharts';
+import { DataPoint } from 'highcharts';
 import * as Highcharts from 'highcharts';
 
 import * as moment from 'moment';
@@ -24,7 +24,6 @@ import {
   ReportingService,
   ScoreKeeperService
 } from '../shared';
-import { Order } from '../shared/models/order';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import { SmartOrder } from '../shared/models/smart-order';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
@@ -35,9 +34,10 @@ import { Subscription } from 'rxjs/Subscription';
   templateUrl: './bb-card.component.html',
   styleUrls: ['./bb-card.component.css']
 })
-export class BbCardComponent implements OnInit {
+export class BbCardComponent implements OnInit, OnChanges {
   @ViewChild('stepper') stepper;
   @Input() order: SmartOrder;
+  @Input() triggered: boolean;
   chart: Chart;
   volumeChart: Chart;
   alive: boolean;
@@ -65,7 +65,6 @@ export class BbCardComponent implements OnInit {
   myPreferences;
   startTime;
   endTime;
-  testDate: string;
   selectedRange: string;
   backtestQuotes;
 
@@ -74,7 +73,9 @@ export class BbCardComponent implements OnInit {
     private daytradeService: DaytradeService,
     private reportingService: ReportingService,
     private scoringService: ScoreKeeperService,
-    public dialog: MatDialog) {
+    public dialog: MatDialog) {}
+
+  ngOnInit() {
     this.alive = true;
     this.interval = 300000;
     this.live = false;
@@ -92,10 +93,8 @@ export class BbCardComponent implements OnInit {
     this.endTime = moment('4:00pm', 'h:mma');
     this.showGraph = false;
     this.bbandPeriod = 80;
-    this.dataInterval = '1m';
-  }
+    this.dataInterval = '1min';
 
-  ngOnInit() {
     this.firstFormGroup = this._formBuilder.group({
       quantity: [this.order.quantity, Validators.required],
       lossThreshold: [this.order.lossThreshold || -0.03, Validators.required],
@@ -112,6 +111,12 @@ export class BbCardComponent implements OnInit {
     });
 
     this.setup();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (_.get(changes, 'triggered.currentValue')) {
+      this.goLive();
+    }
   }
 
   resetStepper(stepper) {
@@ -184,7 +189,7 @@ export class BbCardComponent implements OnInit {
 
     let data;
 
-    if (!this.testDate) {
+    if (live) {
       const requestBody = {
         symbol: this.order.holding.symbol,
         interval: this.dataInterval
@@ -215,14 +220,12 @@ export class BbCardComponent implements OnInit {
 
       _.forEach(this.backtestQuotes, (historicalData) => {
         const date = moment(historicalData.date);
-        if (moment(this.testDate).format('YYYY-MM-DD') === date.format('YYYY-MM-DD')) {
-          data.chart.result[0].timestamp.push(date.unix());
-          data.chart.result[0].indicators.quote[0].close.push(historicalData.close);
-          data.chart.result[0].indicators.quote[0].low.push(historicalData.low);
-          data.chart.result[0].indicators.quote[0].volume.push(historicalData.volume);
-          data.chart.result[0].indicators.quote[0].open.push(historicalData.open);
-          data.chart.result[0].indicators.quote[0].high.push(historicalData.high);
-        }
+        data.chart.result[0].timestamp.push(date.unix());
+        data.chart.result[0].indicators.quote[0].close.push(historicalData.close);
+        data.chart.result[0].indicators.quote[0].low.push(historicalData.low);
+        data.chart.result[0].indicators.quote[0].volume.push(historicalData.volume);
+        data.chart.result[0].indicators.quote[0].open.push(historicalData.open);
+        data.chart.result[0].indicators.quote[0].high.push(historicalData.high);
       });
     }
 
@@ -774,7 +777,7 @@ export class BbCardComponent implements OnInit {
 
   processSpecialRules(closePrice: number, signalTime, quotes, idx) {
     const score = this.scoringService.getScore(this.order.holding.symbol);
-    if (score.total > 2) {
+    if (score && score.total > 2) {
       const scorePct = _.round(_.divide(score.win, score.total), 2);
       if (scorePct < 0.5) {
         this.stop();

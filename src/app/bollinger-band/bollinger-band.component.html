@@ -1,17 +1,17 @@
 <h3 mat-subheader>Shopping List</h3>
-<p>Smart Ordering will attempt to buy at the intraday highs and sell at the intraday lows.
-  *Satisfaction not guaranteed.
-</p>
+<div>
+  <button mat-button color="warn" (click)="confirmStart()">Start</button>
+</div>
 <div *ngFor="let other of cartService.otherOrders">
   <app-score-board [stock]="other.holding.symbol" [score]="scoreKeeperService.profitLossHash[other.holding.symbol]"></app-score-board>
 </div>
 <div *ngFor="let sell of cartService.sellOrders">
-  <app-bb-card [order]="sell"></app-bb-card>
+  <app-bb-card [order]="sell" [triggered]="sell.triggered"></app-bb-card>
 </div>
 <div *ngFor="let buy of cartService.buyOrders">
-  <app-bb-card [order]="buy"></app-bb-card>
+  <app-bb-card [order]="buy" [triggered]="buy.triggered"></app-bb-card>
 </div>
 <div *ngFor="let other of cartService.otherOrders">
-  <app-bb-card [order]="other"></app-bb-card>
+  <app-bb-card [order]="other" [triggered]="other.triggered"></app-bb-card>
 </div>
 <app-bb-card [order]="uvxy"></app-bb-card>

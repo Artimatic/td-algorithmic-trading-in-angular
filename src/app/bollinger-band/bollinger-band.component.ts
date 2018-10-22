@@ -2,6 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CartService } from '../shared/services/cart.service';
 import { SmartOrder } from '../shared/models/smart-order';
 import { ScoreKeeperService } from '../shared';
+import { MatDialog } from '@angular/material';
+import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
+import * as _ from 'lodash';
 
 @Component({
   selector: 'app-bollinger-band',
@@ -15,7 +18,9 @@ export class BollingerBandComponent implements OnInit {
   vxx: SmartOrder;
   uvxy: SmartOrder;
 
-  constructor(private cartService: CartService, public scoreKeeperService: ScoreKeeperService) { }
+  constructor(private cartService: CartService,
+    public scoreKeeperService: ScoreKeeperService,
+    public dialog: MatDialog) { }
 
   ngOnInit() {
     this.spxl = {
@@ -99,4 +104,26 @@ export class BollingerBandComponent implements OnInit {
   deleteBuyOrder(deleteOrder: SmartOrder) {
     this.cartService.deleteBuy(deleteOrder);
   }
+
+  confirmStart(): void {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '250px',
+      data: { title: 'Confirm', message: 'Are you sure you want to execute all orders?' }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.triggerOrder(this.cartService.sellOrders);
+        this.triggerOrder(this.cartService.buyOrders);
+        this.triggerOrder(this.cartService.otherOrders);
+      }
+    });
+  }
+
+  triggerOrder(orders: SmartOrder[]) {
+    _.forEach(this.cartService.otherOrders, (order: SmartOrder) => {
+        order.triggered = true;
+    });
+  }
+
 }

@@ -12,4 +12,5 @@ export interface SmartOrder extends Order {
     useMomentum1?: boolean;
     useMomentum2?: boolean;
     orderSize?: number;
+    triggered?: boolean;
 }

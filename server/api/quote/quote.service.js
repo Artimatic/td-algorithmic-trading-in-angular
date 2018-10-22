@@ -148,7 +148,6 @@ class QuoteService {
   }
 
   getIntradayDataV2(symbol, interval) {
-    console.log('interval:', interval);
     return av.timeSeriesIntraday(symbol, interval).then(quotes => {
       const data = {
         chart: {
