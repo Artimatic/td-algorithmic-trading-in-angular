@@ -180,24 +180,7 @@ class QuoteService {
         data.chart.result[0].indicators.quote[0].high.push(quote.getHigh());
       });
 
-  
-
-      return IEX.getQuote(symbol).then(quote => {
-        const timestampsLen = data.chart.result[0].timestamp.length;
-        if (timestampsLen > 0) {
-          const latestTime = data.chart.result[0].timestamp[timestampsLen - 1];
-          if (moment(quote.getDate()).isAfter(latestTime)) {
-            console.log('is after: ', quote);
-            data.chart.result[0].timestamp.push(moment(quote.getDate()).unix());
-            data.chart.result[0].indicators.quote[0].close.push(quote.getClose());
-            data.chart.result[0].indicators.quote[0].low.push(quote.getLow());
-            data.chart.result[0].indicators.quote[0].volume.push(quote.getVolume());
-            data.chart.result[0].indicators.quote[0].open.push(quote.getOpen());
-            data.chart.result[0].indicators.quote[0].high.push(quote.getHigh());
-          }
-        }
-        return data
-      });
+      return data;
     });
   }
 
