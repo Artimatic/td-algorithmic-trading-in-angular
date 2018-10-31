@@ -77,7 +77,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
   ngOnInit() {
     this.alive = true;
-    this.interval = 300000;
+    this.interval = 180000;
     this.live = false;
     this.sides = ['Buy', 'Sell', 'DayTrade'];
     this.error = '';
