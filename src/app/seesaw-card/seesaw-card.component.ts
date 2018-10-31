@@ -187,22 +187,6 @@ export class SeesawCardComponent implements OnInit, OnChanges {
         const lastIndex = i;
         const firstIndex = i - this.bbandPeriod;
         const order = await this.runStrategy(quotes, inverseQuotes, timestamps1, firstIndex, lastIndex);
-
-        if (order) {
-          if (order.side.toLowerCase() === 'buy') {
-            point.marker = {
-              symbol: 'triangle',
-              fillColor: 'green',
-              radius: 5
-            };
-          } else if (order.side.toLowerCase() === 'sell') {
-            point.marker = {
-              symbol: 'triangle-down',
-              fillColor: 'red',
-              radius: 5
-            };
-          }
-        }
       }
 
       const foundOrder = this.orders.find((order) => {
