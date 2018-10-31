@@ -71,6 +71,7 @@ import { ResearchViewComponent } from './research-view/research-view.component';
 import { OptionsViewComponent } from './options-view/options-view.component';
 import { ScoreBoardComponent } from './score-board/score-board.component';
 import { TimelineViewComponent } from './timeline-view/timeline-view.component';
+import { SeesawCardComponent } from './seesaw-card/seesaw-card.component';
 
 @NgModule({
   declarations: [
@@ -99,6 +100,7 @@ import { TimelineViewComponent } from './timeline-view/timeline-view.component';
     OptionsViewComponent,
     ScoreBoardComponent,
     TimelineViewComponent,
+    SeesawCardComponent,
   ],
   entryComponents: [
     ChartDialogComponent,

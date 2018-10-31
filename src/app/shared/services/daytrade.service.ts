@@ -326,4 +326,64 @@ export class DaytradeService {
     }
     return null;
   }
+
+  findMostCurrentQuoteIndex(quotes, firstIndex, lastIndex) {
+    // TODO: Replace with real time quote
+    let ctr = 1,
+      tFirstIndex = firstIndex,
+      tLastIndex = lastIndex;
+
+    while (!quotes[tLastIndex] && quotes[tFirstIndex] && ctr < 3) {
+      tFirstIndex = firstIndex - ctr;
+      tLastIndex = lastIndex - ctr;
+      if (quotes[tFirstIndex] && quotes[tLastIndex]) {
+        firstIndex = tFirstIndex;
+        lastIndex = tLastIndex;
+        break;
+      } else if (!quotes[tFirstIndex]) {
+        break;
+      }
+      ctr++;
+    }
+    return { firstIndex, lastIndex };
+  }
+
+  convertToFixedNumber(num, sig) {
+    return Number(num.toFixed(sig));
+  }
+
+  convertHistoricalQuotes(backtestQuotes) {
+    const data = {
+      chart: {
+        result: [
+          {
+            timestamp: [],
+            indicators: {
+              quote: [
+                {
+                  low: [],
+                  volume: [],
+                  open: [],
+                  high: [],
+                  close: []
+                }
+              ]
+            }
+          }
+        ]
+      }
+    };
+
+    _.forEach(backtestQuotes, (historicalData) => {
+      const date = moment(historicalData.date);
+      data.chart.result[0].timestamp.push(date.unix());
+      data.chart.result[0].indicators.quote[0].close.push(historicalData.close);
+      data.chart.result[0].indicators.quote[0].low.push(historicalData.low);
+      data.chart.result[0].indicators.quote[0].volume.push(historicalData.volume);
+      data.chart.result[0].indicators.quote[0].open.push(historicalData.open);
+      data.chart.result[0].indicators.quote[0].high.push(historicalData.high);
+    });
+
+    return data;
+  }
 }

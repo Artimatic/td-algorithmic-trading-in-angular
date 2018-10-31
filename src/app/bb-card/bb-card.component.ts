@@ -90,7 +90,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
     });
     this.startTime = moment('10:10am', 'h:mma');
-    this.endTime = moment('4:00pm', 'h:mma');
+    this.endTime = moment('3:50pm', 'h:mma');
     this.showGraph = false;
     this.bbandPeriod = 80;
     this.dataInterval = '1min';
@@ -698,17 +698,14 @@ export class BbCardComponent implements OnInit, OnChanges {
     const gains = this.daytradeService.getPercentChange(signalPrice, pricePaid);
 
     if (gains < this.firstFormGroup.value.lossThreshold) {
-      this.setWarning(`Loss threshold met. Buying is stalled. Estimated loss: ${this.convertToFixedNumber(gains, 4) * 100}%`);
+      this.setWarning('Loss threshold met. Buying is stalled. Estimated loss: ' +
+        `${this.daytradeService.convertToFixedNumber(gains, 4) * 100}%`);
       this.reportingService.addAuditLog(this.order.holding.symbol,
         `Loss circuit breaker triggered. Current: ${signalPrice}, Paid: ${pricePaid}, Gains: ${gains}`);
       return null;
     }
 
     if (orderQuantity <= 0) {
-      return null;
-    }
-
-    if (lower.length === 0) {
       return null;
     }
 
@@ -754,10 +751,6 @@ export class BbCardComponent implements OnInit, OnChanges {
       return null;
     }
 
-    if (upper.length === 0) {
-      return null;
-    }
-
     if (!signalPrice || !price) {
       return null;
     }
@@ -777,7 +770,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
   processSpecialRules(closePrice: number, signalTime, quotes, idx) {
     const score = this.scoringService.getScore(this.order.holding.symbol);
-    if (score && score.total > 2) {
+    if (score && score.total > 0) {
       const scorePct = _.round(_.divide(score.win, score.total), 2);
       if (scorePct < 0.5) {
         this.stop();
@@ -794,7 +787,8 @@ export class BbCardComponent implements OnInit, OnChanges {
 
       if (this.config.StopLoss) {
         if (gains < this.firstFormGroup.value.lossThreshold) {
-          this.setWarning(`Loss threshold met. Sending stop loss order. Estimated loss: ${this.convertToFixedNumber(gains, 4) * 100}%`);
+          this.setWarning('Loss threshold met. Sending stop loss order. Estimated loss: ' +
+            `${this.daytradeService.convertToFixedNumber(gains, 4) * 100}%`);
           this.reportingService.addAuditLog(this.order.holding.symbol,
             `${this.order.holding.symbol} Stop Loss triggered: ${closePrice}/${estimatedPrice}`);
           const stopLossOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
@@ -811,7 +805,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
       if (this.config.TakeProfit) {
         if (gains > this.firstFormGroup.value.profitTarget) {
-          this.setWarning(`Profits met. Realizing profits. Estimated gain: ${this.convertToFixedNumber(gains, 4) * 100}%`);
+          this.setWarning(`Profits met. Realizing profits. Estimated gain: ${this.daytradeService.convertToFixedNumber(gains, 4) * 100}%`);
           this.reportingService.addAuditLog(this.order.holding.symbol,
             `${this.order.holding.symbol} PROFIT HARVEST TRIGGERED: ${closePrice}/${estimatedPrice}`);
           const sellOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
@@ -840,7 +834,7 @@ export class BbCardComponent implements OnInit, OnChanges {
   }
 
   async runStrategy(quotes, timestamps, firstIdx, lastIdx) {
-    const { firstIndex, lastIndex } = this.findMostCurrentQuoteIndex(quotes.close, firstIdx, lastIdx);
+    const { firstIndex, lastIndex } = this.daytradeService.findMostCurrentQuoteIndex(quotes.close, firstIdx, lastIdx);
     const reals = quotes.close.slice(firstIndex, lastIndex + 1);
     if (!quotes.close[lastIndex]) {
       const log = `Quote data is missing ${reals.toString()}`;
@@ -849,31 +843,6 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
     const band = await this.daytradeService.getBBand(reals, this.bbandPeriod);
     return this.buildOrder(band, quotes, timestamps, lastIndex);
-  }
-
-  findMostCurrentQuoteIndex(quotes, firstIndex, lastIndex) {
-    // TODO: Replace with real time quote
-    let ctr = 1,
-      tFirstIndex = firstIndex,
-      tLastIndex = lastIndex;
-
-    while (!quotes[tLastIndex] && quotes[tFirstIndex] && ctr < 3) {
-      tFirstIndex = firstIndex - ctr;
-      tLastIndex = lastIndex - ctr;
-      if (quotes[tFirstIndex] && quotes[tLastIndex]) {
-        firstIndex = tFirstIndex;
-        lastIndex = tLastIndex;
-        break;
-      } else if (!quotes[tFirstIndex]) {
-        break;
-      }
-      ctr++;
-    }
-    return { firstIndex, lastIndex };
-  }
-
-  convertToFixedNumber(num, sig) {
-    return Number(num.toFixed(sig));
   }
 
   hasReachedDayTradeOrderLimit() {
