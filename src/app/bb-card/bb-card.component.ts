@@ -77,7 +77,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
   ngOnInit() {
     this.alive = true;
-    this.interval = 180000;
+    this.interval = 300000;
     this.live = false;
     this.sides = ['Buy', 'Sell', 'DayTrade'];
     this.error = '';
@@ -90,7 +90,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
     });
     this.startTime = moment('10:10am', 'h:mma');
-    this.endTime = moment('3:50pm', 'h:mma');
+    this.endTime = moment('3:30pm', 'h:mma');
     this.showGraph = false;
     this.bbandPeriod = 80;
     this.dataInterval = '1min';
