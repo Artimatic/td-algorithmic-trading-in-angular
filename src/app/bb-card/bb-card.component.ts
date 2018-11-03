@@ -718,7 +718,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.reportingService.addAuditLog(this.order.holding.symbol, log);
 
     if (this.config.UseMomentum1) {
-      const momentum = this.daytradeService.momentumV1(quotes, 1, idx);
+      const momentum = this.daytradeService.momentumV1(quotes, 2, idx);
       if (momentum === 'sell') {
         return null;
       }
