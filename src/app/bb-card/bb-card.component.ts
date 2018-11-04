@@ -733,8 +733,8 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
     }
 
-    if (signalPrice <= lower[0]) {
-      if (idx - 1 >= 0 && quotes.close[idx - 1] < signalPrice) {
+    if (signalPrice > lower[0] && signalPrice < mid[0]) {
+      if (idx - 1 >= 0 && quotes.close[idx - 1] < lower[0]) {
         return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
       }
     }
