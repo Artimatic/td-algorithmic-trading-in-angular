@@ -107,25 +107,8 @@
       <ng-template matStepLabel>Backtest</ng-template>
       <mat-grid-list cols="2" rowHeight="50px">
         <mat-grid-tile [colspan]="2" [rowspan]="1">
-            <mat-checkbox [(ngModel)]="showBacktestOptions">Options</mat-checkbox>
+            <mat-checkbox [(ngModel)]="backtestOn">Backtest On</mat-checkbox>
         </mat-grid-tile>
-        <span *ngIf="showBacktestOptions">
-          <mat-grid-tile [colspan]="1" [rowspan]="2">
-            <div class="date-picker">
-              Test Date
-              <input name="testDate" type="date" [ngModel]="testDate" (ngModelChange)="testDate = $event">
-            </div>
-          </mat-grid-tile>
-          <mat-grid-tile [colspan]="1" [rowspan]="2">
-            <mat-form-field>
-              <mat-label>Date Range</mat-label>
-              <mat-select [(value)]="selectedRange">
-                <mat-option value="1d">1 day</mat-option>
-                <mat-option value="5d">5 days</mat-option>
-              </mat-select>
-            </mat-form-field>
-          </mat-grid-tile>
-        </span>
       </mat-grid-list>
       <mat-card-actions>
         <button mat-button matStepperPrevious>Back</button>

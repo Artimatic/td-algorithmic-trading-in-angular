@@ -55,6 +55,7 @@ export class BbCardComponent implements OnInit, OnChanges {
   color: string;
   warning: string;
   backtestLive: boolean;
+  backtestOn: boolean;
   lastPrice: number;
   preferenceList: any[];
   config;
@@ -77,7 +78,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
   ngOnInit() {
     this.alive = true;
-    this.interval = 300000;
+    this.interval = 180000;
     this.live = false;
     this.sides = ['Buy', 'Sell', 'DayTrade'];
     this.error = '';
@@ -115,7 +116,16 @@ export class BbCardComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if (_.get(changes, 'triggered.currentValue')) {
-      this.goLive();
+      if (this.backtestOn) {
+        this.requestQuotes()
+          .then((quotes) => {
+            this.newRun(false, false);
+          });
+
+      } else {
+        this.goLive();
+      }
+
     }
   }
 
@@ -173,14 +183,17 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.play(live, backtestLive);
   }
 
-  async requestQuotes() {
+  requestQuotes() {
     const requestBody = {
       ticker: this.order.holding.symbol,
       interval: '1m',
       range: this.selectedRange
     };
 
-    this.backtestQuotes = await this.backtestService.getQuote(requestBody).toPromise();
+    return this.backtestService.getQuote(requestBody).toPromise()
+      .then((result) => {
+        this.backtestQuotes = result;
+      });
   }
 
   async play(live, backtestLive) {
@@ -734,7 +747,9 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
 
     if (signalPrice > lower[0] && signalPrice < mid[0]) {
-      if (idx - 1 >= 0 && quotes.close[idx - 1] < lower[0]) {
+      if ((idx - 1 >= 0 && quotes.close[idx - 1] < lower[0]) ||
+          (idx - 2 >= 0 && quotes.close[idx - 2] < lower[0]) ||
+          (idx - 3 >= 0 && quotes.close[idx - 3] < lower[0])) {
         return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
       }
     }
