@@ -78,7 +78,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
   ngOnInit() {
     this.alive = true;
-    this.interval = 180000;
+    this.interval = 300000;
     this.live = false;
     this.sides = ['Buy', 'Sell', 'DayTrade'];
     this.error = '';
@@ -731,7 +731,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.reportingService.addAuditLog(this.order.holding.symbol, log);
 
     if (this.config.UseMomentum1) {
-      const momentum = this.daytradeService.momentumV1(quotes, 2, idx);
+      const momentum = this.daytradeService.momentumV1(quotes, 3, idx);
       if (momentum === 'sell') {
         return null;
       }
