@@ -29,6 +29,24 @@ export class DaytradeService {
     return await this.backtestService.getBBands(body).toPromise();
   }
 
+  async getSMA(reals: number[], period): Promise<any[]> {
+    const body = {
+      real: this.fillInMissingReals(reals),
+      period: period
+    };
+
+    return await this.backtestService.getSMA(body).toPromise();
+  }
+
+  async getROC(reals: number[], period): Promise<any[]> {
+    const body = {
+      real: this.fillInMissingReals(reals),
+      period: period
+    };
+
+    return await this.backtestService.getROC(body).toPromise();
+  }
+
   fillInMissingReals(reals: number[]) {
     for (let i = 1, length = reals.length; i < length; i++) {
       if (!reals[i]) {
@@ -184,6 +202,14 @@ export class DaytradeService {
     } else {
       return (currentPrice - boughtPrice) / boughtPrice;
     }
+  }
+
+  // calculatePercentDifference(v1, v2) {
+  //   return _.divide(_.subtract(v1, v2), _.divide(_.add(v1, v2), 2));
+  // }
+
+  calculatePercentDifference(v1, v2) {
+    return Math.abs(Math.abs(v1 - v2) / ((v1 + v2) / 2));
   }
 
   estimateAverageBuyOrderPrice(orders: SmartOrder[]): number {

@@ -96,6 +96,16 @@ export class BacktestService {
             .map(r => r.json());
     }
 
+    getSMA(data: any): Observable<any> {
+        return this.http.post(`${BASE_URL}api/backtest/sma`, data, {})
+            .map(r => r.json());
+    }
+
+    getROC(data: any): Observable<any> {
+        return this.http.post(`${BASE_URL}api/backtest/roc`, data, {})
+            .map(r => r.json());
+    }
+
     getTestData(data: any): Observable<any> {
         return Observable.of({
             'chart': {

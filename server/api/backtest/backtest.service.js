@@ -30,6 +30,14 @@ class BacktestService {
     return tulind.indicators.bbands.indicator([real], [period, stddev]);
   }
 
+  getSMA(real, period) {
+    return tulind.indicators.sma.indicator([real], [period]);
+  }
+
+  getRateOfChange(real, period) {
+    return tulind.indicators.roc.indicator([real], [period]);
+  }
+
   evaluateStrategyAll(ticker, end, start) {
     console.log('Executing: ', ticker, new Date());
     startTime = moment();

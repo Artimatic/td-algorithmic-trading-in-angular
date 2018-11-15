@@ -27,3 +27,11 @@ export let infoV2Chart = (request, response) => {
 export let timeline = (request, response) => {
   BacktestController.getHistoricalMatches(request, response);
 }
+
+export let sma = (request, response) => {
+  BacktestController.getSMA(request, response);
+}
+
+export let roc = (request, response) => {
+  BacktestController.getRateOfChange(request, response);
+}
