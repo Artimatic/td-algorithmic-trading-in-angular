@@ -755,13 +755,9 @@ export class BbCardComponent implements OnInit, OnChanges {
     const shortSmaLen = shortSma[0].length - 1;
     const diff = _.round(this.daytradeService.calculatePercentDifference(mid[0], shortSma[0][shortSmaLen]), 3);
 
-    console.log(`${moment.unix(signalTime).format('hh:mm')} diff: `, diff);
-
     if (diff === 0) {
-
       const rocLen = roc[0].length - 1;
       const roc1 = _.round(roc[0][rocLen], 3);
-      console.log(`${moment.unix(signalTime).format('hh:mm')}: `, roc, roc1);
 
       if (roc1 > 0.003) {
         return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
