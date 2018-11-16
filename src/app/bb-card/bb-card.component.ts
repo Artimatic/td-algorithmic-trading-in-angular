@@ -38,6 +38,7 @@ export class BbCardComponent implements OnInit, OnChanges {
   @ViewChild('stepper') stepper;
   @Input() order: SmartOrder;
   @Input() triggered: boolean;
+  @Input() triggeredBacktest: boolean;
   chart: Chart;
   volumeChart: Chart;
   alive: boolean;
@@ -74,7 +75,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     private daytradeService: DaytradeService,
     private reportingService: ReportingService,
     private scoringService: ScoreKeeperService,
-    public dialog: MatDialog) {}
+    public dialog: MatDialog) { }
 
   ngOnInit() {
     this.alive = true;
@@ -116,16 +117,12 @@ export class BbCardComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if (_.get(changes, 'triggered.currentValue')) {
-      if (this.backtestOn) {
-        this.requestQuotes()
-          .then((quotes) => {
-            this.newRun(false, false);
-          });
-
-      } else {
-        this.goLive();
-      }
-
+      this.goLive();
+    } else if (_.get(changes, 'triggeredBacktest.currentValue')) {
+      this.requestQuotes()
+        .then((quotes) => {
+          this.newRun(false, false);
+        });
     }
   }
 
@@ -667,12 +664,14 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
 
       const sellOrder = this.buildSellOrder(orderQuantity,
-        band,
         quotes.close[idx],
         timestamps[idx],
         quotes.high[idx] || quotes.close[idx],
         quotes,
-        idx);
+        idx,
+        band,
+        shortSma,
+        roc);
 
       return this.sendSell(sellOrder);
     } else if (this.firstFormGroup.value.orderType.toLowerCase() === 'daytrade') {
@@ -693,7 +692,15 @@ export class BbCardComponent implements OnInit, OnChanges {
           quotes.low[idx] || quotes.close[idx], quotes, idx, band, shortSma, roc);
 
       const sell: SmartOrder = sellQuantity <= 0 ? null :
-        this.buildSellOrder(sellQuantity, band, quotes.close[idx], timestamps[idx], quotes.high[idx] || quotes.close[idx], quotes, idx);
+        this.buildSellOrder(sellQuantity,
+          quotes.close[idx],
+          timestamps[idx],
+          quotes.high[idx] || quotes.close[idx],
+          quotes,
+          idx,
+          band,
+          shortSma,
+          roc);
 
       if (sell && this.buyCount >= this.sellCount) {
         return this.sendSell(sell);
@@ -742,7 +749,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
     if (this.config.UseMomentum2) {
       const momentum = this.daytradeService.momentumV2(quotes, 10, idx);
-      if ( momentum === 'buy') {
+      if (momentum === 'buy') {
         return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
       } else if (momentum === 'sell') {
         return null;
@@ -758,7 +765,6 @@ export class BbCardComponent implements OnInit, OnChanges {
     if (diff === 0) {
       const rocLen = roc[0].length - 1;
       const roc1 = _.round(roc[0][rocLen], 3);
-
       if (roc1 > 0.003) {
         return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
       }
@@ -767,7 +773,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     return null;
   }
 
-  buildSellOrder(orderQuantity: number, band: any[], price, signalTime, signalPrice, quotes, idx: number) {
+  buildSellOrder(orderQuantity: number, price, signalTime, signalPrice, quotes, idx: number, band: any[], shortSma: any[], roc: any[]) {
     const upper = band[2],
       mid = band[1],
       lower = band[0];
@@ -786,8 +792,25 @@ export class BbCardComponent implements OnInit, OnChanges {
 
     this.reportingService.addAuditLog(this.order.holding.symbol, log);
 
-    if (signalPrice >= upper[0]) {
-      return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
+    // if (signalPrice >= upper[0]) {
+    //   return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
+    // }
+
+    const shortSmaLen = shortSma[0].length - 1;
+    const diff = _.round(this.daytradeService.calculatePercentDifference(mid[0], shortSma[0][shortSmaLen]), 3);
+
+    // const log1 = `diff ${moment.unix(signalTime).format('hh:mm')} - ` +
+    // `${diff}`;
+
+    // console.log(log1);
+    if (diff === 0) {
+      const rocLen = roc[0].length - 1;
+      const roc1 = _.round(roc[0][rocLen], 3);
+      // console.log(`Roc ${moment.unix(signalTime).format('hh:mm')} - ` +
+      // `${roc1}`);
+      if (roc1 < 0) {
+        return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
+      }
     }
 
     return null;
@@ -800,7 +823,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       if (scorePct < 0.5) {
         this.stop();
         const msg = 'Too many losses. Halting trading in Wins:' +
-        `${this.order.holding.symbol} ${score.win} Loss: ${score.loss}`;
+          `${this.order.holding.symbol} ${score.win} Loss: ${score.loss}`;
 
         this.reportingService.addAuditLog(this.order.holding.symbol, msg);
         console.log(msg);

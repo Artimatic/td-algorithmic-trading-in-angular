@@ -122,6 +122,13 @@ export class BollingerBandComponent implements OnInit {
     });
   }
 
+  confirmBacktest(): void {
+    this.triggerBacktest(this.cartService.sellOrders);
+    this.triggerBacktest(this.cartService.buyOrders);
+    this.triggerBacktest(this.cartService.otherOrders);
+  }
+
+
   triggerOrder(orders: SmartOrder[]) {
     _.forEach(orders, (order: SmartOrder) => {
       const startDelay = 60000 * _.round(this.ordersStarted / 5, 0);
@@ -137,4 +144,9 @@ export class BollingerBandComponent implements OnInit {
     });
   }
 
+  triggerBacktest(orders: SmartOrder[]) {
+    _.forEach(orders, (order: SmartOrder) => {
+      order.triggeredBacktest = true;
+    });
+  }
 }
