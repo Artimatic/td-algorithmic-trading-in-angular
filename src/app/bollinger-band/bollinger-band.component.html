@@ -4,8 +4,9 @@
   <button mat-button color="warn" (click)="confirmStart()">Start</button>
 </div>
 <div *ngFor="let other of cartService.otherOrders">
-  <app-score-board [stock]="other.holding.symbol" [score]="scoreKeeperService.profitLossHash[other.holding.symbol]"></app-score-board>
+  <app-score-board [title]="other.holding.symbol" [score]="scoreKeeperService.profitLossHash[other.holding.symbol]"></app-score-board>
 </div>
+<app-score-board [title]="'Total'" [score]="scoreKeeperService.total"></app-score-board>
 <div *ngFor="let sell of cartService.sellOrders">
   <app-bb-card [order]="sell" [triggered]="sell.triggered" [triggeredBacktest]="sell.triggeredBacktest"></app-bb-card>
 </div>

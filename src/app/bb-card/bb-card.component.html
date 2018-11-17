@@ -99,24 +99,11 @@
         </div>
         <mat-card-actions>
           <button mat-raised-button color="warn" (click)="resetStepper(stepper)">STOP</button>
+          <button mat-button color="primary" (click)="backtest()">Backtest</button>
+          <button mat-button color="warn" (click)="confirmLiveBacktest()">TEST LIVE</button>
           <button mat-button color="warn" (click)="openDialog()">GO LIVE</button>
         </mat-card-actions>
       </mat-card>
-    </mat-step>
-    <mat-step>
-      <ng-template matStepLabel>Backtest</ng-template>
-      <mat-grid-list cols="2" rowHeight="50px">
-        <mat-grid-tile [colspan]="2" [rowspan]="1">
-            <mat-checkbox [(ngModel)]="backtestOn">Backtest On</mat-checkbox>
-        </mat-grid-tile>
-      </mat-grid-list>
-      <mat-card-actions>
-        <button mat-button matStepperPrevious>Back</button>
-        <button mat-button (click)="stepper.reset()">Reset</button>
-        <button mat-button (click)="requestQuotes()">Request Quotes</button>
-        <button mat-button color="primary" (click)="newRun(false, false)">Backtest</button>
-        <button mat-button color="warn" (click)="confirmLiveBacktest()">TEST LIVE</button>
-      </mat-card-actions>
     </mat-step>
   </mat-horizontal-stepper>
 </mat-card>

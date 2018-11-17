@@ -9,11 +9,13 @@ export class ScoreKeeperService {
   public profitLossHash = {};
   winlossHash = {};
   costEstimates = {};
+  total = 0;
 
   constructor() { }
 
   addProfitLoss(stock: string, sum: number) {
-    const score: StockScore = {stock: stock, profitLoss: sum};
+    this.total += sum;
+
     if (this.profitLossHash[stock]) {
       this.profitLossHash[stock] += sum;
     } else {

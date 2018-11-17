@@ -8,7 +8,7 @@ import { SmartOrder } from '../shared/models/smart-order';
   styleUrls: ['./score-board.component.css']
 })
 export class ScoreBoardComponent implements OnChanges {
-  @Input() stock: string;
+  @Input() title: string;
   @Input() score: number;
 
   constructor() { }

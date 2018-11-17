@@ -56,7 +56,6 @@ export class BbCardComponent implements OnInit, OnChanges {
   color: string;
   warning: string;
   backtestLive: boolean;
-  backtestOn: boolean;
   lastPrice: number;
   preferenceList: any[];
   config;
@@ -159,6 +158,13 @@ export class BbCardComponent implements OnInit, OnChanges {
         this.newRun(false, true);
       }
     });
+  }
+
+  backtest(): void {
+    this.requestQuotes()
+      .then(() => {
+        this.newRun(false, false);
+      });
   }
 
   goLive() {
