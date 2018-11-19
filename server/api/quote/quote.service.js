@@ -148,6 +148,17 @@ class QuoteService {
     return api.getIntradayChartData(symbol, interval, true);
   }
 
+  postIntradayData(quotes) {
+    const query = `${appUrl}backtest/add/intradaydata`;
+    const options = {
+      method: 'POST',
+      uri: query,
+      body: quotes
+    };
+
+    return RequestPromise(options);
+  }
+
   getIntradayDataV2(symbol, interval) {
     return av.timeSeriesIntraday(symbol, interval).then(quotes => {
       const data = {

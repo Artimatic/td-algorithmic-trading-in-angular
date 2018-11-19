@@ -75,8 +75,24 @@ export class BacktestService {
             .map(r => r.json());
     }
 
+    getYahooIntraday(symbol: string): Observable<any> {
+        const requestBody = {
+            ticker: symbol,
+            interval: '1m',
+            range: '1d'
+          };
+
+        return this.http.post(`${BASE_URL}api/quote/intraday`, requestBody, {})
+            .map(r => r.json());
+    }
+
     getIntraday2(data: any): Observable<any> {
         return this.http.post(`${BASE_URL}api/quote/intraday2`, data, {})
+            .map(r => r.json());
+    }
+
+    postIntraday(data: any): Observable<any> {
+        return this.http.post(`${BASE_URL}api/quote/intraday-quote`, data, {})
             .map(r => r.json());
     }
 

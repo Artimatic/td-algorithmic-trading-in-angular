@@ -10,6 +10,18 @@ import { BacktestService, Stock, AlgoParam, PortfolioService } from '../shared';
 import { ChartDialogComponent } from '../chart-dialog';
 import { OrderDialogComponent } from '../order-dialog/order-dialog.component';
 import { Holding } from '../shared/models';
+import { FormControl } from '@angular/forms';
+
+export interface Algo {
+  value: string;
+  viewValue: string;
+}
+
+export interface AlgoGroup {
+  disabled?: boolean;
+  name: string;
+  algorithm: Algo[];
+}
 
 @Component({
   selector: 'app-rh-table',
@@ -35,10 +47,26 @@ export class RhTableComponent implements OnInit, OnChanges {
   progress = 0;
   totalStocks = 0;
   algos = [
-    { value: 'v1', viewValue: 'Mean Reversion - Moving Average Crossover' },
-    { value: 'v2', viewValue: 'Mean Reversion - Bollinger Band' }
+    { value: 'v1', viewValue: ' - ' },
+    { value: 'v2', viewValue: '' }
   ];
   selectedAlgo = 'v2';
+  algoControl = new FormControl();
+  algoGroups: AlgoGroup[] = [
+    {
+      name: 'Mean Reversion',
+      algorithm: [
+        {value: 'v1', viewValue: 'Moving Average Crossover'},
+        {value: 'v2', viewValue: 'Mean Reversion - Bollinger Band'}
+      ]
+    },
+    {
+      name: 'Update Database',
+      algorithm: [
+        {value: 'intraday', viewValue: 'Intraday Quotes'}
+      ]
+    }
+  ];
 
   constructor(
     public snackBar: MatSnackBar,
@@ -69,6 +97,7 @@ export class RhTableComponent implements OnInit, OnChanges {
       averageReturns: 0,
       averageTrades: 0
     };
+    console.log('getdata: ', algoParams);
     switch (this.selectedAlgo) {
       case 'v1':
         algoParams.forEach((param) => {
@@ -102,6 +131,25 @@ export class RhTableComponent implements OnInit, OnChanges {
               this.addToList(result);
               this.incrementProgress();
               this.updateAlgoReport(result);
+            }, error => {
+              this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
+              this.incrementProgress();
+            });
+        });
+        break;
+      case 'intraday':
+        algoParams.forEach((param) => {
+          this.algo.getYahooIntraday(param.ticker)
+          .subscribe(
+            result => {
+              console.log('result: ', result);
+              this.algo.postIntraday(result).subscribe(
+                status => {
+                  console.log('status: ', status);
+                }, error => {
+                  this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
+                  this.incrementProgress();
+                });
             }, error => {
               this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
               this.incrementProgress();

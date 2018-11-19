@@ -66,7 +66,6 @@ export class BbCardComponent implements OnInit, OnChanges {
   myPreferences;
   startTime;
   endTime;
-  selectedRange: string;
   backtestQuotes;
 
   constructor(private _formBuilder: FormBuilder,
@@ -83,7 +82,6 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.sides = ['Buy', 'Sell', 'DayTrade'];
     this.error = '';
     this.backtestLive = false;
-    this.selectedRange = '1d';
     this.preferenceList = [OrderPref.TakeProfit, OrderPref.StopLoss, OrderPref.UseMomentum1, OrderPref.UseMomentum2];
     Highcharts.setOptions({
       global: {
@@ -187,13 +185,7 @@ export class BbCardComponent implements OnInit, OnChanges {
   }
 
   requestQuotes() {
-    const requestBody = {
-      ticker: this.order.holding.symbol,
-      interval: '1m',
-      range: this.selectedRange
-    };
-
-    return this.backtestService.getQuote(requestBody).toPromise()
+    return this.backtestService.getYahooIntraday(this.order.holding.symbol).toPromise()
       .then((result) => {
         this.backtestQuotes = result;
       });

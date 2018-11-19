@@ -4,6 +4,7 @@ import { Routes, Route, ActivatedRouteSnapshot } from '@angular/router';
 import { ResearchViewComponent } from './research-view/research-view.component';
 import { OptionsViewComponent } from './options-view/options-view.component';
 import { TimelineViewComponent } from './timeline-view/timeline-view.component';
+import { BacktestViewComponent } from './backtest-view/backtest-view.component';
 
 export const routes: Routes = [
   {
@@ -21,6 +22,10 @@ export const routes: Routes = [
   {
     path: 'timeline',
     component: TimelineViewComponent
+  },
+  {
+    path: 'backtest',
+    component: BacktestViewComponent
   },
   {
     path: '**',

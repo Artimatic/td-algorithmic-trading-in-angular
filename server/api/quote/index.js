@@ -8,6 +8,7 @@ router.post('/current', handler.currentQuote);
 router.post('/raw', handler.rawQuote);
 router.post('/intraday', handler.intraday);
 router.post('/intraday2', handler.intradayv2);
+router.post('/intraday-quote', handler.postIntraday);
 router.post('/summary', handler.companySummary);
 router.post('/optionchain', handler.optionChain);
 

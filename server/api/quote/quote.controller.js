@@ -70,6 +70,17 @@ class QuoteController extends BaseController {
     }
   }
 
+  postIntraday(request, response) {
+    if (_.isEmpty(request.body)) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    }
+    else {
+      QuoteService.postIntradayData(request.body)
+        .then((data) => BaseController.requestGetSuccessHandler(response, data))
+        .catch((e) => BaseController.requestErrorHandler(response, e));
+    }
+  }
+
   getCompanySummary(request, response) {
     if (_.isEmpty(request.body)) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);

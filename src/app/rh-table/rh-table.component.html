@@ -19,10 +19,13 @@
       </mat-grid-tile>
       <mat-grid-tile>
         <mat-form-field>
-          <mat-select placeholder="Trading Algorithm" [(ngModel)]="selectedAlgo" name="algorithm">
-            <mat-option *ngFor="let algo of algos" [value]="algo.value">
-              {{ algo.viewValue }}
-            </mat-option>
+          <mat-select placeholder="Algorithm" [(ngModel)]="selectedAlgo">
+            <mat-optgroup *ngFor="let group of algoGroups" [label]="group.name"
+                          [disabled]="group.disabled">
+              <mat-option *ngFor="let algo of group.algorithm" [value]="algo.value">
+                {{algo.viewValue}}
+              </mat-option>
+            </mat-optgroup>
           </mat-select>
         </mat-form-field>
       </mat-grid-tile>
