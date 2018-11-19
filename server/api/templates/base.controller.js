@@ -26,8 +26,8 @@ export default class BaseController {
 
   static requestErrorHandler(reply, error) {
     console.log("Error: ", error);
-    if (error && error.message && error.message.substring(0, 3) === "400") {
-      reply.status(400).send(error.message);
+    if (error && error.error && error.statusCode) {
+      reply.status(error.statusCode).send(error.error);
     } else {
       reply.status(Boom.badImplementation().output.statusCode).send(error);
     }

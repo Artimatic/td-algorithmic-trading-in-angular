@@ -97,7 +97,7 @@ export class RhTableComponent implements OnInit, OnChanges {
       averageReturns: 0,
       averageTrades: 0
     };
-    console.log('getdata: ', algoParams);
+
     switch (this.selectedAlgo) {
       case 'v1':
         algoParams.forEach((param) => {
@@ -142,11 +142,11 @@ export class RhTableComponent implements OnInit, OnChanges {
           this.algo.getYahooIntraday(param.ticker)
           .subscribe(
             result => {
-              console.log('result: ', result);
               this.algo.postIntraday(result).subscribe(
                 status => {
-                  console.log('status: ', status);
                 }, error => {
+                  console.log(error);
+
                   this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
                   this.incrementProgress();
                 });

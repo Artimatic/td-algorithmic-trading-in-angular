@@ -152,6 +152,7 @@ class QuoteService {
     const query = `${appUrl}backtest/add/intradaydata`;
     const options = {
       method: 'POST',
+      json: true,
       uri: query,
       body: quotes
     };

@@ -1,4 +1,4 @@
-import { Http } from '@angular/http';
+import { Http, RequestOptions, Headers } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
 import { Injectable } from '@angular/core';
 import { Stock } from './../../shared';
@@ -76,13 +76,13 @@ export class BacktestService {
     }
 
     getYahooIntraday(symbol: string): Observable<any> {
-        const requestBody = {
+        const body = {
             ticker: symbol,
             interval: '1m',
             range: '1d'
           };
 
-        return this.http.post(`${BASE_URL}api/quote/intraday`, requestBody, {})
+        return this.http.post(`${BASE_URL}api/quote`, body, {})
             .map(r => r.json());
     }
 
@@ -91,7 +91,15 @@ export class BacktestService {
             .map(r => r.json());
     }
 
-    postIntraday(data: any): Observable<any> {
+    postIntraday(data: JSON): Observable<any> {
+        const body = JSON.stringify(data);
+
+        const headers = new Headers({ 'Content-Type': 'application/json' });
+        const options = new RequestOptions({
+          headers: headers,
+          body : body
+        });
+
         return this.http.post(`${BASE_URL}api/quote/intraday-quote`, data, {})
             .map(r => r.json());
     }
