@@ -62,8 +62,7 @@ export class DaytradeService {
     const config = {
       TakeProfit: false,
       StopLoss: false,
-      UseMomentum1: false,
-      UseMomentum2: false
+      MeanReversion1: false
     };
 
     if (preferences) {
@@ -75,11 +74,8 @@ export class DaytradeService {
           case OrderPref.StopLoss:
             config.StopLoss = true;
             break;
-          case OrderPref.UseMomentum1:
-            config.UseMomentum1 = true;
-            break;
-          case OrderPref.UseMomentum2:
-            config.UseMomentum2 = true;
+          case OrderPref.MeanReversion1:
+            config.MeanReversion1 = true;
             break;
         }
       });

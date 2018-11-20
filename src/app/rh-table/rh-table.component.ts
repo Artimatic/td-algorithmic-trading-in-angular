@@ -145,8 +145,6 @@ export class RhTableComponent implements OnInit, OnChanges {
               this.algo.postIntraday(result).subscribe(
                 status => {
                 }, error => {
-                  console.log(error);
-
                   this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
                   this.incrementProgress();
                 });

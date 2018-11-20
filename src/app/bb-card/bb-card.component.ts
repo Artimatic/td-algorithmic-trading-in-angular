@@ -82,7 +82,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.sides = ['Buy', 'Sell', 'DayTrade'];
     this.error = '';
     this.backtestLive = false;
-    this.preferenceList = [OrderPref.TakeProfit, OrderPref.StopLoss, OrderPref.UseMomentum1, OrderPref.UseMomentum2];
+    this.preferenceList = [OrderPref.TakeProfit, OrderPref.StopLoss, OrderPref.MeanReversion1];
     Highcharts.setOptions({
       global: {
         useUTC: false
@@ -733,41 +733,23 @@ export class BbCardComponent implements OnInit, OnChanges {
     if (!signalPrice || !price) {
       return null;
     }
-    // const log = `Building Buy ${moment.unix(signalTime).format('hh:mm')} - ` +
-    //   `${this.order.holding.symbol} for ${orderQuantity}@${price}|${signalPrice}` +
-    //   `\t Band: ${lower}<${mid}<${upper}`;
-    // this.reportingService.addAuditLog(this.order.holding.symbol, log);
 
-    if (this.config.UseMomentum1) {
-      const momentum = this.daytradeService.momentumV1(quotes, 3, idx);
-      if (momentum === 'sell') {
-        return null;
-      }
-    }
-
-    if (this.config.UseMomentum2) {
-      const momentum = this.daytradeService.momentumV2(quotes, 10, idx);
-      if (momentum === 'buy') {
-        return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
-      } else if (momentum === 'sell') {
-        return null;
-      }
-    }
-
-    // if (signalPrice < lower[0]) {
-    //   return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
-    // }
-    const shortSmaLen = shortSma[0].length - 1;
-    const diff = _.round(this.daytradeService.calculatePercentDifference(mid[0], shortSma[0][shortSmaLen]), 3);
-
-    if (diff === 0) {
-      const rocLen = roc[0].length - 1;
-      const roc1 = _.round(roc[0][rocLen], 3);
-      if (roc1 > 0.003) {
+    if (this.config.MeanReversion1) {
+      if (signalPrice < lower[0]) {
         return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
       }
-    }
+    } else {
+      const shortSmaLen = shortSma[0].length - 1;
+      const diff = _.round(this.daytradeService.calculatePercentDifference(mid[0], shortSma[0][shortSmaLen]), 1);
 
+      if (diff === 0) {
+        const rocLen = roc[0].length - 1;
+        const roc1 = _.round(roc[0][rocLen], 3);
+        if (roc1 > 0.003) {
+          return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
+        }
+      }
+    }
     return null;
   }
 
@@ -784,30 +766,21 @@ export class BbCardComponent implements OnInit, OnChanges {
       return null;
     }
 
-    const log = `Building Sell ${moment.unix(signalTime).format('hh:mm')} - ` +
-      `${this.order.holding.symbol} for ${orderQuantity}@${price}|${signalPrice}` +
-      `\t Band: ${lower}<${mid}<${upper}`;
-
-    this.reportingService.addAuditLog(this.order.holding.symbol, log);
-
-    // if (signalPrice >= upper[0]) {
-    //   return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
-    // }
-
-    const shortSmaLen = shortSma[0].length - 1;
-    const diff = _.round(this.daytradeService.calculatePercentDifference(mid[0], shortSma[0][shortSmaLen]), 3);
-
-    // const log1 = `diff ${moment.unix(signalTime).format('hh:mm')} - ` +
-    // `${diff}`;
-
-    // console.log(log1);
-    if (diff === 0) {
-      const rocLen = roc[0].length - 1;
-      const roc1 = _.round(roc[0][rocLen], 3);
-      // console.log(`Roc ${moment.unix(signalTime).format('hh:mm')} - ` +
-      // `${roc1}`);
-      if (roc1 < 0) {
+    if (this.config.MeanReversion1) {
+      if (signalPrice >= upper[0]) {
         return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
+      }
+    } else {
+      const shortSmaLen = shortSma[0].length - 1;
+      const diff = _.round(this.daytradeService.calculatePercentDifference(mid[0], shortSma[0][shortSmaLen]), 3);
+
+      if (diff === 0) {
+        const rocLen = roc[0].length - 1;
+        const roc1 = _.round(roc[0][rocLen], 3);
+
+        if (roc1 < 0) {
+          return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
+        }
       }
     }
 
@@ -839,13 +812,6 @@ export class BbCardComponent implements OnInit, OnChanges {
             `${this.order.holding.symbol} Stop Loss triggered: ${closePrice}/${estimatedPrice}`);
           const stopLossOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
           return this.sendStopLoss(stopLossOrder);
-        }
-      }
-
-      if (this.config.UseMomentum2) {
-        const momentum = this.daytradeService.momentumV2(quotes, 10, idx);
-        if (momentum === 'sell') {
-          return this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
         }
       }
 
@@ -914,11 +880,8 @@ export class BbCardComponent implements OnInit, OnChanges {
       pref.push(OrderPref.StopLoss);
     }
 
-    if (this.order.useMomentum1) {
-      pref.push(OrderPref.UseMomentum1);
-    }
-    if (this.order.useMomentum2) {
-      pref.push(OrderPref.UseMomentum2);
+    if (this.order.meanReversion1) {
+      pref.push(OrderPref.MeanReversion1);
     }
 
     return pref;
