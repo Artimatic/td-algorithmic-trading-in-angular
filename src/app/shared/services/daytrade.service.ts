@@ -208,6 +208,51 @@ export class DaytradeService {
     return Math.abs(Math.abs(v1 - v2) / ((v1 + v2) / 2));
   }
 
+  addChartData(data, newData) {
+    const date = moment(newData.date);
+    data.chart.result[0].timestamp.push(date.unix());
+    data.chart.result[0].indicators.quote[0].close.push(newData.price.last || newData.price.close);
+    data.chart.result[0].indicators.quote[0].low.push(newData.price.low);
+    data.chart.result[0].indicators.quote[0].volume.push(newData.price.volume);
+    data.chart.result[0].indicators.quote[0].open.push(newData.price.open);
+    data.chart.result[0].indicators.quote[0].high.push(newData.price.high);
+    return data;
+  }
+
+  addYahooData(data, newData) {
+    const quote = newData.query.results.quote[0];
+    const date = moment(newData.date);
+    data.chart.result[0].timestamp.push(date.unix());
+    data.chart.result[0].indicators.quote[0].close.push(quote.realtime_price);
+    data.chart.result[0].indicators.quote[0].low.push(quote.realtime_price);
+    data.chart.result[0].indicators.quote[0].volume.push(quote.price.volume);
+    data.chart.result[0].indicators.quote[0].open.push(quote.realtime_price);
+    data.chart.result[0].indicators.quote[0].high.push(quote.realtime_price);
+    return data;
+  }
+
+  createNewChart() {
+    return {
+      chart: {
+        result: [
+          {
+            timestamp: [],
+            indicators: {
+              quote: [
+                {
+                  low: [],
+                  volume: [],
+                  open: [],
+                  high: [],
+                  close: []
+                }
+              ]
+            }
+          }
+        ]
+      }
+    };
+  }
   estimateAverageBuyOrderPrice(orders: SmartOrder[]): number {
     if (orders.length === 0) {
       return 0;

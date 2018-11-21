@@ -144,6 +144,10 @@ class QuoteService {
     return api.getRealtimeQuotes(symbols.join(','));
   }
 
+  getPrice(symbol) {
+    return IEX.getQuote(symbol);
+  }
+
   getIntradayData(symbol, interval) {
     return api.getIntradayChartData(symbol, interval, true);
   }

@@ -65,8 +65,13 @@ export class BacktestService {
             .map(r => r.json());
     }
 
-    getPrice(data: any): Observable<any> {
+    getPrices(data: any): Observable<any> {
         return this.http.post(`${BASE_URL}api/quote/current`, data, {})
+            .map(r => r.json());
+    }
+
+    getPrice(data: any): Observable<any> {
+        return this.http.post(`${BASE_URL}api/quote/price`, data, {})
             .map(r => r.json());
     }
 

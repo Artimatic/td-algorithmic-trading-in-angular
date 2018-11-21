@@ -37,6 +37,17 @@ class QuoteController extends BaseController {
     }
   }
 
+  getPrice(request, response) {
+    if (_.isEmpty(request.body)) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    }
+    else {
+      QuoteService.getPrice(request.body.symbol)
+        .then((data) => BaseController.requestGetSuccessHandler(response, data))
+        .catch((e) => BaseController.requestErrorHandler(response, e));
+    }
+  }
+
   getRawData(request, response) {
     if (_.isEmpty(request.body)) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);

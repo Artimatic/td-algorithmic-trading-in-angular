@@ -203,37 +203,27 @@ export class BbCardComponent implements OnInit, OnChanges {
         interval: this.dataInterval
       };
 
-      data = await this.backtestService.getIntraday2(requestBody).toPromise();
+      data = await this.backtestService.getIntraday2(requestBody).toPromise()
+                    .then((intraday) => {
+                      const timestamps = intraday.chart.result[0].timestamp;
+                      const lastDate = moment.unix(timestamps[timestamps.length - 1]);
+                      if (moment().diff(lastDate, 'minutes') > 1) {
+                        this.reportingService.addAuditLog(this.order.holding.symbol,
+                          `Quote for ${this.order.holding.name} is outdated. Last: ${lastDate.format()}, Current:${moment().format()}`);
+                        return this.backtestService.getPrice(requestBody)
+                        .toPromise()
+                        .then((quote) => {
+                          return this.daytradeService.addChartData(intraday, quote);
+                        });
+                      } else {
+                        return intraday;
+                      }
+                    });
     } else if (this.backtestQuotes.length) {
-      data = {
-        chart: {
-          result: [
-            {
-              timestamp: [],
-              indicators: {
-                quote: [
-                  {
-                    low: [],
-                    volume: [],
-                    open: [],
-                    high: [],
-                    close: []
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      };
+      data = this.daytradeService.createNewChart();
 
       _.forEach(this.backtestQuotes, (historicalData) => {
-        const date = moment(historicalData.date);
-        data.chart.result[0].timestamp.push(date.unix());
-        data.chart.result[0].indicators.quote[0].close.push(historicalData.close);
-        data.chart.result[0].indicators.quote[0].low.push(historicalData.low);
-        data.chart.result[0].indicators.quote[0].volume.push(historicalData.volume);
-        data.chart.result[0].indicators.quote[0].open.push(historicalData.open);
-        data.chart.result[0].indicators.quote[0].high.push(historicalData.high);
+        data = this.daytradeService.addChartData(data, historicalData);
       });
     }
 

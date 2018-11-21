@@ -82,12 +82,13 @@ export class PortfolioTableComponent implements OnInit {
 
   getCurrentPrice() {
     if (this.tickers.length >= this.dataSource.data.length) {
-      this.backtestService.getPrice({ tickers: this.tickers })
+      this.backtestService.getPrices({ tickers: this.tickers })
         .subscribe(result => {
           this.dataSource.data.map((holding: Holding) => {
             const myQuote = result.query.results.quote.find(quote => {
               return quote.symbol === holding.symbol;
             });
+
             if (myQuote) {
               holding.realtime_price = myQuote.realtime_price;
               holding.Volume = myQuote.Volume;
