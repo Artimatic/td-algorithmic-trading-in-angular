@@ -203,22 +203,33 @@ export class BbCardComponent implements OnInit, OnChanges {
         interval: this.dataInterval
       };
 
+      const yahooRequestBody = {
+        symbol: this.order.holding.symbol,
+        interval: this.dataInterval
+      };
+
       data = await this.backtestService.getIntraday2(requestBody).toPromise()
-                    .then((intraday) => {
-                      const timestamps = intraday.chart.result[0].timestamp;
-                      const lastDate = moment.unix(timestamps[timestamps.length - 1]);
-                      if (moment().diff(lastDate, 'minutes') > 1) {
-                        this.reportingService.addAuditLog(this.order.holding.symbol,
-                          `Quote for ${this.order.holding.name} is outdated. Last: ${lastDate.format()}, Current:${moment().format()}`);
-                        return this.backtestService.getPrice(requestBody)
-                        .toPromise()
-                        .then((quote) => {
-                          return this.daytradeService.addChartData(intraday, quote);
-                        });
-                      } else {
-                        return intraday;
-                      }
-                    });
+        .then((intraday) => {
+          const timestamps = intraday.chart.result[0].timestamp;
+          const lastDate = moment.unix(timestamps[timestamps.length - 1]);
+          if (moment().diff(lastDate, 'minutes') > 1) {
+            this.reportingService.addAuditLog(this.order.holding.symbol,
+              `Quote for ${this.order.holding.name} is outdated. Last: ${lastDate.format()}, Current:${moment().format()}`);
+
+            return this.backtestService.getPrices(yahooRequestBody)
+              .toPromise()
+              .then((quote) => {
+                return this.daytradeService.addYahooData(intraday, quote);
+              });
+            // return this.backtestService.getPrice(requestBody)
+            // .toPromise()
+            // .then((quote) => {
+            //   return this.daytradeService.addChartData(intraday, quote);
+            // });
+          } else {
+            return intraday;
+          }
+        });
     } else if (this.backtestQuotes.length) {
       data = this.daytradeService.createNewChart();
 
