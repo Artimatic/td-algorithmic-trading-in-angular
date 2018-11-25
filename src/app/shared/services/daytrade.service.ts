@@ -210,12 +210,15 @@ export class DaytradeService {
 
   addChartData(data, newData) {
     const date = moment(newData.date);
+    const lastPrice = newData.price ? newData.price.last : null;
+    const lastVolume = newData.price ? newData.price.volume : null;
+
     data.chart.result[0].timestamp.push(date.unix());
-    data.chart.result[0].indicators.quote[0].close.push(newData.price.last || newData.price.close);
-    data.chart.result[0].indicators.quote[0].low.push(newData.price.low);
-    data.chart.result[0].indicators.quote[0].volume.push(newData.price.volume);
-    data.chart.result[0].indicators.quote[0].open.push(newData.price.open);
-    data.chart.result[0].indicators.quote[0].high.push(newData.price.high);
+    data.chart.result[0].indicators.quote[0].close.push(lastPrice || newData.close);
+    data.chart.result[0].indicators.quote[0].low.push(lastPrice || newData.low);
+    data.chart.result[0].indicators.quote[0].volume.push(lastVolume || newData.volume);
+    data.chart.result[0].indicators.quote[0].open.push(lastPrice || newData.open);
+    data.chart.result[0].indicators.quote[0].high.push(lastPrice || newData.high);
     return data;
   }
 
