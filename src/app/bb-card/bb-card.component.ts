@@ -515,7 +515,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
   sendBuy(buyOrder: SmartOrder) {
     if (buyOrder) {
-      const log = `ORDER SENT ${buyOrder.side} ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
+      const log = `ORDER SENT ${moment(buyOrder.signalTime).format('hh:mm')} ${buyOrder.side} ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
 
       if (this.backtestLive || this.live) {
         const resolve = (response) => {
@@ -622,7 +622,13 @@ export class BbCardComponent implements OnInit, OnChanges {
     return order;
   }
 
-  buildOrder(quotes, timestamps, idx, band: any[], shortSma: any[], roc: any[]) {
+  buildOrder(quotes,
+    timestamps,
+    idx,
+    band: any[],
+    shortSma: any[],
+    roc: any[],
+    roc5: any[]) {
     if (band.length !== 3) {
       return null;
     }
@@ -634,9 +640,10 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
 
     if (this.firstFormGroup.value.orderType.toLowerCase() === 'buy') {
-      const orderQuantity = this.daytradeService.getOrderQuantity(this.firstFormGroup.value.quantity,
+      const orderQuantity = this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
         this.firstFormGroup.value.orderSize,
-        this.buyCount);
+        this.buyCount,
+        this.positionCount);
 
       if (orderQuantity <= 0) {
         return null;
@@ -670,7 +677,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         idx,
         band,
         shortSma,
-        roc);
+        roc5);
 
       return this.sendSell(sellOrder);
     } else if (this.firstFormGroup.value.orderType.toLowerCase() === 'daytrade') {
@@ -679,9 +686,10 @@ export class BbCardComponent implements OnInit, OnChanges {
         return null;
       }
 
-      const buyQuantity: number = this.daytradeService.getOrderQuantity(this.firstFormGroup.value.quantity,
+      const buyQuantity: number = this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
         this.firstFormGroup.value.orderSize,
-        this.buyCount);
+        this.buyCount,
+        this.positionCount);
 
       const sellQuantity: number = this.firstFormGroup.value.orderSize <= this.positionCount ?
         this.firstFormGroup.value.orderSize : this.positionCount;
@@ -742,12 +750,22 @@ export class BbCardComponent implements OnInit, OnChanges {
     } else {
       const shortSmaLen = shortSma[0].length - 1;
       const diff = _.round(this.daytradeService.calculatePercentDifference(mid[0], shortSma[0][shortSmaLen]), 1);
+      const rocLen = roc[0].length - 1;
+      const roc1 = _.round(roc[0][rocLen], 3);
 
       if (diff === 0) {
-        const rocLen = roc[0].length - 1;
-        const roc1 = _.round(roc[0][rocLen], 3);
         if (roc1 > 0.003) {
           return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
+        }
+      }
+
+      if (signalPrice > lower[0] && signalPrice < mid[0]) {
+        if ((idx - 1 >= 0 && quotes.close[idx - 1] < lower[0]) ||
+            (idx - 2 >= 0 && quotes.close[idx - 2] < lower[0]) ||
+            (idx - 3 >= 0 && quotes.close[idx - 3] < lower[0])) {
+              if (roc1 > 0.003) {
+                return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
+              }
         }
       }
     }
@@ -772,16 +790,11 @@ export class BbCardComponent implements OnInit, OnChanges {
         return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
       }
     } else {
-      const shortSmaLen = shortSma[0].length - 1;
-      const diff = _.round(this.daytradeService.calculatePercentDifference(mid[0], shortSma[0][shortSmaLen]), 3);
+      const rocLen = roc[0].length - 1;
+      const roc1 = _.round(roc[0][rocLen], 3);
 
-      if (diff === 0) {
-        const rocLen = roc[0].length - 1;
-        const roc1 = _.round(roc[0][rocLen], 3);
-
-        if (roc1 < 0) {
-          return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
-        }
+      if (roc1 < 0) {
+        return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
       }
     }
 
@@ -791,11 +804,11 @@ export class BbCardComponent implements OnInit, OnChanges {
   processSpecialRules(closePrice: number, signalTime, quotes, idx) {
     const score = this.scoringService.getScore(this.order.holding.symbol);
     if (score && score.total > 0) {
-      const scorePct = _.round(_.divide(score.win, score.total), 2);
+      const scorePct = _.round(_.divide(score.wins, score.total), 2);
       if (scorePct < 0.5) {
         this.stop();
         const msg = 'Too many losses. Halting trading in Wins:' +
-          `${this.order.holding.symbol} ${score.win} Loss: ${score.loss}`;
+          `${this.order.holding.symbol} ${score.wins} Loss: ${score.losses}`;
 
         this.reportingService.addAuditLog(this.order.holding.symbol, msg);
         console.log(msg);
@@ -858,7 +871,9 @@ export class BbCardComponent implements OnInit, OnChanges {
     const shortSma = await this.daytradeService.getSMA(reals, 5);
     const roc = await this.daytradeService.getROC(reals, 10);
 
-    return this.buildOrder(quotes, timestamps, lastIndex, band, shortSma, roc);
+    let roc5 = this.positionCount > 0 ? await this.daytradeService.getROC(reals, 5) : [];
+
+    return this.buildOrder(quotes, timestamps, lastIndex, band, shortSma, roc, roc5);
   }
 
   hasReachedDayTradeOrderLimit() {

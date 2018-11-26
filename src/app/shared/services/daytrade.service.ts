@@ -83,10 +83,32 @@ export class DaytradeService {
     return config;
   }
 
-  getOrderQuantity(maxAllowedOrders: number, orderSize: number, ordersAlreadyMade: number): number {
+  getOrderQuantity(maxAllowedOrders: number,
+    orderSize: number,
+    ordersAlreadyMade: number): number {
     if (ordersAlreadyMade >= maxAllowedOrders) {
       return 0;
     }
+
+    if (orderSize + ordersAlreadyMade > maxAllowedOrders) {
+      return maxAllowedOrders - ordersAlreadyMade;
+    }
+
+    return orderSize;
+  }
+
+  getBuyOrderQuantity(maxAllowedOrders: number,
+    orderSize: number,
+    ordersAlreadyMade: number,
+    positionCount: number): number {
+    if (positionCount > orderSize) {
+      return 0;
+    }
+
+    if (ordersAlreadyMade >= maxAllowedOrders) {
+      return 0;
+    }
+
     if (orderSize + ordersAlreadyMade > maxAllowedOrders) {
       return maxAllowedOrders - ordersAlreadyMade;
     }

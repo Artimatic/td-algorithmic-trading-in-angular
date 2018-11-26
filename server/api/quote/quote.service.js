@@ -152,6 +152,18 @@ class QuoteService {
     return api.getIntradayChartData(symbol, interval, true);
   }
 
+  queryForIntraday(quotes) {
+    const query = `${appUrl}backtest/find/intradaydata`;
+    const options = {
+      method: 'POST',
+      json: true,
+      uri: query,
+      body: quotes
+    };
+
+    return RequestPromise(options);
+  }
+
   postIntradayData(quotes) {
     const query = `${appUrl}backtest/add/intradaydata`;
     const options = {
@@ -203,7 +215,7 @@ class QuoteService {
   getOptionChain(symbol) {
     return api.optionChain(symbol);
   }
-  
+
 }
 
 module.exports.QuoteService = new QuoteService();
