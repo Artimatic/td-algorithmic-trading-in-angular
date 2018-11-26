@@ -204,8 +204,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       };
 
       const yahooRequestBody = {
-        symbol: this.order.holding.symbol,
-        interval: this.dataInterval
+        tickers: [this.order.holding.symbol]
       };
 
       data = await this.backtestService.getIntraday2(requestBody).toPromise()
@@ -707,7 +706,7 @@ export class BbCardComponent implements OnInit, OnChanges {
           idx,
           band,
           shortSma,
-          roc);
+          roc5);
 
       if (sell && this.buyCount >= this.sellCount) {
         return this.sendSell(sell);
@@ -805,7 +804,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     const score = this.scoringService.getScore(this.order.holding.symbol);
     if (score && score.total > 0) {
       const scorePct = _.round(_.divide(score.wins, score.total), 2);
-      if (scorePct < 0.5) {
+      if (scorePct < 0.45) {
         this.stop();
         const msg = 'Too many losses. Halting trading in Wins:' +
           `${this.order.holding.symbol} ${score.wins} Loss: ${score.losses}`;
