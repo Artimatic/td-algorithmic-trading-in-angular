@@ -773,8 +773,8 @@ export class BbCardComponent implements OnInit, OnChanges {
       } else {
         const momentumDiff = _.round(_.divide(this.momentum, roc1), 3);
 
-        console.log(`momentum neg - time: ${moment.unix(signalTime).format()},
-        price: ${signalPrice}, roc: ${roc1}, momentum: ${this.momentum}, lower: ${lower[0]}, diff: ${momentumDiff}`);
+        // console.log(`momentum neg - time: ${moment.unix(signalTime).format()},
+        // price: ${signalPrice}, roc: ${roc1}, momentum: ${this.momentum}, lower: ${lower[0]}, diff: ${momentumDiff}`);
 
         if (signalPrice < lower[0] && roc1 < -0.003 && momentumDiff > 2.3) {
           const log = `BB Event - time: ${moment.unix(signalTime).format()},
