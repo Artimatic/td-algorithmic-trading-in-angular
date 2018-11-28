@@ -754,39 +754,47 @@ export class BbCardComponent implements OnInit, OnChanges {
 
       const rocLen = roc[0].length - 1;
       const roc1 = _.round(roc[0][rocLen], 3);
-      const momentumDiff = _.round(_.divide(this.momentum, roc1), 3);
-      if (momentumDiff > 2) {
-          if (this.momentum > 0) {
-            const shortSmaLen = shortSma[0].length - 1;
-            const short = shortSma[0][shortSmaLen];
-            const diff = _.round(this.daytradeService.calculatePercentDifference(mid[0], short), 3);
+      let num, den;
+      if (this.momentum > roc1) {
+        num = this.momentum;
+        den = roc1;
+      } else {
+        den = this.momentum;
+        num = roc1;
+      }
 
-            if (diff === 0) {
-              if (roc1 > 0.001) {
-                const log = `MA Crossover Event - time: ${moment.unix(signalTime).format()},
-                price: ${signalPrice}, roc: ${roc1}, long: ${mid[0]}, short: ${short}`;
+      const momentumDiff = _.round(_.divide(num, den), 3);
+      console.log(`start: ${this.order.holding.symbol}
+        ${moment.unix(signalTime).format()}, roc: ${roc1}, momentum: ${this.momentum} diff: ${momentumDiff}`);
 
-                this.reportingService.addAuditLog(this.order.holding.symbol, log);
+      if (momentumDiff > 1.5 || momentumDiff < -1.5) {
+        // console.log(`ma: ${moment.unix(signalTime).format()}, roc: ${roc1}, momentum: ${this.momentum} diff: ${momentumDiff}`);
+        const shortSmaLen = shortSma[0].length - 1;
+        const short = shortSma[0][shortSmaLen];
+        const diff = _.round(this.daytradeService.calculatePercentDifference(mid[0], short), 3);
 
-                console.log(log);
+        if (diff === 0) {
+          if (roc1 > 0.001) {
+            const log = `MA Crossover Event - time: ${moment.unix(signalTime).format()},
+            price: ${signalPrice}, roc: ${roc1}, long: ${mid[0]}, short: ${short}`;
 
-                return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
-              }
-            }
-          } else {
-            // console.log(`momentum neg - time: ${moment.unix(signalTime).format()},
-            // price: ${signalPrice}, roc: ${roc1}, momentum: ${this.momentum}, lower: ${lower[0]}, diff: ${momentumDiff}`);
+            this.reportingService.addAuditLog(this.order.holding.symbol, log);
 
-            if (signalPrice < lower[0] && roc1 < -0.003 && momentumDiff > 2.3) {
-              const log = `BB Event - time: ${moment.unix(signalTime).format()},
-                price: ${signalPrice}, roc: ${roc1}, mid: ${mid[0]}, lower: ${lower[0]}`;
-              this.reportingService.addAuditLog(this.order.holding.symbol, log);
+            console.log(log);
 
-              console.log(log);
-
-              return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
-            }
+            return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
           }
+        }
+      } else if (momentumDiff < 0) {
+        if (signalPrice < lower[0]) {
+          const log = `BB Event - time: ${moment.unix(signalTime).format()},
+            price: ${signalPrice}, roc: ${roc1}, mid: ${mid[0]}, lower: ${lower[0]}`;
+          this.reportingService.addAuditLog(this.order.holding.symbol, log);
+
+          console.log(log);
+
+          return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
+        }
       }
     }
     return null;
@@ -912,9 +920,11 @@ export class BbCardComponent implements OnInit, OnChanges {
     const band = await this.daytradeService.getBBand(reals, this.bbandPeriod);
     const shortSma = await this.daytradeService.getSMA(reals, 5);
     const roc = await this.daytradeService.getROC(_.slice(reals, reals.length - 11), 10);
-    this.momentum = await this.daytradeService.getROC(reals, 80)
+    this.momentum = await this.daytradeService.getROC(reals, 70)
       .then((result) => {
-        return _.round(result[result.length - 1], 3);
+        const rocLen = result[0].length - 1;
+        const roc1 = _.round(result[0][rocLen], 3);
+        return _.round(roc1, 3);
       });
 
     const roc5 = this.positionCount > 0 ? await this.daytradeService.getROC(_.slice(reals, reals.length - 6), 5) : [];
