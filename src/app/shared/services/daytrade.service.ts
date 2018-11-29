@@ -246,13 +246,16 @@ export class DaytradeService {
 
   addYahooData(data, newData) {
     const quote = newData.query.results.quote;
-    const date = moment(newData.ts);
-    data.chart.result[0].timestamp.push(date.unix());
-    data.chart.result[0].indicators.quote[0].close.push(quote.realtime_price);
-    data.chart.result[0].indicators.quote[0].low.push(quote.realtime_price);
-    data.chart.result[0].indicators.quote[0].volume.push(quote.volume);
-    data.chart.result[0].indicators.quote[0].open.push(quote.realtime_price);
-    data.chart.result[0].indicators.quote[0].high.push(quote.realtime_price);
+
+    if (quote.realtime_price) {
+      const date = moment(newData.ts);
+      data.chart.result[0].timestamp.push(date.unix());
+      data.chart.result[0].indicators.quote[0].close.push(quote.realtime_price);
+      data.chart.result[0].indicators.quote[0].low.push(quote.realtime_price);
+      data.chart.result[0].indicators.quote[0].volume.push(quote.volume);
+      data.chart.result[0].indicators.quote[0].open.push(quote.realtime_price);
+      data.chart.result[0].indicators.quote[0].high.push(quote.realtime_price);
+    }
     return data;
   }
 
