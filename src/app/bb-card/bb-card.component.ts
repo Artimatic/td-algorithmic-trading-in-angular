@@ -79,7 +79,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
   ngOnInit() {
     this.alive = true;
-    this.interval = 240000;
+    this.interval = 248880;
     this.live = false;
     this.sides = ['Buy', 'Sell', 'DayTrade'];
     this.error = '';
@@ -688,18 +688,8 @@ export class BbCardComponent implements OnInit, OnChanges {
         this.stop();
         return null;
       }
-
-      const buyQuantity: number = this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
-        this.firstFormGroup.value.orderSize,
-        this.buyCount,
-        this.positionCount);
-
       const sellQuantity: number = this.firstFormGroup.value.orderSize <= this.positionCount ?
         this.firstFormGroup.value.orderSize : this.positionCount;
-
-      const buy: SmartOrder = buyQuantity <= 0 ? null :
-        this.buildBuyOrder(buyQuantity, quotes.close[idx], timestamps[idx],
-          quotes.low[idx] || quotes.close[idx], quotes, idx, band, shortSma, roc);
 
       const sell: SmartOrder = sellQuantity <= 0 ? null :
         this.buildSellOrder(sellQuantity,
@@ -714,11 +704,22 @@ export class BbCardComponent implements OnInit, OnChanges {
 
       if (sell && this.buyCount >= this.sellCount) {
         return this.sendSell(sell);
-      } if (buy) {
-        return this.sendBuy(buy);
-      } else {
-        return null;
       }
+
+      const buyQuantity: number = this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
+        this.firstFormGroup.value.orderSize,
+        this.buyCount,
+        this.positionCount);
+
+      const buy: SmartOrder = buyQuantity <= 0 ? null :
+        this.buildBuyOrder(buyQuantity, quotes.close[idx], timestamps[idx],
+          quotes.low[idx] || quotes.close[idx], quotes, idx, band, shortSma, roc);
+
+      if (buy) {
+        return this.sendBuy(buy);
+      }
+
+      return null;
     }
   }
 
@@ -767,11 +768,11 @@ export class BbCardComponent implements OnInit, OnChanges {
       // console.log(`start: ${this.order.holding.symbol}
       //   ${moment.unix(signalTime).format()}, roc: ${roc1}, momentum: ${this.momentum} diff: ${momentumDiff}`);
 
-      if (momentumDiff > 1.5 || momentumDiff < -1.5) {
+      if (momentumDiff < -1.5 || momentumDiff > 1.5) {
         // console.log(`ma: ${moment.unix(signalTime).format()}, roc: ${roc1}, momentum: ${this.momentum} diff: ${momentumDiff}`);
         const shortSmaLen = shortSma[0].length - 1;
         const short = shortSma[0][shortSmaLen];
-        const diff = _.round(this.daytradeService.calculatePercentDifference(mid[0], short), 3);
+        const diff = _.round(this.daytradeService.calculatePercentDifference(mid[0], short), 1);
 
         if (diff === 0) {
           if (roc1 > 0.001) {
@@ -821,17 +822,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       const rocLen = roc[0].length - 1;
       const roc1 = _.round(roc[0][rocLen], 3);
 
-      if (this.momentum >= 0) {
-        const log = `MA Crossover Sell Event - time: ${moment.unix(signalTime).format()},
-        price: ${signalPrice}, roc: ${roc1}`;
-
-        this.reportingService.addAuditLog(this.order.holding.symbol, log);
-
-        if (roc1 < -0.001) {
-          return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
-        }
-      } else {
-
+      if (this.momentum > 0.001 || this.momentum < -0.001) {
         // console.log(`momentum neg sell - time: ${moment.unix(signalTime).format()},
         // price: ${signalPrice}, roc: ${roc1}, momentum: ${this.momentum}, lower: ${lower[0]}, diff: ${momentumDiff}`);
 
@@ -843,6 +834,13 @@ export class BbCardComponent implements OnInit, OnChanges {
           console.log(log);
 
           return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
+        } else if (roc1 < -0.001) {
+          const log = `MA Crossover Sell Event - time: ${moment.unix(signalTime).format()},
+          price: ${signalPrice}, roc: ${roc1}`;
+
+          this.reportingService.addAuditLog(this.order.holding.symbol, log);
+
+          return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
         }
       }
     }
