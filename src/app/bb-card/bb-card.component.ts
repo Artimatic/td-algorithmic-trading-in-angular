@@ -833,7 +833,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
           console.log(log);
 
-          return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
+          return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
         } else if (roc1 < -0.001) {
           const log = `MA Crossover Sell Event - time: ${moment.unix(signalTime).format()},
           price: ${signalPrice}, roc: ${roc1}`;
