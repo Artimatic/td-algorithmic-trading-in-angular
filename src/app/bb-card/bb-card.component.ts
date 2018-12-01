@@ -490,6 +490,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.orders = [];
     this.config = this.daytradeService.parsePreferences(this.firstFormGroup.value.preferences);
     this.warning = '';
+    this.stopped = false;
 
     switch (this.firstFormGroup.value.orderType.side) {
       case 'Buy':
@@ -823,9 +824,6 @@ export class BbCardComponent implements OnInit, OnChanges {
       const roc1 = _.round(roc[0][rocLen], 3);
 
       if (this.momentum > 0.001 || this.momentum < -0.001) {
-        // console.log(`momentum neg sell - time: ${moment.unix(signalTime).format()},
-        // price: ${signalPrice}, roc: ${roc1}, momentum: ${this.momentum}, lower: ${lower[0]}, diff: ${momentumDiff}`);
-
         if (signalPrice > upper[0]) {
           const log = `BB Sell Event - time: ${moment.unix(signalTime).format()},
             price: ${signalPrice}, roc: ${roc1}, mid: ${mid[0]}, lower: ${lower[0]}`;
