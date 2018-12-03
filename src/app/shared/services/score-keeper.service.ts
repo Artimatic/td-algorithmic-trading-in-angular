@@ -59,4 +59,8 @@ export class ScoreKeeperService {
   getScore(stock: string) {
     return this.winlossHash[stock];
   }
+
+  resetScore(stock: string) {
+   this.winlossHash[stock] = null;
+  }
 }

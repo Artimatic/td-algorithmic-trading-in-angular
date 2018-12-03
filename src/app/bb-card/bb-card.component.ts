@@ -69,6 +69,7 @@ export class BbCardComponent implements OnInit, OnChanges {
   backtestQuotes;
   momentum;
   stopped;
+  isBacktest;
 
   constructor(private _formBuilder: FormBuilder,
     private backtestService: BacktestService,
@@ -161,6 +162,7 @@ export class BbCardComponent implements OnInit, OnChanges {
   }
 
   backtest(): void {
+    this.isBacktest = true;
     this.requestQuotes()
       .then(() => {
         this.newRun(false, false);
@@ -491,6 +493,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.config = this.daytradeService.parsePreferences(this.firstFormGroup.value.preferences);
     this.warning = '';
     this.stopped = false;
+    this.scoringService.resetScore(this.order.holding.symbol);
 
     switch (this.firstFormGroup.value.orderType.side) {
       case 'Buy':
@@ -704,7 +707,7 @@ export class BbCardComponent implements OnInit, OnChanges {
           roc5);
 
       if (sell && this.buyCount >= this.sellCount) {
-        return this.sendSell(sell);
+        return this.sendStopLoss(sell);
       }
 
       const buyQuantity: number = this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
@@ -851,12 +854,16 @@ export class BbCardComponent implements OnInit, OnChanges {
     if (score && score.total > 2) {
       const scorePct = _.round(_.divide(score.wins, score.total), 2);
       if (scorePct < 0.45) {
-        this.stop();
-        const msg = 'Too many losses. Halting trading in Wins:' +
-          `${this.order.holding.symbol} ${score.wins} Loss: ${score.losses}`;
+        if (!this.isBacktest) {
+          this.stop();
+          const msg = 'Too many losses. Halting trading in Wins:' +
+            `${this.order.holding.symbol} ${score.wins} Loss: ${score.losses}`;
 
-        this.reportingService.addAuditLog(this.order.holding.symbol, msg);
-        console.log(msg);
+          this.reportingService.addAuditLog(this.order.holding.symbol, msg);
+          console.log(msg);
+        } else {
+          console.log('Trading not halted in backtest mode.');
+        }
       }
     }
     if (this.positionCount > 0 && closePrice) {
