@@ -80,7 +80,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
   ngOnInit() {
     this.alive = true;
-    this.interval = 248880;
+    this.interval = 199800;
     this.live = false;
     this.sides = ['Buy', 'Sell', 'DayTrade'];
     this.error = '';
@@ -853,15 +853,16 @@ export class BbCardComponent implements OnInit, OnChanges {
     const score = this.scoringService.getScore(this.order.holding.symbol);
     if (score && score.total > 2) {
       const scorePct = _.round(_.divide(score.wins, score.total), 2);
-      if (scorePct < 0.45) {
+      if (scorePct < 0.30) {
         if (!this.isBacktest) {
           this.stop();
-          const msg = 'Too many losses. Halting trading in Wins:' +
-            `${this.order.holding.symbol} ${score.wins} Loss: ${score.losses}`;
+        }
+        const msg = 'Too many losses. Halting trading in Wins:' +
+          `${this.order.holding.symbol} ${score.wins} Loss: ${score.losses}`;
 
-          this.reportingService.addAuditLog(this.order.holding.symbol, msg);
-          console.log(msg);
-        } else {
+        this.reportingService.addAuditLog(this.order.holding.symbol, msg);
+        console.log(msg);
+        if (this.isBacktest) {
           console.log('Trading not halted in backtest mode.');
         }
       }
@@ -884,9 +885,11 @@ export class BbCardComponent implements OnInit, OnChanges {
 
       if (this.config.TakeProfit) {
         if (gains > this.firstFormGroup.value.profitTarget) {
-          this.setWarning(`Profits met. Realizing profits. Estimated gain: ${this.daytradeService.convertToFixedNumber(gains, 4) * 100}%`);
+          const warning = `Profits met. Realizing profits. Estimated gain: ${this.daytradeService.convertToFixedNumber(gains, 4) * 100}%`;
+          this.setWarning(warning);
           this.reportingService.addAuditLog(this.order.holding.symbol,
             `${this.order.holding.symbol} PROFIT HARVEST TRIGGERED: ${closePrice}/${estimatedPrice}`);
+          console.log(warning);
           const sellOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
           return this.sendSell(sellOrder);
         }
