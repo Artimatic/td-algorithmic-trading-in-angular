@@ -35,3 +35,7 @@ export let sma = (request, response) => {
 export let roc = (request, response) => {
   BacktestController.getRateOfChange(request, response);
 }
+
+export let mfi = (request, response) => {
+  BacktestController.getMfi(request, response);
+}

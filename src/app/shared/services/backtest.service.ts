@@ -130,6 +130,11 @@ export class BacktestService {
             .map(r => r.json());
     }
 
+    getMFI(data: any): Observable<any> {
+        return this.http.post(`${BASE_URL}api/backtest/mfi`, data, {})
+            .map(r => r.json());
+    }
+
     getROC(data: any): Observable<any> {
         return this.http.post(`${BASE_URL}api/backtest/roc`, data, {})
             .map(r => r.json());

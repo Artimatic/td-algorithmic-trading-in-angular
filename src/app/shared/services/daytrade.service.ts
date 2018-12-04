@@ -38,6 +38,19 @@ export class DaytradeService {
     return await this.backtestService.getSMA(body).toPromise();
   }
 
+  async getMFI(high: number[], low: number[], close: number[], volume: number[], period: number): Promise<any[]> {
+    const body = {
+      high,
+      low,
+      close,
+      volume,
+      period
+    };
+
+    return await this.backtestService.getMFI(body).toPromise();
+  }
+
+
   async getROC(reals: number[], period): Promise<any[]> {
     const body = {
       real: this.fillInMissingReals(reals),
@@ -56,6 +69,26 @@ export class DaytradeService {
       }
     }
     return reals;
+  }
+
+  private minutesOfDay(minutes: moment.Moment) {
+    return minutes.minutes() + minutes.hours() * 60;
+  }
+
+  tradePeriod(time: moment.Moment, start: moment.Moment, noon: moment.Moment, end: moment.Moment) {
+    let period: String = 'pre';
+    const minutes = this.minutesOfDay(time);
+    if (minutes > this.minutesOfDay(start)) {
+      period = 'morning';
+    }
+    if (minutes > this.minutesOfDay(noon)) {
+      period = 'afternoon';
+    }
+    if (minutes > this.minutesOfDay(end)) {
+      period = 'after';
+    }
+
+    return period;
   }
 
   parsePreferences(preferences) {
@@ -281,6 +314,11 @@ export class DaytradeService {
       }
     };
   }
+
+  getSubArray(reals: number[], period) {
+    return _.slice(reals, reals.length - (period + 1));
+  }
+
   estimateAverageBuyOrderPrice(orders: SmartOrder[]): number {
     if (orders.length === 0) {
       return 0;

@@ -34,6 +34,10 @@ class BacktestService {
     return tulind.indicators.sma.indicator([real], [period]);
   }
 
+  getMfi(high, low, close, volume, period) {
+    return tulind.indicators.mfi.indicator([high, low, close, volume], [period]);
+  }
+
   getRateOfChange(real, period) {
     return tulind.indicators.roc.indicator([real], [period]);
   }

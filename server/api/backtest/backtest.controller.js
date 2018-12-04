@@ -74,6 +74,17 @@ class BacktestController extends BaseController {
     }
   }
 
+  getMfi(request, response) {
+    if (_.isEmpty(request.body)) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    }
+    else {
+      BacktestService.getMfi(request.body.high, request.body.low, request.body.close, request.body.volume, request.body.period)
+        .then((data) => BaseController.requestGetSuccessHandler(response, data))
+        .catch((err) => BaseController.requestErrorHandler(response, err));
+    }
+  }
+
   getRateOfChange(request, response) {
     if (_.isEmpty(request.body)) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
@@ -84,7 +95,6 @@ class BacktestController extends BaseController {
         .catch((err) => BaseController.requestErrorHandler(response, err));
     }
   }
-
 
   getInfoV2(request, response) {
     BacktestService.getInfoV2(request.body.symbol, request.body.to, request.body.from)
