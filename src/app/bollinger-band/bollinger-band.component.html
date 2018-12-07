@@ -1,6 +1,6 @@
 <h3 mat-subheader>Shopping List</h3>
 <div>
-    <button mat-button color="secondary" (click)="confirmBacktest()">Backtest</button>
+  <button mat-button color="secondary" (click)="confirmBacktest()">Backtest</button>
   <button mat-button color="warn" (click)="confirmStart()">Start</button>
 </div>
 <div *ngFor="let other of cartService.otherOrders">
@@ -8,12 +8,27 @@
 </div>
 <app-score-board [title]="'Total'" [score]="scoreKeeperService.total"></app-score-board>
 <div *ngFor="let sell of cartService.sellOrders">
-  <app-bb-card [order]="sell" [triggered]="sell.triggered" [triggeredBacktest]="sell.triggeredBacktest"></app-bb-card>
+  <app-bb-card [order]="sell" 
+    [triggered]="sell.triggered" 
+    [triggeredBacktest]="sell.triggeredBacktest"
+    [init]="sell.init"
+    [stepForward]="sell.stepForward">
+  </app-bb-card>
 </div>
 <div *ngFor="let buy of cartService.buyOrders">
-  <app-bb-card [order]="buy" [triggered]="buy.triggered" [triggeredBacktest]="buy.triggeredBacktest"></app-bb-card>
+  <app-bb-card [order]="buy" 
+    [triggered]="buy.triggered" 
+    [triggeredBacktest]="buy.triggeredBacktest" 
+    [init]="buy.init"
+    [stepForward]="buy.stepForward">
+  </app-bb-card>
 </div>
 <div *ngFor="let other of cartService.otherOrders">
-  <app-bb-card [order]="other" [triggered]="other.triggered" [triggeredBacktest]="other.triggeredBacktest"></app-bb-card>
+  <app-bb-card [order]="other" 
+    [triggered]="other.triggered" 
+    [triggeredBacktest]="other.triggeredBacktest"
+    [init]="other.init"
+    [stepForward]="other.stepForward">
+  </app-bb-card>
 </div>
 <app-bb-card [order]="uvxy"></app-bb-card>

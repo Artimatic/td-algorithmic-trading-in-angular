@@ -39,6 +39,8 @@ export class BbCardComponent implements OnInit, OnChanges {
   @Input() order: SmartOrder;
   @Input() triggered: boolean;
   @Input() triggeredBacktest: boolean;
+  @Input() init: boolean;
+  @Input() stepForward: number;
   chart: Chart;
   volumeChart: Chart;
   alive: boolean;
@@ -123,6 +125,14 @@ export class BbCardComponent implements OnInit, OnChanges {
       this.goLive();
     } else if (_.get(changes, 'triggeredBacktest.currentValue')) {
       this.backtest();
+    } else {
+      if (_.get(changes, 'init.currentValue')) {
+        this.initRun();
+      }
+
+      if (_.get(changes, 'stepForward.currentValue')) {
+        this.step();
+      }
     }
   }
 
@@ -182,6 +192,19 @@ export class BbCardComponent implements OnInit, OnChanges {
           this.play(true, this.backtestLive);
         }
       });
+  }
+
+  initRun() {
+    this.setup();
+    this.alive = true;
+    this.live = true;
+  }
+
+  step() {
+    // TODO: Use moment timezones
+    if (this.alive && moment().isAfter(this.startTime)) {
+      this.play(true, this.backtestLive);
+    }
   }
 
   newRun(live, backtestLive) {
@@ -323,19 +346,19 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
 
     // TODO: Use moment timezones
-    if (moment().isAfter(this.endTime)) {
-      this.reportingService.addAuditLog(this.order.holding.symbol, `Final Orders ${this.order.holding.name}`);
+    // if (moment().isAfter(this.endTime)) {
+    //   this.reportingService.addAuditLog(this.order.holding.symbol, `Final Orders ${this.order.holding.name}`);
 
-      _.forEach(this.tiles, (tile) => {
-        _.forEach(tile.orders, (order) => {
-          const orderStr = JSON.stringify(order);
-          console.log(`Order: ${orderStr}`);
-          // this.reportingService.addAuditLog(`Order: ${orderStr}`);
-        });
-      });
+    //   _.forEach(this.tiles, (tile) => {
+    //     _.forEach(tile.orders, (order) => {
+    //       const orderStr = JSON.stringify(order);
+    //       console.log(`Order: ${orderStr}`);
+    //       // this.reportingService.addAuditLog(`Order: ${orderStr}`);
+    //     });
+    //   });
 
-      this.stop();
-    }
+    //   this.stop();
+    // }
   }
 
   initVolumeChart(title, data): Chart {
@@ -865,11 +888,11 @@ export class BbCardComponent implements OnInit, OnChanges {
       return null;
     }
 
-    if (this.config.MeanReversion1) {
-      if (signalPrice >= upper[0]) {
-        return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
-      }
-    } else {
+    // if (this.config.MeanReversion1) {
+    //   if (signalPrice >= upper[0]) {
+    //     return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
+    //   }
+    // } else {
       const rocLen = roc[0].length - 1;
       const roc1 = _.round(roc[0][rocLen], 3);
 
@@ -893,7 +916,7 @@ export class BbCardComponent implements OnInit, OnChanges {
           return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
         }
       }
-    }
+    // }
 
     return null;
   }

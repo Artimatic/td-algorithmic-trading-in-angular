@@ -13,4 +13,6 @@ export interface SmartOrder extends Order {
     orderSize?: number;
     triggered?: boolean;
     triggeredBacktest?: boolean;
+    init?: boolean;
+    stepForward?: number;
 }
