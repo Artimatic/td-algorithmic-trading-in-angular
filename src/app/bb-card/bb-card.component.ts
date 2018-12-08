@@ -41,6 +41,7 @@ export class BbCardComponent implements OnInit, OnChanges {
   @Input() triggeredBacktest: boolean;
   @Input() init: boolean;
   @Input() stepForward: number;
+  @Input() backtestData: number;
   chart: Chart;
   volumeChart: Chart;
   alive: boolean;
@@ -123,8 +124,10 @@ export class BbCardComponent implements OnInit, OnChanges {
   ngOnChanges(changes: SimpleChanges) {
     if (_.get(changes, 'triggered.currentValue')) {
       this.goLive();
+    } else if (_.get(changes, 'backtestData.currentValue')) {
+      this.backtest(this.backtestData);
     } else if (_.get(changes, 'triggeredBacktest.currentValue')) {
-      this.backtest();
+      this.backtest(this.backtestData);
     } else {
       if (_.get(changes, 'init.currentValue')) {
         this.initRun();
@@ -171,13 +174,18 @@ export class BbCardComponent implements OnInit, OnChanges {
     });
   }
 
-  backtest(): void {
+  backtest(data: any): void {
     this.setup();
     this.isBacktest = true;
-    this.requestQuotes()
+    if (data) {
+      this.backtestQuotes = data;
+      this.newRun(false, false);
+    } else {
+      this.requestQuotes()
       .then(() => {
         this.newRun(false, false);
       });
+    }
   }
 
   goLive() {

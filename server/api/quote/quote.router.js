@@ -31,6 +31,10 @@ exports.postIntraday = function (req, res, next) {
   QuoteController.postIntraday(req, res);
 };
 
+exports.postIntraday = function (req, res, next) {
+  QuoteController.findIntraday(req, res);
+};
+
 exports.companySummary = function (req, res, next) {
   QuoteController.getCompanySummary(req, res);
 };

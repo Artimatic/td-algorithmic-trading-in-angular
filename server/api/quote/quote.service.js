@@ -152,12 +152,16 @@ class QuoteService {
     return api.getIntradayChartData(symbol, interval, true);
   }
 
-  queryForIntraday(quotes) {
-    const query = `${appUrl}backtest/find/intradaydata`;
+  queryForIntraday(symbol, from, to) {
+    const url = `${appUrl}backtest/find/intradaydata`;
     const options = {
-      method: 'POST',
-      json: true,
-      uri: query,
+      method: 'GET',
+      qs: {
+        symbol,
+        to,
+        from
+      },
+      uri: url,
       body: quotes
     };
 
