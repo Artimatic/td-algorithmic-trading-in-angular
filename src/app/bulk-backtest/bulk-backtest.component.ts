@@ -12,7 +12,7 @@ import * as moment from 'moment';
   styleUrls: ['./bulk-backtest.component.css']
 })
 export class BulkBacktestComponent implements OnInit {
-  private stocks: AlgoParam[] = [];
+  public stocks: AlgoParam[] = [];
   headers: Array<string>;
 
   constructor() {}

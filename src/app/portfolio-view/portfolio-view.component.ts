@@ -29,7 +29,7 @@ export class PortfolioViewComponent implements AfterViewInit {
   constructor(
     private portfolioService: PortfolioService,
     private authenticationService: AuthenticationService,
-    private cartService: CartService,
+    public cartService: CartService,
     private excelService: ExcelService,
     public snackBar: MatSnackBar) { }
 

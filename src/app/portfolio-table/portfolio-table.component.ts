@@ -16,7 +16,6 @@ import { ExcelService } from '../shared/services/excel-service.service';
   styleUrls: ['./portfolio-table.component.css']
 })
 export class PortfolioTableComponent implements OnInit {
-  @Output() addCart = new EventEmitter<Holding>();
 
   portfolioData: Holding[];
   displayedColumns = ['name', 'symbol',

@@ -19,7 +19,7 @@ export class BacktestViewComponent implements OnInit {
 
   constructor(
     private portfolioService: PortfolioService,
-    private cartService: CartService,
+    public cartService: CartService,
     public scoreKeeperService: ScoreKeeperService,
     private backtestService: BacktestService,
     public snackBar: MatSnackBar

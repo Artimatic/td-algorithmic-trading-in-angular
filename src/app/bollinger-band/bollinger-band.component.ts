@@ -33,7 +33,7 @@ export class BollingerBandComponent implements OnInit {
   endTime: moment.Moment;
   noonTime: moment.Moment;
 
-  constructor(private cartService: CartService,
+  constructor(public cartService: CartService,
     public scoreKeeperService: ScoreKeeperService,
     public dialog: MatDialog) { }
 
