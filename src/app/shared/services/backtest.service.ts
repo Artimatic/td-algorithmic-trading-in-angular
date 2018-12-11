@@ -97,6 +97,11 @@ export class BacktestService {
     }
 
     postIntraday(data: JSON): Observable<any> {
+        return this.http.post(`${BASE_URL}api/quote/intraday-quote`, data, {})
+            .map(r => r.json());
+    }
+
+    findIntraday(data: JSON): Observable<any> {
         const body = JSON.stringify(data);
 
         const headers = new Headers({ 'Content-Type': 'application/json' });
@@ -105,9 +110,10 @@ export class BacktestService {
           body : body
         });
 
-        return this.http.post(`${BASE_URL}api/quote/intraday-quote`, data, {})
+        return this.http.get(`${BASE_URL}api/quote/intraday-quote`, options)
             .map(r => r.json());
     }
+
 
     getQuote(data: any): Observable<any> {
         return this.http.post(`${BASE_URL}api/quote`, data, {})
