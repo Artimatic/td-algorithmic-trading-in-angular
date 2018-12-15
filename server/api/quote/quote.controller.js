@@ -82,7 +82,9 @@ class QuoteController extends BaseController {
   }
 
   findIntraday(request, response) {
-    if (_.isEmpty(request.body)) {
+    console.log('q: ', request.query);
+
+    if (_.isEmpty(request.query)) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     }
     else {

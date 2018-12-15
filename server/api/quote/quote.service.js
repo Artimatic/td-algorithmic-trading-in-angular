@@ -153,7 +153,7 @@ class QuoteService {
   }
 
   queryForIntraday(symbol, from, to) {
-    const url = `${appUrl}backtest/find/intradaydata`;
+    const url = `${appUrl}backtest/find/intraday`;
     const options = {
       method: 'GET',
       qs: {
@@ -161,8 +161,7 @@ class QuoteService {
         to,
         from
       },
-      uri: url,
-      body: quotes
+      uri: url
     };
 
     return RequestPromise(options);

@@ -31,7 +31,7 @@ exports.postIntraday = function (req, res, next) {
   QuoteController.postIntraday(req, res);
 };
 
-exports.findIntraday = function (req, res, next) {
+exports.findIntraday = function (req, res) {
   QuoteController.findIntraday(req, res);
 };
 

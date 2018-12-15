@@ -114,7 +114,7 @@ class ReversionService {
         let MAs = this.executeMeanReversion(this.calcMA, quotes, shortTerm, longTerm);
         yesterdayDecision = MAs[MAs.length - 1];
 
-        let recommendedDifference = DecisionService.findDeviation(MAs, fromDate);
+        let recommendedDifference = 0.003;
 
         if (autoDeviation) {
           deviation = recommendedDifference;

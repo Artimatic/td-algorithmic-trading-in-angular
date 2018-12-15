@@ -81,8 +81,7 @@ class BacktestService {
             if (i < j) {
               console.log("short:", i, " long:", j);
               let MAs = ReversionService.executeMeanReversion(ReversionService.calcMA, quotes, i, j);
-              let yesterdayDecision = MAs[MAs.length - 1];
-              let recommendedDifference = DecisionService.findDeviation(MAs, startDate);
+              let recommendedDifference = 0.003;
 
               let averagesRange = { shortTerm: i, longTerm: j };
               let returns = DecisionService.calcReturns(MAs, recommendedDifference, startDate);
