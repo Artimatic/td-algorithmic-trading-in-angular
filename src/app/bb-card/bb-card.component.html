@@ -9,7 +9,7 @@
       WARNING: {{warning}}
     </div>
   </div>
-  <mat-horizontal-stepper [linear]="true" #stepper="matHorizontalStepper">
+  <mat-horizontal-stepper [linear]="false" #stepper="matHorizontalStepper">
     <mat-step [stepControl]="firstFormGroup">
       <form [formGroup]="firstFormGroup">
         <ng-template matStepLabel>Edit Order</ng-template>
@@ -99,20 +99,11 @@
         </div>
         <mat-card-actions>
           <button mat-raised-button color="warn" (click)="resetStepper(stepper)">STOP</button>
-          <button mat-button color="primary" (click)="newRun(false, false)">Backtest</button>
-          <button mat-button color="warn" (click)="openDialog()">GO LIVE</button>
+          <button mat-button color="primary" (click)="backtest()">Backtest</button>
           <button mat-button color="warn" (click)="confirmLiveBacktest()">TEST LIVE</button>
-
+          <button mat-button color="warn" (click)="openDialog()">GO LIVE</button>
         </mat-card-actions>
       </mat-card>
-    </mat-step>
-    <mat-step>
-      <ng-template matStepLabel>Done</ng-template>
-      You are now done.
-      <div>
-        <button mat-button matStepperPrevious>Back</button>
-        <button mat-button (click)="stepper.reset()">Reset</button>
-      </div>
     </mat-step>
   </mat-horizontal-stepper>
 </mat-card>

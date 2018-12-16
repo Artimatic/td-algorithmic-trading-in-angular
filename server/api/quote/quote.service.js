@@ -1,19 +1,25 @@
-import google from '../../components/google-finance';
 import _ from 'lodash';
 import moment from 'moment';
-import boom from 'boom';
 import RequestPromise from 'request-promise';
 
 import { feedQuandl } from 'd3fc-financial-feed';
 import YahooFinanceAPI from 'yahoo-finance-data';
+import * as algotrader from 'algotrader';
 
 import errors from '../../components/errors/baseErrors';
 import config from '../../config/environment';
+
 const yahoo = {
   key: config.yahoo.key,
   secret: config.yahoo.secret
 };
+
+const appUrl = config.apps.goliath;
+
 const api = new YahooFinanceAPI(yahoo);
+const AlphaVantage = algotrader.Data.AlphaVantage;
+const av = new AlphaVantage(config.alpha.key);
+const IEX = algotrader.Data.IEX;
 
 const quandl = feedQuandl()
   .apiKey('5DsGxgTS3k9BepaWg_MD')
@@ -96,7 +102,7 @@ class QuoteService {
     to = to.format('YYYY-MM-DD');
     from = from.format('YYYY-MM-DD');
 
-    const query = `http://localhost:8080/backtest?ticker=${symbol}&to=${to}&from=${from}`;
+    const query = `${appUrl}backtest?ticker=${symbol}&to=${to}&from=${from}`;
     const options = {
       method: 'POST',
       uri: query
@@ -138,13 +144,81 @@ class QuoteService {
     return api.getRealtimeQuotes(symbols.join(','));
   }
 
+  getPrice(symbol) {
+    return IEX.getQuote(symbol);
+  }
+
   getIntradayData(symbol, interval) {
     return api.getIntradayChartData(symbol, interval, true);
   }
 
-  getCompanySummary(symbol) {
-    return api.quoteSummary(symbol);
+  queryForIntraday(symbol, from, to) {
+    const url = `${appUrl}backtest/find/intraday`;
+    const options = {
+      method: 'GET',
+      qs: {
+        symbol,
+        to,
+        from
+      },
+      uri: url
+    };
+
+    return RequestPromise(options);
   }
+
+  postIntradayData(quotes) {
+    const query = `${appUrl}backtest/add/intradaydata`;
+    const options = {
+      method: 'POST',
+      json: true,
+      uri: query,
+      body: quotes
+    };
+
+    return RequestPromise(options);
+  }
+
+  getIntradayDataV2(symbol, interval) {
+    return av.timeSeriesIntraday(symbol, interval).then(quotes => {
+      const data = {
+        chart: {
+          result: [
+            {
+              timestamp: [],
+              indicators: {
+                quote: [
+                  {
+                    low: [],
+                    volume: [],
+                    open: [],
+                    high: [],
+                    close: []
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      };
+
+      _.forEach(quotes, (quote) => {
+        data.chart.result[0].timestamp.push(moment(quote.getDate()).unix());
+        data.chart.result[0].indicators.quote[0].close.push(quote.getClose());
+        data.chart.result[0].indicators.quote[0].low.push(quote.getLow());
+        data.chart.result[0].indicators.quote[0].volume.push(quote.getVolume());
+        data.chart.result[0].indicators.quote[0].open.push(quote.getOpen());
+        data.chart.result[0].indicators.quote[0].high.push(quote.getHigh());
+      });
+
+      return data;
+    });
+  }
+
+  getOptionChain(symbol) {
+    return api.optionChain(symbol);
+  }
+
 }
 
 module.exports.QuoteService = new QuoteService();

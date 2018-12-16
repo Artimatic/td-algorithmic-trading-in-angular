@@ -6,6 +6,7 @@ import { OrderPref } from '../enums/order-pref.enum';
 import { SmartOrder } from '../models/smart-order';
 
 import * as moment from 'moment';
+import * as _ from 'lodash';
 
 @Injectable()
 export class DaytradeService {
@@ -28,6 +29,37 @@ export class DaytradeService {
     return await this.backtestService.getBBands(body).toPromise();
   }
 
+  async getSMA(reals: number[], period): Promise<any[]> {
+    const body = {
+      real: this.fillInMissingReals(reals),
+      period: period
+    };
+
+    return await this.backtestService.getSMA(body).toPromise();
+  }
+
+  async getMFI(high: number[], low: number[], close: number[], volume: number[], period: number): Promise<any[]> {
+    const body = {
+      high,
+      low,
+      close,
+      volume,
+      period
+    };
+
+    return await this.backtestService.getMFI(body).toPromise();
+  }
+
+
+  async getROC(reals: number[], period): Promise<any[]> {
+    const body = {
+      real: this.fillInMissingReals(reals),
+      period: period
+    };
+
+    return await this.backtestService.getROC(body).toPromise();
+  }
+
   fillInMissingReals(reals: number[]) {
     for (let i = 1, length = reals.length; i < length; i++) {
       if (!reals[i]) {
@@ -39,8 +71,33 @@ export class DaytradeService {
     return reals;
   }
 
+  private minutesOfDay(minutes: moment.Moment) {
+    return minutes.minutes() + minutes.hours() * 60;
+  }
+
+  tradePeriod(time: moment.Moment, start: moment.Moment, noon: moment.Moment, end: moment.Moment) {
+    let period: String = 'pre';
+    const minutes = this.minutesOfDay(time);
+    if (minutes > this.minutesOfDay(start)) {
+      period = 'morning';
+    }
+    if (minutes > this.minutesOfDay(noon)) {
+      period = 'afternoon';
+    }
+    if (minutes > this.minutesOfDay(end)) {
+      period = 'after';
+    }
+
+    return period;
+  }
+
   parsePreferences(preferences) {
-    const config = { TakeProfit: false, StopLoss: false };
+    const config = {
+      TakeProfit: false,
+      StopLoss: false,
+      MeanReversion1: false
+    };
+
     if (preferences) {
       preferences.forEach((value) => {
         switch (value) {
@@ -50,16 +107,41 @@ export class DaytradeService {
           case OrderPref.StopLoss:
             config.StopLoss = true;
             break;
+          case OrderPref.MeanReversion1:
+            config.MeanReversion1 = true;
+            break;
         }
       });
     }
     return config;
   }
 
-  getOrderQuantity(maxAllowedOrders: number, orderSize: number, ordersAlreadyMade: number): number {
+  getOrderQuantity(maxAllowedOrders: number,
+    orderSize: number,
+    ordersAlreadyMade: number): number {
     if (ordersAlreadyMade >= maxAllowedOrders) {
       return 0;
     }
+
+    if (orderSize + ordersAlreadyMade > maxAllowedOrders) {
+      return maxAllowedOrders - ordersAlreadyMade;
+    }
+
+    return orderSize;
+  }
+
+  getBuyOrderQuantity(maxAllowedOrders: number,
+    orderSize: number,
+    ordersAlreadyMade: number,
+    positionCount: number): number {
+    if (positionCount > orderSize) {
+      return 0;
+    }
+
+    if (ordersAlreadyMade >= maxAllowedOrders) {
+      return 0;
+    }
+
     if (orderSize + ordersAlreadyMade > maxAllowedOrders) {
       return maxAllowedOrders - ordersAlreadyMade;
     }
@@ -90,14 +172,25 @@ export class DaytradeService {
 
           if (foundPosition) {
             const positionCount = Number(foundPosition.quantity);
-            sellOrder.quantity = sellOrder.quantity < positionCount ? sellOrder.quantity : positionCount;
-            this.portfolioService.sell(sellOrder.holding, sellOrder.quantity, sellOrder.price, type).subscribe(
-              response => {
-                resolve(response);
-              },
-              error => {
-                reject(error);
-              });
+            if (positionCount === 0) {
+              handleNotFound();
+            } else {
+              sellOrder.quantity = sellOrder.quantity < positionCount ? sellOrder.quantity : positionCount;
+
+              let price = sellOrder.price;
+
+              if (type === 'market') {
+                price = null;
+              }
+
+              this.portfolioService.sell(sellOrder.holding, sellOrder.quantity, price, type).subscribe(
+                response => {
+                  resolve(response);
+                },
+                error => {
+                  reject(error);
+                });
+            }
           } else {
             handleNotFound();
           }
@@ -160,5 +253,270 @@ export class DaytradeService {
     } else {
       return (currentPrice - boughtPrice) / boughtPrice;
     }
+  }
+
+  // calculatePercentDifference(v1, v2) {
+  //   return _.divide(_.subtract(v1, v2), _.divide(_.add(v1, v2), 2));
+  // }
+
+  calculatePercentDifference(v1, v2) {
+    return Math.abs(Math.abs(v1 - v2) / ((v1 + v2) / 2));
+  }
+
+  addChartData(data, newData) {
+    const date = moment(newData.date);
+    const lastPrice = newData.price ? newData.price.last : null;
+    const lastVolume = newData.price ? newData.price.volume : null;
+
+    data.chart.result[0].timestamp.push(date.unix());
+    data.chart.result[0].indicators.quote[0].close.push(lastPrice || newData.close);
+    data.chart.result[0].indicators.quote[0].low.push(lastPrice || newData.low);
+    data.chart.result[0].indicators.quote[0].volume.push(lastVolume || newData.volume);
+    data.chart.result[0].indicators.quote[0].open.push(lastPrice || newData.open);
+    data.chart.result[0].indicators.quote[0].high.push(lastPrice || newData.high);
+    return data;
+  }
+
+  addYahooData(data, newData) {
+    const quote = newData.query.results.quote;
+    const realtime_price = 1 * quote.realtime_price;
+    if (realtime_price) {
+      const date = moment(newData.ts);
+      data.chart.result[0].timestamp.push(date.unix());
+      data.chart.result[0].indicators.quote[0].close.push(realtime_price);
+      data.chart.result[0].indicators.quote[0].low.push(realtime_price);
+      data.chart.result[0].indicators.quote[0].volume.push(1 * quote.volume);
+      data.chart.result[0].indicators.quote[0].open.push(realtime_price);
+      data.chart.result[0].indicators.quote[0].high.push(realtime_price);
+    }
+    return data;
+  }
+
+  createNewChart() {
+    return {
+      chart: {
+        result: [
+          {
+            timestamp: [],
+            indicators: {
+              quote: [
+                {
+                  low: [],
+                  volume: [],
+                  open: [],
+                  high: [],
+                  close: []
+                }
+              ]
+            }
+          }
+        ]
+      }
+    };
+  }
+
+  getSubArray(reals: number[], period) {
+    return _.slice(reals, reals.length - (period + 1));
+  }
+
+  estimateAverageBuyOrderPrice(orders: SmartOrder[]): number {
+    if (orders.length === 0) {
+      return 0;
+    }
+
+    const finalPositions: SmartOrder[] = [];
+
+    _.forEach(orders, (currentOrder: SmartOrder) => {
+      if (currentOrder.side.toLowerCase() === 'sell') {
+        let sellSize: number = currentOrder.quantity;
+        let i = 0;
+        while (sellSize > 0 && i < finalPositions.length) {
+          if (finalPositions[i].side.toLowerCase() === 'buy') {
+            if (finalPositions[i].quantity > sellSize) {
+              finalPositions[i].quantity -= sellSize;
+              sellSize = 0;
+            } else {
+              const removed = finalPositions.shift();
+              sellSize -= removed.quantity;
+              i--;
+            }
+          }
+          i++;
+        }
+      } else if (currentOrder.side.toLowerCase() === 'buy') {
+        finalPositions.push(currentOrder);
+      }
+    });
+
+    let sum = 0;
+    let size = 0;
+
+    _.forEach(finalPositions, (pos: SmartOrder) => {
+      sum += _.multiply(pos.quantity, pos.price);
+      size += pos.quantity;
+    });
+
+    if (sum === 0 || size === 0) {
+      return 0;
+    }
+
+    return _.round(_.divide(sum, size), 2);
+  }
+
+  /*
+  * Estimate the profit/loss of the last sell order
+  */
+  estimateSellProfitLoss(orders: SmartOrder[]) {
+    const len = orders.length;
+    if (len < 2) {
+      return 0;
+    }
+
+    const lastOrder = orders[len - 1];
+
+    if (lastOrder.side.toLowerCase() !== 'sell') {
+      throw new Error(`Estimating sell p/l: ${orders[orders.length - 1]} is not a sell order.`);
+    }
+
+    const finalPositions: SmartOrder[] = [];
+
+    for (let j = 0, c = len - 1; j < c; j++) {
+      const currentOrder: SmartOrder = orders[j];
+      if (currentOrder.side.toLowerCase() === 'sell') {
+        let sellSize: number = currentOrder.quantity;
+        let i = 0;
+        while (sellSize > 0 && i < finalPositions.length) {
+          if (finalPositions[i].side.toLowerCase() === 'buy') {
+            if (finalPositions[i].quantity > sellSize) {
+              finalPositions[i].quantity -= sellSize;
+              sellSize = 0;
+            } else {
+              const removed = finalPositions.shift();
+              sellSize -= removed.quantity;
+              i--;
+            }
+          }
+          i++;
+        }
+      } else if (currentOrder.side.toLowerCase() === 'buy') {
+        finalPositions.push(currentOrder);
+      }
+    }
+
+    let size = lastOrder.quantity;
+    let cost = 0;
+
+    _.forEach(finalPositions, (pos: SmartOrder) => {
+      if (pos.quantity > size) {
+        cost += _.multiply(size, pos.price);
+        size = 0;
+      } else {
+        cost += _.multiply(pos.quantity, pos.price);
+        size -= pos.quantity;
+      }
+
+      if (size <= 0) {
+        return false;
+      }
+    });
+
+    const lastOrderCost = _.multiply(lastOrder.quantity, lastOrder.price);
+
+    return _.round(_.subtract(lastOrderCost, cost), 2);
+  }
+
+  momentumV1(quotes, period, idx) {
+    const beginningIdx = idx - period;
+    if (beginningIdx >= 0) {
+      if (quotes.close[idx] > quotes.close[beginningIdx]) {
+        return 'buy';
+      } else {
+        return 'sell';
+      }
+    }
+    return null;
+  }
+
+  momentumV2(quotes, period, idx) {
+    const beginningIdx = idx - period;
+    let smallSpreadCount = 0;
+    if (beginningIdx >= 0) {
+      for (let i = beginningIdx; i < idx; i++) {
+        if (_.subtract(_.round(quotes.close[i], 2), _.round(quotes.open[i], 2)) === 0) {
+          smallSpreadCount++;
+        }
+      }
+
+      if (smallSpreadCount > 1 && smallSpreadCount < 4) {
+        if (quotes.close[idx] > quotes.close[beginningIdx]) {
+          return 'buy';
+        } else {
+          return 'sell';
+        }
+      } else {
+        return 'unknown';
+      }
+    }
+    return null;
+  }
+
+  findMostCurrentQuoteIndex(quotes, firstIndex, lastIndex) {
+    // TODO: Replace with real time quote
+    let ctr = 1,
+      tFirstIndex = firstIndex,
+      tLastIndex = lastIndex;
+
+    while (!quotes[tLastIndex] && quotes[tFirstIndex] && ctr < 3) {
+      tFirstIndex = firstIndex - ctr;
+      tLastIndex = lastIndex - ctr;
+      if (quotes[tFirstIndex] && quotes[tLastIndex]) {
+        firstIndex = tFirstIndex;
+        lastIndex = tLastIndex;
+        break;
+      } else if (!quotes[tFirstIndex]) {
+        break;
+      }
+      ctr++;
+    }
+    return { firstIndex, lastIndex };
+  }
+
+  convertToFixedNumber(num, sig) {
+    return Number(num.toFixed(sig));
+  }
+
+  convertHistoricalQuotes(backtestQuotes) {
+    const data = {
+      chart: {
+        result: [
+          {
+            timestamp: [],
+            indicators: {
+              quote: [
+                {
+                  low: [],
+                  volume: [],
+                  open: [],
+                  high: [],
+                  close: []
+                }
+              ]
+            }
+          }
+        ]
+      }
+    };
+
+    _.forEach(backtestQuotes, (historicalData) => {
+      const date = moment(historicalData.date);
+      data.chart.result[0].timestamp.push(date.unix());
+      data.chart.result[0].indicators.quote[0].close.push(historicalData.close);
+      data.chart.result[0].indicators.quote[0].low.push(historicalData.low);
+      data.chart.result[0].indicators.quote[0].volume.push(historicalData.volume);
+      data.chart.result[0].indicators.quote[0].open.push(historicalData.open);
+      data.chart.result[0].indicators.quote[0].high.push(historicalData.high);
+    });
+
+    return data;
   }
 }

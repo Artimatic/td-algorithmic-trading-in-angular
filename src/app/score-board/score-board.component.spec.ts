@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { RhDateComponent } from './rh-date.component';
+import { ScoreBoardComponent } from './score-board.component';
 
-describe('RhDateComponent', () => {
-  let component: RhDateComponent;
-  let fixture: ComponentFixture<RhDateComponent>;
+describe('ScoreBoardComponent', () => {
+  let component: ScoreBoardComponent;
+  let fixture: ComponentFixture<ScoreBoardComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ RhDateComponent ]
+      declarations: [ ScoreBoardComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(RhDateComponent);
+    fixture = TestBed.createComponent(ScoreBoardComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

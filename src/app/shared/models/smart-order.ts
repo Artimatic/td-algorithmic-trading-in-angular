@@ -9,5 +9,10 @@ export interface SmartOrder extends Order {
     profitTarget?: number;
     useStopLoss?: boolean;
     useTakeProfit?: boolean;
+    meanReversion1?: boolean;
     orderSize?: number;
+    triggered?: boolean;
+    triggeredBacktest?: boolean;
+    init?: boolean;
+    stepForward?: number;
 }

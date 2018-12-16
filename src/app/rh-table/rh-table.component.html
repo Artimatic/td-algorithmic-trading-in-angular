@@ -1,60 +1,120 @@
 <app-product-view #product></app-product-view>
 <mat-card>
   <div class="table-container mat-elevation-z8">
-    <div class="table-header">
-      <mat-radio-group [(ngModel)]="recommendation" (change)="filterRecommendation()">
-        <mat-radio-button value="buy">Buy</mat-radio-button>
-        <mat-radio-button value="sell">Sell</mat-radio-button>
-        <mat-radio-button value="indeterminant">Unknown</mat-radio-button>
-        <mat-radio-button value="">Any</mat-radio-button>
-      </mat-radio-group>
+    <mat-grid-list cols="3" rowHeight="76px">
+      <mat-grid-tile>
+        <div class="date-picker">
+          End Date
+          <input name="endDate" type="date" [ngModel]="endDate" (ngModelChange)="endDate = $event">
+        </div>
+      </mat-grid-tile>
+      <mat-grid-tile>
+        <mat-radio-group [(ngModel)]="recommendation" (change)="filterRecommendation()">
+          <mat-radio-button value="strongbuy">Strong Buy</mat-radio-button>
+          <mat-radio-button value="buy">Buy</mat-radio-button>
+          <mat-radio-button value="">Any</mat-radio-button>
+          <mat-radio-button value="sell">Sell</mat-radio-button>
+          <mat-radio-button value="strongsell">Strong Sell</mat-radio-button>
+        </mat-radio-group>
+      </mat-grid-tile>
+      <mat-grid-tile>
+        <mat-form-field>
+          <mat-select placeholder="Algorithm" [(ngModel)]="selectedAlgo">
+            <mat-optgroup *ngFor="let group of algoGroups" [label]="group.name"
+                          [disabled]="group.disabled">
+              <mat-option *ngFor="let algo of group.algorithm" [value]="algo.value">
+                {{algo.viewValue}}
+              </mat-option>
+            </mat-optgroup>
+          </mat-select>
+        </mat-form-field>
+      </mat-grid-tile>
+    </mat-grid-list>
+    <div id="tableContainer" class="tableContainer">
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" class="scrollTable">
+        <thead class="fixedHeader">
+          <tr>
+            <th>Stock</th>
+            <th>Returns</th>
+            <th>Last Volume</th>
+            <th>Last Price</th>
+            <th>Trades</th>
+            <th>Recommendation</th>
+            <th>Strong Buy</th>
+            <th>Buy</th>
+            <th>Sell</th>
+            <th>Strong Sell</th>
+          </tr>
+        </thead>
+        <tbody class="scrollContent">
+          <tr *ngFor="let element of currentList">
+            <td>
+              <span> {{element.stock}}
+                  <button mat-button color="primary" (click)="buy(element)">BUY</button>
+                  <button mat-button color="warn" (click)="sell(element)">SELL</button>
+              </span>
+            </td>
+            <td>
+              <span>
+                {{element.returns}}%
+              </span>
+            </td>
+            <td>
+              <span> {{element.lastVolume | number}}
+              </span>
+            </td>
+            <td>
+              <span>
+                {{element.lastPrice | currency}}
+              </span>
+            </td>
+            <td>
+              <span>
+                {{element.totalTrades}}
+              </span>
+            </td>
+            <td>
+              <span>
+                {{element.recommendation}}
+                <span *ngIf="selectedAlgo==='v1'">
+                  <button mat-icon-button (click)="product.load(element, endDate)">
+                    <mat-icon>show_chart</mat-icon>
+                  </button>
+                </span>
+                <span *ngIf="selectedAlgo==='v2'">
+                  <button mat-icon-button (click)="product.loadV2Chart(element, endDate)">
+                    <mat-icon>show_chart</mat-icon>
+                  </button>
+                </span>
+              </span>
+            </td>
+            <td>
+              <span *ngIf="element.strongbuySignals">
+                {{element.strongbuySignals}}
+              </span>
+            </td>
+            <td>
+              <span *ngIf="element.buySignals">
+                {{element.buySignals}}
+              </span>
+            </td>
+            <td>
+              <span *ngIf="element.sellSignals">
+                {{element.sellSignals}}
+              </span>
+            </td>
+            <td>
+              <span *ngIf="element.strongsellSignals">
+                {{element.strongsellSignals}}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-    <mat-table #table [dataSource]="dataSource">
-      <!-- Position Column -->
-      <ng-container matColumnDef="stock">
-        <mat-header-cell *matHeaderCellDef mat-sort-header> Stock </mat-header-cell>
-        <mat-cell *matCellDef="let element"> {{element.stock}}
-          <button mat-icon-button (click)="product.load(element)">
-            <mat-icon>show_chart</mat-icon>
-          </button>
-        </mat-cell>
-      </ng-container>
-
-      <!-- Name Column -->
-      <ng-container matColumnDef="totalReturns">
-        <mat-header-cell *matHeaderCellDef mat-sort-header> Returns </mat-header-cell>
-        <mat-cell *matCellDef="let element"> {{element.totalReturns}}%
-          <button mat-button color="primary" (click)="buy(element)">BUY</button>
-        </mat-cell>
-      </ng-container>
-
-      <!-- Weight Column -->
-      <ng-container matColumnDef="lastVolume">
-        <mat-header-cell *matHeaderCellDef mat-sort-header> Last Volume </mat-header-cell>
-        <mat-cell *matCellDef="let element"> {{element.lastVolume | number}}
-          <button mat-button color="warn" (click)="sell(element)">SELL</button>
-        </mat-cell>
-      </ng-container>
-
-      <!-- Color Column -->
-      <ng-container matColumnDef="lastPrice">
-        <mat-header-cell *matHeaderCellDef mat-sort-header> Last Price </mat-header-cell>
-        <mat-cell *matCellDef="let element"> {{element.lastPrice | currency}} </mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="totalTrades">
-        <mat-header-cell *matHeaderCellDef mat-sort-header> Trades </mat-header-cell>
-        <mat-cell *matCellDef="let element"> {{element.totalTrades}} </mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="trending">
-        <mat-header-cell *matHeaderCellDef mat-sort-header> Recommendation </mat-header-cell>
-        <mat-cell *matCellDef="let element"> {{element.trending}} </mat-cell>
-      </ng-container>
-
-      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row *matRowDef="let element; columns: displayedColumns;">
-      </mat-row>
-    </mat-table>
+    Progress: {{progress}}/{{totalStocks}}
+    <mat-progress-bar mode="determinate" value="{{progressPct}}"></mat-progress-bar>
+    Average Trades: {{algoReport.averageTrades}}
+    Average Returns: {{algoReport.averageReturns}}%
   </div>
 </mat-card>

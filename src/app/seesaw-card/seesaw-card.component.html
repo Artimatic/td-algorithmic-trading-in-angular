@@ -1,0 +1,119 @@
+<mat-card *ngIf="order">
+  <div class="banner" *ngIf="error">
+    <div class="banner-content">
+      ERROR: {{error}}
+    </div>
+  </div>
+  <div class="banner-warning" *ngIf="warning">
+    <div class="banner-content-warning">
+      WARNING: {{warning}}
+    </div>
+  </div>
+  <mat-horizontal-stepper [linear]="false" #stepper="matHorizontalStepper">
+    <mat-step [stepControl]="firstFormGroup">
+      <form [formGroup]="firstFormGroup">
+        <ng-template matStepLabel>Edit Order</ng-template>
+        <mat-chip>{{order.holding.symbol}}</mat-chip>
+        <p>{{order.holding.name}}</p>
+        <mat-form-field hintLabel="Quantity">
+          <input matInput type="number" placeholder="Quantity" formControlName="quantity" required>
+        </mat-form-field>
+        <mat-form-field hintLabel="Loss circuit breaker">
+          <input matInput type="number" placeholder="Loss Threshold" formControlName="lossThreshold" required>
+          <span matSuffix>% &nbsp;</span>
+        </mat-form-field>
+        <mat-form-field hintLabel="Profit exit">
+          <input matInput type="number" placeholder="Profit Target" formControlName="profitTarget">
+        </mat-form-field>
+        <mat-form-field hintLabel="Size of Each Order">
+          <input matInput type="number" placeholder="Orders" formControlName="orderSize" required>
+        </mat-form-field>
+      </form>
+    </mat-step>
+    <mat-step [stepControl]="secondFormGroup">
+      <ng-template matStepLabel>Place Order</ng-template>
+      <mat-card>
+        <div *ngIf="live">
+          <mat-chip color="warn" selected="true">LIVE</mat-chip>
+        </div>
+        <div *ngIf="!live">
+          <button mat-raised-button disabled>STALLED</button>
+        </div>
+        <div>
+          <section class="example-section">
+            <mat-progress-bar class="progress-bar" [mode]="determinate" [color]="color" [value]="progress()"></mat-progress-bar>
+          </section>
+          Orders Submitted: {{ buyCount + sellCount}}/{{firstFormGroup.value.quantity || 0}} shares
+        </div>
+        <div class="toolbar-content" fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px" fxLayoutGap.xs="0">
+          <div fxFlex="5%">
+            <mat-card-header>
+              <mat-card-title>{{order.holding.symbol}}</mat-card-title>
+              <mat-card-subtitle>
+                <button mat-fab color="accent">DAY</button>
+              </mat-card-subtitle>
+            </mat-card-header>
+            <mat-checkbox [(ngModel)]="showGraph">Chart</mat-checkbox>
+          </div>
+          <div fxFlex="95%">
+            <div *ngIf="showGraph">
+              <div [chart]="chart"></div>
+              <div [chart]="volumeChart"></div>
+            </div>
+            <div class="order-log" *ngIf="!showGraph">
+              <mat-grid-list cols="3" rowHeight="150px">
+                <mat-grid-tile *ngFor="let tile of tiles" [colspan]="tile.cols" [rowspan]="tile.rows">
+                  <table>
+                    <tr *ngFor="let order of tile.orders">
+                      <td>{{order.signalTime}}</td>
+                      <td>{{order.action}}</td>
+                      <td>{{order.quantity}}@</td>
+                      <td>${{order.price}}</td>
+                      <td> on {{order.timeSubmitted}}</td>
+                    </tr>
+                  </table>
+                </mat-grid-tile>
+              </mat-grid-list>
+            </div>
+          </div>
+        </div>
+        <mat-card-actions>
+          <button mat-raised-button color="warn" (click)="resetStepper(stepper)">STOP</button>
+          <button mat-button color="warn" (click)="openDialog()">GO LIVE</button>
+        </mat-card-actions>
+      </mat-card>
+    </mat-step>
+    <mat-step>
+      <ng-template matStepLabel>Backtest</ng-template>
+      <mat-grid-list cols="2" rowHeight="50px">
+        <mat-grid-tile [colspan]="2" [rowspan]="1">
+            <mat-checkbox [(ngModel)]="showBacktestOptions">Options</mat-checkbox>
+        </mat-grid-tile>
+        <span *ngIf="showBacktestOptions">
+          <mat-grid-tile [colspan]="1" [rowspan]="2">
+            <div class="date-picker">
+              Test Date
+              <input name="testDate" type="date" [ngModel]="testDate" (ngModelChange)="testDate = $event">
+            </div>
+          </mat-grid-tile>
+          <mat-grid-tile [colspan]="1" [rowspan]="2">
+            <mat-form-field>
+              <mat-label>Date Range</mat-label>
+              <mat-select [(value)]="selectedRange">
+                <mat-option value="1d">1 day</mat-option>
+                <mat-option value="5d">5 days</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </mat-grid-tile>
+        </span>
+      </mat-grid-list>
+      <mat-card-actions>
+        <button mat-button matStepperPrevious>Back</button>
+        <button mat-button (click)="stepper.reset()">Reset</button>
+        <button mat-button (click)="requestQuotes()">Request Quotes</button>
+        <button mat-button color="primary" (click)="newRun(false, false)">Backtest</button>
+        <button mat-button color="warn" (click)="confirmLiveBacktest()">TEST LIVE</button>
+      </mat-card-actions>
+    </mat-step>
+  </mat-horizontal-stepper>
+</mat-card>

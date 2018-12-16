@@ -114,7 +114,7 @@ class ReversionService {
         let MAs = this.executeMeanReversion(this.calcMA, quotes, shortTerm, longTerm);
         yesterdayDecision = MAs[MAs.length - 1];
 
-        let recommendedDifference = DecisionService.findDeviation(MAs, fromDate);
+        let recommendedDifference = 0.003;
 
         if (autoDeviation) {
           deviation = recommendedDifference;
@@ -133,8 +133,8 @@ class ReversionService {
           trending = yesterdayDecision.trending;
         }
 
-        let quoteInfo = { lastPrice, lastVolume, trending };
-        return { ...algoStats, ...quoteInfo };
+        let additionalInfo = { algo: 'MACrossover',lastPrice, lastVolume, trending };
+        return { ...algoStats, ...additionalInfo };
       })
       .catch(err => {
         console.log('ERROR! backtest snapshot', err, ticker);

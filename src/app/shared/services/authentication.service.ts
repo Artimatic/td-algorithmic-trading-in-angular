@@ -34,7 +34,7 @@ export class AuthenticationService {
     return this.http.post('/api/portfolio/mfa', { username: username, password: password, code: code })
       .map((response: Response) => {
         // login successful if there's a jwt token in the response
-        const token = response.json() && response.json().token;
+        const token = response.json() && response.json().access_token;
         if (token) {
           // set token property
           this.token = token;

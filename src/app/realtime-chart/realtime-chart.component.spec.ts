@@ -19,7 +19,7 @@ describe('RealtimeChartComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  xit('createshould create', () => {
     expect(component).toBeTruthy();
   });
 });

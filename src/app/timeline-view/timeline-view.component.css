@@ -1,0 +1,6 @@
+.table-container {
+	clear: both;
+	border: 1px solid #963;
+  height: 1080px;
+	overflow: auto;
+}

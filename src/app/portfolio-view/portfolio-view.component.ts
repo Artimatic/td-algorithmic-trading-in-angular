@@ -1,5 +1,5 @@
 import { AfterViewInit, ViewChild } from '@angular/core';
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { MatSidenav } from '@angular/material/sidenav';
 import * as moment from 'moment';
 
@@ -8,7 +8,6 @@ import { Holding } from '../shared/models';
 import { PortfolioTableComponent } from '../portfolio-table/portfolio-table.component';
 import { AuthenticationService } from '../shared/services/authentication.service';
 import { CartService } from '../shared/services/cart.service';
-import { Order } from '../shared/models/order';
 import { OrderRow } from '../shared/models/order-row';
 import { MatSnackBar } from '@angular/material';
 import { ExcelService } from '../shared/services/excel-service.service';
@@ -30,7 +29,7 @@ export class PortfolioViewComponent implements AfterViewInit {
   constructor(
     private portfolioService: PortfolioService,
     private authenticationService: AuthenticationService,
-    private cartService: CartService,
+    public cartService: CartService,
     private excelService: ExcelService,
     public snackBar: MatSnackBar) { }
 
@@ -83,6 +82,7 @@ export class PortfolioViewComponent implements AfterViewInit {
           profitTarget: row.Target * 1 || null,
           useStopLoss: row.StopLoss || null,
           useTakeProfit: row.TakeProfit || null,
+          meanReversion1: row.MeanReversion1 || null,
           orderSize: row.OrderSize * 1 || null
         };
         this.cartService.addToCart(order);

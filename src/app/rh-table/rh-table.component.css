@@ -1,12 +1,9 @@
 .table-container {
   display: flex;
   flex-direction: column;
-  max-height: 550px;
-  min-width: 800px;
 }
 
-.table-header {
-  min-height: 64px;
+.table-controls {
   display: flex;
   align-items: baseline;
   padding: 8px 24px 0;
@@ -14,7 +11,68 @@
   justify-content: space-between;
 }
 
-.mat-table {
+.rh-table {
   overflow: auto;
-  max-height: auto;
+}
+
+div.tableContainer {
+	clear: both;
+	border: 1px solid #963;
+	height: 416px;
+	overflow: auto;
+}
+
+html>body div.tableContainer {
+	overflow: hidden;
+}
+
+div.tableContainer table {
+	float: left;
+}
+
+thead.fixedHeader tr {
+	position: relative;
+}
+
+thead.fixedHeader th {
+	background: #C96;
+	border-left: 1px solid #EB8;
+	border-right: 1px solid #B74;
+	border-top: 1px solid #EB8;
+	font-weight: normal;
+	padding: 4px 3px;
+	text-align: left
+}
+
+html>body tbody.scrollContent {
+	display: block;
+	height: 756px;
+	overflow: auto;
+	width: 100%
+}
+
+html>body thead.fixedHeader {
+	display: table;
+	overflow: auto;
+	width: 100%
+}
+
+tbody.scrollContent td, tbody.scrollContent tr.normalRow td {
+	background: #FFF;
+	border-bottom: none;
+	border-left: none;
+	border-right: 1px solid #CCC;
+	border-top: 1px solid #DDD;
+	padding: 2px 3px 3px 4px
+}
+
+
+
+tbody.scrollContent tr.alternateRow td {
+	background: #EEE;
+	border-bottom: none;
+	border-left: none;
+	border-right: 1px solid #CCC;
+	border-top: 1px solid #DDD;
+	padding: 2px 3px 3px 4px
 }

@@ -16,7 +16,6 @@ import { ExcelService } from '../shared/services/excel-service.service';
   styleUrls: ['./portfolio-table.component.css']
 })
 export class PortfolioTableComponent implements OnInit {
-  @Output() addCart = new EventEmitter<Holding>();
 
   portfolioData: Holding[];
   displayedColumns = ['name', 'symbol',
@@ -82,12 +81,13 @@ export class PortfolioTableComponent implements OnInit {
 
   getCurrentPrice() {
     if (this.tickers.length >= this.dataSource.data.length) {
-      this.backtestService.getPrice({ tickers: this.tickers })
+      this.backtestService.getPrices({ tickers: this.tickers })
         .subscribe(result => {
           this.dataSource.data.map((holding: Holding) => {
             const myQuote = result.query.results.quote.find(quote => {
               return quote.symbol === holding.symbol;
             });
+
             if (myQuote) {
               holding.realtime_price = myQuote.realtime_price;
               holding.Volume = myQuote.Volume;

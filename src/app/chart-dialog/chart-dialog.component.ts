@@ -24,7 +24,7 @@ export class ChartDialogComponent implements OnInit {
   ngOnInit() {
     this.resolving = true;
 
-    this.algo.getBacktest(this.data)
+    this.algo.getBacktestChart(this.data)
       .map(result => {
         const time = [],
           seriesData = [];

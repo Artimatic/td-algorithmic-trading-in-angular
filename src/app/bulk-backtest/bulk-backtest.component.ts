@@ -3,7 +3,7 @@ import { DataSource } from '@angular/cdk/collections';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/of';
 
-import { BacktestService, Stock, AlgoParam, Row } from '../shared';
+import { Stock, AlgoParam, Row } from '../shared';
 import * as moment from 'moment';
 
 @Component({
@@ -12,17 +12,13 @@ import * as moment from 'moment';
   styleUrls: ['./bulk-backtest.component.css']
 })
 export class BulkBacktestComponent implements OnInit {
-  private stocks: AlgoParam[] = [];
+  public stocks: AlgoParam[] = [];
   headers: Array<string>;
 
-  constructor(private algo: BacktestService) {}
+  constructor() {}
 
   ngOnInit() {
     this.headers = ['stock', 'totalReturns', 'lastVolume', 'lastPrice', 'totalTrades', 'trending'];
-
-  }
-
-  runAlgo() {
   }
 
   import(event) {
@@ -30,8 +26,8 @@ export class BulkBacktestComponent implements OnInit {
     event.forEach((row: Row) => {
       const params = {
         ticker: row.Stock,
-        start: row.Start || moment().subtract(1, 'years').format('YYYY-MM-DD'),
-        end: row.End || moment().format('YYYY-MM-DD'),
+        start: row.Start,
+        end: row.End,
         short: row.Short || 30,
         long:	row.Long || 90,
         deviation: row.Deviation
@@ -42,12 +38,11 @@ export class BulkBacktestComponent implements OnInit {
   }
 
   query(param) {
-    console.log('stock: ', param);
     this.stocks = [];
     const params = {
       ticker: param.query,
-      start: moment().subtract(1, 'years').format('YYYY-MM-DD'),
-      end: moment().format('YYYY-MM-DD'),
+      start: param.start,
+      end: param.end,
       short: param.short || 30,
       long:	param.long || 90,
       deviation: param.deviation

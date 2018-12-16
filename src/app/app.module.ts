@@ -45,7 +45,8 @@ import {
   AuthenticationService,
   PortfolioService,
   DaytradeService,
-  ReportingService
+  ReportingService,
+  ScoreKeeperService
 } from './shared';
 import { ChartDialogComponent } from './chart-dialog';
 
@@ -67,6 +68,11 @@ import { BbCardComponent } from './bb-card/bb-card.component';
 import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.component';
 import { ReportingComponent, ReportDialogComponent } from './reporting/reporting.component';
 import { ResearchViewComponent } from './research-view/research-view.component';
+import { OptionsViewComponent } from './options-view/options-view.component';
+import { ScoreBoardComponent } from './score-board/score-board.component';
+import { TimelineViewComponent } from './timeline-view/timeline-view.component';
+import { SeesawCardComponent } from './seesaw-card/seesaw-card.component';
+import { BacktestViewComponent } from './backtest-view/backtest-view.component';
 
 @NgModule({
   declarations: [
@@ -92,6 +98,11 @@ import { ResearchViewComponent } from './research-view/research-view.component';
     ReportingComponent,
     ReportDialogComponent,
     ResearchViewComponent,
+    OptionsViewComponent,
+    ScoreBoardComponent,
+    TimelineViewComponent,
+    SeesawCardComponent,
+    BacktestViewComponent,
   ],
   entryComponents: [
     ChartDialogComponent,
@@ -143,6 +154,7 @@ import { ResearchViewComponent } from './research-view/research-view.component';
     ExcelService,
     DaytradeService,
     ReportingService,
+    ScoreKeeperService,
   ],
   bootstrap: [AppComponent]
 })

@@ -62,6 +62,57 @@ class BacktestController extends BaseController {
         .catch((err) => BaseController.requestErrorHandler(response, err));
     }
   }
+
+  getSMA(request, response) {
+    if (_.isEmpty(request.body)) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    }
+    else {
+      BacktestService.getSMA(request.body.real, request.body.period)
+        .then((data) => BaseController.requestGetSuccessHandler(response, data))
+        .catch((err) => BaseController.requestErrorHandler(response, err));
+    }
+  }
+
+  getMfi(request, response) {
+    if (_.isEmpty(request.body)) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    }
+    else {
+      BacktestService.getMfi(request.body.high, request.body.low, request.body.close, request.body.volume, request.body.period)
+        .then((data) => BaseController.requestGetSuccessHandler(response, data))
+        .catch((err) => BaseController.requestErrorHandler(response, err));
+    }
+  }
+
+  getRateOfChange(request, response) {
+    if (_.isEmpty(request.body)) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    }
+    else {
+      BacktestService.getRateOfChange(request.body.real, request.body.period)
+        .then((data) => BaseController.requestGetSuccessHandler(response, data))
+        .catch((err) => BaseController.requestErrorHandler(response, err));
+    }
+  }
+
+  getInfoV2(request, response) {
+    BacktestService.getInfoV2(request.body.symbol, request.body.to, request.body.from)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+  getInfoV2Chart(request, response) {
+    BacktestService.getInfoV2Chart(request.body.symbol, request.body.to, request.body.from)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+  getHistoricalMatches(request, response) {
+    BacktestService.getHistoricalMatches(request.body.symbol, request.body.to, request.body.from)
+    .then((data) => BaseController.requestGetSuccessHandler(response, data))
+    .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
 }
 
 module.exports.BacktestController = new BacktestController();
