@@ -57,7 +57,7 @@ class PortfolioService {
 
   getPortfolio(token, reply) {
     const options = {
-      uri: apiUrl + 'positions',
+      uri: apiUrl + 'positions/',
       headers: {
         'Authorization': `Bearer ${token}`
       }
