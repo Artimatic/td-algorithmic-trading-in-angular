@@ -14,61 +14,71 @@ const apiUrl = 'https://api.robinhood.com/';
 
 class PortfolioService {
   login(username, password, reply) {
-    (async () => {
-      try {
-        let loginResult = await robinhood.login({ username: username, password: password });
-        reply.status(200).send({});
-      } catch (e) {
-        console.log('Oh noes! Login probably failed!', e);
-        reply.status(401).send(e);
+    return request.post({
+      uri: apiUrl + 'oauth2/token/',
+      form: {
+        username: username,
+        password: password,
+        client_id: 'c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS',
+        grant_type: 'password',
+        scope: 'internal'
       }
-    })();
+    })
+      .then(() => reply.status(200).send({}))
+      .catch((e) => (reply.status(401).send(e)));
   }
 
   mfaLogin(username, password, code, reply) {
-    (async () => {
-      try {
-        let loginResult = await robinhood.mfaCode({ username: username, password: password, mfa_code: code });
-        reply.status(200).send(loginResult);
-      } catch (e) {
-        console.log('Oh noes! Login probably failed!', e);
-        reply.status(401).send(e);
+    return request.post({
+      uri: apiUrl + 'oauth2/token/',
+      form: {
+        username: username,
+        password: password,
+        client_id: 'c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS',
+        grant_type: 'password',
+        scope: 'internal',
+        mfa_code: code
       }
-    })();
+    })
+      .then((response) => reply.status(200).send(response))
+      .catch((e) => (reply.status(401).send(e)));
   }
 
   expireToken(token, reply) {
-    Robinhood({ token: token }).expire_token((error, response, body) => {
-      if (error) {
-        console.error(error);
-        reply.status(500).send(error);
-
-      } else {
-        reply.status(200).send(body);
+    return request.post({
+      uri: apiUrl + 'api-token-logout/',
+      headers: {
+        'Authorization': 'Bearer ' + _this.token
       }
-    });
+    })
+      .then(() => reply.status(200).send({}))
+      .catch((e) => (reply.status(401).send(e)));
   }
 
   getPortfolio(token, reply) {
-    Robinhood({ token: token }).accounts((error, response, body) => {
-      if (error) {
-        console.error(error);
-        reply.status(500).send(error);
-      } else {
-        reply.status(200).send(body);
+    const options = {
+      uri: apiUrl + 'positions',
+      headers: {
+        'Authorization': `Bearer ${token}`
       }
-    });
+    };
+
+    return request.get(options)
+      .then((response) => reply.status(200).send(response))
+      .catch((e) => (reply.status(500).send(e)));
   }
 
   getPositions(token, reply) {
-    Robinhood({ token: token }).nonzero_positions((error, response, body) => {
-      if (error) {
-        console.error(error);
-        reply.status(500).send(error);
-      } else {
-        reply.status(200).send(body);
+    const options = {
+      uri: apiUrl + 'positions/?nonzero=true',
+      headers: {
+        'Authorization': `Bearer ${token}`
       }
-    });
+    };
+
+    return request.get(options)
+      .then((response) => reply.status(200).send(response))
+      .catch((e) => (reply.status(500).send(e)));
   }
 
   getResource(instrument, reply) {
