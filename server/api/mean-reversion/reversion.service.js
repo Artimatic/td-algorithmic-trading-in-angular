@@ -1,9 +1,6 @@
 const moment = require('moment');
 const algebra = require("algebra.js");
 const math = require("mathjs");
-import {
-  ma, dma, ema, sma, wma
-} from 'moving-averages';
 
 import * as errors from '../../components/errors/baseErrors';
 import { QuoteService } from './../quote/quote.service';
