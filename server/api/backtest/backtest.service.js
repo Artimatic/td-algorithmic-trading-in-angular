@@ -9,13 +9,13 @@ import * as DecisionService from './../mean-reversion/reversion-decision.service
 
 import * as errors from '../../components/errors/baseErrors';
 import * as tulind from 'tulind';
-import configuations from '../../config/environment';
+import configurations from '../../config/environment';
 
-const appUrl = configuations.apps.goliath;
+const appUrl = configurations.apps.goliath;
 
 const config = {
-  shortTerm: [3, 85],
-  longTerm: [5, 85]
+  shortTerm: [3, 103],
+  longTerm: [5, 286]
 }
 
 let startTime;
@@ -62,7 +62,6 @@ class BacktestService {
 
   getData(ticker, currentDate, startDate) {
     let { end, start } = this.getDateRanges(currentDate, startDate);
-    console.log(start, " to ", end);
 
     return QuoteService.getDailyQuotes(ticker, end, start)
       .then(data => {
@@ -76,16 +75,19 @@ class BacktestService {
     let snapshots = [];
     return this.getData(ticker, currentDate, startDate)
       .then(quotes => {
+        const fields = ['shortTerm', 'longTerm', 'totalReturns', 'totalTrades', 'recommendedDifference'];
         for (let i = shortTerm[0]; i < shortTerm[1]; i++) {
           for (let j = longTerm[0]; j < longTerm[1]; j++) {
             if (i < j) {
-              console.log("short:", i, " long:", j);
               let MAs = ReversionService.executeMeanReversion(ReversionService.calcMA, quotes, i, j);
               let recommendedDifference = 0.003;
 
               let averagesRange = { shortTerm: i, longTerm: j };
               let returns = DecisionService.calcReturns(MAs, recommendedDifference, startDate);
-              console.log("returns: ", returns.totalReturns, "trades: ", returns.totalTrades);
+
+              if (returns.totalReturns > 0 && returns.totalTrades > 3) {
+                snapshots.push({ ...averagesRange, ...returns, recommendedDifference });
+              }
 
               snapshots.push({ ...averagesRange, ...returns, recommendedDifference });
 
@@ -105,9 +107,6 @@ class BacktestService {
         const duration = moment.duration(endTime.diff(startTime)).humanize();
 
         console.log("Duration: ", duration);
-
-        const fields = ['shortTerm', 'longTerm', 'totalReturns', 'totalTrades', 'recommendedDifference'];
-
 
         fs.writeFile(`${ticker}_analysis_${currentDate}-${startDate}.csv`, json2csv({ data: snapshots, fields: fields }), function (err) {
           if (err) throw err;
