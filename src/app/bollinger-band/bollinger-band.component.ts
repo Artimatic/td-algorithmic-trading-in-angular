@@ -184,9 +184,9 @@ export class BollingerBandComponent implements OnInit {
           counter++;
           executed++;
         }
-        // if (moment().isAfter(this.endTime)) {
-        //   this.stop();
-        // }
+        if (moment().isAfter(this.endTime)) {
+          this.stop();
+        }
       });
   }
 
