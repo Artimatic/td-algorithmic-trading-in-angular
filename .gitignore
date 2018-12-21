@@ -51,3 +51,5 @@ AA_analysis_2018-01-11-2015-01-11.csv
 AAPL_analysis_2018-01-11-2015-01-11.csv
 .vscode/settings.json
 server/config/environment/credentials.js
+
+server/config/environment/credentials\.ts
