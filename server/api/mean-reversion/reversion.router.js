@@ -1,4 +1,4 @@
-const ReversionController = require('./reversion.controller');
+import ReversionController from './reversion.controller';
 
 exports.reversion = function (req, res, next) {
   ReversionController.getAlgoData(req, res);
