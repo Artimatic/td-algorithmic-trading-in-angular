@@ -192,7 +192,7 @@ class BacktestService {
         return arr;
       })
       .catch((error) => {
-        console.log('Error: ', error);
+        return error;
       });
   }
 
