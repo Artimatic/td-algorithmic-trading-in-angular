@@ -1,7 +1,14 @@
 import { Component, Inject } from '@angular/core';
-import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
+import { MatDialog, MAT_DIALOG_DATA } from '@angular/material';
 import { AuthenticationService, ReportingService } from '../shared';
-import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
+
+@Component({
+  selector: 'app-report-dialog',
+  templateUrl: './report-dialog.component.html',
+})
+export class ReportDialogComponent {
+  constructor(@Inject(MAT_DIALOG_DATA) public data: any) { }
+}
 
 @Component({
   selector: 'app-reporting',
@@ -30,12 +37,4 @@ export class ReportingComponent {
       }
     });
   }
-}
-
-@Component({
-  selector: 'app-report-dialog',
-  templateUrl: './report-dialog.component.html',
-})
-export class ReportDialogComponent {
-  constructor(@Inject(MAT_DIALOG_DATA) public data: any) { }
 }

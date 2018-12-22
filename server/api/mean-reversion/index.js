@@ -1,11 +1,10 @@
-const express = require('express');
-const handler = require('./reversion.router');
-
+import * as express from 'express';
 const router = express.Router();
 
-router.post('/', handler.reversion);
-router.post('/backtest', handler.backtest);
-router.post('/info', handler.backtestQuick);
-router.post('/pricing', handler.pricing);
+import ReversionController from './reversion.controller';
+
+router.post('/', ReversionController.getAlgoData);
+router.post('/backtest', ReversionController.runBacktest);
+router.post('/info', ReversionController.runBacktestQuick);
 
 module.exports = router;

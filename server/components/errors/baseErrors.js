@@ -1,11 +1,23 @@
 const errors = require('errors');
 
-module.exports.InvalidArgumentsError = errors.create({
-    name:"InvalidArgumentsError",
-    defaultExplanation: "Input has invalid value"
-});
+class BaseErrors {
+  InvalidArgumentsError() {
+    return errors.create({
+      name: 'InvalidArgumentsError',
+      defaultExplanation: 'Input has invalid value'
+    });
+  }
 
-module.exports.NotFoundError = errors.create({
-  name:"NotFoundError",
-  defaultExplanation: "Not found"
-});
+  NotFoundError() {
+    return errors.create({
+      name: 'NotFoundError',
+      defaultExplanation: 'Not found'
+    });
+  }
+
+  Http400Error(err) {
+    return new errors.Http400Error(err);
+  }
+}
+
+export default new BaseErrors();

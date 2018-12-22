@@ -1,6 +1,4 @@
 import { Component, OnChanges, Input, SimpleChanges } from '@angular/core';
-import * as _ from 'lodash';
-import { SmartOrder } from '../shared/models/smart-order';
 
 @Component({
   selector: 'app-score-board',

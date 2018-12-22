@@ -186,7 +186,7 @@ export class SeesawCardComponent implements OnInit, OnChanges {
       if (!this.live && i > this.bbandPeriod) {
         const lastIndex = i;
         const firstIndex = i - this.bbandPeriod;
-        const order = await this.runStrategy(quotes, inverseQuotes, timestamps1, firstIndex, lastIndex);
+        await this.runStrategy(quotes, inverseQuotes, timestamps1, firstIndex, lastIndex);
       }
 
       const foundOrder = this.orders.find((order) => {

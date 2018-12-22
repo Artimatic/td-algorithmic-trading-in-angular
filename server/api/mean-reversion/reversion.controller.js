@@ -1,12 +1,9 @@
 import * as _ from 'lodash';
 import * as Boom from 'boom';
-import * as  moment from 'moment';
 
-import BaseController from '../../api/templates/base.controller';
+import BaseController from '../templates/base.controller';
 
-import { ReversionService } from './../mean-reversion/reversion.service';
-
-const errors = require('../../components/errors/baseErrors');
+import ReversionService from './reversion.service';
 
 class ReversionController extends BaseController {
 
@@ -17,9 +14,8 @@ class ReversionController extends BaseController {
     getAlgoData(request, response) {
         if (_.isEmpty(request.body)) {
             return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
-        }
-        else {
-            ReversionService.getData(request.body.ticker, request.body.end)
+        } else {
+            ReversionService.getData(request.body.ticker, request.body.end, request.body.start)
                 .then((data) => BaseController.requestGetSuccessHandler(response, data))
                 .catch((err) => BaseController.requestErrorHandler(response, err));
         }
@@ -30,8 +26,7 @@ class ReversionController extends BaseController {
             !request.body.short ||
             !request.body.long) {
             return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
-        }
-        else {
+        } else {
             ReversionService.runBacktest(request.body.ticker,
                 request.body.end,
                 request.body.start,
@@ -48,8 +43,7 @@ class ReversionController extends BaseController {
             !request.body.short ||
             !request.body.long) {
             return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
-        }
-        else {
+        } else {
             ReversionService.runBacktestSnapshot(request.body.ticker,
                 request.body.end,
                 request.body.start,
@@ -60,17 +54,6 @@ class ReversionController extends BaseController {
                 .catch((err) => BaseController.requestErrorHandler(response, err));
         }
     }
-
-    getPrice(request, response) {
-        if (_.isEmpty(request.body)) {
-            return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
-        }
-        else {
-            ReversionService.getPrice(request.body.ticker, request.body.end, parseFloat(request.body.deviation))
-                .then((data) => BaseController.requestGetSuccessHandler(response, data))
-                .catch((err) => BaseController.requestErrorHandler(response, err));
-        }
-    }
 }
 
-module.exports = new ReversionController();
+export default new ReversionController();

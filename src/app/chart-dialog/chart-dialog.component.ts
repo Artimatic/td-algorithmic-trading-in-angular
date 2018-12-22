@@ -1,11 +1,11 @@
 import { Component, OnInit, Inject } from '@angular/core';
-import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { RhTableComponent } from '../rh-table';
 import { Chart } from 'angular-highcharts';
-import { DataPoint, SeriesOptions } from 'highcharts';
+import { DataPoint } from 'highcharts';
 import * as moment from 'moment';
 
-import { BacktestService, Stock, AlgoParam } from '../shared';
+import { BacktestService } from '../shared';
 
 @Component({
   selector: 'app-chart-dialog',

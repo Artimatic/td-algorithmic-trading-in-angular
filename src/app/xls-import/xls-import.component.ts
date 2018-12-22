@@ -17,14 +17,11 @@ export class XlsImportComponent implements OnInit {
   upload() {
     const reader = new FileReader();
     const fileBrowser = this.fileInput.nativeElement;
-    const component = this;
 
     const overwriteOnload = function (evt: any) {
       const data = evt.target.result;
 
       const workbook = XLSX.read(data, { type: 'binary' });
-
-      const headerNames = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 })[0];
 
       const parsedData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 

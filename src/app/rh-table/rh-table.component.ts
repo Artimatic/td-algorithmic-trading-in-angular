@@ -2,7 +2,7 @@ import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/cor
 import 'rxjs/add/observable/of';
 import 'rxjs/add/observable/merge';
 import 'rxjs/add/operator/finally';
-import { MatSnackBar, MatDialog, MatGridListModule } from '@angular/material';
+import { MatSnackBar, MatDialog } from '@angular/material';
 import * as moment from 'moment';
 import * as _ from 'lodash';
 

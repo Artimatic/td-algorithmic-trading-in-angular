@@ -1,11 +1,6 @@
-import moment from 'moment';
-import json2csv from 'json2csv';
-import fs from 'fs';
 import request from 'request-promise';
 
 import Robinhood from 'robinhood';
-
-import * as errors from '../../components/errors/baseErrors';
 
 const RobinHoodApi = require('robinhood-api');
 const robinhood = new RobinHoodApi();
@@ -48,7 +43,7 @@ class PortfolioService {
     return request.post({
       uri: apiUrl + 'api-token-logout/',
       headers: {
-        'Authorization': 'Bearer ' + _this.token
+        'Authorization': 'Bearer ' + token
       }
     })
       .then(() => reply.status(200).send({}))
@@ -201,4 +196,4 @@ class PortfolioService {
   }
 }
 
-module.exports.PortfolioService = new PortfolioService();
+export default new PortfolioService();

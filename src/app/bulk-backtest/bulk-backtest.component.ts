@@ -1,10 +1,7 @@
-import { Component, OnInit, Input } from '@angular/core';
-import { DataSource } from '@angular/cdk/collections';
-import { Observable } from 'rxjs/Observable';
+import { Component, OnInit } from '@angular/core';
 import 'rxjs/add/observable/of';
 
-import { Stock, AlgoParam, Row } from '../shared';
-import * as moment from 'moment';
+import { AlgoParam, Row } from '../shared';
 
 @Component({
   selector: 'app-bulk-backtest',

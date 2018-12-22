@@ -1,6 +1,6 @@
 import { Component, OnChanges, Input, OnInit, ViewChild, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
+import { MatDialog } from '@angular/material';
 import 'rxjs/add/observable/concat';
 import 'rxjs/add/observable/defer';
 import 'rxjs/add/observable/merge';
@@ -777,8 +777,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     shortSma: any[],
     roc: any[]) {
 
-    const upper = band[2],
-      mid = band[1],
+    const mid = band[1],
       lower = band[0];
 
     const pricePaid = this.daytradeService.estimateAverageBuyOrderPrice(this.orders);
@@ -952,7 +951,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         if (gains < this.firstFormGroup.value.lossThreshold) {
           this.setWarning('Loss threshold met. Sending stop loss order. Estimated loss: ' +
             `${this.daytradeService.convertToFixedNumber(gains, 4) * 100}%`);
-          const log = `${this.order.holding.symbol} Stop Loss triggered: ${closePrice}/${estimatedPrice}`
+          const log = `${this.order.holding.symbol} Stop Loss triggered: ${closePrice}/${estimatedPrice}`;
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
           console.log(log);
           const stopLossOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);

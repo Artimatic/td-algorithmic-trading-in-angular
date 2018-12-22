@@ -1,13 +1,14 @@
 import moment from 'moment';
-import json2csv from 'json2csv';
-import fs from 'fs';
+import * as json2csv from 'json2csv';
+import * as fs from 'fs';
+import * as _ from 'lodash';
+
 import RequestPromise from 'request-promise';
 
-import { QuoteService } from './../quote/quote.service';
-import { ReversionService } from './../mean-reversion/reversion.service';
-import * as DecisionService from './../mean-reversion/reversion-decision.service';
-
-import * as errors from '../../components/errors/baseErrors';
+import QuoteService from '../quote/quote.service';
+import ReversionService from '../mean-reversion/reversion.service';
+import DecisionService from '../mean-reversion/reversion-decision.service';
+import BaseErrors from '../../components/errors/baseErrors';
 import * as tulind from 'tulind';
 import configurations from '../../config/environment';
 
@@ -16,7 +17,7 @@ const appUrl = configurations.apps.goliath;
 const config = {
   shortTerm: [3, 103],
   longTerm: [5, 286]
-}
+};
 
 let startTime;
 let endTime;
@@ -45,14 +46,14 @@ class BacktestService {
   evaluateStrategyAll(ticker, end, start) {
     console.log('Executing: ', ticker, new Date());
     startTime = moment();
-    return this.runTest(ticker, end, start);
+    return this.runIntradayTest(ticker, end, start);
   }
 
   getDateRanges(currentDate, startDate) {
-    let current = moment(currentDate),
+    const current = moment(currentDate),
       start = moment(startDate);
 
-    let days = current.diff(start, 'days') + 1;
+    const days = current.diff(start, 'days') + 1;
 
     return {
       end: current.format(),
@@ -61,7 +62,7 @@ class BacktestService {
   }
 
   getData(ticker, currentDate, startDate) {
-    let { end, start } = this.getDateRanges(currentDate, startDate);
+    const { end, start } = this.getDateRanges(currentDate, startDate);
 
     return QuoteService.getDailyQuotes(ticker, end, start)
       .then(data => {
@@ -70,20 +71,20 @@ class BacktestService {
   }
 
   runTest(ticker, currentDate, startDate) {
-    let shortTerm = config.shortTerm;
-    let longTerm = config.longTerm;
-    let snapshots = [];
+    const shortTerm = config.shortTerm;
+    const longTerm = config.longTerm;
+    const snapshots = [];
     return this.getData(ticker, currentDate, startDate)
       .then(quotes => {
         const fields = ['shortTerm', 'longTerm', 'totalReturns', 'totalTrades', 'recommendedDifference'];
         for (let i = shortTerm[0]; i < shortTerm[1]; i++) {
           for (let j = longTerm[0]; j < longTerm[1]; j++) {
             if (i < j) {
-              let MAs = ReversionService.executeMeanReversion(ReversionService.calcMA, quotes, i, j);
-              let recommendedDifference = 0.003;
+              const MAs = ReversionService.executeMeanReversion(ReversionService.calcMA, quotes, i, j);
+              const recommendedDifference = 0.003;
 
-              let averagesRange = { shortTerm: i, longTerm: j };
-              let returns = DecisionService.calcReturns(MAs, recommendedDifference, startDate);
+              const averagesRange = { shortTerm: i, longTerm: j };
+              const returns = DecisionService.calcReturns(MAs, recommendedDifference, startDate);
 
               if (returns.totalReturns > 0 && returns.totalTrades > 3) {
                 snapshots.push({ ...averagesRange, ...returns, recommendedDifference });
@@ -92,8 +93,9 @@ class BacktestService {
               snapshots.push({ ...averagesRange, ...returns, recommendedDifference });
 
               if (i % 3 === 0 && j === longTerm[longTerm.length - 1] - 1) {
-                fs.writeFile(`${ticker}_analysis_${startDate}-${currentDate}_${i}.csv`, json2csv({ data: snapshots, fields: fields }), function (err) {
-                  if (err) throw err;
+                fs.writeFile(`${ticker}_analysis_${startDate}-
+                  ${currentDate}_${i}.csv`, json2csv({ data: snapshots, fields: fields }), function (err) {
+                  if (err) { throw err; }
                   console.log('file saved');
                 });
                 snapshots.length = 0;
@@ -106,14 +108,26 @@ class BacktestService {
 
         const duration = moment.duration(endTime.diff(startTime)).humanize();
 
-        console.log("Duration: ", duration);
+        console.log('Duration: ', duration);
 
         fs.writeFile(`${ticker}_analysis_${currentDate}-${startDate}.csv`, json2csv({ data: snapshots, fields: fields }), function (err) {
-          if (err) throw err;
+          if (err) { throw err; }
           console.log('file saved');
         });
         return snapshots;
       });
+  }
+
+  runIntradayTest(symbol, currentDate, startDate) {
+    return QuoteService.queryForIntraday(symbol, startDate, currentDate)
+      .then(quotes => {
+        _.forEach(quotes, (q) => {
+
+        });
+      });
+  }
+
+  getBuySignal() {
   }
 
   getMeanReversionChart(ticker, currentDate, startDate, deviation, shortTerm, longTerm) {
@@ -123,12 +137,12 @@ class BacktestService {
       })
       .catch(err => {
         console.log('ERROR! backtest', err);
-        throw errors.InvalidArgumentsError();
+        throw BaseErrors.InvalidArgumentsError();
       });
   }
 
   getTradeDays(days) {
-    let workDaysPerWeek = 5 / 7,
+    const workDaysPerWeek = 5 / 7,
       holidays = 9;
 
     return Math.ceil(days * workDaysPerWeek - holidays);
@@ -150,7 +164,7 @@ class BacktestService {
 
     return RequestPromise(options)
       .then((data) => {
-        let arr = JSON.parse(data);
+        const arr = JSON.parse(data);
         return arr;
       })
       .catch((error) => {
@@ -174,7 +188,7 @@ class BacktestService {
 
     return RequestPromise(options)
       .then((data) => {
-        let arr = JSON.parse(data);
+        const arr = JSON.parse(data);
         return arr;
       })
       .catch((error) => {
@@ -208,4 +222,4 @@ class BacktestService {
   }
 }
 
-module.exports.BacktestService = new BacktestService();
+export default new BacktestService();

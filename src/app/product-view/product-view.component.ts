@@ -1,11 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { Chart } from 'angular-highcharts';
-import { DataPoint, SeriesOptions } from 'highcharts';
+import { DataPoint } from 'highcharts';
 import * as moment from 'moment';
 import { MatSnackBar } from '@angular/material';
 
-import { BacktestService, Stock, AlgoParam } from '../shared';
-import { removeSummaryDuplicates } from '@angular/compiler';
+import { BacktestService } from '../shared';
 
 @Component({
   selector: 'app-product-view',

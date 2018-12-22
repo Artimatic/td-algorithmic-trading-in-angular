@@ -1,5 +1,5 @@
 import { TestBed, inject } from '@angular/core/testing';
-import { HttpModule, Http } from '@angular/http';
+import { HttpModule } from '@angular/http';
 
 import { DaytradeService } from './daytrade.service';
 import { BacktestService } from './backtest.service';

@@ -81,7 +81,6 @@ export class PortfolioService {
   }
 
   getQuote(symbol: string): Observable<any> {
-    const body = { symbol: symbol };
     return this.http.get(`/api/portfolio/quote?symbol=${symbol}`)
       .map((response: Response) => response.json());
   }

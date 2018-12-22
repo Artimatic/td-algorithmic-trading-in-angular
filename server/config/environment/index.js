@@ -1,27 +1,16 @@
 const path = require('path');
 const _ = require('lodash');
-const fs = require('fs');
 
-let credentials = {}
+import * as credentials from './credentials';
 
-try {
-  const stats = fs.statSync('./server/config/environment/credentials.js');
-  credentials = require('./credentials');
-}
-catch(err) {
+if(!credentials) {
     console.log('Credentials are missing. Continuing without credentials.');
-}
-
-function requiredProcessEnv(name) {
-  if(!process.env[name]) {
-    throw new Error('You must set the ' + name + ' environment variable');
-  }
-  return process.env[name];
 }
 
 // All configurations will extend these options
 // ============================================
-const all = {
+
+export default {
   env: process.env.NODE_ENV,
 
   // Root path of server
@@ -40,9 +29,3 @@ const all = {
     goliath: 'http://localhost:8100/'
   }
 };
-
-// Export the config object based on the NODE_ENV
-// ==============================================
-module.exports = _.merge(
-  all,
-  require('./' + process.env.NODE_ENV + '.js') || {});

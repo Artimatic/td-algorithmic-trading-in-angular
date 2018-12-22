@@ -1,13 +1,9 @@
 import * as _ from 'lodash';
 import * as Boom from 'boom';
-import * as  moment from 'moment';
 
-import BaseController from '../../api/templates/base.controller';
-import { QuoteService } from './quote.service';
+import BaseController from '../templates/base.controller';
+import QuoteService from './quote.service';
 
-const errors = require('../../components/errors/baseErrors');
-
-const Schema = require('./quote.model');
 
 class QuoteController extends BaseController {
 
@@ -18,8 +14,7 @@ class QuoteController extends BaseController {
   getQuote(request, response) {
     if (_.isEmpty(request.body)) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
-    }
-    else {
+    } else {
       QuoteService.getData(request.body.ticker, request.body.interval, request.body.range)
         .then((data) => BaseController.requestGetSuccessHandler(response, data))
         .catch((e) => BaseController.requestErrorHandler(response, e));
@@ -29,8 +24,7 @@ class QuoteController extends BaseController {
   getCurrentQuote(request, response) {
     if (_.isEmpty(request.body)) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
-    }
-    else {
+    } else {
       QuoteService.getLastPrice(request.body.tickers)
         .then((data) => BaseController.requestGetSuccessHandler(response, data))
         .catch((e) => BaseController.requestErrorHandler(response, e));
@@ -40,8 +34,7 @@ class QuoteController extends BaseController {
   getPrice(request, response) {
     if (_.isEmpty(request.body)) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
-    }
-    else {
+    } else {
       QuoteService.getPrice(request.body.symbol)
         .then((data) => BaseController.requestGetSuccessHandler(response, data))
         .catch((e) => BaseController.requestErrorHandler(response, e));
@@ -51,8 +44,7 @@ class QuoteController extends BaseController {
   getRawData(request, response) {
     if (_.isEmpty(request.body)) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
-    }
-    else {
+    } else {
       QuoteService.getRawData(request.body.ticker, request.body.interval, request.body.range)
         .then((data) => BaseController.requestGetSuccessHandler(response, data))
         .catch((e) => BaseController.requestErrorHandler(response, e));
@@ -62,8 +54,7 @@ class QuoteController extends BaseController {
   getIntraday(request, response) {
     if (_.isEmpty(request.body)) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
-    }
-    else {
+    } else {
       QuoteService.getIntradayData(request.body.symbol, request.body.interval)
         .then((data) => BaseController.requestGetSuccessHandler(response, data))
         .catch((e) => BaseController.requestErrorHandler(response, e));
@@ -73,8 +64,7 @@ class QuoteController extends BaseController {
   getIntradayV2(request, response) {
     if (_.isEmpty(request.body)) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
-    }
-    else {
+    } else {
       QuoteService.getIntradayDataV2(request.body.symbol, request.body.interval)
         .then((data) => BaseController.requestGetSuccessHandler(response, data))
         .catch((e) => BaseController.requestErrorHandler(response, e));
@@ -86,8 +76,7 @@ class QuoteController extends BaseController {
 
     if (_.isEmpty(request.query)) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
-    }
-    else {
+    } else {
       console.log('q: ', request.query);
       QuoteService.queryForIntraday(request.query.symbol, request.query.from, request.query.to)
         .then((data) => BaseController.requestGetSuccessHandler(response, data))
@@ -98,20 +87,8 @@ class QuoteController extends BaseController {
   postIntraday(request, response) {
     if (_.isEmpty(request.body)) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
-    }
-    else {
+    } else {
       QuoteService.postIntradayData(request.body)
-        .then((data) => BaseController.requestGetSuccessHandler(response, data))
-        .catch((e) => BaseController.requestErrorHandler(response, e));
-    }
-  }
-
-  getCompanySummary(request, response) {
-    if (_.isEmpty(request.body)) {
-      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
-    }
-    else {
-      QuoteService.getCompanySummary(request.body.symbol)
         .then((data) => BaseController.requestGetSuccessHandler(response, data))
         .catch((e) => BaseController.requestErrorHandler(response, e));
     }
@@ -120,8 +97,7 @@ class QuoteController extends BaseController {
   getOptionChain(request, response) {
     if (_.isEmpty(request.body)) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
-    }
-    else {
+    } else {
       QuoteService.getOptionChain(request.body.symbol)
         .then((data) => BaseController.requestGetSuccessHandler(response, data))
         .catch((e) => BaseController.requestErrorHandler(response, e));
@@ -129,4 +105,4 @@ class QuoteController extends BaseController {
   }
 }
 
-module.exports = new QuoteController();
+export default new QuoteController();
