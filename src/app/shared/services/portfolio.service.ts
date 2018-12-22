@@ -36,7 +36,7 @@ export class PortfolioService {
     const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.token });
     const options = new RequestOptions({ headers: headers });
     const body = {
-      'account': this.authenticationService.myAccount.url,
+      'account': this.authenticationService.myAccount.account,
       'url': holding.instrument,
       'symbol': holding.symbol,
       'quantity': quantity,
@@ -60,7 +60,7 @@ export class PortfolioService {
     const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.token });
     const options = new RequestOptions({ headers: headers });
     const body = {
-      'account': this.authenticationService.myAccount.url,
+      'account': this.authenticationService.myAccount.account,
       'url': holding.instrument,
       'symbol': holding.symbol,
       'quantity': quantity,
