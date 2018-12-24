@@ -154,23 +154,25 @@ class BacktestService {
         }
 
         _.forEach(indicators, (indicator, key) => {
-          let orderType;
-          const avgPrice = this.estimateAverageBuyOrderPrice(orders);
-          let sell = false,
-            buy = false;
-          if (orders.buy.length > 0) {
-            sell = this.getSellSignal(avgPrice, indicator.close, lossThreshold, profitThreshold);
+          if (indicator.close) {
+            let orderType;
+            const avgPrice = this.estimateAverageBuyOrderPrice(orders);
+            let sell = false,
+              buy = false;
+            if (orders.buy.length > 0) {
+              sell = this.getSellSignal(avgPrice, indicator.close, lossThreshold, profitThreshold);
+            }
+  
+            buy = this.getBuySignal(indicator, rocDiffRange, mfiLimit, bbRangeFn(indicator.close, indicator.bband80));
+  
+            if (buy) {
+              orderType = 'buy';
+            } else if (sell) {
+              orderType = 'sell';
+            }
+  
+            orders = this.calcTrade(orders, indicator, orderType);
           }
-
-          buy = this.getBuySignal(indicator, rocDiffRange, mfiLimit, bbRangeFn(indicator.close, indicator.bband80));
-
-          if (buy) {
-            orderType = 'buy';
-          } else if (sell) {
-            orderType = 'sell';
-          }
-
-          orders = this.calcTrade(orders, indicator, orderType);
         });
 
         const response = { ...orders, indicators };
