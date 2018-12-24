@@ -867,8 +867,8 @@ export class BbCardComponent implements OnInit, OnChanges {
 
       this.reportingService.addAuditLog(this.order.holding.symbol, log);
 
-      if (momentumDiff < -0.7 || momentumDiff > 0.7) {
-        if (roc1 < -0.006 || roc1 > 0.006) {
+      if (momentumDiff < -0.5 || momentumDiff > 0.5) {
+        if (roc1 < -0.003 || roc1 > 0.003) {
           if (this.mfi < 20) {
             if (signalPrice < lower[0]) {
               return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
