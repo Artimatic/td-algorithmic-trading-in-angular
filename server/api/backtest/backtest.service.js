@@ -43,10 +43,10 @@ class BacktestService {
     return tulind.indicators.roc.indicator([real], [period]);
   }
 
-  evaluateStrategyAll(ticker, end, start) {
+  async evaluateStrategyAll(ticker, end, start) {
     console.log('Executing: ', ticker, new Date());
     startTime = moment();
-    return this.runIntradayTest(ticker, end, start);
+    return await this.runIntradayTest(ticker, end, start);
   }
 
   getDateRanges(currentDate, startDate) {
@@ -95,9 +95,9 @@ class BacktestService {
               if (i % 3 === 0 && j === longTerm[longTerm.length - 1] - 1) {
                 fs.writeFile(`${ticker}_analysis_${startDate}-
                   ${currentDate}_${i}.csv`, json2csv({ data: snapshots, fields: fields }), function (err) {
-                  if (err) { throw err; }
-                  console.log('file saved');
-                });
+                    if (err) { throw err; }
+                    console.log('file saved');
+                  });
                 snapshots.length = 0;
               }
             }
@@ -119,12 +119,79 @@ class BacktestService {
   }
 
   runIntradayTest(symbol, currentDate, startDate) {
+    const minQuotes = 81;
+    const getIndicatorQuotes = [];
     return QuoteService.queryForIntraday(symbol, startDate, currentDate)
       .then(quotes => {
-        _.forEach(quotes, (q) => {
-
+        _.forEach(quotes, (value, key) => {
+          if (key > minQuotes) {
+            const q = _.slice(quotes, key - minQuotes, key);
+            getIndicatorQuotes.push(this.initStrategy(q));
+          }
         });
+        return Promise.all(getIndicatorQuotes);
       });
+  }
+
+  getSubArray(reals, period) {
+    return _.slice(reals, reals.length - (period + 1));
+  }
+
+  processQuotes(quotes) {
+    const reals = [],
+      highs = [],
+      lows = [],
+      volumes = [],
+      timeline = [];
+
+    _.forEach(quotes, (value) => {
+      reals.push(value.close);
+      highs.push(value.high);
+      lows.push(value.low);
+      volumes.push(value.volume);
+      timeline.push(value.date);
+    });
+
+    return { reals, highs, lows, volumes, timeline };
+  }
+
+  initStrategy(quotes) {
+    const currentQuote = quotes[quotes.length - 1];
+    const indicators = this.processQuotes(quotes);
+    
+    return this.getBBands(indicators.reals, 80, 2)
+      .then((bband80) => {
+        currentQuote.bband80 = bband80;
+        return this.getSMA(indicators.reals, 5);
+      })
+      .then((sma5) => {
+        currentQuote.sma5 = sma5;
+        return this.getRateOfChange(this.getSubArray(indicators.reals, 10), 10);
+      })
+      .then((roc10) => {
+        const rocLen = roc10[0].length - 1;
+        currentQuote.roc10 = _.round(roc10[0][rocLen], 3);
+        return this.getRateOfChange(this.getSubArray(indicators.reals, 70), 70);
+      })
+      .then((roc70) => {
+        const rocLen = roc70[0].length - 1;
+        currentQuote.roc70 = _.round(roc70[0][rocLen], 3);
+        return this.getRateOfChange(this.getSubArray(indicators.reals, 70), 70);
+      })
+      .then((roc5) => {
+        const rocLen = roc5[0].length - 1;
+        currentQuote.roc5 = _.round(roc5[0][rocLen], 3);
+        return this.getMfi(this.getSubArray(indicators.highs, 14),
+          this.getSubArray(indicators.lows, 14),
+          this.getSubArray(indicators.reals, 14),
+          this.getSubArray(indicators.volumes, 14),
+          14);
+      })
+      .then((mfi) => {
+        const len = mfi[0].length - 1;
+        currentQuote.mfi = _.round(mfi[0][len], 3);
+        return currentQuote;
+      })
   }
 
   getBuySignal() {

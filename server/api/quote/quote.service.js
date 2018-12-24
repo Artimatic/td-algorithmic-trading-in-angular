@@ -116,7 +116,10 @@ class QuoteService {
       uri: url
     };
 
-    return RequestPromise(options);
+    return RequestPromise(options)
+      .then(results => {
+        return JSON.parse(results);
+      });
   }
 
   postIntradayData(quotes) {
