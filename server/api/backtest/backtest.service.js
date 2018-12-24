@@ -161,7 +161,7 @@ class BacktestService {
           if (orders.buy.length > 0) {
             sell = this.getSellSignal(avgPrice, indicator.close, lossThreshold, profitThreshold);
           }
-          
+
           buy = this.getBuySignal(indicator, rocDiffRange, mfiLimit, bbRangeFn(indicator.close, indicator.bband80));
 
           if (buy) {
@@ -173,7 +173,7 @@ class BacktestService {
           orders = this.calcTrade(orders, indicator, orderType);
         });
 
-        const response = { indicators, ...orders };
+        const response = { ...orders, indicators };
 
         return response;
       });
@@ -220,8 +220,8 @@ class BacktestService {
 
   calcTrade(orders, dayQuote, orderType) {
     if (orderType === 'sell') {
-      orders.trades++;
       // Sell
+      orders.trades++;
       if (orders.buy.length > 0) {
         const holding = orders.buy.shift(),
           profit = dayQuote.close - holding;
@@ -231,8 +231,8 @@ class BacktestService {
         orders.history.push(dayQuote);
       }
     } else if (orderType === 'buy') {
-      orders.trades++;
       // Buy
+      orders.trades++;
       orders.buy.push(dayQuote.close);
       dayQuote.signal = 'buy';
       orders.history.push(dayQuote);
@@ -241,7 +241,7 @@ class BacktestService {
   }
 
   estimateAverageBuyOrderPrice(orders) {
-    return  _.reduce(orders.buy, (sum, value) => {
+    return _.reduce(orders.buy, (sum, value) => {
       return sum + value;
     }, 0) / orders.buy.length;
   }
