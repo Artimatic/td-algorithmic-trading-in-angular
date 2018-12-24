@@ -137,8 +137,8 @@ class BacktestService {
           trades: 0,
           buy: [],
           history: [],
-          avgPrice: null,
-          net: 0
+          net: 0,
+          total: 0
         };
 
         const lossThreshold = 0.002;
@@ -185,6 +185,30 @@ class BacktestService {
     } else {
       return (currentPrice - boughtPrice) / boughtPrice;
     }
+  }
+
+  getBuySignal(indicator, rocDiffRange, mfiLimit, bbCondition) {
+    let num, den;
+    if (indicator.roc70 > indicator.roc10) {
+      num = indicator.roc70;
+      den = indicator.roc10;
+    } else {
+      den = indicator.roc70;
+      num = indicator.roc10;
+    }
+
+    const momentumDiff = _.round(_.divide(num, den), 3);
+
+    // console.log('indicator: ', moment(indicator.date).format('HH:mm'), bbCondition, momentumDiff, indicator.mfi)
+    if (bbCondition) {
+      if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
+        if (indicator.mfi < mfiLimit) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
   getSellSignal(paidPrice, currentPrice, lossThreshold, profitThreshold) {
@@ -281,30 +305,6 @@ class BacktestService {
         currentQuote.mfi = _.round(mfi[0][len], 3);
         return currentQuote;
       })
-  }
-
-  getBuySignal(indicator, rocDiffRange, mfiLimit, bbCondition) {
-    let num, den;
-    if (indicator.roc70 > indicator.roc10) {
-      num = indicator.roc70;
-      den = indicator.roc10;
-    } else {
-      den = indicator.roc70;
-      num = indicator.roc10;
-    }
-
-    const momentumDiff = _.round(_.divide(num, den), 3);
-
-    // console.log('indicator: ', moment(indicator.date).format('HH:mm'), bbCondition, momentumDiff, indicator.mfi)
-    if (bbCondition) {
-      if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
-        if (indicator.mfi < mfiLimit) {
-          return true;
-        }
-      }
-    }
-
-    return false;
   }
 
   getMeanReversionChart(ticker, currentDate, startDate, deviation, shortTerm, longTerm) {
