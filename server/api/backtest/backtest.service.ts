@@ -1,9 +1,9 @@
-import moment from 'moment';
+import * as moment from 'moment';
+import * as _ from 'lodash';
+import * as RequestPromise from 'request-promise';
 import * as json2csv from 'json2csv';
 import * as fs from 'fs';
-import * as _ from 'lodash';
 
-import RequestPromise from 'request-promise';
 
 import QuoteService from '../quote/quote.service';
 import ReversionService from '../mean-reversion/reversion.service';
@@ -81,10 +81,10 @@ class BacktestService {
       });
   }
 
-  cutCsv(rows, fields, num) {
+  cutCsv(symbol, startDate, currentDate, rows, fields, count) {
     if (rows.length > 10000) {
-      fs.writeFile(`${ticker}_analysis_${startDate}-
-        ${currentDate}_${i}.csv`, json2csv({ data: rows, fields: fields }), function (err) {
+      fs.writeFile(`${symbol}_analysis_${startDate}-
+        ${currentDate}_${count}.csv`, json2csv({ data: rows, fields: fields }), function (err) {
           if (err) { throw err; }
           console.log('file saved');
         });
@@ -147,8 +147,9 @@ class BacktestService {
     return QuoteService.queryForIntraday(symbol, startDate, currentDate)
       .then(quotes => {
         _.forEach(quotes, (value, key) => {
-          if (key > minQuotes) {
-            const q = _.slice(quotes, key - minQuotes, key);
+          const idx = Number(key);
+          if ( idx > minQuotes) {
+            const q = _.slice(quotes, idx - minQuotes, idx);
             getIndicatorQuotes.push(this.initStrategy(q));
           }
         });
@@ -165,8 +166,7 @@ class BacktestService {
         const profitThreshold = 0.003;
         const rocDiffRange = [-0.5, 0.5];
         const mfiLimit = 20;
-        this.getBacktestResults(indicators, bbRangeFn, mfiLimit, rocDiffRange, lossThreshold, profitThreshold);
-        return response;
+        return this.getBacktestResults(indicators, bbRangeFn, mfiLimit, rocDiffRange, lossThreshold, profitThreshold);
       });
   }
 
@@ -177,8 +177,9 @@ class BacktestService {
     return QuoteService.queryForIntraday(symbol, startDate, currentDate)
       .then(quotes => {
         _.forEach(quotes, (value, key) => {
-          if (key > minQuotes) {
-            const q = _.slice(quotes, key - minQuotes, key);
+          const idx = Number(key);
+          if (idx > minQuotes) {
+            const q = _.slice(quotes, idx - minQuotes, idx);
             getIndicatorQuotes.push(this.initStrategy(q));
           }
         });
@@ -195,12 +196,11 @@ class BacktestService {
         const profitThreshold = 0.003;
         const rocDiffRange = [-0.5, 0.5];
         const mfiLimit = 20;
-        this.getBacktestResults(indicators, bbRangeFn, mfiLimit, rocDiffRange, lossThreshold, profitThreshold);
-        return response;
+        return this.getBacktestResults(indicators, bbRangeFn, mfiLimit, rocDiffRange, lossThreshold, profitThreshold);
       });
   }
 
-  getBacktestResults() {
+  getBacktestResults(indicators, bbRangeFn, mfiLimit, rocDiffRange, lossThreshold, profitThreshold) {
     let orders = {
       trades: 0,
       buy: [],

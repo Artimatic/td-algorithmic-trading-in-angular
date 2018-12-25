@@ -1,6 +1,5 @@
-import request from 'request-promise';
-
-import Robinhood from 'robinhood';
+import * as request from 'request-promise';
+import * as Robinhood from 'robinhood';
 
 const RobinHoodApi = require('robinhood-api');
 const robinhood = new RobinHoodApi();

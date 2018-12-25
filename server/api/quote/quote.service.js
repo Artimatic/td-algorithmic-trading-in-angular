@@ -1,6 +1,6 @@
-import _ from 'lodash';
-import moment from 'moment';
-import RequestPromise from 'request-promise';
+import * as moment from 'moment';
+import * as _ from 'lodash';
+import * as RequestPromise from 'request-promise';
 const YahooFinanceAPI = require('yahoo-finance-data');
 import * as algotrader from 'algotrader';
 
