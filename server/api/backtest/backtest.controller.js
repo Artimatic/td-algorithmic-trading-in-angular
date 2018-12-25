@@ -15,9 +15,21 @@ class BacktestController extends BaseController {
     if (_.isEmpty(request.body)) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     } else {
-      BacktestService.evaluateStrategyAll(request.body.ticker, request.body.end, request.body.start)
+      if(request.body.algo) {
+        switch(request.body.algo) {
+          case 'intraday-mean-reversion':
+            BacktestService.evaluateIntradayAlgo(request.body.ticker, request.body.end, request.body.start)
+              .then((data) => BaseController.requestGetSuccessHandler(response, data))
+              .catch((err) => BaseController.requestErrorHandler(response, err));
+            break;
+          default:
+          return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+        }
+      } else {
+        BacktestService.intradayTest(request.body.ticker, request.body.end, request.body.start)
         .then((data) => BaseController.requestGetSuccessHandler(response, data))
         .catch((err) => BaseController.requestErrorHandler(response, err));
+      }
     }
   }
 

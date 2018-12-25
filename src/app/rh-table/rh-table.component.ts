@@ -45,10 +45,6 @@ export class RhTableComponent implements OnInit, OnChanges {
   progressPct = 0;
   progress = 0;
   totalStocks = 0;
-  algos = [
-    { value: 'v1', viewValue: ' - ' },
-    { value: 'v2', viewValue: '' }
-  ];
   selectedAlgo = 'v2';
   algoControl = new FormControl();
   algoGroups: AlgoGroup[] = [
@@ -56,7 +52,8 @@ export class RhTableComponent implements OnInit, OnChanges {
       name: 'Mean Reversion',
       algorithm: [
         {value: 'v1', viewValue: 'Moving Average Crossover'},
-        {value: 'v2', viewValue: 'Mean Reversion - Bollinger Band'}
+        {value: 'v2', viewValue: 'Mean Reversion - Bollinger Band'},
+        {value: 'v3', viewValue: 'Intraday'}
       ]
     },
     {
@@ -130,6 +127,17 @@ export class RhTableComponent implements OnInit, OnChanges {
               this.addToList(result);
               this.incrementProgress();
               this.updateAlgoReport(result);
+            }, error => {
+              this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
+              this.incrementProgress();
+            });
+        });
+        break;
+      case 'v3':
+        algoParams.forEach((param) => {
+          this.algo.getIntradayBacktest(param.ticker, startDate, currentDate).subscribe(
+            result => {
+
             }, error => {
               this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
               this.incrementProgress();

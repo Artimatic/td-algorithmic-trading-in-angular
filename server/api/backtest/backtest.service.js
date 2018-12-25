@@ -43,7 +43,18 @@ class BacktestService {
     return tulind.indicators.roc.indicator([real], [period]);
   }
 
-  async evaluateStrategyAll(ticker, end, start) {
+  evaluateStrategyAll(ticker, end, start) {
+    console.log('Executing: ', ticker, new Date());
+    startTime = moment();
+    return await this.runTest(ticker, end, start);
+  }
+
+  evaluateIntradayAlgo(ticker, end, start) {
+
+    return await this.runIntradayTest(ticker, end, start);
+  }
+
+  intradayTest(ticker, end, start) {
     console.log('Executing: ', ticker, new Date());
     startTime = moment();
     return await this.runIntradayTest(ticker, end, start);
@@ -133,52 +144,53 @@ class BacktestService {
         return Promise.all(getIndicatorQuotes);
       })
       .then(indicators => {
-        let orders = {
-          trades: 0,
-          buy: [],
-          history: [],
-          net: 0,
-          total: 0
-        };
-
-        const lossThreshold = 0.002;
-        const profitThreshold = 0.003;
-
-        const rocDiffRange = [-0.5, 0.5];
-        const mfiLimit = 20;
         const bbRangeFn = (price, bband) => {
           const lower = bband[0][0];
           const mid = bband[1][0];
           const upper = bband[2][0];
           return price < lower;
-        }
-
-        _.forEach(indicators, (indicator, key) => {
-          if (indicator.close) {
-            let orderType;
-            const avgPrice = this.estimateAverageBuyOrderPrice(orders);
-            let sell = false,
-              buy = false;
-            if (orders.buy.length > 0) {
-              sell = this.getSellSignal(avgPrice, indicator.close, lossThreshold, profitThreshold);
-            }
-  
-            buy = this.getBuySignal(indicator, rocDiffRange, mfiLimit, bbRangeFn(indicator.close, indicator.bband80));
-  
-            if (buy) {
-              orderType = 'buy';
-            } else if (sell) {
-              orderType = 'sell';
-            }
-  
-            orders = this.calcTrade(orders, indicator, orderType);
-          }
-        });
-
-        const response = { ...orders, indicators };
-
+        };
+        const lossThreshold = 0.002;
+        const profitThreshold = 0.003;
+        const rocDiffRange = [-0.5, 0.5];
+        const mfiLimit = 20;
+        this.getBacktestResults(indicators, bbRangeFn, mfiLimit, rocDiffRange, lossThreshold, profitThreshold);
         return response;
       });
+  }
+
+  getBacktestResults() {
+    let orders = {
+      trades: 0,
+      buy: [],
+      history: [],
+      net: 0,
+      total: 0
+    };
+
+    _.forEach(indicators, (indicator) => {
+      if (indicator.close) {
+        let orderType;
+        const avgPrice = this.estimateAverageBuyOrderPrice(orders);
+        let sell = false,
+          buy = false;
+        if (orders.buy.length > 0) {
+          sell = this.getSellSignal(avgPrice, indicator.close, lossThreshold, profitThreshold);
+        }
+
+        buy = this.getBuySignal(indicator, rocDiffRange, mfiLimit, bbRangeFn(indicator.close, indicator.bband80));
+
+        if (buy) {
+          orderType = 'buy';
+        } else if (sell) {
+          orderType = 'sell';
+        }
+
+        orders = this.calcTrade(orders, indicator, orderType, avgPrice);
+      }
+    });
+
+    return { ...orders, indicators };
   }
 
   getPercentChange(currentPrice, boughtPrice) {
@@ -220,21 +232,22 @@ class BacktestService {
     }
   }
 
-  calcTrade(orders, dayQuote, orderType) {
+  calcTrade(orders, dayQuote, orderType, avgPrice) {
     if (orderType === 'sell') {
       // Sell
       orders.trades++;
       if (orders.buy.length > 0) {
-        const holding = orders.buy.shift(),
-          profit = dayQuote.close - holding;
-        orders.total += holding;
+        const len = orders.buy.length,
+          profit = (dayQuote.close - avgPrice) * len;
+
+        orders.total += (avgPrice * len);
         orders.net += profit;
         dayQuote.signal = 'sell';
         orders.history.push(dayQuote);
+        orders.buy = [];
       }
     } else if (orderType === 'buy') {
       // Buy
-      orders.trades++;
       orders.buy.push(dayQuote.close);
       dayQuote.signal = 'buy';
       orders.history.push(dayQuote);
