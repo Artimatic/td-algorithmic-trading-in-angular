@@ -48,7 +48,6 @@ import {
   ReportingService,
   ScoreKeeperService
 } from './shared';
-import { ChartDialogComponent } from './chart-dialog';
 
 import { RhInputComponent } from './rh-input/rh-input.component';
 import { ProductViewComponent } from './product-view/product-view.component';
@@ -79,7 +78,6 @@ import { BacktestViewComponent } from './backtest-view/backtest-view.component';
     BulkBacktestComponent,
     XlsImportComponent,
     RhTableComponent,
-    ChartDialogComponent,
     RhInputComponent,
     ProductViewComponent,
     LoginComponent,
@@ -103,7 +101,6 @@ import { BacktestViewComponent } from './backtest-view/backtest-view.component';
     BacktestViewComponent,
   ],
   entryComponents: [
-    ChartDialogComponent,
     LoginDialogComponent,
     OrderDialogComponent,
     ConfirmDialogComponent,

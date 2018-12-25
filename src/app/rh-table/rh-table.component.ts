@@ -7,7 +7,6 @@ import * as moment from 'moment';
 import * as _ from 'lodash';
 
 import { BacktestService, Stock, AlgoParam, PortfolioService } from '../shared';
-import { ChartDialogComponent } from '../chart-dialog';
 import { OrderDialogComponent } from '../order-dialog/order-dialog.component';
 import { Holding } from '../shared/models';
 import { FormControl } from '@angular/forms';
@@ -171,30 +170,6 @@ export class RhTableComponent implements OnInit, OnChanges {
     this.algoReport.totalTrades += result.totalTrades;
     this.algoReport.averageReturns = +((this.algoReport.totalReturns / this.totalStocks).toFixed(5));
     this.algoReport.averageTrades = +((this.algoReport.totalTrades / this.totalStocks).toFixed(5));
-  }
-
-  openDialog(event, index): void {
-    console.log(event, index);
-    const currentDate = moment().format('YYYY-MM-DD');
-    const pastDate = moment().subtract(1, 'years').format('YYYY-MM-DD');
-    const requestBody = {
-      ticker: event.stock,
-      start: pastDate,
-      end: currentDate,
-      deviation: event.deviation,
-      short: event.shortTerm,
-      long: event.longTerm
-    };
-
-    const dialogRef = this.dialog.open(ChartDialogComponent, {
-      width: '200%',
-      height: '100%',
-      data: requestBody
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      console.log('The dialog was closed');
-    });
   }
 
   filterRecommendation() {

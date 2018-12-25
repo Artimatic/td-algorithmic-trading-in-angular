@@ -38,21 +38,13 @@ export class ProductViewComponent implements OnInit {
     this.chart.addPoint(y);
   }
 
-  load(data): void {
+  load(data, endDate): void {
     this.resolving = true;
 
-    const currentDate = moment().format('YYYY-MM-DD');
+    const currentDate = moment(endDate).format('YYYY-MM-DD');
     const pastDate = moment().subtract(700, 'days').format('YYYY-MM-DD');
-    const requestBody = {
-      ticker: data.stock,
-      start: pastDate,
-      end: currentDate,
-      deviation: data.deviation,
-      short: data.shortTerm,
-      long: data.longTerm
-    };
 
-    this.algo.getBacktestChart(requestBody)
+    this.algo.getBacktestChart(data.stock, pastDate, currentDate, data.deviation, data.shortTerm, data.longTerm)
       .map(result => {
         const time = [],
           seriesData = [];

@@ -48,7 +48,6 @@ import {
   ReportingService,
   ScoreKeeperService
 } from './shared';
-import { ChartDialogComponent } from './chart-dialog';
 
 import { RhInputComponent } from './rh-input/rh-input.component';
 import { ProductViewComponent } from './product-view/product-view.component';
@@ -79,7 +78,6 @@ describe('AppComponent', () => {
         BulkBacktestComponent,
         XlsImportComponent,
         RhTableComponent,
-        ChartDialogComponent,
         RhInputComponent,
         ProductViewComponent,
         LoginComponent,

@@ -59,7 +59,21 @@ export class BacktestService {
             .map(r => r.json());
     }
 
-    getBacktestChart(data: any): Observable<any[]> {
+    getBacktestChart(ticker: string,
+        start: string,
+        end: string,
+        deviation: number,
+        short: number,
+        long: number): Observable<any[]> {
+        const data = {
+            ticker,
+            start,
+            end,
+            deviation,
+            short,
+            long
+        };
+
         return this.http.post(`${BASE_URL}api/backtest/chart`, data, {})
             .map(r => r.json());
     }
@@ -84,7 +98,7 @@ export class BacktestService {
             ticker: symbol,
             interval: '1m',
             range: '1d'
-          };
+        };
 
         return this.http.post(`${BASE_URL}api/quote`, body, {})
             .map(r => r.json());
@@ -105,8 +119,8 @@ export class BacktestService {
 
         const headers = new Headers({ 'Content-Type': 'application/json' });
         const options = new RequestOptions({
-          headers: headers,
-          body : body
+            headers: headers,
+            body: body
         });
 
         return this.http.get(`${BASE_URL}api/quote/historical-intraday`, options)
@@ -122,7 +136,7 @@ export class BacktestService {
     getOptionChain(symbol: String): Observable<any> {
         const body = { symbol: symbol };
         return this.http.post(`${BASE_URL}api/quote/optionchain`, body, {})
-        .map(r => r.json());
+            .map(r => r.json());
     }
 
     getBBands(data: any): Observable<any> {
