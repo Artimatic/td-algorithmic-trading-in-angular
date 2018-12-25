@@ -3,7 +3,7 @@ const moment = require('moment');
 import BaseErrors from '../../components/errors/baseErrors';
 import QuoteService from '../quote/quote.service';
 
-const DecisionService = require('./reversion-decision.service');
+import DecisionService from './reversion-decision.service';
 
 class ReversionService {
   getTrend(quotes, end, thirtyDay, ninetyDay, deviation) {

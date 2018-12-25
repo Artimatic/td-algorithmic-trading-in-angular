@@ -126,8 +126,8 @@ class DecisionService {
   }
 
   calcReturns(decisions, deviation, startDate) {
-    const results = decisions.reduce(function (orders, day) {
-      if (moment(day.date).isAfter(moment(startDate).subtract(1, 'day').format())) {
+    const results = decisions.reduce((orders, day) => {
+      if (moment(day.date).isAfter(moment(startDate).subtract(1, 'day').format())) { 
         if (this.triggerCondition(day.close, day.shortTermAvg, day.longTermAvg, deviation)) {
           if (day.trending === this.trends.down) {
             orders.trades++;
