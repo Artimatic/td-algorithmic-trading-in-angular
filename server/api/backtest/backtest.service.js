@@ -46,18 +46,18 @@ class BacktestService {
   evaluateStrategyAll(ticker, end, start) {
     console.log('Executing: ', ticker, new Date());
     startTime = moment();
-    return await this.runTest(ticker, end, start);
+    return this.runTest(ticker, end, start);
   }
 
   evaluateIntradayAlgo(ticker, end, start) {
 
-    return await this.runIntradayTest(ticker, end, start);
+    return this.runIntradayEvaluation(ticker, end, start);
   }
 
   intradayTest(ticker, end, start) {
     console.log('Executing: ', ticker, new Date());
     startTime = moment();
-    return await this.runIntradayTest(ticker, end, start);
+    return this.runIntradayTest(ticker, end, start);
   }
 
   getDateRanges(currentDate, startDate) {
@@ -79,6 +79,17 @@ class BacktestService {
       .then(data => {
         return data;
       });
+  }
+
+  cutCsv(rows, fields, num) {
+    if (rows.length > 10000) {
+      fs.writeFile(`${ticker}_analysis_${startDate}-
+        ${currentDate}_${i}.csv`, json2csv({ data: rows, fields: fields }), function (err) {
+          if (err) { throw err; }
+          console.log('file saved');
+        });
+      rows.length = 0;
+    }
   }
 
   runTest(ticker, currentDate, startDate) {
@@ -126,6 +137,36 @@ class BacktestService {
           console.log('file saved');
         });
         return snapshots;
+      });
+  }
+
+  runIntradayEvaluation(symbol, currentDate, startDate) {
+    const minQuotes = 81;
+    const getIndicatorQuotes = [];
+
+    return QuoteService.queryForIntraday(symbol, startDate, currentDate)
+      .then(quotes => {
+        _.forEach(quotes, (value, key) => {
+          if (key > minQuotes) {
+            const q = _.slice(quotes, key - minQuotes, key);
+            getIndicatorQuotes.push(this.initStrategy(q));
+          }
+        });
+        return Promise.all(getIndicatorQuotes);
+      })
+      .then(indicators => {
+        const bbRangeFn = (price, bband) => {
+          const lower = bband[0][0];
+          const mid = bband[1][0];
+          const upper = bband[2][0];
+          return price < lower;
+        };
+        const lossThreshold = 0.002;
+        const profitThreshold = 0.003;
+        const rocDiffRange = [-0.5, 0.5];
+        const mfiLimit = 20;
+        this.getBacktestResults(indicators, bbRangeFn, mfiLimit, rocDiffRange, lossThreshold, profitThreshold);
+        return response;
       });
   }
 
