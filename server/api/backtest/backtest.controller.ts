@@ -17,8 +17,13 @@ class BacktestController extends BaseController {
     } else {
       if (request.body.algo) {
         switch (request.body.algo) {
-          case 'intraday-mean-reversion':
+          case 'evaluate-intraday':
             BacktestService.evaluateIntradayAlgo(request.body.ticker, request.body.end, request.body.start)
+              .then((data) => BaseController.requestGetSuccessHandler(response, data))
+              .catch((err) => BaseController.requestErrorHandler(response, err));
+            break;
+          case 'v1':
+            BacktestService.evaluateStrategyAll(request.body.ticker, request.body.end, request.body.start)
               .then((data) => BaseController.requestGetSuccessHandler(response, data))
               .catch((err) => BaseController.requestErrorHandler(response, err));
             break;

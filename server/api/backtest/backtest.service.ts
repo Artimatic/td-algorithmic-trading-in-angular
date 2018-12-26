@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import * as RequestPromise from 'request-promise';
 import * as json2csv from 'json2csv';
 import * as fs from 'fs';
-
+import * as path from 'path';
 
 import QuoteService from '../quote/quote.service';
 import ReversionService from '../mean-reversion/reversion.service';
@@ -81,15 +81,22 @@ class BacktestService {
       });
   }
 
-  cutCsv(symbol, startDate, currentDate, rows, fields, count) {
+  cutCsv(name, startDate, currentDate, rows, fields, count) {
     if (rows.length > 10000) {
-      fs.writeFile(`${symbol}_analysis_${startDate}-
-        ${currentDate}_${count}.csv`, json2csv({ data: rows, fields: fields }), function (err) {
-          if (err) { throw err; }
-          console.log('file saved');
-        });
-      rows.length = 0;
+      this.writeCsv(name, startDate, currentDate, rows, fields, count);
     }
+    return count;
+  }
+
+  writeCsv(name, startDate, currentDate, rows, fields, count) {
+    fs.writeFile(path.join(__dirname, '../../../tmp/' +
+      `${name}_analysis_${startDate}-${currentDate}_${count}.csv`
+    ), json2csv({ data: rows, fields: fields }), function (err) {
+      if (err) { throw err; }
+      console.log('file saved');
+    });
+    rows.length = 0;
+    return ++count;
   }
 
   runTest(ticker, currentDate, startDate) {
@@ -132,10 +139,11 @@ class BacktestService {
 
         console.log('Duration: ', duration);
 
-        fs.writeFile(`${ticker}_analysis_${currentDate}-${startDate}.csv`, json2csv({ data: snapshots, fields: fields }), function (err) {
-          if (err) { throw err; }
-          console.log('file saved');
-        });
+        fs.writeFile(`${ticker}_analysis_${currentDate}-${startDate}.csv`,
+          json2csv({ data: snapshots, fields: fields }), function (err) {
+            if (err) { throw err; }
+            console.log('file saved');
+          });
         return snapshots;
       });
   }
@@ -148,7 +156,7 @@ class BacktestService {
       .then(quotes => {
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);
-          if ( idx > minQuotes) {
+          if (idx > minQuotes) {
             const q = _.slice(quotes, idx - minQuotes, idx);
             getIndicatorQuotes.push(this.initStrategy(q));
           }
@@ -162,11 +170,38 @@ class BacktestService {
           const upper = bband[2][0];
           return price < lower;
         };
+
         const lossThreshold = 0.002;
         const profitThreshold = 0.003;
-        const rocDiffRange = [-0.5, 0.5];
         const mfiLimit = 20;
-        return this.getBacktestResults(indicators, bbRangeFn, mfiLimit, rocDiffRange, lossThreshold, profitThreshold);
+        const fields = ['leftRange', 'rightRange', 'totalTrades', 'net', 'avgTrade', 'returns'];
+        let count = 0;
+        let leftRange = -1;
+        let rightRange = 1;
+
+        const rows = [];
+        while (leftRange < 0) {
+          while (rightRange > 0) {
+            const rocDiffRange = [leftRange, rightRange];
+            const results = this.getBacktestResults(indicators, bbRangeFn, mfiLimit, rocDiffRange, lossThreshold, profitThreshold);
+
+            rows.push({
+              leftRange,
+              rightRange,
+              net: _.round(results.net, 3),
+              avgTrade: _.round(_.divide(results.total, results.trades), 3),
+              returns: _.round(_.divide(results.net, results.total), 3),
+              totalTrades: results.trades
+            });
+
+            count = this.cutCsv(`${symbol}-intraday`, startDate, currentDate, rows, fields, count);
+            leftRange = _.round(_.add(leftRange, 0.001), 3);
+            rightRange = _.round(_.subtract(rightRange, 0.001), 3);
+          }
+        }
+
+        this.writeCsv(symbol, startDate, currentDate, rows, fields, count);
+        return 'done';
       });
   }
 
@@ -257,6 +292,7 @@ class BacktestService {
     // console.log('indicator: ', moment(indicator.date).format('HH:mm'), bbCondition, momentumDiff, indicator.mfi)
     if (bbCondition) {
       if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
+        console.log('momentum: ', momentumDiff);
         if (indicator.mfi < mfiLimit) {
           return true;
         }
