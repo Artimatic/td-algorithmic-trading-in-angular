@@ -174,8 +174,8 @@ class BacktestService {
         const mfiLimit = 20;
         const fields = ['leftRange', 'rightRange', 'totalTrades', 'net', 'avgTrade', 'returns'];
         let count = 0;
-        let leftRange = -1;
-        let rightRange = 1;
+        let leftRange = -0.9;
+        let rightRange = 0.9;
 
         const rows = [];
         while (leftRange < 0) {
@@ -183,18 +183,20 @@ class BacktestService {
             const rocDiffRange = [leftRange, rightRange];
             const results = this.getBacktestResults(indicators, bbRangeFn, mfiLimit, rocDiffRange, lossThreshold, profitThreshold);
 
-            rows.push({
-              leftRange,
-              rightRange,
-              net: _.round(results.net, 3),
-              avgTrade: _.round(_.divide(results.total, results.trades), 3),
-              returns: _.round(_.divide(results.net, results.total), 3),
-              totalTrades: results.trades
-            });
+            if (results.net > 0 && _.divide(indicators.length, results.trades) < 250) {
+              rows.push({
+                leftRange,
+                rightRange,
+                net: _.round(results.net, 3),
+                avgTrade: _.round(_.divide(results.total, results.trades), 3),
+                returns: _.round(_.divide(results.net, results.total), 3),
+                totalTrades: results.trades
+              });
+            }
 
             count = this.cutCsv(`${symbol}-intraday`, startDate, currentDate, rows, fields, count);
-            leftRange = _.round(_.add(leftRange, 0.001), 3);
-            rightRange = _.round(_.subtract(rightRange, 0.001), 3);
+            leftRange = _.round(_.add(leftRange, 0.01), 3);
+            rightRange = _.round(_.subtract(rightRange, 0.01), 3);
           }
         }
 
