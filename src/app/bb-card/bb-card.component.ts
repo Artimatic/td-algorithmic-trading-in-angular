@@ -861,13 +861,14 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
 
       const momentumDiff = _.round(_.divide(num, den), 3);
+      const rocDiffRange = [-0.8, 0.8];
 
       const log = `${this.order.holding.symbol} Event - time: ${moment.unix(signalTime).format()}, ` +
       `momentumDiff: ${momentumDiff}, roc: ${roc1}, mid: ${mid[0]}, lower: ${lower[0]}, mfi: ${this.mfi}`;
 
       this.reportingService.addAuditLog(this.order.holding.symbol, log);
 
-      if (momentumDiff < -0.5 || momentumDiff > 0.5) {
+      if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
         if (this.mfi < 20) {
           if (signalPrice < lower[0]) {
             return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
@@ -899,24 +900,22 @@ export class BbCardComponent implements OnInit, OnChanges {
     const rocLen = roc[0].length - 1;
     const roc1 = _.round(roc[0][rocLen], 3);
 
-    if (this.momentum > 0.001 || this.momentum < -0.001) {
-      if (signalPrice > upper[0]) {
-        const log = `BB Sell Event - time: ${moment.unix(signalTime).format()},
-            price: ${signalPrice}, roc: ${roc1}, mid: ${mid[0]}, lower: ${lower[0]}`;
-        this.reportingService.addAuditLog(this.order.holding.symbol, log);
+    if (signalPrice > upper[0]) {
+      const log = `BB Sell Event - time: ${moment.unix(signalTime).format()},
+          price: ${signalPrice}, roc: ${roc1}, mid: ${mid[0]}, lower: ${lower[0]}`;
+      this.reportingService.addAuditLog(this.order.holding.symbol, log);
 
-        console.log(log);
+      console.log(log);
 
-        return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
-      } else if (this.mfi > 80) {
-        const log = `MA Crossover Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}`;
+      return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
+    } else if (this.mfi > 80) {
+      const log = `MA Crossover Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}`;
 
-        this.reportingService.addAuditLog(this.order.holding.symbol, log);
+      this.reportingService.addAuditLog(this.order.holding.symbol, log);
 
-        console.log(log);
+      console.log(log);
 
-        return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
-      }
+      return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
     }
     // }
 

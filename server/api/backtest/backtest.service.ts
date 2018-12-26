@@ -166,8 +166,6 @@ class BacktestService {
       .then(indicators => {
         const bbRangeFn = (price, bband) => {
           const lower = bband[0][0];
-          const mid = bband[1][0];
-          const upper = bband[2][0];
           return price < lower;
         };
 
@@ -223,8 +221,6 @@ class BacktestService {
       .then(indicators => {
         const bbRangeFn = (price, bband) => {
           const lower = bband[0][0];
-          const mid = bband[1][0];
-          const upper = bband[2][0];
           return price < lower;
         };
         const lossThreshold = 0.002;
@@ -292,7 +288,6 @@ class BacktestService {
     // console.log('indicator: ', moment(indicator.date).format('HH:mm'), bbCondition, momentumDiff, indicator.mfi)
     if (bbCondition) {
       if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
-        console.log('momentum: ', momentumDiff);
         if (indicator.mfi < mfiLimit) {
           return true;
         }
@@ -396,7 +391,7 @@ class BacktestService {
         const len = mfi[0].length - 1;
         currentQuote.mfi = _.round(mfi[0][len], 3);
         return currentQuote;
-      })
+      });
   }
 
   getMeanReversionChart(ticker, currentDate, startDate, deviation, shortTerm, longTerm) {

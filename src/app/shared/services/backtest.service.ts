@@ -78,13 +78,15 @@ export class BacktestService {
             .map(r => r.json());
     }
 
-    getIntradayBacktest(ticker: string,
+    getBacktestEvaluation(ticker: string,
         start: string,
-        end: string): Observable<any[]> {
+        end: string,
+        algo: string): Observable<any[]> {
         const data = {
             ticker,
             start,
-            end
+            end,
+            algo
         };
 
         return this.http.post(`${BASE_URL}api/backtest`, data, {})

@@ -134,10 +134,10 @@ export class RhTableComponent implements OnInit, OnChanges {
         });
         break;
       case 'v3':
+        const algo = 'evaluate-intraday';
         algoParams.forEach((param) => {
-          this.algo.getIntradayBacktest(param.ticker, startDate, currentDate).subscribe(
+          this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, algo).subscribe(
             result => {
-
             }, error => {
               this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
               this.incrementProgress();
