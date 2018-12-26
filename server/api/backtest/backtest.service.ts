@@ -201,7 +201,7 @@ class BacktestService {
         }
 
         this.writeCsv(symbol, startDate, currentDate, rows, fields, count);
-        return 'done';
+        return [];
       });
   }
 

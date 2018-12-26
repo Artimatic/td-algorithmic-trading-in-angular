@@ -138,6 +138,7 @@ export class RhTableComponent implements OnInit, OnChanges {
         algoParams.forEach((param) => {
           this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, algo).subscribe(
             result => {
+              this.incrementProgress();
             }, error => {
               this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
               this.incrementProgress();
