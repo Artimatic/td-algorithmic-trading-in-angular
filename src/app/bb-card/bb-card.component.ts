@@ -861,7 +861,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
 
       const momentumDiff = _.round(_.divide(num, den), 3);
-      const rocDiffRange = [-0.8, 0.8];
+      const rocDiffRange = [-0.32, 0.32];
 
       const log = `${this.order.holding.symbol} Event - time: ${moment.unix(signalTime).format()}, ` +
       `momentumDiff: ${momentumDiff}, roc: ${roc1}, mid: ${mid[0]}, lower: ${lower[0]}, mfi: ${this.mfi}`;
