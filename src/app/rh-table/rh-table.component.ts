@@ -81,7 +81,7 @@ export class RhTableComponent implements OnInit, OnChanges {
     }
   }
 
-  getData(algoParams) {
+  async getData(algoParams) {
     const currentDate = moment(this.endDate).format('YYYY-MM-DD');
     const startDate = moment(this.endDate).subtract(700, 'days').format('YYYY-MM-DD');
 
@@ -119,8 +119,8 @@ export class RhTableComponent implements OnInit, OnChanges {
         });
         break;
       case 'v2':
-        algoParams.forEach((param) => {
-          this.algo.getInfoV2(param.ticker, currentDate, startDate).subscribe(
+        for (const param of algoParams) {
+          await this.algo.getInfoV2(param.ticker, currentDate, startDate).subscribe(
             result => {
               result.stock = param.ticker;
               result.returns = +((result.returns * 100).toFixed(2));
@@ -131,7 +131,7 @@ export class RhTableComponent implements OnInit, OnChanges {
               this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
               this.incrementProgress();
             });
-        });
+          }
         break;
       case 'v3':
         const algo = 'evaluate-intraday';

@@ -183,7 +183,7 @@ class BacktestService {
             const rocDiffRange = [leftRange, rightRange];
             const results = this.getBacktestResults(indicators, bbRangeFn, mfiLimit, rocDiffRange, lossThreshold, profitThreshold);
 
-            if (results.net > 0 && _.divide(indicators.length, results.trades) < 250) {
+            // if (results.net > 0 && _.divide(indicators.length, results.trades) < 250) {
               rows.push({
                 leftRange,
                 rightRange,
@@ -192,12 +192,13 @@ class BacktestService {
                 returns: _.round(_.divide(results.net, results.total), 3),
                 totalTrades: results.trades
               });
-            }
+            // }
 
             count = this.cutCsv(`${symbol}-intraday`, startDate, currentDate, rows, fields, count);
-            leftRange = _.round(_.add(leftRange, 0.01), 3);
-            rightRange = _.round(_.subtract(rightRange, 0.01), 3);
+            rightRange = _.round(_.subtract(rightRange, 0.1), 3);
           }
+          leftRange = _.round(_.add(leftRange, 0.1), 3);
+          rightRange = 0.9;
         }
 
         this.writeCsv(symbol, startDate, currentDate, rows, fields, count);
@@ -211,6 +212,7 @@ class BacktestService {
 
     return QuoteService.queryForIntraday(symbol, startDate, currentDate)
       .then(quotes => {
+        console.log(`Found ${quotes.length} for ${symbol}`);
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);
           if (idx > minQuotes) {
