@@ -861,18 +861,24 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
 
       const momentumDiff = _.round(_.divide(num, den), 3);
-      const rocDiffRange = [-0.9, 0.2];
+      const rocDiffRange = [-0.4, 0.1];
 
       const log = `${this.order.holding.symbol} Event - time: ${moment.unix(signalTime).format()}, ` +
       `momentumDiff: ${momentumDiff}, roc: ${roc1}, mid: ${mid[0]}, lower: ${lower[0]}, mfi: ${this.mfi}`;
 
       this.reportingService.addAuditLog(this.order.holding.symbol, log);
 
+      // if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
+      //   if (this.mfi < 20) {
+      //     if (signalPrice < lower[0]) {
+      //       return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
+      //     }
+      //   }
+      // }
+
       if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
         if (this.mfi < 20) {
-          if (signalPrice < lower[0]) {
-            return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
-          }
+          return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
         }
       }
     }

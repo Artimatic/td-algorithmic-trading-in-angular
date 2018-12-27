@@ -154,6 +154,7 @@ class BacktestService {
 
     return QuoteService.queryForIntraday(symbol, startDate, currentDate)
       .then(quotes => {
+        console.log(`Found ${quotes.length} for ${symbol}`);
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);
           if (idx > minQuotes) {
@@ -212,7 +213,6 @@ class BacktestService {
 
     return QuoteService.queryForIntraday(symbol, startDate, currentDate)
       .then(quotes => {
-        console.log(`Found ${quotes.length} for ${symbol}`);
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);
           if (idx > minQuotes) {
@@ -290,11 +290,16 @@ class BacktestService {
     const momentumDiff = _.round(_.divide(num, den), 3);
 
     // console.log('indicator: ', moment(indicator.date).format('HH:mm'), bbCondition, momentumDiff, indicator.mfi)
-    if (bbCondition) {
-      if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
-        if (indicator.mfi < mfiLimit) {
-          return true;
-        }
+    // if (bbCondition) {
+    //   if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
+    //     if (indicator.mfi < mfiLimit) {
+    //       return true;
+    //     }
+    //   }
+    // }
+    if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
+      if (indicator.mfi < mfiLimit) {
+        return true;
       }
     }
 
@@ -366,10 +371,10 @@ class BacktestService {
     return this.getBBands(indicators.reals, 80, 2)
       .then((bband80) => {
         currentQuote.bband80 = bband80;
-        //   return this.getSMA(indicators.reals, 5);
-        // })
-        // .then((sma5) => {
-        //   currentQuote.sma5 = sma5;
+          return this.getSMA(indicators.reals, 5);
+        })
+        .then((sma5) => {
+          currentQuote.sma5 = sma5;
         return this.getRateOfChange(this.getSubArray(indicators.reals, 10), 10);
       })
       .then((roc10) => {
