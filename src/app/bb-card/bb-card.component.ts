@@ -65,7 +65,7 @@ export class BbCardComponent implements OnInit, OnChanges {
   showGraph;
   tiles;
   bbandPeriod;
-  dataInterval;
+  dataInterval: string;
   myPreferences;
   startTime;
   endTime;
@@ -90,7 +90,11 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.sides = ['Buy', 'Sell', 'DayTrade'];
     this.error = '';
     this.backtestLive = false;
-    this.preferenceList = [OrderPref.TakeProfit, OrderPref.StopLoss, OrderPref.MeanReversion1];
+    this.preferenceList = [OrderPref.TakeProfit, 
+      OrderPref.StopLoss, 
+      OrderPref.MeanReversion1,
+      OrderPref.SpyMomentum
+    ];
     Highcharts.setOptions({
       global: {
         useUTC: false
@@ -661,7 +665,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     return order;
   }
 
-  buildOrder(quotes,
+  async buildOrder(quotes,
     timestamps,
     idx,
     band: any[],
@@ -696,7 +700,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         return null;
       }
 
-      const buyOrder = this.buildBuyOrder(orderQuantity,
+      const buyOrder = await this.buildBuyOrder(orderQuantity,
         quotes.close[idx],
         timestamps[idx],
         quotes.low[idx] || quotes.close[idx],
@@ -756,7 +760,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         this.positionCount);
 
       const buy: SmartOrder = buyQuantity <= 0 ? null :
-        this.buildBuyOrder(buyQuantity, quotes.close[idx], timestamps[idx],
+        await this.buildBuyOrder(buyQuantity, quotes.close[idx], timestamps[idx],
           quotes.low[idx] || quotes.close[idx], quotes, idx, band, shortSma, roc);
 
       if (buy) {
@@ -767,7 +771,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
   }
 
-  buildBuyOrder(orderQuantity: number,
+  async buildBuyOrder(orderQuantity: number,
     price,
     signalTime,
     signalPrice,
@@ -845,6 +849,11 @@ export class BbCardComponent implements OnInit, OnChanges {
         }
       }
       if (signalPrice < lower[0]) {
+        return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
+      }
+    } else if (this.config.SpyMomentum) {
+      const buySignal = await this.daytradeService.spyBearMomentum(signalPrice, lower[0], this.dataInterval);
+      if (buySignal) {
         return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
       }
     } else {
@@ -1006,7 +1015,9 @@ export class BbCardComponent implements OnInit, OnChanges {
       return null;
     }
     const band = await this.daytradeService.getBBand(reals, this.bbandPeriod);
-    const shortSma = await this.daytradeService.getSMA(reals, 5);
+    // const shortSma = await this.daytradeService.getSMA(reals, 5);
+    const shortSma = null;
+
     const roc = await this.daytradeService.getROC(_.slice(reals, reals.length - 11), 10);
     this.momentum = await this.daytradeService.getROC(reals, 70)
       .then((result) => {
@@ -1052,6 +1063,10 @@ export class BbCardComponent implements OnInit, OnChanges {
 
     if (this.order.meanReversion1) {
       pref.push(OrderPref.MeanReversion1);
+    }
+
+    if (this.order.spyMomentum) {
+      pref.push(OrderPref.SpyMomentum);
     }
 
     return pref;

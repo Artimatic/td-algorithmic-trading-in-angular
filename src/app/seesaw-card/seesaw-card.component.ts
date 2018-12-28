@@ -1,4 +1,4 @@
-import { Component, OnInit, OnChanges, SimpleChanges, ViewChild, Input } from '@angular/core';
+import { Component, OnInit, ViewChild, Input } from '@angular/core';
 import { SmartOrder } from '../shared/models/smart-order';
 import * as moment from 'moment';
 import * as _ from 'lodash';
@@ -27,7 +27,7 @@ import { Order } from '../shared/models/order';
   templateUrl: './seesaw-card.component.html',
   styleUrls: ['./seesaw-card.component.css']
 })
-export class SeesawCardComponent implements OnInit, OnChanges {
+export class SeesawCardComponent implements OnInit {
   @ViewChild('stepper') stepper;
   @Input() order: SmartOrder;
   @Input() orderInverse: SmartOrder;
@@ -92,12 +92,6 @@ export class SeesawCardComponent implements OnInit, OnChanges {
       preferences: []
     });
 
-  }
-
-  ngOnChanges(changes: SimpleChanges) {
-    if (_.get(changes, 'triggered.currentValue')) {
-      this.goLive();
-    }
   }
 
   openDialog(): void {
@@ -309,6 +303,10 @@ export class SeesawCardComponent implements OnInit, OnChanges {
           this.play(true, this.backtestLive);
         }
       });
+  }
+
+  progress() {
+    return Number((100 * (this.buyCount + this.sellCount / this.firstFormGroup.value.quantity)).toFixed(2));
   }
 
   stop() {

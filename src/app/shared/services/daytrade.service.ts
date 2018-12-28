@@ -95,7 +95,8 @@ export class DaytradeService {
     const config = {
       TakeProfit: false,
       StopLoss: false,
-      MeanReversion1: false
+      MeanReversion1: false,
+      SpyMomentum: false
     };
 
     if (preferences) {
@@ -109,6 +110,9 @@ export class DaytradeService {
             break;
           case OrderPref.MeanReversion1:
             config.MeanReversion1 = true;
+            break;
+          case OrderPref.SpyMomentum:
+            config.SpyMomentum = true;
             break;
         }
       });
@@ -458,6 +462,21 @@ export class DaytradeService {
       }
     }
     return null;
+  }
+
+  spyBearMomentum(price: number, lowerBand: number, dataInterval: string) {
+    const requestBody = {
+      symbol: 'SPY',
+      interval: dataInterval
+    };
+
+    return this.backtestService.getIntraday2(requestBody).toPromise()
+    .then((intraday) => {
+      if (lowerBand < price) {
+        return true;
+      }
+      return false;
+    });
   }
 
   findMostCurrentQuoteIndex(quotes, firstIndex, lastIndex) {

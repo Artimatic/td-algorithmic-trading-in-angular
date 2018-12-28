@@ -83,6 +83,7 @@ export class PortfolioViewComponent implements AfterViewInit {
           useStopLoss: row.StopLoss || null,
           useTakeProfit: row.TakeProfit || null,
           meanReversion1: row.MeanReversion1 || null,
+          spyMomentum: row.SpyMomentum || null,
           orderSize: row.OrderSize * 1 || null
         };
         this.cartService.addToCart(order);
