@@ -852,7 +852,9 @@ export class BbCardComponent implements OnInit, OnChanges {
         return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
       }
     } else if (this.config.SpyMomentum) {
-      const buySignal = await this.daytradeService.spyBearMomentum(signalPrice, lower[0], this.dataInterval);
+
+      const buySignal = await this.daytradeService.spyBearMomentum(lower[0], this.dataInterval);
+
       if (buySignal) {
         return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
       }

@@ -464,7 +464,7 @@ export class DaytradeService {
     return null;
   }
 
-  spyBearMomentum(price: number, lowerBand: number, dataInterval: string) {
+  spyBearMomentum(lowerBand: number, dataInterval: string) {
     const requestBody = {
       symbol: 'SPY',
       interval: dataInterval
@@ -472,6 +472,8 @@ export class DaytradeService {
 
     return this.backtestService.getIntraday2(requestBody).toPromise()
     .then((intraday) => {
+      const closePrices = _.get(intraday, 'chart.result[0].indicators.quote[0].close');
+      const price = closePrices[closePrices.length - 1];
       if (lowerBand < price) {
         return true;
       }
