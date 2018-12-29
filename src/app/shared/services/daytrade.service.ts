@@ -464,21 +464,22 @@ export class DaytradeService {
     return null;
   }
 
-  spyBearMomentum(lowerBand: number, dataInterval: string) {
+  async hasSpyBearMomentum(dataInterval: string, period: number) {
     const requestBody = {
       symbol: 'SPY',
       interval: dataInterval
     };
 
-    return this.backtestService.getIntraday2(requestBody).toPromise()
-    .then((intraday) => {
-      const closePrices = _.get(intraday, 'chart.result[0].indicators.quote[0].close');
-      const price = closePrices[closePrices.length - 1];
-      if (lowerBand < price) {
-        return true;
-      }
-      return false;
-    });
+    const intraday = await this.backtestService.getIntraday2(requestBody).toPromise();
+    const closePrices = _.get(intraday, 'chart.result[0].indicators.quote[0].close');
+    const price = closePrices[closePrices.length - 1];
+
+    const bands = await this.getBBand(closePrices, period);
+    const lowerBand = bands[0][0];
+    if (lowerBand > price) {
+      return true;
+    }
+    return false;
   }
 
   findMostCurrentQuoteIndex(quotes, firstIndex, lastIndex) {

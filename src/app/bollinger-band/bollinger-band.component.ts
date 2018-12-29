@@ -191,20 +191,23 @@ export class BollingerBandComponent implements OnInit {
     this.sub = TimerObservable.create(0, this.interval)
       .takeWhile(() => this.alive)
       .subscribe(() => {
-        let executed = 0;
-        while (executed < limit) {
-          if (lastIndex < orders.length) {
-            orders[lastIndex].stepForward = counter;
-          } else {
-            lastIndex = 0;
-            orders[lastIndex].stepForward = counter;
+        // TODO: Use moment timezones
+        if (moment().isAfter(this.startTime)) {
+          let executed = 0;
+          while (executed < limit) {
+            if (lastIndex < orders.length) {
+              orders[lastIndex].stepForward = counter;
+            } else {
+              lastIndex = 0;
+              orders[lastIndex].stepForward = counter;
+            }
+            lastIndex++;
+            counter++;
+            executed++;
           }
-          lastIndex++;
-          counter++;
-          executed++;
-        }
-        if (moment().isAfter(this.endTime)) {
-          this.stop();
+          if (moment().isAfter(this.endTime)) {
+            this.stop();
+          }
         }
       });
   }

@@ -90,8 +90,8 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.sides = ['Buy', 'Sell', 'DayTrade'];
     this.error = '';
     this.backtestLive = false;
-    this.preferenceList = [OrderPref.TakeProfit, 
-      OrderPref.StopLoss, 
+    this.preferenceList = [OrderPref.TakeProfit,
+      OrderPref.StopLoss,
       OrderPref.MeanReversion1,
       OrderPref.SpyMomentum
     ];
@@ -199,10 +199,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       .takeWhile(() => this.alive)
       .subscribe(() => {
         this.live = true;
-        // TODO: Use moment timezones
-        if (moment().isAfter(this.startTime)) {
-          this.play(true, this.backtestLive);
-        }
+        this.play(true, this.backtestLive);
       });
   }
 
@@ -213,8 +210,7 @@ export class BbCardComponent implements OnInit, OnChanges {
   }
 
   step() {
-    // TODO: Use moment timezones
-    if (this.alive && moment().isAfter(this.startTime)) {
+    if (this.alive) {
       this.play(true, this.backtestLive);
     }
   }
@@ -250,23 +246,35 @@ export class BbCardComponent implements OnInit, OnChanges {
       data = await this.backtestService.getIntraday2(requestBody).toPromise()
         .then((intraday) => {
           const timestamps = intraday.chart.result[0].timestamp;
-          const lastDate = moment.unix(timestamps[timestamps.length - 1]);
-          if (moment().diff(lastDate, 'minutes') > 1) {
-            this.reportingService.addAuditLog(this.order.holding.symbol,
-              `Quote for ${this.order.holding.name} is outdated. Last: ${lastDate.format()}, Current:${moment().format()}`);
+          if (timestamps.length > 0) {
+            const lastDate = moment.unix(timestamps[timestamps.length - 1]);
 
-            return this.backtestService.getPrices(yahooRequestBody)
-              .toPromise()
-              .then((quote) => {
-                return this.daytradeService.addYahooData(intraday, quote);
-              });
-            // return this.backtestService.getPrice(requestBody)
-            // .toPromise()
-            // .then((quote) => {
-            //   return this.daytradeService.addChartData(intraday, quote);
-            // });
+            if (moment().diff(lastDate, 'minutes') > 1) {
+              this.reportingService.addAuditLog(this.order.holding.symbol,
+                `Quote for ${this.order.holding.name} is outdated. Last: ${lastDate.format()}, Current:${moment().format()}`);
+
+              return this.backtestService.getPrices(yahooRequestBody)
+                .toPromise()
+                .then((quote) => {
+                  return this.daytradeService.addYahooData(intraday, quote);
+                });
+              // return this.backtestService.getPrice(requestBody)
+              // .toPromise()
+              // .then((quote) => {
+              //   return this.daytradeService.addChartData(intraday, quote);
+              // });
+            } else {
+              return intraday;
+            }
           } else {
-            return intraday;
+            return this.backtestService.getIntraday({
+                symbol: this.order.holding.symbol,
+                interval: '1m'
+              })
+              .toPromise()
+              .then((quotes) => {
+                return quotes;
+              });
           }
         });
     } else if (this.backtestQuotes.length) {
@@ -853,7 +861,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
     } else if (this.config.SpyMomentum) {
 
-      const buySignal = await this.daytradeService.spyBearMomentum(lower[0], this.dataInterval);
+      const buySignal = await this.daytradeService.hasSpyBearMomentum(this.dataInterval, this.bbandPeriod);
 
       if (buySignal) {
         return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
