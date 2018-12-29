@@ -267,9 +267,10 @@ export class BbCardComponent implements OnInit, OnChanges {
               return intraday;
             }
           } else {
-            return this.backtestService.getIntraday({
+            return this.backtestService.getIntradayV3({
                 symbol: this.order.holding.symbol,
-                interval: '1m'
+                interval: '1m',
+                range: '1d'
               })
               .toPromise()
               .then((quotes) => {

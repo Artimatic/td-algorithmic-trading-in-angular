@@ -134,44 +134,79 @@ class QuoteService {
     return RequestPromise(options);
   }
 
-  getIntradayDataV2(symbol, interval) {
-    return av.timeSeriesIntraday(symbol, interval).then(quotes => {
-      const data = {
-        chart: {
-          result: [
-            {
-              timestamp: [],
-              indicators: {
-                quote: [
-                  {
-                    low: [],
-                    volume: [],
-                    open: [],
-                    high: [],
-                    close: []
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      };
+  getTiingoIntraday(symbol, date) {
+    const query = `${configurations.apps.tiingo}iex/${symbol}/prices?startDate=${date}&resampleFreq=1min`;
+    const options = {
+      method: 'GET',
+      json: true,
+      uri: query,
+      headers: {
+        Authorization: 'Token ' + configurations.tiingo.key,
+        'Content-Type': 'application/json'
+      }
+    };
 
-      _.forEach(quotes, (quote) => {
-        data.chart.result[0].timestamp.push(moment(quote.getDate()).unix());
-        data.chart.result[0].indicators.quote[0].close.push(quote.getClose());
-        data.chart.result[0].indicators.quote[0].low.push(quote.getLow());
-        data.chart.result[0].indicators.quote[0].volume.push(quote.getVolume());
-        data.chart.result[0].indicators.quote[0].open.push(quote.getOpen());
-        data.chart.result[0].indicators.quote[0].high.push(quote.getHigh());
+    return RequestPromise(options)
+      .then(quotes => {
+        const data = this.createIntradayData();
+
+        _.forEach(quotes, (quote) => {
+          data.chart.result[0].timestamp.push(moment(quote.date).unix());
+          data.chart.result[0].indicators.quote[0].close.push(quote.close);
+          data.chart.result[0].indicators.quote[0].low.push(quote.low);
+          data.chart.result[0].indicators.quote[0].volume.push(null);
+          data.chart.result[0].indicators.quote[0].open.push(open);
+          data.chart.result[0].indicators.quote[0].high.push(high);
+        });
+
+        return data;
       });
+  }
 
-      return data;
-    });
+  getIntradayDataV2(symbol, interval) {
+    return av.timeSeriesIntraday(symbol, interval)
+      .then(quotes => {
+        const data = this.createIntradayData();
+
+        _.forEach(quotes, (quote) => {
+          data.chart.result[0].timestamp.push(moment(quote.getDate()).unix());
+          data.chart.result[0].indicators.quote[0].close.push(quote.getClose());
+          data.chart.result[0].indicators.quote[0].low.push(quote.getLow());
+          data.chart.result[0].indicators.quote[0].volume.push(quote.getVolume());
+          data.chart.result[0].indicators.quote[0].open.push(quote.getOpen());
+          data.chart.result[0].indicators.quote[0].high.push(quote.getHigh());
+        });
+
+        return data;
+      });
   }
 
   getOptionChain(symbol) {
     return api.optionChain(symbol);
+  }
+
+  createIntradayData() {
+    const data = {
+      chart: {
+        result: [
+          {
+            timestamp: [],
+            indicators: {
+              quote: [
+                {
+                  low: [],
+                  volume: [],
+                  open: [],
+                  high: [],
+                  close: []
+                }
+              ]
+            }
+          }
+        ]
+      }
+    };
+    return data;
   }
 
 }

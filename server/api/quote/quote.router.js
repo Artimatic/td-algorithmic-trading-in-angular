@@ -27,6 +27,10 @@ exports.intradayv2 = function (req, res, next) {
   QuoteController.getIntradayV2(req, res);
 };
 
+exports.intradayTiingo = function (req, res, next) {
+  QuoteController.getTiingoIntraday(req, res);
+};
+
 exports.postIntraday = function (req, res, next) {
   QuoteController.postIntraday(req, res);
 };

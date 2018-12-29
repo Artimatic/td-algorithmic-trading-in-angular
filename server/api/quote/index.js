@@ -12,5 +12,6 @@ router.post('/intraday2', handler.intradayv2);
 router.post('/historical-intraday', handler.postIntraday);
 router.get('/historical-intraday', handler.findIntraday);
 router.post('/optionchain', handler.optionChain);
+router.post('/intraday-tiingo', handler.intradayTiingo);
 
 module.exports = router;

@@ -61,6 +61,16 @@ class QuoteController extends BaseController {
     }
   }
 
+  getTiingoIntraday(request, response) {
+    if (_.isEmpty(request.body)) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    } else {
+      QuoteService.getTiingoIntraday(request.body.symbol, request.body.startDate)
+        .then((data) => BaseController.requestGetSuccessHandler(response, data))
+        .catch((e) => BaseController.requestErrorHandler(response, e));
+    }
+  }
+
   getIntradayV2(request, response) {
     if (_.isEmpty(request.body)) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);

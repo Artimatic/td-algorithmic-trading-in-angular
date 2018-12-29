@@ -109,6 +109,11 @@ export class BacktestService {
             .map(r => r.json());
     }
 
+    getIntradayV3(data: any): Observable<any> {
+        return this.http.post(`${BASE_URL}api/quote/raw`, data, {})
+            .map(r => r.json());
+    }
+
     getYahooIntraday(symbol: string): Observable<any> {
         const body = {
             ticker: symbol,
