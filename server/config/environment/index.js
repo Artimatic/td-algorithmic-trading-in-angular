@@ -1,5 +1,5 @@
-const path = require('path');
-const _ = require('lodash');
+import * as path from 'path';
+import * as _ from 'lodash';
 
 import * as credentials from './credentials';
 
@@ -19,13 +19,17 @@ export default {
   // Server port
   port: process.env.PORT || 9000,
   yahoo: {
-    key: _.get(credentials, 'yahoo.key', null),
-    secret: _.get(credentials, 'yahoo.secret', null)
+    key: _.get(credentials, 'default.yahoo.key', null),
+    secret: _.get(credentials, 'default.yahoo.secret', null)
   },
   alpha: {
-    key: _.get(credentials, 'alpha.key', null),
+    key: _.get(credentials, 'default.alpha.key', null),
+  },
+  tiingo: {
+    key: _.get(credentials, 'default.tiingo.key', null),
   },
   apps: {
-    goliath: 'http://localhost:8100/'
+    goliath: 'http://localhost:8100/',
+    tiingo: 'https://api.tiingo.com/'
   }
 };
