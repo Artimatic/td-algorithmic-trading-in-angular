@@ -17,7 +17,7 @@ export class PortfolioService {
     const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.token });
     const options = new RequestOptions({ headers: headers });
 
-    return this.http.get('/api/portfolio/positions', options)
+    return this.http.get('/api/portfolio/positions/', options)
       .map((response: Response) => {
         return response.json().results;
       });

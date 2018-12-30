@@ -58,16 +58,13 @@ export class LoginDialogComponent implements OnInit {
             this.mfa = true;
             this.loading = false;
           } else {
-            // login failed
-            this.snackBar.open('Username or password is incorrect', 'Dismiss', {
-              duration: 2000,
-            });
             this.loading = false;
           }
         },
         error => {
-          this.mfa = true;
-
+          this.snackBar.open('Username or password is incorrect', 'Dismiss', {
+            duration: 2000,
+          });
           this.loading = false;
         });
     }

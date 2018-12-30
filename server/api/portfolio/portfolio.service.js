@@ -40,9 +40,10 @@ class PortfolioService {
 
   expireToken(token, reply) {
     return request.post({
-      uri: apiUrl + 'api-token-logout/',
-      headers: {
-        'Authorization': 'Bearer ' + token
+      uri: apiUrl + 'oauth2/revoke_token/',
+      form: {
+        client_id: 'c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS',
+        token
       }
     })
       .then(() => reply.status(200).send({}))
@@ -54,7 +55,8 @@ class PortfolioService {
       uri: apiUrl + 'positions/',
       headers: {
         'Authorization': `Bearer ${token}`
-      }
+      },
+      json: true
     };
 
     return request.get(options)
