@@ -121,6 +121,14 @@ class DecisionService {
     return Math.abs(Math.abs(v1 - v2) / ((v1 + v2) / 2));
   }
 
+  getPercentChange(currentPrice, boughtPrice) {
+    if (boughtPrice === 0 || currentPrice === boughtPrice) {
+      return 0;
+    } else {
+      return (currentPrice - boughtPrice) / boughtPrice;
+    }
+  }
+  
   fractionToPrice(fraction) {
     return math.round(math.eval(fraction), 2);
   }

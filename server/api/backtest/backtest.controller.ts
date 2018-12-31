@@ -17,13 +17,18 @@ class BacktestController extends BaseController {
     } else {
       if (request.body.algo) {
         switch (request.body.algo) {
-          case 'evaluate-intraday':
+          case 'intraday':
             BacktestService.evaluateIntradayAlgo(request.body.ticker, request.body.end, request.body.start)
               .then((data) => BaseController.requestGetSuccessHandler(response, data))
               .catch((err) => BaseController.requestErrorHandler(response, err));
             break;
           case 'v1':
             BacktestService.evaluateStrategyAll(request.body.ticker, request.body.end, request.body.start)
+              .then((data) => BaseController.requestGetSuccessHandler(response, data))
+              .catch((err) => BaseController.requestErrorHandler(response, err));
+            break;
+          case 'crossover':
+            BacktestService.evaluateMACrossover(request.body.ticker, request.body.end, request.body.start)
               .then((data) => BaseController.requestGetSuccessHandler(response, data))
               .catch((err) => BaseController.requestErrorHandler(response, err));
             break;

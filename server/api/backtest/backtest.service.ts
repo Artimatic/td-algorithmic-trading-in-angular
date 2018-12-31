@@ -50,7 +50,6 @@ class BacktestService {
   }
 
   evaluateIntradayAlgo(ticker, end, start) {
-
     return this.runIntradayEvaluation(ticker, end, start);
   }
 
@@ -172,7 +171,7 @@ class BacktestService {
 
         const lossThreshold = 0.002;
         const profitThreshold = 0.003;
-        const mfiLimit = 20;
+        const mfiRange = [20, 80];
         const fields = ['leftRange', 'rightRange', 'totalTrades', 'net', 'avgTrade', 'returns'];
         let count = 0;
         let leftRange = -0.9;
@@ -182,17 +181,24 @@ class BacktestService {
         while (leftRange < 0) {
           while (rightRange > 0) {
             const rocDiffRange = [leftRange, rightRange];
-            const results = this.getBacktestResults(indicators, bbRangeFn, mfiLimit, rocDiffRange, lossThreshold, profitThreshold);
+            const results = this.getBacktestResults(this.getBuySignal,
+              this.getSellSignal,
+              indicators,
+              bbRangeFn,
+              mfiRange,
+              rocDiffRange,
+              lossThreshold,
+              profitThreshold);
 
             // if (results.net > 0 && _.divide(indicators.length, results.trades) < 250) {
-              rows.push({
-                leftRange,
-                rightRange,
-                net: _.round(results.net, 3),
-                avgTrade: _.round(_.divide(results.total, results.trades), 3),
-                returns: _.round(_.divide(results.net, results.total), 3),
-                totalTrades: results.trades
-              });
+            rows.push({
+              leftRange,
+              rightRange,
+              net: _.round(results.net, 3),
+              avgTrade: _.round(_.divide(results.total, results.trades), 3),
+              returns: _.round(_.divide(results.net, results.total), 3),
+              totalTrades: results.trades
+            });
             // }
 
             count = this.cutCsv(`${symbol}-intraday`, startDate, currentDate, rows, fields, count);
@@ -230,12 +236,26 @@ class BacktestService {
         const lossThreshold = 0.002;
         const profitThreshold = 0.003;
         const rocDiffRange = [-0.5, 0.5];
-        const mfiLimit = 20;
-        return this.getBacktestResults(indicators, bbRangeFn, mfiLimit, rocDiffRange, lossThreshold, profitThreshold);
+        const mfiRange = [20, 80];
+        return this.getBacktestResults(this.getBuySignal,
+          this.getSellSignal,
+          indicators,
+          bbRangeFn,
+          mfiRange,
+          rocDiffRange,
+          lossThreshold,
+          profitThreshold);
       });
   }
 
-  getBacktestResults(indicators, bbRangeFn, mfiLimit, rocDiffRange, lossThreshold, profitThreshold) {
+  getBacktestResults(buySignalFn: Function,
+    sellSignalFn: Function,
+    indicators,
+    bbRangeFn,
+    mfiRange,
+    rocDiffRange,
+    lossThreshold,
+    profitThreshold) {
     let orders = {
       trades: 0,
       buy: [],
@@ -251,10 +271,10 @@ class BacktestService {
         let sell = false,
           buy = false;
         if (orders.buy.length > 0) {
-          sell = this.getSellSignal(avgPrice, indicator.close, lossThreshold, profitThreshold);
+          sell = sellSignalFn(avgPrice, indicator.close, lossThreshold, profitThreshold);
         }
 
-        buy = this.getBuySignal(indicator, rocDiffRange, mfiLimit, bbRangeFn(indicator.close, indicator.bband80));
+        buy = buySignalFn(indicator, rocDiffRange, mfiRange, bbRangeFn(indicator.close, indicator.bband80));
 
         if (buy) {
           orderType = 'buy';
@@ -269,15 +289,83 @@ class BacktestService {
     return { ...orders, indicators };
   }
 
-  getPercentChange(currentPrice, boughtPrice) {
-    if (boughtPrice === 0 || currentPrice === boughtPrice) {
-      return 0;
-    } else {
-      return (currentPrice - boughtPrice) / boughtPrice;
-    }
+  evaluateMACrossover(symbol, currentDate, startDate) {
+    const minQuotes = 81;
+    const getIndicatorQuotes = [];
+
+    return QuoteService.queryForIntraday(symbol, startDate, currentDate)
+      .then(quotes => {
+        _.forEach(quotes, (value, key) => {
+          const idx = Number(key);
+          if (idx > minQuotes) {
+            const q = _.slice(quotes, idx - minQuotes, idx);
+            getIndicatorQuotes.push(this.initMAIndicators(q));
+          }
+        });
+        return Promise.all(getIndicatorQuotes);
+      })
+      .then(indicators => {
+        const bbRangeFn = (price, bband) => {
+          const lower = bband[0][0];
+          return price < lower;
+        };
+
+        const lossThreshold = 0.002;
+        const profitThreshold = 0.003;
+        const fields = ['rocLeft', 'rocRight', 'mfiLeft', 'mfiRight', 'totalTrades', 'net', 'avgTrade', 'returns'];
+        let count = 0;
+        let rocLeft = -0.9;
+        let rocRight = 0.9;
+        let mfiLeft = 0;
+        let mfiRight = 100;
+        const rows = [];
+        while (rocLeft < 0) {
+          while (rocRight > 0) {
+            while (mfiLeft < 100) {
+              while (mfiRight > 0) {
+                const rocDiffRange = [rocLeft, rocRight];
+                const mfiRange = [mfiLeft, mfiRight];
+
+                const results = this.getBacktestResults(this.getMABuySignal,
+                  this.getSellSignal,
+                  indicators,
+                  bbRangeFn,
+                  mfiRange,
+                  rocDiffRange,
+                  lossThreshold,
+                  profitThreshold);
+
+                // if (results.net > 0 && _.divide(indicators.length, results.trades) < 250) {
+                rows.push({
+                  rocLeft,
+                  rocRight,
+                  mfiLeft,
+                  mfiRight,
+                  net: _.round(results.net, 3),
+                  avgTrade: _.round(_.divide(results.total, results.trades), 3),
+                  returns: _.round(_.divide(results.net, results.total), 3),
+                  totalTrades: results.trades
+                });
+                // }
+
+                count = this.cutCsv(`${symbol}-crossover-intraday`, startDate, currentDate, rows, fields, count);
+                mfiRight = _.subtract(mfiRight, 1);
+              }
+              mfiLeft = _.add(mfiLeft, 1);
+              mfiRight = 100;
+            }
+            rocRight = _.round(_.subtract(rocRight, 0.1), 3);
+          }
+          rocLeft = _.round(_.add(rocLeft, 0.1), 3);
+          rocRight = 0.9;
+        }
+
+        this.writeCsv(`${symbol}-crossover-intraday`, startDate, currentDate, rows, fields, count);
+        return [];
+      });
   }
 
-  getBuySignal(indicator, rocDiffRange, mfiLimit, bbCondition) {
+  getBuySignal(indicator, rocDiffRange, mfiRange, bbCondition) {
     let num, den;
     if (indicator.roc70 > indicator.roc10) {
       num = indicator.roc70;
@@ -289,16 +377,16 @@ class BacktestService {
 
     const momentumDiff = _.round(_.divide(num, den), 3);
 
-    // console.log('indicator: ', moment(indicator.date).format('HH:mm'), bbCondition, momentumDiff, indicator.mfi)
+    // console.log('indicator: ', moment(indicator.date).format('HH:mm'), bbCondition, momentumDiff, indicator.mfiLeft)
     // if (bbCondition) {
     //   if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
-    //     if (indicator.mfi < mfiLimit) {
+    //     if (indicator.mfiLeft < mfiLimit) {
     //       return true;
     //     }
     //   }
     // }
     if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
-      if (indicator.mfi < mfiLimit) {
+      if (indicator.mfiLeft < mfiRange[0]) {
         return true;
       }
     }
@@ -307,10 +395,34 @@ class BacktestService {
   }
 
   getSellSignal(paidPrice, currentPrice, lossThreshold, profitThreshold) {
-    const gain = this.getPercentChange(currentPrice, paidPrice);
+    const gain = DecisionService.getPercentChange(currentPrice, paidPrice);
     if (gain < lossThreshold || gain > profitThreshold) {
       return true;
     }
+  }
+
+  getMABuySignal(indicator: any, rocDiffRange, mfiRange: number[]) {
+    let num, den;
+    if (indicator.roc70 > indicator.roc10) {
+      num = indicator.roc70;
+      den = indicator.roc10;
+    } else {
+      den = indicator.roc70;
+      num = indicator.roc10;
+    }
+
+    const momentumDiff = _.round(_.divide(num, den), 3);
+
+    if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
+      if (indicator.mfiLeft > mfiRange[0] && indicator.mfiLeft < mfiRange[1]) {
+        const crossover = _.round(DecisionService.calculatePercentDifference(indicator.sma5, indicator.sma70), 3);
+        if (crossover < 0.001) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
   calcTrade(orders, dayQuote, orderType, avgPrice) {
@@ -371,10 +483,44 @@ class BacktestService {
     return this.getBBands(indicators.reals, 80, 2)
       .then((bband80) => {
         currentQuote.bband80 = bband80;
-          return this.getSMA(indicators.reals, 5);
-        })
-        .then((sma5) => {
-          currentQuote.sma5 = sma5;
+        return this.getRateOfChange(this.getSubArray(indicators.reals, 10), 10);
+      })
+      .then((roc10) => {
+        const rocLen = roc10[0].length - 1;
+        currentQuote.roc10 = _.round(roc10[0][rocLen], 3);
+        return this.getRateOfChange(this.getSubArray(indicators.reals, 70), 70);
+      })
+      .then((roc70) => {
+        const rocLen = roc70[0].length - 1;
+        currentQuote.roc70 = _.round(roc70[0][rocLen], 3);
+        return this.getMfi(this.getSubArray(indicators.highs, 14),
+          this.getSubArray(indicators.lows, 14),
+          this.getSubArray(indicators.reals, 14),
+          this.getSubArray(indicators.volumes, 14),
+          14);
+      })
+      .then((mfiLeft) => {
+        const len = mfiLeft[0].length - 1;
+        currentQuote.mfiLeft = _.round(mfiLeft[0][len], 3);
+        return currentQuote;
+      });
+  }
+
+  initMAIndicators(quotes) {
+    const currentQuote = quotes[quotes.length - 1];
+    const indicators = this.processQuotes(quotes);
+
+    return this.getBBands(indicators.reals, 80, 2)
+      .then((bband80) => {
+        currentQuote.bband80 = bband80;
+        return this.getSMA(indicators.reals, 5);
+      })
+      .then((sma5) => {
+        currentQuote.sma5 = sma5[0][sma5[0].length - 1];
+        return this.getSMA(indicators.reals, 70);
+      })
+      .then((sma70) => {
+        currentQuote.sma70 = sma70[0][sma70[0].length - 1];
         return this.getRateOfChange(this.getSubArray(indicators.reals, 10), 10);
       })
       .then((roc10) => {
@@ -396,9 +542,9 @@ class BacktestService {
           this.getSubArray(indicators.volumes, 14),
           14);
       })
-      .then((mfi) => {
-        const len = mfi[0].length - 1;
-        currentQuote.mfi = _.round(mfi[0][len], 3);
+      .then((mfiLeft) => {
+        const len = mfiLeft[0].length - 1;
+        currentQuote.mfiLeft = _.round(mfiLeft[0][len], 3);
         return currentQuote;
       });
   }
