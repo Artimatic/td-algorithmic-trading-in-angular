@@ -80,14 +80,6 @@ class BacktestService {
       });
   }
 
-  cutCsv(name, startDate, currentDate, rows, fields, count) {
-
-    if (rows.length > 5000) {
-      this.writeCsv(name, startDate, currentDate, rows, fields, count);
-    }
-    return count;
-  }
-
   writeCsv(name, startDate, currentDate, rows, fields, count) {
     fs.writeFile(path.join(__dirname, '../../../tmp/' +
       `${name}_analysis_${startDate}-${currentDate}_${++count}.csv`
@@ -95,7 +87,6 @@ class BacktestService {
       if (err) { throw err; }
       console.log('file saved');
     });
-    rows.length = 0;
     return count;
   }
 
@@ -174,7 +165,7 @@ class BacktestService {
         const profitThreshold = 0.003;
         const mfiRange = [20, 80];
         const fields = ['leftRange', 'rightRange', 'totalTrades', 'net', 'avgTrade', 'returns'];
-        const count = 0;
+        let count = 0;
         let leftRange = -0.9;
         let rightRange = 0.9;
 
@@ -201,7 +192,10 @@ class BacktestService {
                 totalTrades: results.trades
               });
             }
-            // count = this.cutCsv(`${symbol}-intraday`, startDate, currentDate, rows, fields, count);
+            if (rows.length > 500000) {
+              this.writeCsv(name, startDate, currentDate, _.cloneDeep(rows), fields, ++count);
+              rows.length = 0;
+            }
             rightRange = _.round(_.subtract(rightRange, 0.1), 3);
           }
           leftRange = _.round(_.add(leftRange, 0.1), 3);
@@ -298,20 +292,24 @@ class BacktestService {
                   lossThreshold,
                   profitThreshold);
 
-                // if (results.net > 0 && _.divide(indicators.length, results.trades) < 250) {
-                rows.push({
-                  rocLeft,
-                  rocRight,
-                  mfiLeft,
-                  mfiRight,
-                  net: _.round(results.net, 3),
-                  avgTrade: _.round(_.divide(results.total, results.trades), 3),
-                  returns: _.round(_.divide(results.net, results.total), 3),
-                  totalTrades: results.trades
-                });
-                // }
+                if (results.net > 0 && _.divide(indicators.length, results.trades) < 250) {
+                  rows.push({
+                    rocLeft,
+                    rocRight,
+                    mfiLeft,
+                    mfiRight,
+                    net: _.round(results.net, 3),
+                    avgTrade: _.round(_.divide(results.total, results.trades), 3),
+                    returns: _.round(_.divide(results.net, results.total), 3),
+                    totalTrades: results.trades
+                  });
+                }
 
-                count = this.cutCsv(`${symbol}-crossover-intraday`, startDate, currentDate, rows, fields, count);
+                if (rows.length > 500000) {
+                  this.writeCsv(`${symbol}-crossover-intraday`, startDate, currentDate, _.cloneDeep(rows), fields, ++count);
+                  rows.length = 0;
+                }
+
                 mfiRight = _.subtract(mfiRight, 1);
               }
               mfiLeft = _.add(mfiLeft, 1);
@@ -468,11 +466,13 @@ class BacktestService {
       timeline = [];
 
     _.forEach(quotes, (value) => {
-      reals.push(value.close);
-      highs.push(value.high);
-      lows.push(value.low);
-      volumes.push(value.volume);
-      timeline.push(value.date);
+      if (value.close && value.high && value.low) {
+        reals.push(value.close);
+        highs.push(value.high);
+        lows.push(value.low);
+        volumes.push(value.volume);
+        timeline.push(value.date);
+      }
     });
 
     return { reals, highs, lows, volumes, timeline };
