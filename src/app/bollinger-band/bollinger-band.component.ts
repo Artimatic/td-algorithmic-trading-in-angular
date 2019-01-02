@@ -21,6 +21,7 @@ export class BollingerBandComponent implements OnInit {
   spxl: SmartOrder;
   vxx: SmartOrder;
   uvxy: SmartOrder;
+  sh: SmartOrder;
 
   ordersStarted: number;
   interval: number;
@@ -65,9 +66,9 @@ export class BollingerBandComponent implements OnInit {
         instrument: 'https://api.robinhood.com/instruments/18226051-6bfa-4c56-bd9a-d7575f0245c1/',
         symbol: 'VTI',
         name: 'Vanguard Total Stock Market ETF',
-        realtime_price: 145.69
+        realtime_price: 125.46
       },
-      quantity: 60, price: 145.69,
+      quantity: 3, price: 125.46,
       submitted: false, pending: false,
       side: 'DayTrade',
       useTakeProfit: true,
@@ -115,6 +116,24 @@ export class BollingerBandComponent implements OnInit {
       quantity: 60, price: 54.59000015258789,
       submitted: false, pending: false,
       side: 'Buy'
+    };
+
+    this.sh = {
+      holding:
+      {
+        instrument: 'https://api.robinhood.com/instruments/625e3596-9e2e-49e7-a9bf-6cbbc9d72ecd/',
+        symbol: 'SH',
+        name: 'ProShares Short S&P500',
+        realtime_price: 31.86
+      },
+      quantity: 12, price: 31.86,
+      submitted: false, pending: false,
+      side: 'DayTrade',
+      useTakeProfit: true,
+      useStopLoss: true,
+      lossThreshold: -0.002,
+      profitTarget: 0.004,
+      spyMomentum: true
     };
   }
 
@@ -172,20 +191,23 @@ export class BollingerBandComponent implements OnInit {
     this.sub = TimerObservable.create(0, this.interval)
       .takeWhile(() => this.alive)
       .subscribe(() => {
-        let executed = 0;
-        while (executed < limit) {
-          if (lastIndex < orders.length) {
-            orders[lastIndex].stepForward = counter;
-          } else {
-            lastIndex = 0;
-            orders[lastIndex].stepForward = counter;
+        // TODO: Use moment timezones
+        if (moment().isAfter(this.startTime)) {
+          let executed = 0;
+          while (executed < limit) {
+            if (lastIndex < orders.length) {
+              orders[lastIndex].stepForward = counter;
+            } else {
+              lastIndex = 0;
+              orders[lastIndex].stepForward = counter;
+            }
+            lastIndex++;
+            counter++;
+            executed++;
           }
-          lastIndex++;
-          counter++;
-          executed++;
-        }
-        if (moment().isAfter(this.endTime)) {
-          this.stop();
+          if (moment().isAfter(this.endTime)) {
+            this.stop();
+          }
         }
       });
   }

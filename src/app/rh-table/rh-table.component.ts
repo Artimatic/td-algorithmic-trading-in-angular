@@ -2,12 +2,11 @@ import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/cor
 import 'rxjs/add/observable/of';
 import 'rxjs/add/observable/merge';
 import 'rxjs/add/operator/finally';
-import { MatSnackBar, MatDialog, MatGridListModule } from '@angular/material';
+import { MatSnackBar, MatDialog } from '@angular/material';
 import * as moment from 'moment';
 import * as _ from 'lodash';
 
 import { BacktestService, Stock, AlgoParam, PortfolioService } from '../shared';
-import { ChartDialogComponent } from '../chart-dialog';
 import { OrderDialogComponent } from '../order-dialog/order-dialog.component';
 import { Holding } from '../shared/models';
 import { FormControl } from '@angular/forms';
@@ -46,10 +45,6 @@ export class RhTableComponent implements OnInit, OnChanges {
   progressPct = 0;
   progress = 0;
   totalStocks = 0;
-  algos = [
-    { value: 'v1', viewValue: ' - ' },
-    { value: 'v2', viewValue: '' }
-  ];
   selectedAlgo = 'v2';
   algoControl = new FormControl();
   algoGroups: AlgoGroup[] = [
@@ -57,7 +52,8 @@ export class RhTableComponent implements OnInit, OnChanges {
       name: 'Mean Reversion',
       algorithm: [
         {value: 'v1', viewValue: 'Moving Average Crossover'},
-        {value: 'v2', viewValue: 'Mean Reversion - Bollinger Band'}
+        {value: 'v2', viewValue: 'Mean Reversion - Bollinger Band'},
+        {value: 'v3', viewValue: 'Intraday'}
       ]
     },
     {
@@ -85,7 +81,7 @@ export class RhTableComponent implements OnInit, OnChanges {
     }
   }
 
-  getData(algoParams) {
+  async getData(algoParams) {
     const currentDate = moment(this.endDate).format('YYYY-MM-DD');
     const startDate = moment(this.endDate).subtract(700, 'days').format('YYYY-MM-DD');
 
@@ -123,14 +119,26 @@ export class RhTableComponent implements OnInit, OnChanges {
         });
         break;
       case 'v2':
-        algoParams.forEach((param) => {
-          this.algo.getInfoV2(param.ticker, currentDate, startDate).subscribe(
+        for (const param of algoParams) {
+          await this.algo.getInfoV2(param.ticker, currentDate, startDate).subscribe(
             result => {
               result.stock = param.ticker;
               result.returns = +((result.returns * 100).toFixed(2));
               this.addToList(result);
               this.incrementProgress();
               this.updateAlgoReport(result);
+            }, error => {
+              this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
+              this.incrementProgress();
+            });
+          }
+        break;
+      case 'v3':
+        const algo = 'evaluate-intraday';
+        algoParams.forEach((param) => {
+          this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, algo).subscribe(
+            result => {
+              this.incrementProgress();
             }, error => {
               this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
               this.incrementProgress();
@@ -171,30 +179,6 @@ export class RhTableComponent implements OnInit, OnChanges {
     this.algoReport.totalTrades += result.totalTrades;
     this.algoReport.averageReturns = +((this.algoReport.totalReturns / this.totalStocks).toFixed(5));
     this.algoReport.averageTrades = +((this.algoReport.totalTrades / this.totalStocks).toFixed(5));
-  }
-
-  openDialog(event, index): void {
-    console.log(event, index);
-    const currentDate = moment().format('YYYY-MM-DD');
-    const pastDate = moment().subtract(1, 'years').format('YYYY-MM-DD');
-    const requestBody = {
-      ticker: event.stock,
-      start: pastDate,
-      end: currentDate,
-      deviation: event.deviation,
-      short: event.shortTerm,
-      long: event.longTerm
-    };
-
-    const dialogRef = this.dialog.open(ChartDialogComponent, {
-      width: '200%',
-      height: '100%',
-      data: requestBody
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      console.log('The dialog was closed');
-    });
   }
 
   filterRecommendation() {

@@ -1,11 +1,5 @@
-import moment from 'moment';
-import json2csv from 'json2csv';
-import fs from 'fs';
-import request from 'request-promise';
-
-import Robinhood from 'robinhood';
-
-import * as errors from '../../components/errors/baseErrors';
+import * as request from 'request-promise';
+import * as Robinhood from 'robinhood';
 
 const RobinHoodApi = require('robinhood-api');
 const robinhood = new RobinHoodApi();
@@ -46,9 +40,10 @@ class PortfolioService {
 
   expireToken(token, reply) {
     return request.post({
-      uri: apiUrl + 'api-token-logout/',
-      headers: {
-        'Authorization': 'Bearer ' + _this.token
+      uri: apiUrl + 'oauth2/revoke_token/',
+      form: {
+        client_id: 'c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS',
+        token
       }
     })
       .then(() => reply.status(200).send({}))
@@ -60,7 +55,8 @@ class PortfolioService {
       uri: apiUrl + 'positions/',
       headers: {
         'Authorization': `Bearer ${token}`
-      }
+      },
+      json: true
     };
 
     return request.get(options)
@@ -201,4 +197,4 @@ class PortfolioService {
   }
 }
 
-module.exports.PortfolioService = new PortfolioService();
+export default new PortfolioService();

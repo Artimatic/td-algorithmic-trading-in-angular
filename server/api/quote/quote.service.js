@@ -1,40 +1,22 @@
-import _ from 'lodash';
-import moment from 'moment';
-import RequestPromise from 'request-promise';
-
-import { feedQuandl } from 'd3fc-financial-feed';
-import YahooFinanceAPI from 'yahoo-finance-data';
+import * as moment from 'moment';
+import * as _ from 'lodash';
+import * as RequestPromise from 'request-promise';
+const YahooFinanceAPI = require('yahoo-finance-data');
 import * as algotrader from 'algotrader';
 
-import errors from '../../components/errors/baseErrors';
-import config from '../../config/environment';
+import configurations from '../../config/environment';
 
 const yahoo = {
-  key: config.yahoo.key,
-  secret: config.yahoo.secret
+  key: configurations.yahoo.key,
+  secret: configurations.yahoo.secret
 };
 
-const appUrl = config.apps.goliath;
+const appUrl = configurations.apps.goliath;
 
 const api = new YahooFinanceAPI(yahoo);
 const AlphaVantage = algotrader.Data.AlphaVantage;
-const av = new AlphaVantage(config.alpha.key);
+const av = new AlphaVantage(configurations.alpha.key);
 const IEX = algotrader.Data.IEX;
-
-const quandl = feedQuandl()
-  .apiKey('5DsGxgTS3k9BepaWg_MD')
-  .database('WIKI');
-
-function checkDate(toDate, fromDate) {
-  let to = moment(toDate);
-  let from = moment(fromDate);
-
-  if (!to.isValid() || !from.isValid()) {
-    throw new errors.Http400Error('Invalid arguments')
-  }
-
-  return { to, from };
-}
 
 class QuoteService {
   /*
@@ -44,12 +26,12 @@ class QuoteService {
   getData(symbol, interval = '1d', range) {
     return api.getHistoricalData(symbol, interval, range)
       .then((data) => {
-        let quotes = _.get(data, 'chart.result[0].indicators.quote[0]', []);
-        let timestamps = _.get(data, 'chart.result[0].timestamp', []);
-        let converted = [];
+        const quotes = _.get(data, 'chart.result[0].indicators.quote[0]', []);
+        const timestamps = _.get(data, 'chart.result[0].timestamp', []);
+        const converted = [];
 
         timestamps.forEach((val, idx) => {
-          let quote = {
+          const quote = {
             symbol: symbol,
             date: moment.unix(val).toISOString(),
             open: quotes.open[idx],
@@ -69,40 +51,12 @@ class QuoteService {
     return api.getHistoricalData(symbol, interval, range);
   }
 
-  getDataQuandl(symbol, startDate, endDate) {
-    let { start, end } = checkDate(startDate, endDate);
-
-    if (!start.isValid() || !end.isValid()) {
-      throw new errors.Http400Error('Invalid arguments')
-    }
-
-    let quote = quandl
-      .dataset(symbol)
-      .start(start.toDate())
-      .end(end.toDate())
-      .descending(true)
-      .collapse('daily');
-
-    return new Promise(function (resolve, reject) {
-      quote((error, data) => {
-        if (error) {
-          console.log("error: ", error);
-          reject(new errors.FileNotFoundError(error));
-        }
-        resolve(data);
-      });
-    })
-  }
-
   getDailyQuotes(symbol, toDate, fromDate) {
-    let { to, from } = checkDate(toDate, fromDate);
 
-    const diff = Math.abs(to.diff(from, 'days'));
+    const to = moment(toDate);
+    const from = moment(fromDate);
 
-    to = to.format('YYYY-MM-DD');
-    from = from.format('YYYY-MM-DD');
-
-    const query = `${appUrl}backtest?ticker=${symbol}&to=${to}&from=${from}`;
+    const query = `${appUrl}backtest?ticker=${symbol}&to=${to.format('YYYY-MM-DD')}&from=${from.format('YYYY-MM-DD')}`;
     const options = {
       method: 'POST',
       uri: query
@@ -110,13 +64,11 @@ class QuoteService {
 
     return RequestPromise(options)
       .then((data) => {
-        let arr = JSON.parse(data);
+        const arr = JSON.parse(data);
         return arr;
       })
       .catch(() => {
-        let { to, from } = checkDate(toDate, fromDate);
-
-        let diff = Math.abs(to.diff(from, 'days'));
+        const diff = Math.abs(to.diff(from, 'days'));
 
         let range;
 
@@ -164,7 +116,10 @@ class QuoteService {
       uri: url
     };
 
-    return RequestPromise(options);
+    return RequestPromise(options)
+      .then(results => {
+        return JSON.parse(results);
+      });
   }
 
   postIntradayData(quotes) {
@@ -179,46 +134,81 @@ class QuoteService {
     return RequestPromise(options);
   }
 
-  getIntradayDataV2(symbol, interval) {
-    return av.timeSeriesIntraday(symbol, interval).then(quotes => {
-      const data = {
-        chart: {
-          result: [
-            {
-              timestamp: [],
-              indicators: {
-                quote: [
-                  {
-                    low: [],
-                    volume: [],
-                    open: [],
-                    high: [],
-                    close: []
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      };
+  getTiingoIntraday(symbol, date) {
+    const query = `${configurations.apps.tiingo}iex/${symbol}/prices?startDate=${date}&resampleFreq=1min`;
+    const options = {
+      method: 'GET',
+      json: true,
+      uri: query,
+      headers: {
+        Authorization: 'Token ' + configurations.tiingo.key,
+        'Content-Type': 'application/json'
+      }
+    };
 
-      _.forEach(quotes, (quote) => {
-        data.chart.result[0].timestamp.push(moment(quote.getDate()).unix());
-        data.chart.result[0].indicators.quote[0].close.push(quote.getClose());
-        data.chart.result[0].indicators.quote[0].low.push(quote.getLow());
-        data.chart.result[0].indicators.quote[0].volume.push(quote.getVolume());
-        data.chart.result[0].indicators.quote[0].open.push(quote.getOpen());
-        data.chart.result[0].indicators.quote[0].high.push(quote.getHigh());
+    return RequestPromise(options)
+      .then(quotes => {
+        const data = this.createIntradayData();
+
+        _.forEach(quotes, (quote) => {
+          data.chart.result[0].timestamp.push(moment(quote.date).unix());
+          data.chart.result[0].indicators.quote[0].close.push(quote.close);
+          data.chart.result[0].indicators.quote[0].low.push(quote.low);
+          data.chart.result[0].indicators.quote[0].volume.push(null);
+          data.chart.result[0].indicators.quote[0].open.push(open);
+          data.chart.result[0].indicators.quote[0].high.push(high);
+        });
+
+        return data;
       });
+  }
 
-      return data;
-    });
+  getIntradayDataV2(symbol, interval) {
+    return av.timeSeriesIntraday(symbol, interval)
+      .then(quotes => {
+        const data = this.createIntradayData();
+
+        _.forEach(quotes, (quote) => {
+          data.chart.result[0].timestamp.push(moment(quote.getDate()).unix());
+          data.chart.result[0].indicators.quote[0].close.push(quote.getClose());
+          data.chart.result[0].indicators.quote[0].low.push(quote.getLow());
+          data.chart.result[0].indicators.quote[0].volume.push(quote.getVolume());
+          data.chart.result[0].indicators.quote[0].open.push(quote.getOpen());
+          data.chart.result[0].indicators.quote[0].high.push(quote.getHigh());
+        });
+
+        return data;
+      });
   }
 
   getOptionChain(symbol) {
     return api.optionChain(symbol);
   }
 
+  createIntradayData() {
+    const data = {
+      chart: {
+        result: [
+          {
+            timestamp: [],
+            indicators: {
+              quote: [
+                {
+                  low: [],
+                  volume: [],
+                  open: [],
+                  high: [],
+                  close: []
+                }
+              ]
+            }
+          }
+        ]
+      }
+    };
+    return data;
+  }
+
 }
 
-module.exports.QuoteService = new QuoteService();
+export default new QuoteService();

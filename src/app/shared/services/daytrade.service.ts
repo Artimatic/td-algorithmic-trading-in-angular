@@ -95,7 +95,8 @@ export class DaytradeService {
     const config = {
       TakeProfit: false,
       StopLoss: false,
-      MeanReversion1: false
+      MeanReversion1: false,
+      SpyMomentum: false
     };
 
     if (preferences) {
@@ -109,6 +110,9 @@ export class DaytradeService {
             break;
           case OrderPref.MeanReversion1:
             config.MeanReversion1 = true;
+            break;
+          case OrderPref.SpyMomentum:
+            config.SpyMomentum = true;
             break;
         }
       });
@@ -458,6 +462,24 @@ export class DaytradeService {
       }
     }
     return null;
+  }
+
+  async hasSpyBearMomentum(dataInterval: string, period: number) {
+    const requestBody = {
+      symbol: 'SPY',
+      interval: dataInterval
+    };
+
+    const intraday = await this.backtestService.getIntraday2(requestBody).toPromise();
+    const closePrices = _.get(intraday, 'chart.result[0].indicators.quote[0].close');
+    const price = closePrices[closePrices.length - 1];
+
+    const bands = await this.getBBand(closePrices, period);
+    const lowerBand = bands[0][0];
+    if (lowerBand > price) {
+      return true;
+    }
+    return false;
   }
 
   findMostCurrentQuoteIndex(quotes, firstIndex, lastIndex) {

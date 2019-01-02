@@ -2,7 +2,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
-import { RouterModule, NavigationError } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { ChartModule } from 'angular-highcharts';
 
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -48,7 +48,6 @@ import {
   ReportingService,
   ScoreKeeperService
 } from './shared';
-import { ChartDialogComponent } from './chart-dialog';
 
 import { RhInputComponent } from './rh-input/rh-input.component';
 import { ProductViewComponent } from './product-view/product-view.component';
@@ -58,7 +57,6 @@ import { MainViewComponent } from './main-view/main-view.component';
 import { PortfolioTableComponent } from './portfolio-table/portfolio-table.component';
 import { PortfolioViewComponent } from './portfolio-view/portfolio-view.component';
 import { InstrumentPipe } from './shared/pipes/instrument.pipe';
-import { CartComponent } from './cart/cart.component';
 import { OrderDialogComponent } from './order-dialog/order-dialog.component';
 import { CartService } from './shared/services/cart.service';
 import { ExcelService } from './shared/services/excel-service.service';
@@ -80,7 +78,6 @@ import { BacktestViewComponent } from './backtest-view/backtest-view.component';
     BulkBacktestComponent,
     XlsImportComponent,
     RhTableComponent,
-    ChartDialogComponent,
     RhInputComponent,
     ProductViewComponent,
     LoginComponent,
@@ -89,7 +86,6 @@ import { BacktestViewComponent } from './backtest-view/backtest-view.component';
     PortfolioTableComponent,
     PortfolioViewComponent,
     InstrumentPipe,
-    CartComponent,
     OrderDialogComponent,
     BollingerBandComponent,
     RealtimeChartComponent,
@@ -105,7 +101,6 @@ import { BacktestViewComponent } from './backtest-view/backtest-view.component';
     BacktestViewComponent,
   ],
   entryComponents: [
-    ChartDialogComponent,
     LoginDialogComponent,
     OrderDialogComponent,
     ConfirmDialogComponent,

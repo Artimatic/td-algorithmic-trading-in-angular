@@ -1,4 +1,4 @@
-const QuoteController = require('./quote.controller');
+import QuoteController from './quote.controller';
 
 /**
  * Get quotes
@@ -25,6 +25,10 @@ exports.intraday = function (req, res, next) {
 
 exports.intradayv2 = function (req, res, next) {
   QuoteController.getIntradayV2(req, res);
+};
+
+exports.intradayTiingo = function (req, res, next) {
+  QuoteController.getTiingoIntraday(req, res);
 };
 
 exports.postIntraday = function (req, res, next) {

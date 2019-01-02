@@ -1,5 +1,5 @@
 import { Component, OnInit, Inject } from '@angular/core';
-import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { MatSnackBar } from '@angular/material';
 import { LoginComponent } from '../login/login.component';
 import { AuthenticationService } from '../shared';
@@ -58,16 +58,13 @@ export class LoginDialogComponent implements OnInit {
             this.mfa = true;
             this.loading = false;
           } else {
-            // login failed
-            this.snackBar.open('Username or password is incorrect', 'Dismiss', {
-              duration: 2000,
-            });
             this.loading = false;
           }
         },
         error => {
-          this.mfa = true;
-
+          this.snackBar.open('Username or password is incorrect', 'Dismiss', {
+            duration: 2000,
+          });
           this.loading = false;
         });
     }

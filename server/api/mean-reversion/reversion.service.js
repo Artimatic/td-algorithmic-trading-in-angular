@@ -1,20 +1,9 @@
 const moment = require('moment');
-const algebra = require("algebra.js");
-const math = require("mathjs");
 
-import * as errors from '../../components/errors/baseErrors';
-import { QuoteService } from './../quote/quote.service';
-import { BacktestService } from './../backtest/backtest.service';
+import BaseErrors from '../../components/errors/baseErrors';
+import QuoteService from '../quote/quote.service';
 
-const DecisionService = require('./reversion-decision.service');
-
-const Fraction = algebra.Fraction;
-const Expression = algebra.Expression;
-const Equation = algebra.Equation;
-
-const algorithms = {
-  MeanReversion_30_90: "0"
-};
+import DecisionService from './reversion-decision.service';
 
 class ReversionService {
   getTrend(quotes, end, thirtyDay, ninetyDay, deviation) {
@@ -24,46 +13,10 @@ class ReversionService {
   }
 
   getData(ticker, currentDate, startDate) {
-    let { to, from } = this.getDateRanges(currentDate, startDate);
+    const { to, from } = this.getDateRanges(currentDate, startDate);
     return QuoteService.getDailyQuotes(ticker, to, from)
       .then(data => {
         return data;
-      });
-  }
-
-  getPrice(ticker, currentDate, deviation) {
-    let quotes = null,
-      decisions = null;
-
-    let { endDate, start } = this.getDateRanges();
-
-    if (isNaN(deviation)) {
-      throw errors.InvalidArgumentsError();
-    }
-
-    return QuoteService.getData(ticker, start, endDate)
-      .then(data => {
-        if (data.length === 0) {
-          throw errors.InvalidArgumentsError();
-        }
-        quotes = data;
-        return data;
-      })
-      .then(this.getDecisionData)
-      .then(data => {
-        decisions = data;
-        return this.calcPricing(quotes, quotes.length - 1, data.thirtyTotal, data.ninetyTotal, deviation);
-      })
-      .then(price => {
-        let trend1 = this.getTrend(quotes, quotes.length - 1, price.lower.thirtyAvg, price.lower.ninetyAvg);
-        let trend2 = this.getTrend(quotes, quotes.length - 1, price.upper.thirtyAvg, price.upper.ninetyAvg);
-        price.lower.trend = trend1;
-        price.upper.trend = trend2;
-        return price;
-      })
-      .catch(err => {
-        console.log('ERROR! pricing', err);
-        throw errors.InvalidArgumentsError();
       });
   }
 
@@ -75,10 +28,10 @@ class ReversionService {
   }
 
   runBacktest(ticker, toDate, fromDate, deviation, shortTerm, longTerm) {
-    let { to, from } = this.getDateRanges(toDate, fromDate);
+    const { to, from } = this.getDateRanges(toDate, fromDate);
 
     if (isNaN(deviation)) {
-      throw errors.InvalidArgumentsError();
+      throw BaseErrors.InvalidArgumentsError();
     }
 
     return this.getData(ticker, to, from)
@@ -87,7 +40,7 @@ class ReversionService {
       })
       .catch(err => {
         console.log('ERROR! backtest', err);
-        throw errors.InvalidArgumentsError();
+        throw BaseErrors.InvalidArgumentsError();
       });
   }
 
@@ -96,7 +49,7 @@ class ReversionService {
       quotes = null,
       yesterdayDecision = null;
 
-    let { to, from } = this.getDateRanges(toDate, fromDate);
+    const { to, from } = this.getDateRanges(toDate, fromDate);
 
     if (isNaN(deviation)) {
       autoDeviation = true;
@@ -108,41 +61,41 @@ class ReversionService {
         return data;
       })
       .then(decisions => {
-        let MAs = this.executeMeanReversion(this.calcMA, quotes, shortTerm, longTerm);
+        const MAs = this.executeMeanReversion(this.calcMA, quotes, shortTerm, longTerm);
         yesterdayDecision = MAs[MAs.length - 1];
 
-        let recommendedDifference = 0.003;
+        const recommendedDifference = 0.003;
 
         if (autoDeviation) {
           deviation = recommendedDifference;
         }
-        let returns = DecisionService.calcReturns(MAs, deviation, fromDate);
+        const returns = DecisionService.calcReturns(MAs, deviation, fromDate);
 
         return { ...returns, deviation, recommendedDifference, shortTerm, longTerm };
       })
       .then(algoStats => {
-        let lastPrice = quotes[quotes.length - 1].close,
-          lastVolume = quotes[quotes.length - 1].volume,
-          trending = DecisionService.getTrendsConst().indet;
+        const lastPrice = quotes[quotes.length - 1].close,
+          lastVolume = quotes[quotes.length - 1].volume;
+        let trending = DecisionService.getTrendsConst().indet;
 
-        //Check to see if yesterday's moving avgs trigger a signal
+        // Check to see if yesterday's moving avgs trigger a signal
         if (DecisionService.triggerCondition(lastPrice, yesterdayDecision.shortTermAvg, yesterdayDecision.longTermAvg, deviation)) {
           trending = yesterdayDecision.trending;
         }
 
-        let additionalInfo = { algo: 'MACrossover',lastPrice, lastVolume, trending };
+        const additionalInfo = { algo: 'MACrossover', lastPrice, lastVolume, trending };
         return { ...algoStats, ...additionalInfo };
       })
       .catch(err => {
         console.log('ERROR! backtest snapshot', err, ticker);
-        throw errors.InvalidArgumentsError();
+        throw BaseErrors.InvalidArgumentsError();
       });
   }
 
   executeMeanReversion(calculationFn, quotes, shortTerm, longTerm) {
     return quotes.reduce(function (accumulator, value, idx) {
       if (idx >= longTerm) {
-        let movingAverages = calculationFn(quotes, idx, idx - longTerm, shortTerm, longTerm);
+        const movingAverages = calculationFn(quotes, idx, idx - longTerm, shortTerm, longTerm);
 
         accumulator.push(movingAverages);
       }
@@ -159,20 +112,20 @@ class ReversionService {
       startIdx = 0;
     }
 
-    let trend = DecisionService.getInitialTrend(quotes, endIdx);
+    const trend = DecisionService.getInitialTrend(quotes, endIdx);
 
-    let data = quotes.slice(startIdx, endIdx + 1);
+    const data = quotes.slice(startIdx, endIdx + 1),
+      date = moment(data[data.length - 1].date).valueOf(),
+      close = data[data.length - 1].close;
 
-    let date          = moment(data[data.length - 1].date).valueOf(),
-        trending      = null,
-        deviation     = null,
-        shortTermAvg  = null,
-        longTermAvg   = null,
-        close         = data[data.length - 1].close,
-        total         = 0;
+    let trending = null,
+      deviation = null,
+      shortTermAvg = null,
+      longTermAvg = null,
+      total = 0;
 
     for (let i = data.length - 1; i > 0; i--) {
-      let current = data[i];
+      const current = data[i];
       total += current.close;
       if (i === (data.length - shortTerm)) {
         shortTermAvg = total / shortTerm;
@@ -193,16 +146,16 @@ class ReversionService {
       close
     };
   }
-  
-  getMA(history, rangeStart, rangeEnd) {
-    let date          = moment(history[history.length - 1].date).valueOf(),
-        close         = history[history.length - 1].close,
-        total         = 0,
-        averages      = {};
 
+  getMA(history, rangeStart, rangeEnd) {
+    const date = moment(history[history.length - 1].date).valueOf(),
+      close = history[history.length - 1].close,
+      averages = {};
+
+    let total = 0;
     for (let i = history.length - 1; i > 0; i--) {
-      let current = history[i],
-          period = history.length - i;
+      const current = history[i],
+        period = history.length - i;
       total += current.close;
       if (period >= rangeStart && period <= rangeEnd) {
         averages[period] = total / period;
@@ -225,9 +178,9 @@ class ReversionService {
       startIdx = 0;
     }
 
-    let trend = DecisionService.getInitialTrend(historicalData, endIdx);
+    const trend = DecisionService.getInitialTrend(historicalData, endIdx);
 
-    let data = historicalData.slice(startIdx, endIdx + 1);
+    const data = historicalData.slice(startIdx, endIdx + 1);
 
     return data.reduceRight((accumulator, currentValue, currentIdx) => {
       accumulator.total += currentValue.close;
@@ -266,13 +219,13 @@ class ReversionService {
   * @param {float} deviation Accepted deviation from intersection
   */
   calcPricing(historicalData, endIdx, thirtyAvgTotal, ninetyAvgTotal, deviation) {
-    //Subtract the last price
-    thirtyAvgTotal -= historicalData[endIdx - 29].close; //{value.closing}
+    // Subtract the last price
+    thirtyAvgTotal -= historicalData[endIdx - 29].close; // {value.closing}
     ninetyAvgTotal -= historicalData[endIdx - 89].close;
-    let range = DecisionService.solveExpression(thirtyAvgTotal, ninetyAvgTotal, deviation);
+    const range = DecisionService.solveExpression(thirtyAvgTotal, ninetyAvgTotal, deviation);
 
     return range;
   }
 }
 
-module.exports.ReversionService = new ReversionService();
+export default new ReversionService();

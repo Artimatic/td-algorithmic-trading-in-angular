@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { Winloss } from '../models/winloss';
-import { StockScore } from '../models/stock-score';
 
 import * as _ from 'lodash';
 

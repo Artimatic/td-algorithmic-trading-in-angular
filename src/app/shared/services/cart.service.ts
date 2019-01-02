@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { PortfolioService } from './portfolio.service';
-import { Order } from '../models/order';
 import { MatSnackBar } from '@angular/material';
 import { SmartOrder } from '../models/smart-order';
 

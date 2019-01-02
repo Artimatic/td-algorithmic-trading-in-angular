@@ -1,7 +1,5 @@
 import { Component } from '@angular/core';
 
-import { Subscription } from 'rxjs/Subscription';
-import { Title } from '@angular/platform-browser';
 
 import 'rxjs/add/operator/filter';
 import 'rxjs/add/operator/map';

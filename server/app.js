@@ -14,7 +14,7 @@ process.on('unhandledRejection', (reason, p) => {
 
 var express = require('express');
 
-var config = require('./config/environment');
+import configurations from './config/environment';
 
 // Setup server
 var app = express();
@@ -28,8 +28,8 @@ require('./routes')(app);
 
 // Start server
 
-server.listen(config.port, config.ip, function () {
-  console.log('Express server listening on %d, in %s mode', config.port, app.get('env'));
+server.listen(configurations.port, configurations.ip, function () {
+  console.log('Express server listening on %d, in %s mode', configurations.port, app.get('env'));
 });
 
 // Expose app

@@ -1,15 +1,11 @@
-import { Component, EventEmitter, OnInit, Output, ViewChild } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { MatPaginator, MatSort, MatTableDataSource, MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
-import { Observable } from 'rxjs/Observable';
+import { Component, OnInit } from '@angular/core';
+import { MatTableDataSource, MatDialog } from '@angular/material';
 
 import { PortfolioService } from '../shared/services/portfolio.service';
 import { Holding } from '../shared/models';
 import { BacktestService } from '../shared/services/backtest.service';
-import { Account } from '../shared/account';
 import { AuthenticationService } from '../shared/services/authentication.service';
 import { OrderDialogComponent } from '../order-dialog/order-dialog.component';
-import { ExcelService } from '../shared/services/excel-service.service';
 @Component({
   selector: 'app-portfolio-table',
   templateUrl: './portfolio-table.component.html',

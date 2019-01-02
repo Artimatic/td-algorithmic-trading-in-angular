@@ -3,7 +3,6 @@ import { BacktestService } from '../shared';
 import * as moment from 'moment';
 import { MatSnackBar } from '../../../node_modules/@angular/material';
 import { Chart } from 'angular-highcharts';
-import * as Highcharts from 'highcharts';
 import { FormGroup, FormBuilder } from '../../../node_modules/@angular/forms';
 
 @Component({

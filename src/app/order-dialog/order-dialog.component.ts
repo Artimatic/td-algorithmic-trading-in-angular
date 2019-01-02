@@ -1,11 +1,10 @@
 import { Component, OnInit, Inject } from '@angular/core';
-import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { MatSnackBar } from '@angular/material';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 import { Holding } from '../shared/models';
 import { PortfolioService } from '../shared/services/portfolio.service';
-import { PortfolioTableComponent } from '../portfolio-table/portfolio-table.component';
 import { CartService } from '../shared/services/cart.service';
 import { Order } from '../shared/models/order';
 

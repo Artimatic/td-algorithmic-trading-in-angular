@@ -1,7 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { Chart } from 'angular-highcharts';
-import { DataPoint, SeriesOptions } from 'highcharts';
-import * as moment from 'moment';
 
 @Component({
   selector: 'app-realtime-chart',
