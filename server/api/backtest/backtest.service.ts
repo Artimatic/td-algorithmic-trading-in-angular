@@ -81,7 +81,8 @@ class BacktestService {
   }
 
   cutCsv(name, startDate, currentDate, rows, fields, count) {
-    if (rows.length > 10000) {
+
+    if (rows.length > 5000) {
       this.writeCsv(name, startDate, currentDate, rows, fields, count);
     }
     return count;
@@ -89,13 +90,13 @@ class BacktestService {
 
   writeCsv(name, startDate, currentDate, rows, fields, count) {
     fs.writeFile(path.join(__dirname, '../../../tmp/' +
-      `${name}_analysis_${startDate}-${currentDate}_${count}.csv`
+      `${name}_analysis_${startDate}-${currentDate}_${++count}.csv`
     ), json2csv({ data: rows, fields: fields }), function (err) {
       if (err) { throw err; }
       console.log('file saved');
     });
     rows.length = 0;
-    return ++count;
+    return count;
   }
 
   runTest(ticker, currentDate, startDate) {
@@ -190,18 +191,17 @@ class BacktestService {
               lossThreshold,
               profitThreshold);
 
-            // if (results.net > 0 && _.divide(indicators.length, results.trades) < 250) {
-            rows.push({
-              leftRange,
-              rightRange,
-              net: _.round(results.net, 3),
-              avgTrade: _.round(_.divide(results.total, results.trades), 3),
-              returns: _.round(_.divide(results.net, results.total), 3),
-              totalTrades: results.trades
-            });
-            // }
-
-            count = this.cutCsv(`${symbol}-intraday`, startDate, currentDate, rows, fields, count);
+            if (results.net > 0 && _.divide(indicators.length, results.trades) < 250) {
+              rows.push({
+                leftRange,
+                rightRange,
+                net: _.round(results.net, 3),
+                avgTrade: _.round(_.divide(results.total, results.trades), 3),
+                returns: _.round(_.divide(results.net, results.total), 3),
+                totalTrades: results.trades
+              });
+            }
+            // count = this.cutCsv(`${symbol}-intraday`, startDate, currentDate, rows, fields, count);
             rightRange = _.round(_.subtract(rightRange, 0.1), 3);
           }
           leftRange = _.round(_.add(leftRange, 0.1), 3);
@@ -248,6 +248,84 @@ class BacktestService {
       });
   }
 
+  evaluateMACrossover(symbol, currentDate, startDate) {
+    const minQuotes = 81;
+    const getIndicatorQuotes = [];
+
+    return QuoteService.queryForIntraday(symbol, startDate, currentDate)
+      .then(quotes => {
+        _.forEach(quotes, (value, key) => {
+          const idx = Number(key);
+          if (idx > minQuotes) {
+            const q = _.slice(quotes, idx - minQuotes, idx);
+            getIndicatorQuotes.push(this.initMAIndicators(q));
+          }
+        });
+        return Promise.all(getIndicatorQuotes);
+      })
+      .then(indicators => {
+        const bbRangeFn = (price, bband) => {
+          const higher = bband[2][0];
+          return price > higher;
+        };
+
+        const lossThreshold = 0.002;
+        const profitThreshold = 0.003;
+        const fields = ['rocLeft', 'rocRight', 'mfiLeft', 'mfiRight', 'totalTrades', 'net', 'avgTrade', 'returns'];
+        let count = 0;
+        let rocLeft = -0.9;
+        let rocRight = 0.9;
+        let mfiLeft = 0;
+        let mfiRight = 100;
+        const rows = [];
+        while (rocLeft < 0) {
+          rocRight = 0.9;
+          while (rocRight > 0) {
+            mfiLeft = 0;
+            while (mfiLeft < 100) {
+              mfiRight = 100;
+              while (mfiRight > 0) {
+                console.log('rocLeft: ', rocLeft, ' rocRight: ', rocRight, ' mfiLeft: ', mfiLeft, ' mfiRight: ', mfiRight);
+                const rocDiffRange = [rocLeft, rocRight];
+                const mfiRange = [mfiLeft, mfiRight];
+
+                const results = this.getBacktestResults(this.getMABuySignal,
+                  this.getSellSignal,
+                  indicators,
+                  bbRangeFn,
+                  mfiRange,
+                  rocDiffRange,
+                  lossThreshold,
+                  profitThreshold);
+
+                // if (results.net > 0 && _.divide(indicators.length, results.trades) < 250) {
+                rows.push({
+                  rocLeft,
+                  rocRight,
+                  mfiLeft,
+                  mfiRight,
+                  net: _.round(results.net, 3),
+                  avgTrade: _.round(_.divide(results.total, results.trades), 3),
+                  returns: _.round(_.divide(results.net, results.total), 3),
+                  totalTrades: results.trades
+                });
+                // }
+
+                count = this.cutCsv(`${symbol}-crossover-intraday`, startDate, currentDate, rows, fields, count);
+                mfiRight = _.subtract(mfiRight, 1);
+              }
+              mfiLeft = _.add(mfiLeft, 1);
+            }
+            rocRight = _.round(_.subtract(rocRight, 0.1), 3);
+          }
+          rocLeft = _.round(_.add(rocLeft, 0.1), 3);
+        }
+
+        this.writeCsv(`${symbol}-crossover-intraday`, startDate, currentDate, rows, fields, count);
+        return [];
+      });
+  }
+
   getBacktestResults(buySignalFn: Function,
     sellSignalFn: Function,
     indicators,
@@ -289,82 +367,6 @@ class BacktestService {
     return { ...orders, indicators };
   }
 
-  evaluateMACrossover(symbol, currentDate, startDate) {
-    const minQuotes = 81;
-    const getIndicatorQuotes = [];
-
-    return QuoteService.queryForIntraday(symbol, startDate, currentDate)
-      .then(quotes => {
-        _.forEach(quotes, (value, key) => {
-          const idx = Number(key);
-          if (idx > minQuotes) {
-            const q = _.slice(quotes, idx - minQuotes, idx);
-            getIndicatorQuotes.push(this.initMAIndicators(q));
-          }
-        });
-        return Promise.all(getIndicatorQuotes);
-      })
-      .then(indicators => {
-        const bbRangeFn = (price, bband) => {
-          const lower = bband[0][0];
-          return price < lower;
-        };
-
-        const lossThreshold = 0.002;
-        const profitThreshold = 0.003;
-        const fields = ['rocLeft', 'rocRight', 'mfiLeft', 'mfiRight', 'totalTrades', 'net', 'avgTrade', 'returns'];
-        let count = 0;
-        let rocLeft = -0.9;
-        let rocRight = 0.9;
-        let mfiLeft = 0;
-        let mfiRight = 100;
-        const rows = [];
-        while (rocLeft < 0) {
-          while (rocRight > 0) {
-            while (mfiLeft < 100) {
-              while (mfiRight > 0) {
-                const rocDiffRange = [rocLeft, rocRight];
-                const mfiRange = [mfiLeft, mfiRight];
-
-                const results = this.getBacktestResults(this.getMABuySignal,
-                  this.getSellSignal,
-                  indicators,
-                  bbRangeFn,
-                  mfiRange,
-                  rocDiffRange,
-                  lossThreshold,
-                  profitThreshold);
-
-                // if (results.net > 0 && _.divide(indicators.length, results.trades) < 250) {
-                rows.push({
-                  rocLeft,
-                  rocRight,
-                  mfiLeft,
-                  mfiRight,
-                  net: _.round(results.net, 3),
-                  avgTrade: _.round(_.divide(results.total, results.trades), 3),
-                  returns: _.round(_.divide(results.net, results.total), 3),
-                  totalTrades: results.trades
-                });
-                // }
-
-                count = this.cutCsv(`${symbol}-crossover-intraday`, startDate, currentDate, rows, fields, count);
-                mfiRight = _.subtract(mfiRight, 1);
-              }
-              mfiLeft = _.add(mfiLeft, 1);
-              mfiRight = 100;
-            }
-            rocRight = _.round(_.subtract(rocRight, 0.1), 3);
-          }
-          rocLeft = _.round(_.add(rocLeft, 0.1), 3);
-          rocRight = 0.9;
-        }
-
-        this.writeCsv(`${symbol}-crossover-intraday`, startDate, currentDate, rows, fields, count);
-        return [];
-      });
-  }
-
   getBuySignal(indicator, rocDiffRange, mfiRange, bbCondition) {
     let num, den;
     if (indicator.roc70 > indicator.roc10) {
@@ -401,7 +403,7 @@ class BacktestService {
     }
   }
 
-  getMABuySignal(indicator: any, rocDiffRange, mfiRange: number[]) {
+  getMABuySignal(indicator: any, rocDiffRange, mfiRange: number[], bbCondition) {
     let num, den;
     if (indicator.roc70 > indicator.roc10) {
       num = indicator.roc70;
@@ -415,8 +417,8 @@ class BacktestService {
 
     if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
       if (indicator.mfiLeft > mfiRange[0] && indicator.mfiLeft < mfiRange[1]) {
-        const crossover = _.round(DecisionService.calculatePercentDifference(indicator.sma5, indicator.sma70), 3);
-        if (crossover < 0.001) {
+        // const crossover = _.round(DecisionService.calculatePercentDifference(indicator.sma5, indicator.sma70), 3);
+        if (bbCondition) {
           return true;
         }
       }
