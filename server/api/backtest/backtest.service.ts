@@ -174,7 +174,7 @@ class BacktestService {
         const profitThreshold = 0.003;
         const mfiRange = [20, 80];
         const fields = ['leftRange', 'rightRange', 'totalTrades', 'net', 'avgTrade', 'returns'];
-        let count = 0;
+        const count = 0;
         let leftRange = -0.9;
         let rightRange = 0.9;
 
