@@ -242,7 +242,7 @@ export class DaytradeService {
     return {
       holding: holding,
       quantity: quantity,
-      price: Number(price.toFixed(2)),
+      price: _.round(Number(price), 2),
       submitted: false,
       pending: false,
       side: side,
@@ -281,18 +281,15 @@ export class DaytradeService {
     return data;
   }
 
-  addYahooData(data, newData) {
-    const quote = newData.query.results.quote;
-    const realtime_price = 1 * quote.realtime_price;
-    if (realtime_price) {
-      const date = moment(newData.ts);
-      data.chart.result[0].timestamp.push(date.unix());
-      data.chart.result[0].indicators.quote[0].close.push(realtime_price);
-      data.chart.result[0].indicators.quote[0].low.push(realtime_price);
-      data.chart.result[0].indicators.quote[0].volume.push(1 * quote.volume);
-      data.chart.result[0].indicators.quote[0].open.push(realtime_price);
-      data.chart.result[0].indicators.quote[0].high.push(realtime_price);
-    }
+  addQuote(data, newQuote) {
+    const realtime_price = newQuote.last;
+    const date = moment(newQuote.ts);
+    data.chart.result[0].timestamp.push(date.unix());
+    data.chart.result[0].indicators.quote[0].close.push(realtime_price);
+    data.chart.result[0].indicators.quote[0].low.push(realtime_price);
+    data.chart.result[0].indicators.quote[0].volume.push(newQuote.volume);
+    data.chart.result[0].indicators.quote[0].open.push(realtime_price);
+    data.chart.result[0].indicators.quote[0].high.push(realtime_price);
     return data;
   }
 
@@ -504,7 +501,7 @@ export class DaytradeService {
   }
 
   convertToFixedNumber(num, sig) {
-    return Number(num.toFixed(sig));
+    return _.round(Number(num), sig);
   }
 
   convertHistoricalQuotes(backtestQuotes) {

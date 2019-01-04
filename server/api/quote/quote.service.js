@@ -48,7 +48,26 @@ class QuoteService {
   }
 
   getRawData(symbol, interval = '1d', range) {
-    return api.getHistoricalData(symbol, interval, range);
+    return api.getHistoricalData(symbol, interval, range)
+      .then((data) => {
+        const quotes = _.get(data, 'chart.result[0].indicators.quote[0]', []);
+        const close = _.get(data, 'chart.result[0].indicators.quote[0].close', []);
+
+        const timestamps = _.get(data, 'chart.result[0].timestamp', []);
+
+        close.forEach((val, idx) => {
+          if (!val) {
+            quotes.close.splice(idx, 1);
+            quotes.open.splice(idx, 1);
+            quotes.high.splice(idx, 1);
+            quotes.low.splice(idx, 1);
+            quotes.volume.splice(idx, 1);
+            timestamps.splice(idx, 1);
+          }
+        });
+
+        return data;
+      });
   }
 
   getDailyQuotes(symbol, toDate, fromDate) {
@@ -92,8 +111,19 @@ class QuoteService {
       });
   }
 
-  getLastPrice(symbols) {
-    return api.getRealtimeQuotes(symbols.join(','));
+  getLastPrice(symbol) {
+    const query = `${configurations.apps.tiingo}iex/${symbol}`;
+    const options = {
+      method: 'GET',
+      json: true,
+      uri: query,
+      headers: {
+        Authorization: 'Token ' + configurations.tiingo.key,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    return RequestPromise(options);
   }
 
   getPrice(symbol) {
@@ -148,6 +178,7 @@ class QuoteService {
 
     return RequestPromise(options)
       .then(quotes => {
+        console.log(quotes);
         const data = this.createIntradayData();
 
         _.forEach(quotes, (quote) => {
@@ -155,8 +186,8 @@ class QuoteService {
           data.chart.result[0].indicators.quote[0].close.push(quote.close);
           data.chart.result[0].indicators.quote[0].low.push(quote.low);
           data.chart.result[0].indicators.quote[0].volume.push(null);
-          data.chart.result[0].indicators.quote[0].open.push(open);
-          data.chart.result[0].indicators.quote[0].high.push(high);
+          data.chart.result[0].indicators.quote[0].open.push(quote.open);
+          data.chart.result[0].indicators.quote[0].high.push(quote.high);
         });
 
         return data;

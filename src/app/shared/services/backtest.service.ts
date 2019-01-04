@@ -94,12 +94,12 @@ export class BacktestService {
     }
 
 
-    getPrices(data: any): Observable<any> {
+    getLastPriceTiingo(data: any): Observable<any> {
         return this.http.post(`${BASE_URL}api/quote/current`, data, {})
             .map(r => r.json());
     }
 
-    getPrice(data: any): Observable<any> {
+    getLastPriceIEX(data: any): Observable<any> {
         return this.http.post(`${BASE_URL}api/quote/price`, data, {})
             .map(r => r.json());
     }
@@ -111,6 +111,15 @@ export class BacktestService {
 
     getIntradayV3(data: any): Observable<any> {
         return this.http.post(`${BASE_URL}api/quote/raw`, data, {})
+            .map(r => r.json());
+    }
+
+    getIntradayV4(symbol: string, startDate: string): Observable<any> {
+        const data = {
+            symbol,
+            startDate
+        };
+        return this.http.post(`${BASE_URL}api/quote/intraday-tiingo`, data, {})
             .map(r => r.json());
     }
 
