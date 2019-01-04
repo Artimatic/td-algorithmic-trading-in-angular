@@ -53,7 +53,8 @@ export class RhTableComponent implements OnInit, OnChanges {
       algorithm: [
         {value: 'v1', viewValue: 'Moving Average Crossover'},
         {value: 'v2', viewValue: 'Mean Reversion - Bollinger Band'},
-        {value: 'v3', viewValue: 'Intraday - Mean Reversion'}
+        {value: 'v3', viewValue: 'Intraday - Mean Reversion'},
+        {value: 'v4', viewValue: 'Intraday - Momentum'}
       ]
     },
     {
@@ -134,9 +135,19 @@ export class RhTableComponent implements OnInit, OnChanges {
           }
         break;
       case 'v3':
-        const algo = 'intraday';
         algoParams.forEach((param) => {
-          this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, algo).subscribe(
+          this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, 'intraday').subscribe(
+            result => {
+              this.incrementProgress();
+            }, error => {
+              this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
+              this.incrementProgress();
+            });
+        });
+        break;
+      case 'v4':
+        algoParams.forEach((param) => {
+          this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, 'crossover').subscribe(
             result => {
               this.incrementProgress();
             }, error => {
