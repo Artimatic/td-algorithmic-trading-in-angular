@@ -19,14 +19,14 @@ export default {
   // Server port
   port: process.env.PORT || 9000,
   yahoo: {
-    key: _.get(credentials, 'default.yahoo.key', null),
-    secret: _.get(credentials, 'default.yahoo.secret', null)
+    key: _.get(credentials, 'default.yahoo.key', _.get(credentials, 'yahoo.key', null)),
+    secret: _.get(credentials, 'default.yahoo.secret', _.get(credentials, 'yahoo.secret', null))
   },
   alpha: {
-    key: _.get(credentials, 'default.alpha.key', null),
+    key: _.get(credentials, 'default.alpha.key', _.get(credentials, 'alpha.key', null)),
   },
   tiingo: {
-    key: _.get(credentials, 'default.tiingo.key', null),
+    key: _.get(credentials, 'default.tiingo.key', _.get(credentials, 'tiingo.key', null)),
   },
   apps: {
     goliath: 'http://localhost:8100/',

@@ -239,10 +239,6 @@ export class BbCardComponent implements OnInit, OnChanges {
         interval: this.dataInterval
       };
 
-      const yahooRequestBody = {
-        tickers: [this.order.holding.symbol]
-      };
-
       data = await this.backtestService.getIntraday2(requestBody).toPromise()
         .then((intraday) => {
           const timestamps = intraday.chart.result[0].timestamp;
@@ -253,10 +249,12 @@ export class BbCardComponent implements OnInit, OnChanges {
               this.reportingService.addAuditLog(this.order.holding.symbol,
                 `Quote for ${this.order.holding.name} is outdated. Last: ${lastDate.format()}, Current:${moment().format()}`);
 
-              return this.backtestService.getPrices(yahooRequestBody)
+              return this.backtestService.getLastPriceTiingo({
+                symbol: this.order.holding.symbol
+              })
                 .toPromise()
                 .then((quote) => {
-                  return this.daytradeService.addYahooData(intraday, quote);
+                  return this.daytradeService.addQuote(intraday, quote);
                 });
               // return this.backtestService.getPrice(requestBody)
               // .toPromise()
@@ -898,7 +896,9 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
     if (this.config.SpyMomentum) {
       if (signalPrice > high[0]) {
-        return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
+        if (this.mfi > 33 && this.mfi < 90) {
+          return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
+        }
       }
     }
     return null;

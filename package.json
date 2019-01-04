@@ -7,7 +7,7 @@
     "start": "npm run build && nodemon dist/app.js --exec babel-node",
     "start-server": "npm run build-ts && nodemon dist/app.js --exec babel-node",
     "build": "ng build && npm run build-ts && npm run tslint",
-    "serve": "node dist/index.js",
+    "serve": "node dist/app.js",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
