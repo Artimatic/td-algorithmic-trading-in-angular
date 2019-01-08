@@ -153,9 +153,9 @@ export class DaytradeService {
     return orderSize;
   }
 
-  sendBuy(buyOrder: SmartOrder, resolve, reject) {
+  sendBuy(buyOrder: SmartOrder, type: string, resolve, reject) {
     this.authenticationService.getPortfolioAccount().subscribe(account => {
-      this.portfolioService.buy(buyOrder.holding, buyOrder.quantity, buyOrder.price, 'limit').subscribe(
+      this.portfolioService.buy(buyOrder.holding, buyOrder.quantity, buyOrder.price, type).subscribe(
         response => {
           resolve(response);
         },
