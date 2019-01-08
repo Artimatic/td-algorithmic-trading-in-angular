@@ -284,10 +284,16 @@ export class DaytradeService {
   addQuote(data, newQuote) {
     const realtime_price = newQuote.last;
     const date = moment(newQuote.ts);
+    let volume = newQuote.volume;
+
+    if (!volume) {
+      const volumes = data.chart.result[0].indicators.quote[0].volume;
+      volume = volumes[volumes.length - 1];
+    }
     data.chart.result[0].timestamp.push(date.unix());
     data.chart.result[0].indicators.quote[0].close.push(realtime_price);
     data.chart.result[0].indicators.quote[0].low.push(realtime_price);
-    data.chart.result[0].indicators.quote[0].volume.push(newQuote.volume);
+    data.chart.result[0].indicators.quote[0].volume.push(volume);
     data.chart.result[0].indicators.quote[0].open.push(realtime_price);
     data.chart.result[0].indicators.quote[0].high.push(realtime_price);
     return data;

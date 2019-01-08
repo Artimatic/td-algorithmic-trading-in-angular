@@ -182,13 +182,14 @@ class BacktestService {
               lossThreshold,
               profitThreshold);
 
-            if (results.net > 0 && _.divide(indicators.length, results.trades) < 250) {
+            const returns = _.round(_.divide(results.net, results.total), 3);
+            if (returns > 0 && _.divide(indicators.length, results.trades) < 250) {
               rows.push({
                 leftRange,
                 rightRange,
                 net: _.round(results.net, 3),
                 avgTrade: _.round(_.divide(results.total, results.trades), 3),
-                returns: _.round(_.divide(results.net, results.total), 3),
+                returns,
                 totalTrades: results.trades
               });
             }
@@ -248,6 +249,7 @@ class BacktestService {
 
     return QuoteService.queryForIntraday(symbol, startDate, currentDate)
       .then(quotes => {
+        console.log('quotes: ', quotes.length);
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);
           if (idx > minQuotes) {
