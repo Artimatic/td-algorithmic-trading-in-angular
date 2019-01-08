@@ -925,7 +925,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     const rocLen = roc[0].length - 1;
     const roc1 = _.round(roc[0][rocLen], 3);
 
-    if (signalPrice > upper[0]) {
+    if (signalPrice > upper[0] && (this.mfi > 70)) {
       const log = `BB Sell Event - time: ${moment.unix(signalTime).format()},
           price: ${signalPrice}, roc: ${roc1}, mid: ${mid[0]}, lower: ${lower[0]}`;
       this.reportingService.addAuditLog(this.order.holding.symbol, log);

@@ -53,7 +53,8 @@ export class RhTableComponent implements OnInit, OnChanges {
       algorithm: [
         {value: 'v1', viewValue: 'Moving Average Crossover'},
         {value: 'v2', viewValue: 'Mean Reversion - Bollinger Band'},
-        {value: 'v3', viewValue: 'Intraday - Mean Reversion'}
+        {value: 'v3', viewValue: 'Intraday - Mean Reversion'},
+        {value: 'v4', viewValue: 'Daily - Money Flow Index'}
       ]
     },
     {
@@ -93,6 +94,8 @@ export class RhTableComponent implements OnInit, OnChanges {
       averageReturns: 0,
       averageTrades: 0
     };
+
+    let algo;
 
     switch (this.selectedAlgo) {
       case 'v1':
@@ -134,7 +137,7 @@ export class RhTableComponent implements OnInit, OnChanges {
           }
         break;
       case 'v3':
-        const algo = 'intraday';
+        algo = 'intraday';
         algoParams.forEach((param) => {
           this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, algo).subscribe(
             result => {
@@ -156,6 +159,25 @@ export class RhTableComponent implements OnInit, OnChanges {
                   this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
                   this.incrementProgress();
                 });
+            }, error => {
+              this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
+              this.incrementProgress();
+            });
+        });
+        break;
+      case 'v4':
+        algo = 'daily-mfi';
+        algoParams.forEach((param) => {
+          this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, algo).subscribe(
+            (testResults: any[]) => {
+              if (testResults.length > 0) {
+                const result = testResults[testResults.length - 1];
+                result.stock = param.ticker;
+                result.returns = +((result.returns * 100).toFixed(2));
+                this.addToList(result);
+                this.updateAlgoReport(result);
+              }
+              this.incrementProgress();
             }, error => {
               this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
               this.incrementProgress();

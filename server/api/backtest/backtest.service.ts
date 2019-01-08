@@ -310,6 +310,91 @@ class BacktestService {
       });
   }
 
+  evaluateDailyMfi(symbol, currentDate, startDate) {
+    const minQuotes = 81;
+    const getIndicatorQuotes = [];
+
+    return this.getData(symbol, currentDate, startDate)
+      .then(quotes => {
+        _.forEach(quotes, (value, key) => {
+          const idx = Number(key);
+          if (idx > minQuotes) {
+            const q = _.slice(quotes, idx - minQuotes, idx);
+            getIndicatorQuotes.push(this.initMAIndicators(q));
+          }
+        });
+        return Promise.all(getIndicatorQuotes);
+      })
+      .then(indicators => {
+        const bbRangeFn = (price, bband) => {
+          return null;
+        };
+
+        const testResult = [];
+        const name = `${symbol}-mfi-daily`;
+        const lossThreshold = 0.03;
+        const profitThreshold = 0.05;
+        const mfiRange = [20, 80];
+        const fields = ['leftRange', 'rightRange', 'totalTrades', 'net', 'avgTrade', 'returns'];
+        let count = 0;
+        let leftRange = -0.9;
+        let rightRange = 0.9;
+        let bestResult = null;
+
+        const rows = [];
+        while (leftRange < 0) {
+          while (rightRange > 0) {
+            const rocDiffRange = [leftRange, rightRange];
+            const results = this.getBacktestResults(this.getBuySignal,
+              this.getSellSignal,
+              indicators,
+              bbRangeFn,
+              mfiRange,
+              rocDiffRange,
+              lossThreshold,
+              profitThreshold);
+
+            if (results.net > 0 && _.divide(indicators.length, results.trades) < 250) {
+              const line = {
+                leftRange,
+                rightRange,
+                net: _.round(results.net, 3),
+                avgTrade: _.round(_.divide(results.total, results.trades), 3),
+                returns: _.round(_.divide(results.net, results.total), 3),
+                totalTrades: results.trades
+              };
+
+              rows.push(line);
+              testResult.push(line);
+              if (!bestResult || (line.returns > bestResult)) {
+                bestResult = line;
+              }
+            }
+            if (rows.length > 500000) {
+              this.writeCsv(name, startDate, currentDate, _.cloneDeep(rows), fields, ++count);
+              rows.length = 0;
+            }
+            rightRange = _.round(_.subtract(rightRange, 0.1), 3);
+          }
+          leftRange = _.round(_.add(leftRange, 0.1), 3);
+          rightRange = 0.9;
+        }
+
+
+        this.writeCsv(name, startDate, currentDate, rows, fields, count);
+        let recommendation = 'INDETERMINANT';
+        if (bestResult) {
+          if (this.getBuySignal(indicators[indicators.length - 1],
+            [bestResult.leftRange, bestResult.rightRange], mfiRange, null)) {
+              recommendation = 'BUY';
+          }
+
+          testResult.push({...bestResult, algo: 'daily-mfi', recommendation });
+        }
+        return testResult;
+      });
+  }
+
   getBacktestResults(buySignalFn: Function,
     sellSignalFn: Function,
     indicators,
