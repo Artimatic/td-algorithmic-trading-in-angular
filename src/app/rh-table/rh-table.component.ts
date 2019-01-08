@@ -54,7 +54,8 @@ export class RhTableComponent implements OnInit, OnChanges {
         {value: 'v1', viewValue: 'Moving Average Crossover'},
         {value: 'v2', viewValue: 'Mean Reversion - Bollinger Band'},
         {value: 'v3', viewValue: 'Intraday - Mean Reversion'},
-        {value: 'v4', viewValue: 'Daily - Money Flow Index'}
+        {value: 'v4', viewValue: 'Intraday - Momentum'},
+        {value: 'v5', viewValue: 'Daily - Money Flow Index'},
       ]
     },
     {
@@ -148,6 +149,18 @@ export class RhTableComponent implements OnInit, OnChanges {
             });
         });
         break;
+      case 'v4':
+        algo = 'crossover';
+        algoParams.forEach((param) => {
+          this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, 'crossover').subscribe(
+            result => {
+              this.incrementProgress();
+            }, error => {
+              this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
+              this.incrementProgress();
+            });
+        });
+        break;
       case 'intraday':
         algoParams.forEach((param) => {
           this.algo.getYahooIntraday(param.ticker)
@@ -165,7 +178,7 @@ export class RhTableComponent implements OnInit, OnChanges {
             });
         });
         break;
-      case 'v4':
+      case 'v5':
         algo = 'daily-mfi';
         algoParams.forEach((param) => {
           this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, algo).subscribe(
