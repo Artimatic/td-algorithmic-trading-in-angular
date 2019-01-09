@@ -39,7 +39,7 @@ export class BollingerBandComponent implements OnInit {
     public dialog: MatDialog) { }
 
   ngOnInit() {
-    this.interval = 79800;
+    this.interval = 80808;
     this.startTime = moment('10:10am', 'h:mma');
     this.noonTime = moment('1:10pm', 'h:mma');
     this.endTime = moment('3:30pm', 'h:mma');

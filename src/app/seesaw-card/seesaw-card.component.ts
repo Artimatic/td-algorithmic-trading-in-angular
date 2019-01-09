@@ -451,7 +451,7 @@ export class SeesawCardComponent implements OnInit {
           this.stop();
         }
       };
-      this.daytradeService.sendBuy(order, resolve, reject);
+      this.daytradeService.sendBuy(order, 'market', resolve, reject);
     } else {
       this.incrementBuy(order);
       console.log(`${moment().format('hh:mm')} ${log}`);
