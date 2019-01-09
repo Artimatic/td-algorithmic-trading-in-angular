@@ -947,14 +947,14 @@ export class BbCardComponent implements OnInit, OnChanges {
     return null;
   }
 
-  processSpecialRules(closePrice: number, signalTime, quotes, idx) {
+  processSpecialRules(closePrice: number, signalTime) {
     const score = this.scoringService.getScore(this.order.holding.symbol);
     if (score && score.total > 2) {
       const scorePct = _.round(_.divide(score.wins, score.total), 2);
-      if (scorePct < 0.30) {
-        // if (!this.isBacktest) {
-        //   this.stop();
-        // }
+      if (scorePct < 0.25) {
+        if (!this.isBacktest) {
+          this.stop();
+        }
         const msg = 'Too many losses. Halting trading in Wins:' +
           `${this.order.holding.symbol} ${score.wins} Loss: ${score.losses}`;
 
