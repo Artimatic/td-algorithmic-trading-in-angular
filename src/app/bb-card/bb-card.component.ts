@@ -686,7 +686,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       return null;
     }
 
-    const specialOrder = this.processSpecialRules(quotes.close[idx], timestamps[idx], quotes, idx);
+    const specialOrder = this.processSpecialRules(quotes.close[idx], timestamps[idx]);
 
     if (specialOrder) {
       return specialOrder;
