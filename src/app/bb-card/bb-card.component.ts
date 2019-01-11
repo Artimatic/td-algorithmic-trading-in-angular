@@ -763,19 +763,20 @@ export class BbCardComponent implements OnInit, OnChanges {
         return this.sendStopLoss(sell);
       }
 
-      const buyQuantity: number = this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
-        this.firstFormGroup.value.orderSize,
-        this.buyCount,
-        this.positionCount);
+      if (!sell) {
+        const buyQuantity: number = this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
+          this.firstFormGroup.value.orderSize,
+          this.buyCount,
+          this.positionCount);
 
-      const buy: SmartOrder = buyQuantity <= 0 ? null :
-        await this.buildBuyOrder(buyQuantity, quotes.close[idx], timestamps[idx],
-          quotes.low[idx] || quotes.close[idx], quotes, idx, band, shortSma, roc);
+        const buy: SmartOrder = buyQuantity <= 0 ? null :
+          await this.buildBuyOrder(buyQuantity, quotes.close[idx], timestamps[idx],
+            quotes.low[idx] || quotes.close[idx], quotes, idx, band, shortSma, roc);
 
-      if (buy) {
-        return this.sendBuy(buy);
+        if (buy) {
+          return this.sendBuy(buy);
+        }
       }
-
       return null;
     }
   }
