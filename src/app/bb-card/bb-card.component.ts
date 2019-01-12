@@ -793,7 +793,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
     const high = band[2],
       mid = band[1],
-      lower = band[0];
+      low = band[0];
 
     const pricePaid = this.daytradeService.estimateAverageBuyOrderPrice(this.orders);
     const gains = this.daytradeService.getPercentChange(signalPrice, pricePaid);
@@ -896,8 +896,12 @@ export class BbCardComponent implements OnInit, OnChanges {
       // }
     }
     if (this.config.SpyMomentum) {
-      if (signalPrice > high[0]) {
-        if (this.mfi > 33 && this.mfi < 90) {
+      if (signalPrice < low[0]) {
+        if (this.mfi > 0 && this.mfi < 37) {
+          return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
+        }
+      } else if (signalPrice > high[0]) {
+        if (this.mfi > 55 && this.mfi < 87) {
           return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
         }
       }

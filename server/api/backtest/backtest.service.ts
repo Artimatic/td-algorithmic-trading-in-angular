@@ -243,7 +243,7 @@ class BacktestService {
       });
   }
 
-  evaluateMACrossover(symbol, currentDate, startDate) {
+  evaluateBband(symbol, currentDate, startDate) {
     const minQuotes = 81;
     const getIndicatorQuotes = [];
 
@@ -261,8 +261,10 @@ class BacktestService {
       })
       .then(indicators => {
         const bbRangeFn = (price, bband) => {
-          const higher = bband[2][0];
-          return price > higher;
+          // const higher = bband[2][0];
+          const lower = bband[0][0];
+
+          return price < lower;
         };
 
         const lossThreshold = 0.002;
@@ -298,7 +300,7 @@ class BacktestService {
             }
 
             if (rows.length > 500000) {
-              this.writeCsv(`${symbol}-crossover-intraday`, startDate, currentDate, _.cloneDeep(rows), fields, ++count);
+              this.writeCsv(`${symbol}-bband-intraday`, startDate, currentDate, _.cloneDeep(rows), fields, ++count);
               rows.length = 0;
             }
 
@@ -307,7 +309,7 @@ class BacktestService {
           mfiLeft = _.add(mfiLeft, 1);
         }
 
-        this.writeCsv(`${symbol}-crossover-intraday`, startDate, currentDate, rows, fields, count);
+        this.writeCsv(`${symbol}-bband-intraday`, startDate, currentDate, rows, fields, count);
         return [];
       });
   }
