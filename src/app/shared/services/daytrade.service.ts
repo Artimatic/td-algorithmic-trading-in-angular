@@ -181,10 +181,8 @@ export class DaytradeService {
             } else {
               sellOrder.quantity = sellOrder.quantity < positionCount ? sellOrder.quantity : positionCount;
 
-              let price = sellOrder.price;
-
               if (type === 'market') {
-                price = null;
+                sellOrder.price = null;
               }
 
               this.portfolioService.sell(sellOrder.holding, sellOrder.quantity, price, type).subscribe(

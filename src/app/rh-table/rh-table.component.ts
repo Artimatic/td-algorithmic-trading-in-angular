@@ -52,10 +52,10 @@ export class RhTableComponent implements OnInit, OnChanges {
       name: 'Mean Reversion',
       algorithm: [
         {value: 'v1', viewValue: 'Moving Average Crossover'},
-        {value: 'v2', viewValue: 'Mean Reversion - Bollinger Band'},
-        {value: 'v3', viewValue: 'Intraday - Mean Reversion'},
-        {value: 'v4', viewValue: 'Intraday - Momentum'},
+        {value: 'v2', viewValue: 'Daily - Bollinger Band'},
         {value: 'v5', viewValue: 'Daily - Money Flow Index'},
+        {value: 'v3', viewValue: 'Intraday - MFI'},
+        {value: 'v4', viewValue: 'Intraday - Bollinger Band'},
       ]
     },
     {

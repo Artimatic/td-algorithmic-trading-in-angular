@@ -320,6 +320,7 @@ class BacktestService {
 
     return this.getData(symbol, currentDate, startDate)
       .then(quotes => {
+        console.log('quotes: ', quotes.length);
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);
           if (idx > minQuotes) {
@@ -358,7 +359,7 @@ class BacktestService {
               lossThreshold,
               profitThreshold);
 
-            if (results.net > 0 && _.divide(indicators.length, results.trades) < 250) {
+            if (results.net > 0) {
               const line = {
                 leftRange,
                 rightRange,
@@ -385,15 +386,16 @@ class BacktestService {
         }
 
 
-        this.writeCsv(name, startDate, currentDate, rows, fields, count);
+        // this.writeCsv(name, startDate, currentDate, rows, fields, count);
         let recommendation = 'INDETERMINANT';
         if (bestResult) {
           if (this.getBuySignal(indicators[indicators.length - 1],
-            [bestResult.leftRange, bestResult.rightRange], mfiRange, null)) {
+              [0, 1], mfiRange, null)) {
+            // [bestResult.leftRange, bestResult.rightRange], mfiRange, null)) {
               recommendation = 'BUY';
           }
 
-          testResult.push({...bestResult, algo: 'daily-mfi', recommendation });
+          testResult.push({...bestResult, algo: 'daily-mfi', recommendation, ...indicators[indicators.length - 1] });
         }
         return testResult;
       });
