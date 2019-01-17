@@ -88,15 +88,17 @@ class PortfolioService {
     })();
   }
 
-  getQuote(symbol, reply) {
-    return Robinhood().quote_data(symbol, (error, response, body) => {
-      if (error) {
-        console.error(error);
-        reply.status(500).send(error);
-      } else {
-        reply.status(200).send(body);
+  getQuote(symbol, token, reply) {
+    const options = {
+      uri: apiUrl + `/quotes/${symbol}/`,
+      headers: {
+        'Authorization': `Bearer ${token}`
       }
-    });
+    };
+
+    return request.get(options)
+      .then((response) => reply.status(200).send(response))
+      .catch((e) => (reply.status(500).send(e)));
   }
 
   sell(account, token, instrumentUrl, symbol, quantity, price, type = 'limit', reply) {

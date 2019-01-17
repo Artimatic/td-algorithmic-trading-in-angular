@@ -8,6 +8,7 @@ export interface OrderRow {
     StopLoss?: boolean;
     TakeProfit?: boolean;
     MeanReversion1?: boolean;
+    Mfi?: boolean;
     SpyMomentum?: boolean;
     OrderSize?: number;
 }

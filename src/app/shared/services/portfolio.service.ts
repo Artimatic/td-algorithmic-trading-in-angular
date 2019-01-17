@@ -81,7 +81,9 @@ export class PortfolioService {
   }
 
   getQuote(symbol: string): Observable<any> {
-    return this.http.get(`/api/portfolio/quote?symbol=${symbol}`)
+    const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.token });
+    const options = new RequestOptions({ headers: headers });
+    return this.http.get(`/api/portfolio/quote?symbol=${symbol}`, options)
       .map((response: Response) => response.json());
   }
 }

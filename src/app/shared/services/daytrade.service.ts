@@ -96,6 +96,7 @@ export class DaytradeService {
       TakeProfit: false,
       StopLoss: false,
       MeanReversion1: false,
+      Mfi: false,
       SpyMomentum: false
     };
 
@@ -110,6 +111,9 @@ export class DaytradeService {
             break;
           case OrderPref.MeanReversion1:
             config.MeanReversion1 = true;
+            break;
+          case OrderPref.Mfi:
+            config.Mfi = true;
             break;
           case OrderPref.SpyMomentum:
             config.SpyMomentum = true;
@@ -181,8 +185,10 @@ export class DaytradeService {
             } else {
               sellOrder.quantity = sellOrder.quantity < positionCount ? sellOrder.quantity : positionCount;
 
+              let price = sellOrder.price;
+
               if (type === 'market') {
-                sellOrder.price = null;
+                price = null;
               }
 
               this.portfolioService.sell(sellOrder.holding, sellOrder.quantity, price, type).subscribe(
@@ -280,20 +286,8 @@ export class DaytradeService {
   }
 
   addQuote(data, newQuote) {
-    const realtime_price = newQuote.last;
-    const date = moment(newQuote.ts);
-    let volume = newQuote.volume;
-
-    if (!volume) {
-      const volumes = data.chart.result[0].indicators.quote[0].volume;
-      volume = volumes[volumes.length - 1];
-    }
-    data.chart.result[0].timestamp.push(date.unix());
-    data.chart.result[0].indicators.quote[0].close.push(realtime_price);
-    data.chart.result[0].indicators.quote[0].low.push(realtime_price);
-    data.chart.result[0].indicators.quote[0].volume.push(volume);
-    data.chart.result[0].indicators.quote[0].open.push(realtime_price);
-    data.chart.result[0].indicators.quote[0].high.push(realtime_price);
+    const quotes = data.chart.result[0].indicators.quote[0];
+    quotes.close[quotes.close.length - 1] = 1 * newQuote.last_trade_price;
     return data;
   }
 

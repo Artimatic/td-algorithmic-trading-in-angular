@@ -22,7 +22,8 @@ import {
   BacktestService,
   DaytradeService,
   ReportingService,
-  ScoreKeeperService
+  ScoreKeeperService,
+  PortfolioService
 } from '../shared';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import { SmartOrder } from '../shared/models/smart-order';
@@ -81,6 +82,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     private daytradeService: DaytradeService,
     private reportingService: ReportingService,
     private scoringService: ScoreKeeperService,
+    private portfolioService: PortfolioService,
     public dialog: MatDialog) { }
 
   ngOnInit() {
@@ -93,6 +95,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.preferenceList = [OrderPref.TakeProfit,
     OrderPref.StopLoss,
     OrderPref.MeanReversion1,
+    OrderPref.Mfi,
     OrderPref.SpyMomentum
     ];
     Highcharts.setOptions({
@@ -243,27 +246,11 @@ export class BbCardComponent implements OnInit, OnChanges {
         .then((intraday) => {
           const timestamps = intraday.chart.result[0].timestamp;
           if (timestamps.length > 0) {
-            const lastDate = moment.unix(timestamps[timestamps.length - 1]);
-
-            if (moment().diff(lastDate, 'minutes') > 1) {
-              this.reportingService.addAuditLog(this.order.holding.symbol,
-                `Quote for ${this.order.holding.name} is outdated. Last: ${lastDate.format()}, Current:${moment().format()}`);
-
-              return this.backtestService.getLastPriceTiingo({
-                symbol: this.order.holding.symbol
-              })
+              return this.portfolioService.getQuote(this.order.holding.symbol)
                 .toPromise()
                 .then((quote) => {
                   return this.daytradeService.addQuote(intraday, quote);
                 });
-              // return this.backtestService.getPrice(requestBody)
-              // .toPromise()
-              // .then((quote) => {
-              //   return this.daytradeService.addChartData(intraday, quote);
-              // });
-            } else {
-              return intraday;
-            }
           } else {
             return this.backtestService.getIntradayV3({
               symbol: this.order.holding.symbol,
@@ -274,7 +261,11 @@ export class BbCardComponent implements OnInit, OnChanges {
               .then((quotes) => {
                 quotes.chart.result[0].indicators.quote[0].close =
                   this.daytradeService.fillInMissingReals(_.get(quotes, 'chart.result[0].indicators.quote[0].close'));
-                return quotes;
+                  return this.portfolioService.getQuote(this.order.holding.symbol)
+                    .toPromise()
+                    .then((quote) => {
+                      return this.daytradeService.addQuote(intraday, quote);
+                    });
               });
           }
         });
@@ -814,7 +805,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       return null;
     }
 
-    if (this.config.MeanReversion1) {
+    if (this.config.Mfi) {
       const rocLen = roc[0].length - 1;
       const roc1 = _.round(roc[0][rocLen], 3);
       let num, den;
@@ -896,12 +887,16 @@ export class BbCardComponent implements OnInit, OnChanges {
       // }
     }
     if (this.config.SpyMomentum) {
-      if (signalPrice < low[0]) {
-        if (this.mfi > 0 && this.mfi < 37) {
+     if (signalPrice > high[0]) {
+        if (this.mfi > 55 && this.mfi < 87) {
           return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
         }
-      } else if (signalPrice > high[0]) {
-        if (this.mfi > 55 && this.mfi < 87) {
+      }
+    }
+
+    if (this.config.MeanReversion1) {
+      if (signalPrice < low[0]) {
+        if (this.mfi > 0 && this.mfi < 37) {
           return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
         }
       }
@@ -1078,6 +1073,10 @@ export class BbCardComponent implements OnInit, OnChanges {
 
     if (this.order.meanReversion1) {
       pref.push(OrderPref.MeanReversion1);
+    }
+
+    if (this.order.useMfi) {
+      pref.push(OrderPref.Mfi);
     }
 
     if (this.order.spyMomentum) {
