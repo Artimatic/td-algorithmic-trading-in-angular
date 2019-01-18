@@ -264,7 +264,7 @@ export class BbCardComponent implements OnInit, OnChanges {
                   return this.portfolioService.getQuote(this.order.holding.symbol)
                     .toPromise()
                     .then((quote) => {
-                      return this.daytradeService.addQuote(intraday, quote);
+                      return this.daytradeService.addQuote(quotes, quote);
                     });
               });
           }
