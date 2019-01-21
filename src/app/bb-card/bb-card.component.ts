@@ -925,7 +925,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     const rocLen = roc[0].length - 1;
     const roc1 = _.round(roc[0][rocLen], 3);
 
-    if (signalPrice > upper[0] && (this.mfi > 70)) {
+    if (signalPrice > upper[0] && (this.mfi > 46)) {
       const log = `BB Sell Event - time: ${moment.unix(signalTime).format()},
           price: ${signalPrice}, roc: ${roc1}, mid: ${mid[0]}, lower: ${lower[0]}`;
       this.reportingService.addAuditLog(this.order.holding.symbol, log);
@@ -951,7 +951,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     const score = this.scoringService.getScore(this.order.holding.symbol);
     if (score && score.total > 2) {
       const scorePct = _.round(_.divide(score.wins, score.total), 2);
-      if (scorePct < 0.25) {
+      if (scorePct < 0.35) {
         if (!this.isBacktest) {
           this.stop();
         }
