@@ -194,16 +194,14 @@ export class BollingerBandComponent implements OnInit {
         // TODO: Use moment timezones
         if (moment().isAfter(this.startTime)) {
           let executed = 0;
-          while (executed < limit) {
-            if (lastIndex < orders.length) {
-              orders[lastIndex].stepForward = counter;
-            } else {
-              lastIndex = 0;
-              orders[lastIndex].stepForward = counter;
-            }
+          while (executed < limit && lastIndex < orders.length) {
+            orders[lastIndex].stepForward = counter;
             lastIndex++;
             counter++;
             executed++;
+          }
+          if (lastIndex >= orders.length) {
+            lastIndex = 0;
           }
           if (moment().isAfter(this.endTime)) {
             this.stop();
