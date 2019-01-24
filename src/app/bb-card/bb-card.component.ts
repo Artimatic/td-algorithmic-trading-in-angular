@@ -96,7 +96,8 @@ export class BbCardComponent implements OnInit, OnChanges {
     OrderPref.StopLoss,
     OrderPref.MeanReversion1,
     OrderPref.Mfi,
-    OrderPref.SpyMomentum
+    OrderPref.SpyMomentum,
+    OrderPref.useYahooData
     ];
     Highcharts.setOptions({
       global: {
@@ -242,33 +243,21 @@ export class BbCardComponent implements OnInit, OnChanges {
         interval: this.dataInterval
       };
 
-      data = await this.backtestService.getIntraday2(requestBody).toPromise()
-        .then((intraday) => {
-          const timestamps = intraday.chart.result[0].timestamp;
-          if (timestamps.length > 0) {
-              return this.portfolioService.getQuote(this.order.holding.symbol)
-                .toPromise()
-                .then((quote) => {
-                  return this.daytradeService.addQuote(intraday, quote);
-                });
-          } else {
-            return this.backtestService.getIntradayV3({
-              symbol: this.order.holding.symbol,
-              interval: '1m',
-              range: '1d'
-            })
-              .toPromise()
-              .then((quotes) => {
-                quotes.chart.result[0].indicators.quote[0].close =
-                  this.daytradeService.fillInMissingReals(_.get(quotes, 'chart.result[0].indicators.quote[0].close'));
-                  return this.portfolioService.getQuote(this.order.holding.symbol)
-                    .toPromise()
-                    .then((quote) => {
-                      return this.daytradeService.addQuote(quotes, quote);
-                    });
-              });
-          }
-        });
+      data = this.config.useYahooData ? await this.daytradeService.getIntradayYahoo(this.order.holding.symbol) :
+        await this.backtestService.getIntraday2(requestBody).toPromise()
+          .then((intraday) => {
+            const timestamps = intraday.chart.result[0].timestamp;
+            if (timestamps.length > 0) {
+                return this.portfolioService.getQuote(this.order.holding.symbol)
+                  .toPromise()
+                  .then((quote) => {
+                    return this.daytradeService.addQuote(intraday, quote);
+                  });
+            } else {
+              return this.daytradeService.getIntradayYahoo(this.order.holding.symbol);
+            }
+          });
+
     } else if (this.backtestQuotes.length) {
       data = this.daytradeService.createNewChart();
 
@@ -1083,6 +1072,9 @@ export class BbCardComponent implements OnInit, OnChanges {
       pref.push(OrderPref.SpyMomentum);
     }
 
+    if (this.order.yahooData) {
+      pref.push(OrderPref.useYahooData);
+    }
     return pref;
   }
 }

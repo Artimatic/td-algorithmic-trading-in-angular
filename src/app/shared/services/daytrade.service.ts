@@ -97,7 +97,8 @@ export class DaytradeService {
       StopLoss: false,
       MeanReversion1: false,
       Mfi: false,
-      SpyMomentum: false
+      SpyMomentum: false,
+      useYahooData: false
     };
 
     if (preferences) {
@@ -117,6 +118,9 @@ export class DaytradeService {
             break;
           case OrderPref.SpyMomentum:
             config.SpyMomentum = true;
+            break;
+          case OrderPref.useYahooData:
+            config.useYahooData = true;
             break;
         }
       });
@@ -535,5 +539,23 @@ export class DaytradeService {
     });
 
     return data;
+  }
+
+  getIntradayYahoo(symbol: string) {
+    return this.backtestService.getIntradayV3({
+      symbol,
+      interval: '1m',
+      range: '1d'
+    })
+      .toPromise()
+      .then((quotes) => {
+        quotes.chart.result[0].indicators.quote[0].close =
+          this.fillInMissingReals(_.get(quotes, 'chart.result[0].indicators.quote[0].close'));
+          return this.portfolioService.getQuote(symbol)
+            .toPromise()
+            .then((quote) => {
+              return this.addQuote(quotes, quote);
+            });
+      });
   }
 }

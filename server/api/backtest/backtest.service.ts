@@ -246,6 +246,7 @@ class BacktestService {
   evaluateBband(symbol, currentDate, startDate) {
     const minQuotes = 81;
     const getIndicatorQuotes = [];
+    console.log('Start');
 
     return QuoteService.queryForIntraday(symbol, startDate, currentDate)
       .then(quotes => {
@@ -271,18 +272,20 @@ class BacktestService {
         const profitThreshold = 0.05;
         const fields = ['leftRange', 'rightRange', 'mfiLeft', 'mfiRight', 'totalTrades', 'net', 'avgTrade', 'returns'];
         let count = 0;
-        let mfiLeft = 0;
+        const mfiLeft = 0;
         let mfiRight = 100;
         let leftRange = -1;
         let rightRange = 1;
         const rows = [];
-        while (leftRange < 0) {
+        while (leftRange < -0.001) {
           rightRange = 0.9;
-          while (rightRange > 0) {
-            mfiLeft = 0;
-            while (mfiLeft < 100) {
+          while (rightRange > 0.001) {
+            // mfiLeft = 0;
+            // while (mfiLeft < 100) {
               mfiRight = 100;
               while (mfiRight > 0) {
+                console.log(leftRange, rightRange, mfiRight);
+
                 const mfiRange = [mfiLeft, mfiRight];
 
                 const results = this.getBacktestResults(this.getMABuySignal,
@@ -314,11 +317,11 @@ class BacktestService {
 
                 mfiRight = _.subtract(mfiRight, 1);
               }
-              mfiLeft = _.add(mfiLeft, 1);
-            }
-            rightRange = _.round(_.subtract(rightRange, 0.1), 3);
+            //   mfiLeft = _.add(mfiLeft, 1);
+            // }
+            rightRange = _.round(_.subtract(rightRange, 0.01), 2);
           }
-          leftRange = _.round(_.add(leftRange, 0.1), 3);
+          leftRange = _.round(_.add(leftRange, 0.01), 2);
         }
 
         this.writeCsv(`${symbol}-bband-intraday`, startDate, currentDate, rows, fields, count);
@@ -520,23 +523,15 @@ class BacktestService {
   }
 
   getMfiSellSignal(paidPrice, currentPrice, lossThreshold, profitThreshold, indicator, rocDiffRange, mfiRange) {
-    let num, den;
-    if (indicator.roc70 > indicator.roc10) {
-      num = indicator.roc70;
-      den = indicator.roc10;
-    } else {
-      den = indicator.roc70;
-      num = indicator.roc10;
-    }
-
-    const momentumDiff = _.round(_.divide(num, den), 3);
+    // console.log(indicator.roc10, rocDiffRange[1], indicator.roc70, rocDiffRange[0]);
     const gain = DecisionService.getPercentChange(currentPrice, paidPrice);
     if (gain < lossThreshold || gain > profitThreshold) {
       return true;
     }
 
-    if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
-      if (indicator.mfiLeft > mfiRange[0] && indicator.mfiLeft < mfiRange[1]) {
+    const higher = indicator.bband80[0][2];
+    if (indicator.roc10 < rocDiffRange[1] && indicator.roc70 < rocDiffRange[0]) {
+      if (indicator.mfiLeft > 80 || (currentPrice > higher && indicator.mfiLeft > mfiRange[1])) {
         return true;
       }
     }
@@ -651,16 +646,16 @@ class BacktestService {
         // })
         // .then((sma70) => {
         //   currentQuote.sma70 = sma70[0][sma70[0].length - 1];
-        //   return this.getRateOfChange(this.getSubArray(indicators.reals, 10), 10);
-        // })
-        // .then((roc10) => {
-        //   const rocLen = roc10[0].length - 1;
-        //   currentQuote.roc10 = _.round(roc10[0][rocLen], 3);
-        //   return this.getRateOfChange(this.getSubArray(indicators.reals, 70), 70);
-        // })
-        // .then((roc70) => {
-        //   const rocLen = roc70[0].length - 1;
-        //   currentQuote.roc70 = _.round(roc70[0][rocLen], 3);
+          return this.getRateOfChange(this.getSubArray(indicators.reals, 10), 10);
+        })
+        .then((roc10) => {
+          const rocLen = roc10[0].length - 1;
+          currentQuote.roc10 = _.round(roc10[0][rocLen], 3);
+          return this.getRateOfChange(this.getSubArray(indicators.reals, 70), 70);
+        })
+        .then((roc70) => {
+          const rocLen = roc70[0].length - 1;
+          currentQuote.roc70 = _.round(roc70[0][rocLen], 3);
         //   return this.getRateOfChange(this.getSubArray(indicators.reals, 5), 5);
         // })
         // .then((roc5) => {
