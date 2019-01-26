@@ -717,7 +717,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         idx,
         band,
         shortSma,
-        roc5);
+        roc);
 
       return this.sendSell(sellOrder);
     } else if (this.firstFormGroup.value.orderType.toLowerCase() === 'daytrade') {
