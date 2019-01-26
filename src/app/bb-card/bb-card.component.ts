@@ -282,7 +282,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         }
       }
 
-      this.chart = this.initPriceChart(this.order.holding.symbol, this.order.holding.name);
+      this.chart = this.initPriceChart(this.order.holding.symbol);
 
       for (let i = 0; i < dataLength; i += 1) {
         const closePrice = quotes.close[i];
@@ -343,7 +343,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
 
       this.tiles = this.daytradeService.buildTileList(this.orders);
-      this.volumeChart = this.initVolumeChart('Volume', volume);
+      this.volumeChart = this.initVolumeChart(volume);
     }
 
     // TODO: Use moment timezones
@@ -362,7 +362,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     // }
   }
 
-  initVolumeChart(title, data): Chart {
+  initVolumeChart(data): Chart {
     return new Chart({
       chart: {
         type: 'column',
@@ -422,7 +422,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     });
   }
 
-  initPriceChart(title, subtitle): Chart {
+  initPriceChart(title): Chart {
     return new Chart({
       chart: {
         type: 'spline',
@@ -795,99 +795,34 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
 
     if (this.config.Mfi) {
-      const rocLen = roc[0].length - 1;
-      const roc1 = _.round(roc[0][rocLen], 3);
-      let num, den;
-      if (this.momentum > roc1) {
-        num = this.momentum;
-        den = roc1;
-      } else {
-        den = this.momentum;
-        num = roc1;
+      if (this.daytradeService.isOversoldBullish(roc, this.momentum, this.mfi)) {
+        const log = `${this.order.holding.symbol} mfi oversold Event - time: ${moment.unix(signalTime).format()}, ` +
+        `short rate of change: ${roc}, long rate of change: ${this.momentum}, mfi: ${this.mfi}`;
+
+        this.reportingService.addAuditLog(this.order.holding.symbol, log);
+        console.log(log);
+        return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
       }
-
-      const momentumDiff = _.round(_.divide(num, den), 3);
-      const rocDiffRange = [-0.4, 0.1];
-
-      const log = `${this.order.holding.symbol} Event - time: ${moment.unix(signalTime).format()}, ` +
-        `momentumDiff: ${momentumDiff}, roc: ${roc1}, mid: ${mid[0]}, lower: ${low[0]}, mfi: ${this.mfi}`;
-
-      this.reportingService.addAuditLog(this.order.holding.symbol, log);
-
-      // if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
-      //   if (this.mfi < 20) {
-      //     if (signalPrice < lower[0]) {
-      //       return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
-      //     }
-      //   }
-      // }
-
-      if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
-        if (this.mfi < 20) {
-          return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
-        }
-      }
-      // const rocLen = roc[0].length - 1;
-      // const roc1 = _.round(roc[0][rocLen], 3);
-      // let num, den;
-      // if (this.momentum > roc1) {
-      //   num = this.momentum;
-      //   den = roc1;
-      // } else {
-      //   den = this.momentum;
-      //   num = roc1;
-      // }
-
-      // const momentumDiff = _.round(_.divide(num, den), 3);
-      // // console.log(`start: ${this.order.holding.symbol}
-      // //   ${moment.unix(signalTime).format()}, roc: ${roc1}, momentum: ${this.momentum} diff: ${momentumDiff}`);
-
-      // if (momentumDiff < -1.5 || momentumDiff > 1.5) {
-      //   // console.log(`ma: ${moment.unix(signalTime).format()}, roc: ${roc1}, momentum: ${this.momentum} diff: ${momentumDiff}`);
-      //   const shortSmaLen = shortSma[0].length - 1;
-      //   const short = shortSma[0][shortSmaLen];
-      //   const diff = _.round(this.daytradeService.calculatePercentDifference(mid[0], short), 2);
-
-      //   if (diff === 0) {
-      //     if (roc1 > 0.001) {
-      //       const log = `MA Crossover Event - time: ${moment.unix(signalTime).format()},
-      //       price: ${signalPrice}, roc: ${roc1}, long: ${mid[0]}, short: ${short}`;
-
-      //       this.reportingService.addAuditLog(this.order.holding.symbol, log);
-
-      //       console.log(log);
-
-      //       return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
-      //     }
-      //   }
-      // } else if (momentumDiff < 0) {
-      //   if (signalPrice < lower[0]) {
-      //     const log = `BB Event - time: ${moment.unix(signalTime).format()},
-      //       price: ${signalPrice}, roc: ${roc1}, mid: ${mid[0]}, lower: ${lower[0]}`;
-      //     this.reportingService.addAuditLog(this.order.holding.symbol, log);
-
-      //     console.log(log);
-
-      //     return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
-      //   }
-      // }
-      // if (signalPrice < lower[0]) {
-      //   return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
-      // }
     }
     if (this.config.SpyMomentum) {
-     if (signalPrice > high[0]) {
-        if (this.mfi > 55 && this.mfi < 87) {
-          return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
-        }
+      if (this.daytradeService.isMomentumBullish(signalPrice, high[0], this.mfi)) {
+        const log = `${this.order.holding.symbol} bb momentum Event - time: ${moment.unix(signalTime).format()}, ` +
+        `bband high: ${high[0]}, mfi: ${this.mfi}`;
+
+        this.reportingService.addAuditLog(this.order.holding.symbol, log);
+        console.log(log);
+        return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
       }
     }
 
     if (this.config.MeanReversion1) {
-      if (signalPrice < low[0]) {
-        if (this.mfi > 0 && this.mfi < 37) {
-          return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
-        }
+      if (this.daytradeService.isBBandMeanReversionBullish(signalPrice, low[0], this.mfi)) {
+        const log = `${this.order.holding.symbol} bb mean reversion Event - time: ${moment.unix(signalTime).format()}, ` +
+        `bband low: ${low[0]}, mfi: ${this.mfi}`;
+
+        this.reportingService.addAuditLog(this.order.holding.symbol, log);
+        console.log(log);
+        return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
       }
     }
     return null;
@@ -923,7 +858,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
       return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
     } else if (this.mfi > 80) {
-      const log = `MA Crossover Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}`;
+      const log = `mfi Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}`;
 
       this.reportingService.addAuditLog(this.order.holding.symbol, log);
 
