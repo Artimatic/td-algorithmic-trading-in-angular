@@ -536,12 +536,14 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.orders.push(order);
     this.buyCount += order.quantity;
     this.positionCount += order.quantity;
+    this.order.positionCount = this.positionCount;
   }
 
   incrementSell(order) {
     this.orders.push(order);
     this.sellCount += order.quantity;
     this.positionCount -= order.quantity;
+    this.order.positionCount = this.positionCount;
   }
 
   sendBuy(buyOrder: SmartOrder) {
@@ -947,7 +949,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     const volumes = quotes.volume.slice(firstIndex, lastIndex + 1);
     if (!quotes.close[lastIndex]) {
       const log = `Quote data is missing ${reals.toString()}`;
-      this.reportingService.addAuditLog(this.order.holding.symbol, log);
+      // this.reportingService.addAuditLog(this.order.holding.symbol, log);
       return null;
     }
     const band = await this.daytradeService.getBBand(reals, this.bbandPeriod);

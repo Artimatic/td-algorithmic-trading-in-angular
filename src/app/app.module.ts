@@ -71,6 +71,7 @@ import { ScoreBoardComponent } from './score-board/score-board.component';
 import { TimelineViewComponent } from './timeline-view/timeline-view.component';
 import { SeesawCardComponent } from './seesaw-card/seesaw-card.component';
 import { BacktestViewComponent } from './backtest-view/backtest-view.component';
+import { TerminalViewComponent } from './terminal-view/terminal-view.component';
 
 @NgModule({
   declarations: [
@@ -99,6 +100,7 @@ import { BacktestViewComponent } from './backtest-view/backtest-view.component';
     TimelineViewComponent,
     SeesawCardComponent,
     BacktestViewComponent,
+    TerminalViewComponent,
   ],
   entryComponents: [
     LoginDialogComponent,

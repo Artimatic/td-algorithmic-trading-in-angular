@@ -559,7 +559,7 @@ export class DaytradeService {
       });
   }
 
-  isOversoldBullish(roc: [][], momentum: number, mfi: number): boolean {
+  isOversoldBullish(roc: any[], momentum: number, mfi: number): boolean {
     const rocLen = roc[0].length - 1;
     const roc1 = _.round(roc[0][rocLen], 3);
     let num, den;
