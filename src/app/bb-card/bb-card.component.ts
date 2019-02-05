@@ -605,7 +605,9 @@ export class BbCardComponent implements OnInit, OnChanges {
         this.incrementSell(sellOrder);
 
         const pl = this.daytradeService.estimateSellProfitLoss(this.orders);
-        this.scoringService.addProfitLoss(this.order.holding.symbol, pl);
+        if (this.order.side.toLowerCase() !== 'sell') {
+          this.scoringService.addProfitLoss(this.order.holding.symbol, pl);
+        }
 
         console.log(`${moment().format('hh:mm')} ${log}`);
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
