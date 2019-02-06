@@ -11,7 +11,7 @@
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
-    "postinstall": "ng build --environment=prod",
+    "postinstall": "ng build --environment=prod && npm run build-ts",
     "build-ts": "tsc -p ./server/tsconfig.json",
     "watch-ts": "tsc -p ./server/tsconfig.json -w",
     "tslint": "tslint -c tslint.json -p tsconfig.json"
@@ -65,7 +65,7 @@
     "serve-favicon": "^2.4.5",
     "string": "^3.3.3",
     "tulind": "^0.8.9",
-    "xlsx": "^0.14.1",
+    "xlsx": "^0.11.14",
     "yahoo-finance-data": "^3.2.0",
     "zone.js": "^0.8.14"
   },
