@@ -65,7 +65,7 @@
     "serve-favicon": "^2.4.5",
     "string": "^3.3.3",
     "tulind": "^0.8.9",
-    "xlsx": "^0.11.14",
+    "xlsx": "^0.14.1",
     "yahoo-finance-data": "^3.2.0",
     "zone.js": "^0.8.14"
   },
