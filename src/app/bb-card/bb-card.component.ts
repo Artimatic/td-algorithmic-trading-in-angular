@@ -582,8 +582,10 @@ export class BbCardComponent implements OnInit, OnChanges {
         const resolve = (response) => {
           this.incrementSell(sellOrder);
 
-          const pl = this.daytradeService.estimateSellProfitLoss(this.orders);
-          this.scoringService.addProfitLoss(this.order.holding.symbol, pl);
+          if (this.order.side.toLowerCase() !== 'sell') {
+            const pl = this.daytradeService.estimateSellProfitLoss(this.orders);
+            this.scoringService.addProfitLoss(this.order.holding.symbol, pl);
+          }
 
           console.log(`${moment().format('hh:mm')} ${log}`);
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
@@ -626,8 +628,10 @@ export class BbCardComponent implements OnInit, OnChanges {
         const resolve = (response) => {
           this.incrementSell(order);
 
-          const pl = this.daytradeService.estimateSellProfitLoss(this.orders);
-          this.scoringService.addProfitLoss(this.order.holding.symbol, pl);
+          if (this.order.side.toLowerCase() !== 'sell') {
+            const pl = this.daytradeService.estimateSellProfitLoss(this.orders);
+            this.scoringService.addProfitLoss(this.order.holding.symbol, pl);
+          }
 
           console.log(`${moment().format('hh:mm')} ${log}`);
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
@@ -648,9 +652,10 @@ export class BbCardComponent implements OnInit, OnChanges {
       } else {
         this.incrementSell(order);
 
-        const pl = this.daytradeService.estimateSellProfitLoss(this.orders);
-        this.scoringService.addProfitLoss(this.order.holding.symbol, pl);
-
+        if (this.order.side.toLowerCase() !== 'sell') {
+          const pl = this.daytradeService.estimateSellProfitLoss(this.orders);
+          this.scoringService.addProfitLoss(this.order.holding.symbol, pl);
+        }
         console.log(`${moment().format('hh:mm')} ${log}`);
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
       }
@@ -776,7 +781,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     roc: any[]) {
 
     const high = band[2],
-      mid = band[1],
+      // mid = band[1],
       low = band[0];
 
     const pricePaid = this.daytradeService.estimateAverageBuyOrderPrice(this.orders);
@@ -948,7 +953,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     const lows = quotes.low.slice(firstIndex, lastIndex + 1);
     const volumes = quotes.volume.slice(firstIndex, lastIndex + 1);
     if (!quotes.close[lastIndex]) {
-      const log = `Quote data is missing ${reals.toString()}`;
+      // const log = `Quote data is missing ${reals.toString()}`;
       // this.reportingService.addAuditLog(this.order.holding.symbol, log);
       return null;
     }
