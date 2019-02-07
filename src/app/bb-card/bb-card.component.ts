@@ -822,7 +822,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
 
     if (this.config.MeanReversion1) {
-      if (this.daytradeService.isBBandMeanReversionBullish(signalPrice, low[0], this.mfi)) {
+      if (this.daytradeService.isBBandMeanReversionBullish(signalPrice, low[0], this.mfi, roc, this.momentum)) {
         const log = `${this.order.holding.symbol} bb mean reversion Event - time: ${moment.unix(signalTime).format()}, bband low: ${low[0]}, mfi: ${this.mfi}`;
 
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
