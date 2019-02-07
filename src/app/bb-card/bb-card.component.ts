@@ -248,11 +248,11 @@ export class BbCardComponent implements OnInit, OnChanges {
           .then((intraday) => {
             const timestamps = intraday.chart.result[0].timestamp;
             if (timestamps.length > 0) {
-                return this.portfolioService.getQuote(this.order.holding.symbol)
-                  .toPromise()
-                  .then((quote) => {
-                    return this.daytradeService.addQuote(intraday, quote);
-                  });
+              return this.portfolioService.getQuote(this.order.holding.symbol)
+                .toPromise()
+                .then((quote) => {
+                  return this.daytradeService.addQuote(intraday, quote);
+                });
             } else {
               return this.daytradeService.getIntradayYahoo(this.order.holding.symbol);
             }
@@ -853,23 +853,31 @@ export class BbCardComponent implements OnInit, OnChanges {
     // } else {
     const rocLen = roc[0].length - 1;
     const roc1 = _.round(roc[0][rocLen], 3);
+    const num = this.momentum,
+      den = roc1;
 
-    if (signalPrice > upper[0] && (this.mfi > 46)) {
-      const log = `BB Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}, mid: ${mid[0]}, lower: ${lower[0]}`;
-      this.reportingService.addAuditLog(this.order.holding.symbol, log);
+    const momentumDiff = _.round(_.divide(num, den), 3);
+    const rocDiffRange = [0, 3];
 
-      console.log(log);
+    if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
+      if (signalPrice > upper[0] && (this.mfi > 46)) {
+        const log = `BB Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}, mid: ${mid[0]}, lower: ${lower[0]}`;
+        this.reportingService.addAuditLog(this.order.holding.symbol, log);
 
-      return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
-    } else if (this.mfi > 80) {
-      const log = `mfi Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}`;
+        console.log(log);
 
-      this.reportingService.addAuditLog(this.order.holding.symbol, log);
+        return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
+      } else if (this.mfi > 80) {
+        const log = `mfi Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}`;
 
-      console.log(log);
+        this.reportingService.addAuditLog(this.order.holding.symbol, log);
 
-      return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
+        console.log(log);
+
+        return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
+      }
     }
+
     // }
 
     return null;
