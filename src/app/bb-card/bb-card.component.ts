@@ -548,8 +548,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
   sendBuy(buyOrder: SmartOrder) {
     if (buyOrder) {
-      const log = `ORDER SENT ${moment(buyOrder.signalTime).format('hh:mm')}
-        ${buyOrder.side} ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
+      const log = `ORDER SENT ${moment(buyOrder.signalTime).format('hh:mm')} ${buyOrder.side} ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
 
       if (this.backtestLive || this.live) {
         const resolve = (response) => {
@@ -805,8 +804,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
     if (this.config.Mfi) {
       if (this.daytradeService.isOversoldBullish(roc, this.momentum, this.mfi)) {
-        const log = `${this.order.holding.symbol} mfi oversold Event - time: ${moment.unix(signalTime).format()}, ` +
-        `short rate of change: ${roc}, long rate of change: ${this.momentum}, mfi: ${this.mfi}`;
+        const log = `${this.order.holding.symbol} mfi oversold Event - time: ${moment.unix(signalTime).format()}, short rate of change: ${roc}, long rate of change: ${this.momentum}, mfi: ${this.mfi}`;
 
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
         console.log(log);
@@ -815,8 +813,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
     if (this.config.SpyMomentum) {
       if (this.daytradeService.isMomentumBullish(signalPrice, high[0], this.mfi)) {
-        const log = `${this.order.holding.symbol} bb momentum Event - time: ${moment.unix(signalTime).format()}, ` +
-        `bband high: ${high[0]}, mfi: ${this.mfi}`;
+        const log = `${this.order.holding.symbol} bb momentum Event - time: ${moment.unix(signalTime).format()}, bband high: ${high[0]}, mfi: ${this.mfi}`;
 
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
         console.log(log);
@@ -826,8 +823,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
     if (this.config.MeanReversion1) {
       if (this.daytradeService.isBBandMeanReversionBullish(signalPrice, low[0], this.mfi)) {
-        const log = `${this.order.holding.symbol} bb mean reversion Event - time: ${moment.unix(signalTime).format()}, ` +
-        `bband low: ${low[0]}, mfi: ${this.mfi}`;
+        const log = `${this.order.holding.symbol} bb mean reversion Event - time: ${moment.unix(signalTime).format()}, bband low: ${low[0]}, mfi: ${this.mfi}`;
 
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
         console.log(log);
@@ -859,8 +855,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     const roc1 = _.round(roc[0][rocLen], 3);
 
     if (signalPrice > upper[0] && (this.mfi > 46)) {
-      const log = `BB Sell Event - time: ${moment.unix(signalTime).format()},
-          price: ${signalPrice}, roc: ${roc1}, mid: ${mid[0]}, lower: ${lower[0]}`;
+      const log = `BB Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}, mid: ${mid[0]}, lower: ${lower[0]}`;
       this.reportingService.addAuditLog(this.order.holding.symbol, log);
 
       console.log(log);

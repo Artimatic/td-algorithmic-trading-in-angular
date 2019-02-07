@@ -10,7 +10,7 @@ export class ExcelService {
 
   public exportAsExcelFile(json: any[], excelFileName: string): void {
     /* generate worksheet */
-    const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet(json);
+    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(json);
 
     /* generate workbook and add the worksheet */
     const wb: XLSX.WorkBook = XLSX.utils.book_new();

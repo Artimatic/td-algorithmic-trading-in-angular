@@ -12,7 +12,7 @@ export class ReportingService {
 
   addAuditLog(symbol, message) {
     const currentTime = moment().format('DD.MM.YYYY hh:mm');
-    const log = {time: currentTime, symbol: symbol, message: `${message}`};
+    const log = {time: currentTime, symbol: symbol, message: message};
     this.logs.push(log);
   }
 

@@ -6,7 +6,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Holding } from '../shared/models';
 import { PortfolioService } from '../shared/services/portfolio.service';
 import { CartService } from '../shared/services/cart.service';
-import { Order } from '../shared/models/order';
+import { SmartOrder } from '../shared/models/smart-order';
 
 @Component({
   selector: 'app-order-dialog',
@@ -25,7 +25,7 @@ export class OrderDialogComponent implements OnInit {
     private portfolioService: PortfolioService,
     private cartService: CartService) {
     this.options = fb.group({
-      'quantity': [1, Validators.min(0)],
+      'quantity': [this.data.holding.quantity, Validators.min(0)],
       'price': [this.data.holding.realtime_price, Validators.min(0)],
     });
   }
@@ -81,26 +81,38 @@ export class OrderDialogComponent implements OnInit {
   }
 
   addSellOrder() {
-    const order: Order = {
+    const order: SmartOrder = {
       holding: this.data.holding,
       quantity: this.options.value.quantity,
       price: this.options.value.price,
       submitted: false,
       pending: false,
-      side: 'Sell'
+      side: 'Sell',
+      useTakeProfit: true,
+      useStopLoss: true,
+      meanReversion1: true,
+      useMfi: true,
+      spyMomentum: true,
+      yahooData: true
     };
 
     this.cartService.addToCart(order);
   }
 
   addBuyOrder() {
-    const order: Order = {
+    const order: SmartOrder = {
       holding: this.data.holding,
       quantity: this.options.value.quantity,
       price: this.options.value.price,
       submitted: false,
       pending: false,
-      side: 'Buy'
+      side: 'Buy',
+      useTakeProfit: true,
+      useStopLoss: true,
+      meanReversion1: true,
+      useMfi: true,
+      spyMomentum: true,
+      yahooData: true
     };
 
     this.cartService.addToCart(order);
