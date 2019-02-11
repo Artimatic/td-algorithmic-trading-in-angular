@@ -150,7 +150,7 @@ export class RhTableComponent implements OnInit, OnChanges {
         });
         break;
       case 'v4':
-        algo = 'crossover';
+        algo = 'bbands';
         algoParams.forEach((param) => {
           this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, 'crossover').subscribe(
             result => {

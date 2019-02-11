@@ -27,7 +27,7 @@ class BacktestController extends BaseController {
               .then((data) => BaseController.requestGetSuccessHandler(response, data))
               .catch((err) => BaseController.requestErrorHandler(response, err));
             break;
-          case 'crossover':
+          case 'daily-bband':
             BacktestService.evaluateBband(request.body.ticker, request.body.end, request.body.start)
               .then((data) => BaseController.requestGetSuccessHandler(response, data))
               .catch((err) => BaseController.requestErrorHandler(response, err));
