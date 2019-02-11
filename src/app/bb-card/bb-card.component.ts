@@ -733,8 +733,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         this.stop();
         return null;
       }
-      const sellQuantity: number = this.firstFormGroup.value.orderSize <= this.positionCount ?
-        this.firstFormGroup.value.orderSize : this.positionCount;
+      const sellQuantity: number = this.positionCount;
 
       const sell: SmartOrder = sellQuantity <= 0 ? null :
         this.buildSellOrder(sellQuantity,
