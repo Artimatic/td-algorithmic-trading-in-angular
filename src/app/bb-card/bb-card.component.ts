@@ -861,15 +861,17 @@ export class BbCardComponent implements OnInit, OnChanges {
         console.log(log);
 
         return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
-      } else if (this.mfi > 80) {
-        const log = `mfi Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}`;
-
-        this.reportingService.addAuditLog(this.order.holding.symbol, log);
-
-        console.log(log);
-
-        return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
       }
+    }
+
+    if (this.mfi > 80) {
+      const log = `mfi Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}`;
+
+      this.reportingService.addAuditLog(this.order.holding.symbol, log);
+
+      console.log(log);
+
+      return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
     }
 
     return null;
