@@ -1022,6 +1022,10 @@ export class BbCardComponent implements OnInit, OnChanges {
       pref.push(OrderPref.SpyMomentum);
     }
 
+    if (this.order.sellAtClose) {
+      pref.push(OrderPref.SellAtClose);
+    }
+
     if (this.order.yahooData) {
       pref.push(OrderPref.useYahooData);
     }
