@@ -98,6 +98,7 @@ export class DaytradeService {
       MeanReversion1: false,
       Mfi: false,
       SpyMomentum: false,
+      SellAtClose: false,
       useYahooData: false
     };
 
@@ -118,6 +119,9 @@ export class DaytradeService {
             break;
           case OrderPref.SpyMomentum:
             config.SpyMomentum = true;
+            break;
+          case OrderPref.SellAtClose:
+            config.SellAtClose = true;
             break;
           case OrderPref.useYahooData:
             config.useYahooData = true;

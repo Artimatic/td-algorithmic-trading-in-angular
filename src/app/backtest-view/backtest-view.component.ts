@@ -54,7 +54,8 @@ export class BacktestViewComponent implements OnInit {
           useMfi: row.Mfi || null,
           spyMomentum: row.SpyMomentum || null,
           yahooData: row.YahooData || null,
-          orderSize: row.OrderSize * 1 || null
+          sellAtClose: row.SellAtClose || null,
+          orderSize: row.OrderSize * 1 || null,
         };
         this.cartService.addToCart(order);
       },

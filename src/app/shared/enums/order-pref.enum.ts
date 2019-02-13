@@ -4,5 +4,6 @@ export enum OrderPref {
     MeanReversion1 = 'Use Mean Reversion 1',
     Mfi = 'Use mfi',
     SpyMomentum = 'Use SPY Momentum',
+    SellAtClose = 'Sell positions at close',
     useYahooData = 'Use Yahoo data'
 }

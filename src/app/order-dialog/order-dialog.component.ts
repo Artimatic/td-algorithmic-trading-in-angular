@@ -93,6 +93,7 @@ export class OrderDialogComponent implements OnInit {
       meanReversion1: true,
       useMfi: true,
       spyMomentum: true,
+      sellAtClose: true,
       yahooData: true
     };
 
@@ -112,6 +113,7 @@ export class OrderDialogComponent implements OnInit {
       meanReversion1: true,
       useMfi: true,
       spyMomentum: true,
+      sellAtClose: true,
       yahooData: true
     };
 

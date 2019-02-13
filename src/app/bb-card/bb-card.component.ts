@@ -87,7 +87,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
   ngOnInit() {
     this.alive = true;
-    this.interval = 199800;
+    this.interval = 60000;
     this.live = false;
     this.sides = ['Buy', 'Sell', 'DayTrade'];
     this.error = '';
@@ -97,6 +97,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     OrderPref.MeanReversion1,
     OrderPref.Mfi,
     OrderPref.SpyMomentum,
+    OrderPref.SellAtClose,
     OrderPref.useYahooData
     ];
     Highcharts.setOptions({
@@ -843,6 +844,14 @@ export class BbCardComponent implements OnInit, OnChanges {
 
     if (!signalPrice || !price) {
       return null;
+    }
+
+    if (this.config.SellAtClose) {
+      if (this.live && moment().isAfter(this.endTime)) {
+        return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
+      } else if (moment(signalTime).isAfter(this.endTime)) {
+        return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
+      }
     }
 
     const rocLen = roc[0].length - 1;
