@@ -42,7 +42,7 @@ export class BollingerBandComponent implements OnInit {
     this.interval = 80808;
     this.startTime = moment('10:10am', 'h:mma');
     this.noonTime = moment('1:10pm', 'h:mma');
-    this.endTime = moment('4:10pm', 'h:mma');
+    this.endTime = moment('3:55pm', 'h:mma');
 
     this.ordersStarted = 0;
     this.spxl = {

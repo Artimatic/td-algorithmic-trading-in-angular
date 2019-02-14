@@ -681,13 +681,6 @@ export class BbCardComponent implements OnInit, OnChanges {
       return specialOrder;
     }
 
-    const lastTimestamp = timestamps[idx];
-    const timePeriod = this.daytradeService.tradePeriod(moment.unix(lastTimestamp), this.startTime, this.noonTime, this.endTime);
-
-    if (timePeriod === 'pre' || timePeriod === 'after') {
-      return null;
-    }
-
     if (this.firstFormGroup.value.orderType.toLowerCase() === 'buy') {
       const orderQuantity = this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
         this.firstFormGroup.value.orderSize,
@@ -752,6 +745,12 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
 
       if (!sell) {
+        const lastTimestamp = timestamps[idx];
+        const timePeriod = this.daytradeService.tradePeriod(moment.unix(lastTimestamp), this.startTime, this.noonTime, this.endTime);
+
+        if (timePeriod === 'pre' || timePeriod === 'after') {
+          return null;
+        }
         const buyQuantity: number = this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
           this.firstFormGroup.value.orderSize,
           this.buyCount,
@@ -888,9 +887,9 @@ export class BbCardComponent implements OnInit, OnChanges {
 
   processSpecialRules(closePrice: number, signalTime) {
     const score = this.scoringService.getScore(this.order.holding.symbol);
-    if (score && score.total > 2) {
+    if (score && score.total > 1) {
       const scorePct = _.round(_.divide(score.wins, score.total), 2);
-      if (scorePct < 0.35) {
+      if (scorePct < 0.5) {
         if (!this.isBacktest) {
           this.stop();
         }
