@@ -863,7 +863,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
     if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
       if (signalPrice > upper[0] && (this.mfi > 46)) {
-        const log = `BB Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}, mid: ${mid[0]}, lower: ${lower[0]}`;
+        const log = `BB overbought Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}, mid: ${mid[0]}, lower: ${lower[0]}`;
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
 
         console.log(log);
@@ -872,7 +872,18 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
     }
 
-    if (this.mfi > 80) {
+    if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
+      if (signalPrice < lower[0] && (this.mfi > 40)) {
+        const log = `BB momentum Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}, mid: ${mid[0]}, lower: ${lower[0]}`;
+        this.reportingService.addAuditLog(this.order.holding.symbol, log);
+
+        console.log(log);
+
+        return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
+      }
+    }
+
+    if (this.mfi > 76) {
       const log = `mfi Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}`;
 
       this.reportingService.addAuditLog(this.order.holding.symbol, log);

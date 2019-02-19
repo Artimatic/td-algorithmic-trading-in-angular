@@ -579,7 +579,7 @@ export class DaytradeService {
     const rocDiffRange = [-0.4, 0.1];
 
     if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
-      if (mfi < 20) {
+      if (mfi < 10) {
         return true;
       }
     }

@@ -29,7 +29,7 @@ export default {
     key: _.get(credentials, 'default.tiingo.key', _.get(credentials, 'tiingo.key', null)),
   },
   apps: {
-    goliath: 'http://localhost:8100/',
+    goliath: _.get(credentials, 'default.goliathUrl', _.get(credentials, 'goliathUrl', null)),
     tiingo: 'https://api.tiingo.com/'
   }
 };
