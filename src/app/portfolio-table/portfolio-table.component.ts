@@ -40,7 +40,7 @@ export class PortfolioTableComponent implements OnInit {
     const dialogRef = this.dialog.open(OrderDialogComponent, {
       width: '500px',
       height: '500px',
-      data: { holding: row, side: 'Sell' }
+      data: { holding: row, side: 'Sell', }
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -69,37 +69,22 @@ export class PortfolioTableComponent implements OnInit {
           holding.symbol = result.symbol;
           holding.name = result.name;
           this.tickers.push(holding.symbol);
-          this.getCurrentPrice();
-          return holding;
-        });
-    });
-  }
-
-  getCurrentPrice() {
-    if (this.tickers.length >= this.dataSource.data.length) {
-      this.backtestService.getLastPriceTiingo({ tickers: this.tickers })
-        .subscribe(result => {
-          this.dataSource.data.map((holding: Holding) => {
-            const myQuote = result.query.results.quote.find(quote => {
-              return quote.symbol === holding.symbol;
-            });
-
-            if (myQuote) {
-              holding.realtime_price = myQuote.realtime_price;
-              holding.Volume = myQuote.Volume;
-              holding.PERatio = myQuote.PERatio;
-              holding.realtime_chg_percent = myQuote.realtime_chg_percent;
+          this.backtestService.getLastPriceTiingo({ symbol: holding.symbol })
+            .subscribe(tiingoQuote => {
+              holding.realtime_price = tiingoQuote[0].last;
+              holding.Volume = tiingoQuote[0].volume;
+              holding.PERatio = null;
+              holding.realtime_chg_percent = null;
               if (this.authenticationService.myAccount && !this.authenticationService.myAccount.stocks) {
                 this.authenticationService.myAccount.stocks = (holding.quantity * holding.realtime_price);
               } else if (this.authenticationService.myAccount) {
                 this.authenticationService.myAccount.stocks += (holding.quantity * holding.realtime_price);
               }
-            }
-            return holding;
-          });
-          this.getCalculations();
+              this.getCalculations();
+            });
+          return holding;
         });
-    }
+    });
   }
 
   getCalculations() {
