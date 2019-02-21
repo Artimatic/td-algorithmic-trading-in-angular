@@ -107,7 +107,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     });
     this.startTime = moment('10:10am', 'h:mma');
     this.noonTime = moment('1:10pm', 'h:mma');
-    this.endTime = moment('3:30pm', 'h:mma');
+    this.endTime = moment('3:20pm', 'h:mma');
     this.showGraph = false;
     this.bbandPeriod = 80;
     this.dataInterval = '1min';
@@ -846,10 +846,8 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
 
     if (this.config.SellAtClose) {
-      if (this.live && moment().isAfter(this.endTime)) {
-        return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
-      } else if (moment(signalTime).isAfter(this.endTime)) {
-        return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
+      if (moment(signalTime).isAfter(this.endTime)) {
+        return this.closeAllPositions(price, signalTime);
       }
     }
 
@@ -896,6 +894,10 @@ export class BbCardComponent implements OnInit, OnChanges {
     return null;
   }
 
+  closeAllPositions(price: number, signalTime: number) {
+    return this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, price, signalTime);
+  }
+
   processSpecialRules(closePrice: number, signalTime) {
     const score = this.scoringService.getScore(this.order.holding.symbol);
     if (score && score.total > 1) {
@@ -912,6 +914,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         if (this.isBacktest) {
           console.log('Trading not halted in backtest mode.');
         }
+        return this.closeAllPositions(closePrice, signalTime);
       }
     }
     if (this.positionCount > 0 && closePrice) {
