@@ -7,68 +7,32 @@ import { SmartOrder } from '../models/smart-order';
 
 import * as moment from 'moment';
 import * as _ from 'lodash';
+import { IndicatorsService } from './indicators.service';
+import { CartService } from './cart.service';
 
 @Injectable()
 export class DaytradeService {
 
   constructor(private backtestService: BacktestService,
     private authenticationService: AuthenticationService,
-    private portfolioService: PortfolioService) { }
+    private portfolioService: PortfolioService,
+    private indicatorsService: IndicatorsService,
+    private cartService: CartService) { }
 
   getDefaultOrderSize(quantity) {
     return Math.ceil(quantity / 3);
   }
 
-  async getBBand(reals: number[], period): Promise<any[]> {
-    const body = {
-      real: this.fillInMissingReals(reals),
-      period: period,
-      stddev: 2
-    };
+  closeTrades(resolve: Function, reject: Function, handleNotFound: Function): void {
+    _.forEach(this.cartService.otherOrders, (order: SmartOrder) => {
+      this.portfolioService.getQuote(order.holding.symbol)
+      .toPromise()
+      .then((quote) => {
+        let sellOrder = this.createOrder(order.holding, 'Sell', order.positionCount,  1 * quote.last_trade_price, moment().unix());
 
-    return await this.backtestService.getBBands(body).toPromise();
-  }
-
-  async getSMA(reals: number[], period): Promise<any[]> {
-    const body = {
-      real: this.fillInMissingReals(reals),
-      period: period
-    };
-
-    return await this.backtestService.getSMA(body).toPromise();
-  }
-
-  async getMFI(high: number[], low: number[], close: number[], volume: number[], period: number): Promise<any[]> {
-    const body = {
-      high,
-      low,
-      close,
-      volume,
-      period
-    };
-
-    return await this.backtestService.getMFI(body).toPromise();
-  }
-
-
-  async getROC(reals: number[], period): Promise<any[]> {
-    const body = {
-      real: this.fillInMissingReals(reals),
-      period: period
-    };
-
-    return await this.backtestService.getROC(body).toPromise();
-  }
-
-  fillInMissingReals(reals: number[]) {
-    for (let i = 1, length = reals.length; i < length; i++) {
-      if (!reals[i]) {
-        if (reals[i - 1] && reals[i + 1]) {
-          reals[i] = (reals[i - 1] + reals[i + 1]) / 2;
-        }
-      }
-    }
-    return reals;
+        this.sendSell(sellOrder, 'market', resolve, reject, handleNotFound);
+      });
+    });
   }
 
   private minutesOfDay(minutes: moment.Moment) {
@@ -271,10 +235,6 @@ export class DaytradeService {
     }
   }
 
-  // calculatePercentDifference(v1, v2) {
-  //   return _.divide(_.subtract(v1, v2), _.divide(_.add(v1, v2), 2));
-  // }
-
   calculatePercentDifference(v1, v2) {
     return Math.abs(Math.abs(v1 - v2) / ((v1 + v2) / 2));
   }
@@ -432,59 +392,6 @@ export class DaytradeService {
     return _.round(_.subtract(lastOrderCost, cost), 2);
   }
 
-  momentumV1(quotes, period, idx) {
-    const beginningIdx = idx - period;
-    if (beginningIdx >= 0) {
-      if (quotes.close[idx] > quotes.close[beginningIdx]) {
-        return 'buy';
-      } else {
-        return 'sell';
-      }
-    }
-    return null;
-  }
-
-  momentumV2(quotes, period, idx) {
-    const beginningIdx = idx - period;
-    let smallSpreadCount = 0;
-    if (beginningIdx >= 0) {
-      for (let i = beginningIdx; i < idx; i++) {
-        if (_.subtract(_.round(quotes.close[i], 2), _.round(quotes.open[i], 2)) === 0) {
-          smallSpreadCount++;
-        }
-      }
-
-      if (smallSpreadCount > 1 && smallSpreadCount < 4) {
-        if (quotes.close[idx] > quotes.close[beginningIdx]) {
-          return 'buy';
-        } else {
-          return 'sell';
-        }
-      } else {
-        return 'unknown';
-      }
-    }
-    return null;
-  }
-
-  async hasSpyBearMomentum(dataInterval: string, period: number) {
-    const requestBody = {
-      symbol: 'SPY',
-      interval: dataInterval
-    };
-
-    const intraday = await this.backtestService.getIntraday2(requestBody).toPromise();
-    const closePrices = _.get(intraday, 'chart.result[0].indicators.quote[0].close');
-    const price = closePrices[closePrices.length - 1];
-
-    const bands = await this.getBBand(closePrices, period);
-    const lowerBand = bands[0][0];
-    if (lowerBand > price) {
-      return true;
-    }
-    return false;
-  }
-
   findMostCurrentQuoteIndex(quotes, firstIndex, lastIndex) {
     // TODO: Replace with real time quote
     let ctr = 1,
@@ -554,69 +461,12 @@ export class DaytradeService {
       .toPromise()
       .then((quotes) => {
         quotes.chart.result[0].indicators.quote[0].close =
-          this.fillInMissingReals(_.get(quotes, 'chart.result[0].indicators.quote[0].close'));
+        this.indicatorsService.fillInMissingReals(_.get(quotes, 'chart.result[0].indicators.quote[0].close'));
         return this.portfolioService.getQuote(symbol)
           .toPromise()
           .then((quote) => {
             return this.addQuote(quotes, quote);
           });
       });
-  }
-
-  isOversoldBullish(roc: any[], momentum: number, mfi: number): boolean {
-    const rocLen = roc[0].length - 1;
-    const roc1 = _.round(roc[0][rocLen], 3);
-    let num, den;
-    if (momentum > roc1) {
-      num = momentum;
-      den = roc1;
-    } else {
-      den = momentum;
-      num = roc1;
-    }
-
-    const momentumDiff = _.round(_.divide(num, den), 3);
-    const rocDiffRange = [-0.4, 0.1];
-
-    if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
-      if (mfi < 10) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  isMomentumBullish(price: number, high: number, mfi: number): boolean {
-    if (price > high) {
-      if (mfi > 55 && mfi < 80) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  isBBandMeanReversionBullish(price: number, low: number, mfi: number, roc: any[], momentum: number, ): boolean {
-    const rocLen = roc[0].length - 1;
-    const roc1 = _.round(roc[0][rocLen], 3);
-    let num, den;
-    if (momentum > roc1) {
-      num = momentum;
-      den = roc1;
-    } else {
-      den = momentum;
-      num = roc1;
-    }
-
-    const momentumDiff = _.round(_.divide(num, den), 3);
-    const rocDiffRange = [-0.4, 0.1];
-
-    if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
-      if (price < low) {
-        if (mfi > 0 && mfi < 36) {
-          return true;
-        }
-      }
-    }
-    return false;
   }
 }

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CartService } from '../shared/services/cart.service';
 import { SmartOrder } from '../shared/models/smart-order';
-import { ScoreKeeperService, ReportingService } from '../shared';
+import { ScoreKeeperService, ReportingService, DaytradeService } from '../shared';
 import { MatDialog } from '@angular/material';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
@@ -37,7 +37,8 @@ export class BollingerBandComponent implements OnInit {
   constructor(public cartService: CartService,
     public scoreKeeperService: ScoreKeeperService,
     public dialog: MatDialog,
-    private reportingService: ReportingService) { }
+    private reportingService: ReportingService,
+    private daytradeService: DaytradeService) { }
 
   ngOnInit() {
     this.interval = 80808;
@@ -215,5 +216,9 @@ export class BollingerBandComponent implements OnInit {
 
   stop() {
     this.alive = false;
+  }
+
+  closeAllTrades() {
+    this.daytradeService.closeTrades(()=>{}, ()=>{}, ()=>{});
   }
 }

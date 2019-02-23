@@ -46,7 +46,9 @@ import {
   PortfolioService,
   DaytradeService,
   ReportingService,
-  ScoreKeeperService
+  ScoreKeeperService,
+  IndicatorsService,
+  AlgoService,
 } from './shared';
 
 import { RhInputComponent } from './rh-input/rh-input.component';
@@ -69,7 +71,6 @@ import { ResearchViewComponent } from './research-view/research-view.component';
 import { OptionsViewComponent } from './options-view/options-view.component';
 import { ScoreBoardComponent } from './score-board/score-board.component';
 import { TimelineViewComponent } from './timeline-view/timeline-view.component';
-import { SeesawCardComponent } from './seesaw-card/seesaw-card.component';
 import { BacktestViewComponent } from './backtest-view/backtest-view.component';
 import { TerminalViewComponent } from './terminal-view/terminal-view.component';
 
@@ -98,7 +99,6 @@ import { TerminalViewComponent } from './terminal-view/terminal-view.component';
     OptionsViewComponent,
     ScoreBoardComponent,
     TimelineViewComponent,
-    SeesawCardComponent,
     BacktestViewComponent,
     TerminalViewComponent,
   ],
@@ -152,6 +152,8 @@ import { TerminalViewComponent } from './terminal-view/terminal-view.component';
     DaytradeService,
     ReportingService,
     ScoreKeeperService,
+    IndicatorsService,
+    AlgoService,
   ],
   bootstrap: [AppComponent]
 })

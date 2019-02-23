@@ -29,6 +29,8 @@ import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import { SmartOrder } from '../shared/models/smart-order';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { Subscription } from 'rxjs/Subscription';
+import { AlgoService } from '../shared/services/algo.service';
+import { IndicatorsService } from '../shared/services/indicators.service';
 
 @Component({
   selector: 'app-bb-card',
@@ -83,6 +85,8 @@ export class BbCardComponent implements OnInit, OnChanges {
     private reportingService: ReportingService,
     private scoringService: ScoreKeeperService,
     private portfolioService: PortfolioService,
+    private algoService: AlgoService,
+    private indicatorsService: IndicatorsService,
     public dialog: MatDialog) { }
 
   ngOnInit() {
@@ -217,6 +221,9 @@ export class BbCardComponent implements OnInit, OnChanges {
   step() {
     if (this.alive) {
       this.play(true, this.backtestLive);
+      if (this.stepper) {
+        this.stepper.selectedIndex = 1;
+      }
     }
   }
 
@@ -604,7 +611,6 @@ export class BbCardComponent implements OnInit, OnChanges {
         };
 
         this.daytradeService.sendSell(sellOrder, 'market', resolve, reject, handleNotFound);
-
       } else {
         this.incrementSell(sellOrder);
 
@@ -802,7 +808,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
 
     if (this.config.Mfi) {
-      if (this.daytradeService.isOversoldBullish(roc, this.momentum, this.mfi)) {
+      if (this.algoService.isOversoldBullish(roc, this.momentum, this.mfi)) {
         const log = `${this.order.holding.symbol} mfi oversold Event - time: ${moment.unix(signalTime).format()}, short rate of change: ${roc}, long rate of change: ${this.momentum}, mfi: ${this.mfi}`;
 
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
@@ -811,7 +817,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
     }
     if (this.config.SpyMomentum) {
-      if (this.daytradeService.isMomentumBullish(signalPrice, high[0], this.mfi)) {
+      if (this.algoService.isMomentumBullish(signalPrice, high[0], this.mfi)) {
         const log = `${this.order.holding.symbol} bb momentum Event - time: ${moment.unix(signalTime).format()}, bband high: ${high[0]}, mfi: ${this.mfi}`;
 
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
@@ -821,7 +827,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
 
     if (this.config.MeanReversion1) {
-      if (this.daytradeService.isBBandMeanReversionBullish(signalPrice, low[0], this.mfi, roc, this.momentum)) {
+      if (this.algoService.isBBandMeanReversionBullish(signalPrice, low[0], this.mfi, roc, this.momentum)) {
         const log = `${this.order.holding.symbol} bb mean reversion Event - time: ${moment.unix(signalTime).format()}, bband low: ${low[0]}, mfi: ${this.mfi}`;
 
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
@@ -976,21 +982,21 @@ export class BbCardComponent implements OnInit, OnChanges {
       // this.reportingService.addAuditLog(this.order.holding.symbol, log);
       return null;
     }
-    const band = await this.daytradeService.getBBand(reals, this.bbandPeriod);
+    const band = await this.indicatorsService.getBBand(reals, this.bbandPeriod);
     // const shortSma = await this.daytradeService.getSMA(reals, 5);
     const shortSma = null;
 
-    const roc = await this.daytradeService.getROC(_.slice(reals, reals.length - 11), 10);
-    this.momentum = await this.daytradeService.getROC(reals, 70)
+    const roc = await this.indicatorsService.getROC(_.slice(reals, reals.length - 11), 10);
+    this.momentum = await this.indicatorsService.getROC(reals, 70)
       .then((result) => {
         const rocLen = result[0].length - 1;
         const roc1 = _.round(result[0][rocLen], 3);
         return _.round(roc1, 3);
       });
 
-    const roc5 = this.positionCount > 0 ? await this.daytradeService.getROC(this.daytradeService.getSubArray(reals, 5), 5) : [];
+    const roc5 = this.positionCount > 0 ? await this.indicatorsService.getROC(this.daytradeService.getSubArray(reals, 5), 5) : [];
 
-    this.mfi = await this.daytradeService.getMFI(this.daytradeService.getSubArray(highs, 14),
+    this.mfi = await this.indicatorsService.getMFI(this.daytradeService.getSubArray(highs, 14),
       this.daytradeService.getSubArray(lows, 14),
       this.daytradeService.getSubArray(reals, 14),
       this.daytradeService.getSubArray(volumes, 14),
