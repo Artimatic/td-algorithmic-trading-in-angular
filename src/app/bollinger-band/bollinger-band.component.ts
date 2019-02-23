@@ -159,9 +159,6 @@ export class BollingerBandComponent implements OnInit {
         const concat = this.cartService.sellOrders.concat(this.cartService.buyOrders);
 
         this.queueAlgos(concat.concat(this.cartService.otherOrders));
-        // this.triggerOrder(this.cartService.sellOrders);
-        // this.triggerOrder(this.cartService.buyOrders);
-        // this.triggerOrder(this.cartService.otherOrders);
       }
     });
   }
@@ -219,6 +216,18 @@ export class BollingerBandComponent implements OnInit {
   }
 
   closeAllTrades() {
-    this.daytradeService.closeTrades(()=>{}, ()=>{}, ()=>{});
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '250px',
+      data: { title: 'Confirm', message: 'Close all open day trade positions?' }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        const resolve = ()=>{};
+        const reject = ()=>{};
+        const handleNotFound = ()=>{};
+        this.daytradeService.closeTrades(resolve, reject, handleNotFound);
+      }
+    });
   }
 }
