@@ -17,8 +17,7 @@ export class PortfolioTableComponent implements OnInit {
   displayedColumns = ['name', 'symbol',
     'gainz', 'quantity',
     'average_buy_price', 'realtime_price',
-    'Volume', 'PERatio', 'realtime_chg_percent',
-    'diversification', 'created_at', 'updated_at'];
+    'Volume', 'diversification', 'created_at', 'updated_at'];
   dataSource = new MatTableDataSource();
   panelOpenState = false;
 
@@ -73,8 +72,6 @@ export class PortfolioTableComponent implements OnInit {
             .subscribe(tiingoQuote => {
               holding.realtime_price = tiingoQuote[0].last;
               holding.Volume = tiingoQuote[0].volume;
-              holding.PERatio = null;
-              holding.realtime_chg_percent = null;
               if (this.authenticationService.myAccount && !this.authenticationService.myAccount.stocks) {
                 this.authenticationService.myAccount.stocks = (holding.quantity * holding.realtime_price);
               } else if (this.authenticationService.myAccount) {
