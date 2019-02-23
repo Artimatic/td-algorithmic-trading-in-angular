@@ -1,4 +1,4 @@
-<mat-card *ngIf="order">
+<mat-card>
   <div class="banner" *ngIf="error">
     <div class="banner-content">
       ERROR: {{error}}
@@ -43,7 +43,6 @@
           </mat-select>
         </mat-form-field>
         <div>
-          {{this.firstFormGroup.value.preferences}}
           <button mat-button matStepperNext>Next</button>
         </div>
       </form>

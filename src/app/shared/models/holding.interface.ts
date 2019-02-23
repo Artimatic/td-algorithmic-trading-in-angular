@@ -8,8 +8,6 @@ export interface Holding {
     name?: string;
     realtime_price?: number;
     Volume?: number;
-    PERatio?: number;
-    realtime_chg_percent?: number;
     gainz?: number;
     diversification?: number;
     shares_held_for_sells?: number;

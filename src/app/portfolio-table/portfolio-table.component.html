@@ -50,16 +50,6 @@
       <mat-cell *matCellDef="let row">{{ row.Volume | number}}</mat-cell>
     </ng-container>
 
-    <ng-container matColumnDef="PERatio">
-      <mat-header-cell *matHeaderCellDef>PE</mat-header-cell>
-      <mat-cell *matCellDef="let row">{{ row.PERatio }}</mat-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="realtime_chg_percent">
-      <mat-header-cell *matHeaderCellDef>Last Change</mat-header-cell>
-      <mat-cell *matCellDef="let row">{{ row.realtime_chg_percent }}%</mat-cell>
-    </ng-container>
-
     <ng-container matColumnDef="diversification">
       <mat-header-cell *matHeaderCellDef>Diversification</mat-header-cell>
       <mat-cell *matCellDef="let row">{{ row.diversification | percent:'1.2-3'}}</mat-cell>
