@@ -13,24 +13,28 @@ Run `ng generate component component-name` to generate a new component. You can 
 Create file 'credentials.js' in '\server\config\environment\credentials.js'
 
 Get Yahoo developer credentials: https://developer.yahoo.com/apps/create/
-
-Add Yahoo Finance app credentials to credentials.js: 
+Get AlphaVantage credentials: https://www.alphavantage.co/support/
+Add Yahoo Finance app and AlphaVantage api credentials to credentials.js: 
 module.exports = {
-    yahoo: {
-        key: 'Your key here',
-        secret: 'Your secret here'
-      } 
+  yahoo: {
+    key: 'SOMEYAHOOKEY',
+    secret: 'SOMESECRET'
+  },
+  alpha: {
+    key: "SOMEALPHAVANTAGEKEY"
+  }
 };
+
 
 Run `npm install`
 
 ## Build
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `-prod` flag for a production build.
+Run `npm run build `.
 
 ## Start Server
 
-Run `npm start`
+Run `npm run start`
 
 ## Go
 
