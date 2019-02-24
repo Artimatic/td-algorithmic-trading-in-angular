@@ -14,6 +14,7 @@ Run `ng generate component component-name` to generate a new component. You can 
 * Get Yahoo developer credentials: https://developer.yahoo.com/apps/create/
 * Get AlphaVantage credentials: https://www.alphavantage.co/support/
 * Add Yahoo Finance app and AlphaVantage api credentials to credentials.js: 
+```
 module.exports = {
   yahoo: {
     key: 'SOMEYAHOOKEY',
@@ -23,7 +24,7 @@ module.exports = {
     key: "SOMEALPHAVANTAGEKEY"
   }
 };
-
+```
 
 Run `npm install`
 
