@@ -63,7 +63,6 @@ import { OrderDialogComponent } from './order-dialog/order-dialog.component';
 import { CartService } from './shared/services/cart.service';
 import { ExcelService } from './shared/services/excel-service.service';
 import { BollingerBandComponent } from './bollinger-band/bollinger-band.component';
-import { RealtimeChartComponent } from './realtime-chart/realtime-chart.component';
 import { BbCardComponent } from './bb-card/bb-card.component';
 import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.component';
 import { ReportingComponent, ReportDialogComponent } from './reporting/reporting.component';
@@ -90,7 +89,6 @@ import { TerminalViewComponent } from './terminal-view/terminal-view.component';
     InstrumentPipe,
     OrderDialogComponent,
     BollingerBandComponent,
-    RealtimeChartComponent,
     BbCardComponent,
     ConfirmDialogComponent,
     ReportingComponent,
