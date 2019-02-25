@@ -852,7 +852,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
 
     if (this.config.SellAtClose) {
-      if (moment(signalTime).isAfter(this.endTime)) {
+      if (moment(signalTime).utcOffset('-0500').isAfter(this.endTime.utcOffset('-0500'))) {
         return this.closeAllPositions(price, signalTime);
       }
     }

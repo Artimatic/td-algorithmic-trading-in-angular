@@ -192,7 +192,7 @@ export class BollingerBandComponent implements OnInit {
       .takeWhile(() => this.alive)
       .subscribe(() => {
         // TODO: Use moment timezones
-        if (moment().isAfter(this.startTime)) {
+        if (moment().isAfter(this.startTime.utcOffset('-0500'))) {
           let executed = 0;
           while (executed < limit && lastIndex < orders.length) {
             orders[lastIndex].stepForward = counter;
@@ -203,7 +203,7 @@ export class BollingerBandComponent implements OnInit {
           if (lastIndex >= orders.length) {
             lastIndex = 0;
           }
-          if (moment().isAfter(this.endTime)) {
+          if (moment().isAfter(this.endTime.utcOffset('-0500'))) {
             this.reportingService.exportAuditHistory();
             this.stop();
           }
