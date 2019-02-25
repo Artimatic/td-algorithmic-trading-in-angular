@@ -223,9 +223,9 @@ export class BollingerBandComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        const resolve = ()=>{};
-        const reject = ()=>{};
-        const handleNotFound = ()=>{};
+        const resolve = () => { };
+        const reject = () => { };
+        const handleNotFound = () => { };
         this.daytradeService.closeTrades(resolve, reject, handleNotFound);
       }
     });
