@@ -30,7 +30,7 @@ export class LoginComponent implements OnInit {
   }
 
   checkAuthenticated() {
-    if (localStorage.getItem('currentUser')) {
+    if (sessionStorage.getItem('currentUser')) {
       this.authenticated = true;
     } else {
       this.authenticated = false;

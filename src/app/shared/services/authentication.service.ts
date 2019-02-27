@@ -11,7 +11,7 @@ export class AuthenticationService {
 
   constructor(private http: Http) {
     // set token if saved in local storage
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
     this.token = currentUser && currentUser.token;
   }
 
@@ -40,7 +40,7 @@ export class AuthenticationService {
           this.token = token;
 
           // store username and jwt token in local storage to keep user logged in between page refreshes
-          localStorage.setItem('currentUser', JSON.stringify({ username: username, token: token }));
+          sessionStorage.setItem('currentUser', JSON.stringify({ username: username, token: token }));
 
           this.loginInit();
           // return true to indicate successful login
@@ -76,11 +76,11 @@ export class AuthenticationService {
     this.http.post('/api/portfolio/logout', { token: this.token }).subscribe();
     // clear token remove user from local storage to log user out
     this.token = null;
-    localStorage.removeItem('currentUser');
+    sessionStorage.removeItem('currentUser');
   }
 
   isAuthenticated() {
-    if (localStorage.getItem('currentUser')) {
+    if (sessionStorage.getItem('currentUser')) {
       return true;
     }
     return false;
