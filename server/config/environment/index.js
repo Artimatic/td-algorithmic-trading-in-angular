@@ -9,7 +9,7 @@ if(!credentials) {
 
 // All configurations will extend these options
 // ============================================
-
+const defaultPort = _.get(credentials, 'default.port', _.get(credentials, 'port', null)) || 9000; 
 export default {
   env: process.env.NODE_ENV,
 
@@ -17,7 +17,7 @@ export default {
   root: path.normalize(__dirname + '/../../..'),
 
   // Server port
-  port: process.env.PORT || 9000,
+  port: process.env.PORT || defaultPort,
   yahoo: {
     key: _.get(credentials, 'default.yahoo.key', _.get(credentials, 'yahoo.key', null)),
     secret: _.get(credentials, 'default.yahoo.secret', _.get(credentials, 'yahoo.secret', null))

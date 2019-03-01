@@ -30,9 +30,11 @@
       </tbody>
     </table>
   </div>
-  <!-- <ul class="shell-body">
-    <li *ngFor="let log of reportingService.logs">
-      {{log.time}} {{log.symbol}} {{log.message}}
+  <ul class="shell-body">
+    <li *ngFor="let log of reportingService.logs; let i=index">
+      <div *ngIf="i>(reportingService.logs.length - 5)">
+        {{log.time}} {{log.symbol}} {{log.message}}
+    </div>
     </li>
-  </ul> -->
+  </ul>
 </div>
