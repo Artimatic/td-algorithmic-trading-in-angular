@@ -2,7 +2,7 @@ import { Order } from './order';
 
 export interface SmartOrder extends Order {
     splits?: number;
-    filled?: number;
+    positionCount?: number;
     timeSubmitted?: number;
     signalTime?: number;
     lossThreshold?: number;
@@ -10,7 +10,10 @@ export interface SmartOrder extends Order {
     useStopLoss?: boolean;
     useTakeProfit?: boolean;
     meanReversion1?: boolean;
+    useMfi?: boolean;
     spyMomentum?: boolean;
+    sellAtClose?: boolean;
+    yahooData?: boolean;
     orderSize?: number;
     triggered?: boolean;
     triggeredBacktest?: boolean;

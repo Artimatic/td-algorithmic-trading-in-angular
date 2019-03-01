@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Winloss } from '../models/winloss';
 
 import * as _ from 'lodash';
+import { ReportingService } from './reporting.service';
 
 @Injectable()
 export class ScoreKeeperService {
@@ -10,7 +11,7 @@ export class ScoreKeeperService {
   costEstimates = {};
   total = 0;
 
-  constructor() { }
+  constructor(private reportingService: ReportingService) { }
 
   addProfitLoss(stock: string, sum: number) {
     this.total += sum;
@@ -23,7 +24,9 @@ export class ScoreKeeperService {
 
     this.profitLossHash[stock] = _.round(this.profitLossHash[stock], 2);
     this.addSell(stock, sum);
-    console.log(`${stock}: ${this.profitLossHash[stock]}`);
+    const log = `${this.profitLossHash[stock]}`;
+    console.log(stock, ': ', log);
+    this.reportingService.addAuditLog(stock, log);
   }
 
   updateCostEstimate(stock: string, price: number) {

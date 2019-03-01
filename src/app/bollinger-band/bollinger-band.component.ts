@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CartService } from '../shared/services/cart.service';
 import { SmartOrder } from '../shared/models/smart-order';
-import { ScoreKeeperService } from '../shared';
+import { ScoreKeeperService, ReportingService, DaytradeService } from '../shared';
 import { MatDialog } from '@angular/material';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
@@ -36,13 +36,15 @@ export class BollingerBandComponent implements OnInit {
 
   constructor(public cartService: CartService,
     public scoreKeeperService: ScoreKeeperService,
-    public dialog: MatDialog) { }
+    public dialog: MatDialog,
+    private reportingService: ReportingService,
+    private daytradeService: DaytradeService) { }
 
   ngOnInit() {
-    this.interval = 79800;
+    this.interval = 80808;
     this.startTime = moment('10:10am', 'h:mma');
     this.noonTime = moment('1:10pm', 'h:mma');
-    this.endTime = moment('3:30pm', 'h:mma');
+    this.endTime = moment('3:55pm', 'h:mma');
 
     this.ordersStarted = 0;
     this.spxl = {
@@ -133,7 +135,8 @@ export class BollingerBandComponent implements OnInit {
       useStopLoss: true,
       lossThreshold: -0.002,
       profitTarget: 0.004,
-      spyMomentum: true
+      spyMomentum: true,
+      sellAtClose: true
     };
   }
 
@@ -156,9 +159,6 @@ export class BollingerBandComponent implements OnInit {
         const concat = this.cartService.sellOrders.concat(this.cartService.buyOrders);
 
         this.queueAlgos(concat.concat(this.cartService.otherOrders));
-        // this.triggerOrder(this.cartService.sellOrders);
-        // this.triggerOrder(this.cartService.buyOrders);
-        // this.triggerOrder(this.cartService.otherOrders);
       }
     });
   }
@@ -192,20 +192,19 @@ export class BollingerBandComponent implements OnInit {
       .takeWhile(() => this.alive)
       .subscribe(() => {
         // TODO: Use moment timezones
-        if (moment().isAfter(this.startTime)) {
+        if (moment().utcOffset('-0500').isAfter(this.startTime.utcOffset('-0500'))) {
           let executed = 0;
-          while (executed < limit) {
-            if (lastIndex < orders.length) {
-              orders[lastIndex].stepForward = counter;
-            } else {
-              lastIndex = 0;
-              orders[lastIndex].stepForward = counter;
-            }
+          while (executed < limit && lastIndex < orders.length) {
+            orders[lastIndex].stepForward = counter;
             lastIndex++;
             counter++;
             executed++;
           }
-          if (moment().isAfter(this.endTime)) {
+          if (lastIndex >= orders.length) {
+            lastIndex = 0;
+          }
+          if (moment().utcOffset('-0500').isAfter(this.endTime.utcOffset('-0500'))) {
+            this.reportingService.exportAuditHistory();
             this.stop();
           }
         }
@@ -214,5 +213,21 @@ export class BollingerBandComponent implements OnInit {
 
   stop() {
     this.alive = false;
+  }
+
+  closeAllTrades() {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '250px',
+      data: { title: 'Confirm', message: 'Close all open day trade positions?' }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        const resolve = () => { };
+        const reject = () => { };
+        const handleNotFound = () => { };
+        this.daytradeService.closeTrades(resolve, reject, handleNotFound);
+      }
+    });
   }
 }

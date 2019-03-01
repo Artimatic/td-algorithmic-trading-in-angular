@@ -7,7 +7,7 @@ exports.quote = function (req, res, next) {
   QuoteController.getQuote(req, res);
 };
 
-exports.currentQuotes = function (req, res, next) {
+exports.currentQuote = function (req, res, next) {
   QuoteController.getCurrentQuote(req, res);
 };
 

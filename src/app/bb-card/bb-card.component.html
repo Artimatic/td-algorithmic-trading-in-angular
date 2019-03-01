@@ -1,4 +1,4 @@
-<mat-card *ngIf="order">
+<mat-card>
   <div class="banner" *ngIf="error">
     <div class="banner-content">
       ERROR: {{error}}
@@ -27,7 +27,6 @@
         </mat-form-field>
         <mat-form-field hintLabel="Loss circuit breaker">
           <input matInput type="number" placeholder="Loss Threshold" formControlName="lossThreshold" required>
-          <span matSuffix>% &nbsp;</span>
         </mat-form-field>
         <mat-form-field hintLabel="Profit exit">
           <input matInput type="number" placeholder="Profit Target" formControlName="profitTarget">
@@ -43,7 +42,6 @@
           </mat-select>
         </mat-form-field>
         <div>
-          {{this.firstFormGroup.value.preferences}}
           <button mat-button matStepperNext>Next</button>
         </div>
       </form>
@@ -59,7 +57,7 @@
         </div>
         <div>
           <section class="example-section">
-            <mat-progress-bar class="progress-bar" [mode]="determinate" [color]="color" [value]="progress()"></mat-progress-bar>
+            <mat-progress-bar class="progress-bar" [mode]="'determinate'" [color]="color" [value]="progress()"></mat-progress-bar>
           </section>
           Orders Submitted: {{ buyCount + sellCount}}/{{firstFormGroup.value.quantity || 0}} shares
         </div>
@@ -99,7 +97,7 @@
         </div>
         <mat-card-actions>
           <button mat-raised-button color="warn" (click)="resetStepper(stepper)">STOP</button>
-          <button mat-button color="primary" (click)="backtest()">Backtest</button>
+          <button mat-button color="primary" (click)="backtest(null)">Backtest</button>
           <button mat-button color="warn" (click)="confirmLiveBacktest()">TEST LIVE</button>
           <button mat-button color="warn" (click)="openDialog()">GO LIVE</button>
         </mat-card-actions>

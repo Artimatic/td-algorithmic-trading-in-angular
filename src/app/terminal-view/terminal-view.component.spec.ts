@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { SeesawCardComponent } from './seesaw-card.component';
+import { TerminalViewComponent } from './terminal-view.component';
 
-describe('SeesawCardComponent', () => {
-  let component: SeesawCardComponent;
-  let fixture: ComponentFixture<SeesawCardComponent>;
+describe('TerminalViewComponent', () => {
+  let component: TerminalViewComponent;
+  let fixture: ComponentFixture<TerminalViewComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ SeesawCardComponent ]
+      declarations: [ TerminalViewComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(SeesawCardComponent);
+    fixture = TestBed.createComponent(TerminalViewComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

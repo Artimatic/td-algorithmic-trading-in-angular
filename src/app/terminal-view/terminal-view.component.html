@@ -1,0 +1,40 @@
+<div class="shell-wrap">
+  <p class="shell-top-bar">/Users/cashmoney/Documents/merchant/</p>
+  <ul class="shell-body">
+    <li *ngFor="let other of cartService.otherOrders">
+      <app-score-board [title]="other.holding.symbol" [score]="scoreKeeperService.profitLossHash[other.holding.symbol]"></app-score-board>
+    </li>
+    <li>
+      <app-score-board [title]="'Total'" [score]="scoreKeeperService.total"></app-score-board>
+    </li>
+  </ul>
+  <div class="shell-body">
+    <table class="shell-table">
+      <thead class="fixedHeader">
+        <tr>
+          <th>PID</th>
+          <th>#</th>
+        </tr>
+      </thead>
+      <tbody class="scrollContent">
+        <tr *ngFor="let other of cartService.otherOrders">
+          <ng-container *ngIf="other.positionCount">
+            <td>
+              {{other.holding.symbol}}
+            </td>
+            <td>
+              {{other.positionCount}}
+            </td>
+          </ng-container>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <ul class="shell-body">
+    <li *ngFor="let log of reportingService.logs; let i=index">
+      <div *ngIf="i>(reportingService.logs.length - 5)">
+        {{log.time}} {{log.symbol}} {{log.message}}
+    </div>
+    </li>
+  </ul>
+</div>

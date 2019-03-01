@@ -1,23 +1,12 @@
 <mat-sidenav-container>
-  <mat-toolbar color="primary" class="main-toolbar">
-    <div class="toolbar-content" fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px" fxLayoutGap.xs="0">
-      <div fxFlex="80%">
-        <button mat-icon-button>
-          <mat-icon>toc</mat-icon>
-        </button>
-      </div>
-      <div fxFlex="10%">
-        <app-reporting></app-reporting>
-      </div>
-      <div fxFlex="10%">
-        <app-login></app-login>
-      </div>
-    </div>
-  </mat-toolbar>
-</mat-sidenav-container>
-<mat-sidenav-container>
   <mat-sidenav mode="side" opened>
     <mat-list role="list">
+      <mat-list-item role="listitem">
+        <app-reporting></app-reporting>
+      </mat-list-item>
+      <mat-list-item role="listitem">
+        <app-login></app-login>
+      </mat-list-item>
       <mat-list-item role="listitem">
         <button mat-icon-button>
           <a routerLink="/home" matTooltip="trade">

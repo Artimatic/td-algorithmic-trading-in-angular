@@ -161,13 +161,13 @@ class BacktestService {
           return price < lower;
         };
 
-        const lossThreshold = 0.002;
-        const profitThreshold = 0.003;
+        const lossThreshold = 0.05;
+        const profitThreshold = 0.05;
         const mfiRange = [20, 80];
         const fields = ['leftRange', 'rightRange', 'totalTrades', 'net', 'avgTrade', 'returns'];
         let count = 0;
-        let leftRange = -0.9;
-        let rightRange = 0.9;
+        let leftRange = -1;
+        let rightRange = 1;
 
         const rows = [];
         while (leftRange < 0) {
@@ -243,9 +243,10 @@ class BacktestService {
       });
   }
 
-  evaluateMACrossover(symbol, currentDate, startDate) {
+  evaluateBband(symbol, currentDate, startDate) {
     const minQuotes = 81;
     const getIndicatorQuotes = [];
+    console.log('Start');
 
     return QuoteService.queryForIntraday(symbol, startDate, currentDate)
       .then(quotes => {
@@ -261,53 +262,68 @@ class BacktestService {
       })
       .then(indicators => {
         const bbRangeFn = (price, bband) => {
-          const higher = bband[2][0];
-          return price > higher;
+          // const higher = bband[2][0];
+          const lower = bband[0][0];
+
+          return price < lower;
         };
 
-        const lossThreshold = 0.002;
-        const profitThreshold = 0.003;
-        const fields = ['mfiLeft', 'mfiRight', 'totalTrades', 'net', 'avgTrade', 'returns'];
+        const lossThreshold = 0.05;
+        const profitThreshold = 0.05;
+        const fields = ['leftRange', 'rightRange', 'mfiLeft', 'mfiRight', 'totalTrades', 'net', 'avgTrade', 'returns'];
         let count = 0;
-        let mfiLeft = 0;
+        const mfiLeft = 0;
         let mfiRight = 100;
+        let leftRange = -1;
+        let rightRange = 1;
         const rows = [];
-        while (mfiLeft < 100) {
-          mfiRight = 100;
-          while (mfiRight > 0) {
-            const mfiRange = [mfiLeft, mfiRight];
+        while (leftRange < -0.001) {
+          rightRange = 0.9;
+          while (rightRange > 0.001) {
+            // mfiLeft = 0;
+            // while (mfiLeft < 100) {
+            mfiRight = 100;
+            while (mfiRight > 0) {
 
-            const results = this.getBacktestResults(this.getMABuySignal,
-              this.getSellSignal,
-              indicators,
-              bbRangeFn,
-              mfiRange,
-              [],
-              lossThreshold,
-              profitThreshold);
+              const mfiRange = [mfiLeft, mfiRight];
 
-            if (results.net > 0 && _.divide(indicators.length, results.trades) < 250) {
-              rows.push({
-                mfiLeft,
-                mfiRight,
-                net: _.round(results.net, 3),
-                avgTrade: _.round(_.divide(results.total, results.trades), 3),
-                returns: _.round(_.divide(results.net, results.total), 3),
-                totalTrades: results.trades
-              });
+              const results = this.getBacktestResults(this.getMABuySignal,
+                this.getMfiSellSignal,
+                indicators,
+                bbRangeFn,
+                mfiRange,
+                [leftRange, rightRange],
+                lossThreshold,
+                profitThreshold);
+
+              if (results.net > 0 && _.divide(indicators.length, results.trades) < 250) {
+                rows.push({
+                  leftRange,
+                  rightRange,
+                  mfiLeft,
+                  mfiRight,
+                  net: _.round(results.net, 3),
+                  avgTrade: _.round(_.divide(results.total, results.trades), 3),
+                  returns: _.round(_.divide(results.net, results.total), 3),
+                  totalTrades: results.trades
+                });
+              }
+
+              if (rows.length > 500000) {
+                this.writeCsv(`${symbol}-bband-intraday`, startDate, currentDate, _.cloneDeep(rows), fields, ++count);
+                rows.length = 0;
+              }
+
+              mfiRight = _.subtract(mfiRight, 1);
             }
-
-            if (rows.length > 500000) {
-              this.writeCsv(`${symbol}-crossover-intraday`, startDate, currentDate, _.cloneDeep(rows), fields, ++count);
-              rows.length = 0;
-            }
-
-            mfiRight = _.subtract(mfiRight, 1);
+            //   mfiLeft = _.add(mfiLeft, 1);
+            // }
+            rightRange = _.round(_.subtract(rightRange, 0.01), 2);
           }
-          mfiLeft = _.add(mfiLeft, 1);
+          leftRange = _.round(_.add(leftRange, 0.01), 2);
         }
 
-        this.writeCsv(`${symbol}-crossover-intraday`, startDate, currentDate, rows, fields, count);
+        this.writeCsv(`${symbol}-bband-intraday`, startDate, currentDate, rows, fields, count);
         return [];
       });
   }
@@ -318,6 +334,7 @@ class BacktestService {
 
     return this.getData(symbol, currentDate, startDate)
       .then(quotes => {
+        console.log('quotes: ', quotes.length);
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);
           if (idx > minQuotes) {
@@ -356,7 +373,7 @@ class BacktestService {
               lossThreshold,
               profitThreshold);
 
-            if (results.net > 0 && _.divide(indicators.length, results.trades) < 250) {
+            if (results.net > 0) {
               const line = {
                 leftRange,
                 rightRange,
@@ -383,15 +400,19 @@ class BacktestService {
         }
 
 
-        this.writeCsv(name, startDate, currentDate, rows, fields, count);
+        // this.writeCsv(name, startDate, currentDate, rows, fields, count);
         let recommendation = 'INDETERMINANT';
+        const lastInd = indicators[indicators.length - 1];
         if (bestResult) {
-          if (this.getBuySignal(indicators[indicators.length - 1],
-            [bestResult.leftRange, bestResult.rightRange], mfiRange, null)) {
-              recommendation = 'BUY';
+          // if (this.getBuySignal(indicators[indicators.length - 1],
+          //     [0, 1], mfiRange, null)) {
+          // [bestResult.leftRange, bestResult.rightRange], mfiRange, null)) {
+          if (lastInd.mfiLeft < 20) {
+            recommendation = 'BUY';
+          } else if (lastInd.mfiLeft > 80) {
+            recommendation = 'SELL';
           }
-
-          testResult.push({...bestResult, algo: 'daily-mfi', recommendation });
+          testResult.push({ ...bestResult, algo: 'daily-mfi', recommendation, ...lastInd });
         }
         return testResult;
       });
@@ -420,7 +441,13 @@ class BacktestService {
         let sell = false,
           buy = false;
         if (orders.buy.length > 0) {
-          sell = sellSignalFn(avgPrice, indicator.close, lossThreshold, profitThreshold);
+          sell = sellSignalFn(avgPrice,
+            indicator.close,
+            lossThreshold,
+            profitThreshold,
+            indicator,
+            rocDiffRange,
+            mfiRange);
         }
 
         buy = buySignalFn(indicator, rocDiffRange, mfiRange, bbRangeFn(indicator.close, indicator.bband80));
@@ -467,10 +494,45 @@ class BacktestService {
     return false;
   }
 
-  getSellSignal(paidPrice, currentPrice, lossThreshold, profitThreshold) {
+  getSellSignal(paidPrice, currentPrice, lossThreshold, profitThreshold, indicator, rocDiffRange, mfiRange) {
+    let num, den;
+    if (indicator.roc70 > indicator.roc10) {
+      num = indicator.roc70;
+      den = indicator.roc10;
+    } else {
+      den = indicator.roc70;
+      num = indicator.roc10;
+    }
+
+    const momentumDiff = _.round(_.divide(num, den), 3);
     const gain = DecisionService.getPercentChange(currentPrice, paidPrice);
     if (gain < lossThreshold || gain > profitThreshold) {
       return true;
+    }
+
+    const higher = indicator.bband80[0][2];
+
+    if (currentPrice > higher) {
+      if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
+        // if (indicator.mfiLeft > mfiRange[0] && indicator.mfiLeft < mfiRange[1]) {
+        return true;
+        // }
+      }
+    }
+  }
+
+  getMfiSellSignal(paidPrice, currentPrice, lossThreshold, profitThreshold, indicator, rocDiffRange, mfiRange) {
+    // console.log(indicator.roc10, rocDiffRange[1], indicator.roc70, rocDiffRange[0]);
+    const gain = DecisionService.getPercentChange(currentPrice, paidPrice);
+    if (gain < lossThreshold || gain > profitThreshold) {
+      return true;
+    }
+
+    const higher = indicator.bband80[0][2];
+    if (indicator.roc10 < rocDiffRange[1] && indicator.roc70 < rocDiffRange[0]) {
+      if (indicator.mfiLeft > 80 || (currentPrice > higher && indicator.mfiLeft > mfiRange[1])) {
+        return true;
+      }
     }
   }
 
@@ -478,7 +540,19 @@ class BacktestService {
     if (indicator.mfiLeft > mfiRange[0] && indicator.mfiLeft < mfiRange[1]) {
       // const crossover = _.round(DecisionService.calculatePercentDifference(indicator.sma5, indicator.sma70), 3);
       if (bbCondition) {
-        return true;
+        let num, den;
+        if (indicator.roc70 > indicator.roc10) {
+          num = indicator.roc70;
+          den = indicator.roc10;
+        } else {
+          den = indicator.roc70;
+          num = indicator.roc10;
+        }
+
+        const momentumDiff = _.round(_.divide(num, den), 3);
+        if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
+          return true;
+        }
       }
     }
 
@@ -575,29 +649,29 @@ class BacktestService {
     return this.getBBands(indicators.reals, 80, 2)
       .then((bband80) => {
         currentQuote.bband80 = bband80;
-      //   return this.getSMA(indicators.reals, 5);
-      // })
-      // .then((sma5) => {
-      //   currentQuote.sma5 = sma5[0][sma5[0].length - 1];
-      //   return this.getSMA(indicators.reals, 70);
-      // })
-      // .then((sma70) => {
-      //   currentQuote.sma70 = sma70[0][sma70[0].length - 1];
-      //   return this.getRateOfChange(this.getSubArray(indicators.reals, 10), 10);
-      // })
-      // .then((roc10) => {
-      //   const rocLen = roc10[0].length - 1;
-      //   currentQuote.roc10 = _.round(roc10[0][rocLen], 3);
-      //   return this.getRateOfChange(this.getSubArray(indicators.reals, 70), 70);
-      // })
-      // .then((roc70) => {
-      //   const rocLen = roc70[0].length - 1;
-      //   currentQuote.roc70 = _.round(roc70[0][rocLen], 3);
-      //   return this.getRateOfChange(this.getSubArray(indicators.reals, 5), 5);
-      // })
-      // .then((roc5) => {
-      //   const rocLen = roc5[0].length - 1;
-      //   currentQuote.roc5 = _.round(roc5[0][rocLen], 3);
+        //   return this.getSMA(indicators.reals, 5);
+        // })
+        // .then((sma5) => {
+        //   currentQuote.sma5 = sma5[0][sma5[0].length - 1];
+        //   return this.getSMA(indicators.reals, 70);
+        // })
+        // .then((sma70) => {
+        //   currentQuote.sma70 = sma70[0][sma70[0].length - 1];
+        return this.getRateOfChange(this.getSubArray(indicators.reals, 10), 10);
+      })
+      .then((roc10) => {
+        const rocLen = roc10[0].length - 1;
+        currentQuote.roc10 = _.round(roc10[0][rocLen], 3);
+        return this.getRateOfChange(this.getSubArray(indicators.reals, 70), 70);
+      })
+      .then((roc70) => {
+        const rocLen = roc70[0].length - 1;
+        currentQuote.roc70 = _.round(roc70[0][rocLen], 3);
+        //   return this.getRateOfChange(this.getSubArray(indicators.reals, 5), 5);
+        // })
+        // .then((roc5) => {
+        //   const rocLen = roc5[0].length - 1;
+        //   currentQuote.roc5 = _.round(roc5[0][rocLen], 3);
         return this.getMfi(this.getSubArray(indicators.highs, 14),
           this.getSubArray(indicators.lows, 14),
           this.getSubArray(indicators.reals, 14),
