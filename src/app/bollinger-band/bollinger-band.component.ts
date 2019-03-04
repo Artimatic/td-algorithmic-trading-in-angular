@@ -73,7 +73,11 @@ export class BollingerBandComponent implements OnInit {
       submitted: false, pending: false,
       side: 'DayTrade',
       useTakeProfit: true,
-      useStopLoss: true
+      useStopLoss: true,
+      lossThreshold: -0.005,
+      profitTarget: 0.004,
+      spyMomentum: true,
+      sellAtClose: true
     };
 
     this.vxx = {
@@ -88,7 +92,11 @@ export class BollingerBandComponent implements OnInit {
       submitted: false, pending: false,
       side: 'DayTrade',
       useTakeProfit: true,
-      useStopLoss: true
+      useStopLoss: true,
+      lossThreshold: -0.005,
+      profitTarget: 0.004,
+      spyMomentum: true,
+      sellAtClose: true
     };
 
     this.uvxy = {
@@ -116,7 +124,13 @@ export class BollingerBandComponent implements OnInit {
       },
       quantity: 60, price: 54.59000015258789,
       submitted: false, pending: false,
-      side: 'Buy'
+      side: 'Buy',
+      useTakeProfit: true,
+      useStopLoss: true,
+      lossThreshold: -0.005,
+      profitTarget: 0.004,
+      spyMomentum: true,
+      sellAtClose: true
     };
 
     this.sh = {
