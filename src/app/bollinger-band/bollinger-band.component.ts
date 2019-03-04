@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CartService } from '../shared/services/cart.service';
 import { SmartOrder } from '../shared/models/smart-order';
 import { ScoreKeeperService, ReportingService, DaytradeService } from '../shared';
-import { MatDialog } from '@angular/material';
+import { MatDialog, MatSnackBar } from '@angular/material';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import { Subscription } from 'rxjs/Subscription';
@@ -32,18 +32,17 @@ export class BollingerBandComponent implements OnInit {
 
   startTime: moment.Moment;
   endTime: moment.Moment;
-  noonTime: moment.Moment;
 
   constructor(public cartService: CartService,
     public scoreKeeperService: ScoreKeeperService,
     public dialog: MatDialog,
     private reportingService: ReportingService,
-    private daytradeService: DaytradeService) { }
+    private daytradeService: DaytradeService,
+    public snackBar: MatSnackBar) { }
 
   ngOnInit() {
     this.interval = 80808;
     this.startTime = moment('10:10am', 'h:mma');
-    this.noonTime = moment('1:10pm', 'h:mma');
     this.endTime = moment('3:55pm', 'h:mma');
 
     this.ordersStarted = 0;
@@ -223,11 +222,24 @@ export class BollingerBandComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        const resolve = () => { };
-        const reject = () => { };
+        const resolve = () => {
+          this.snackBar.open('Open positions closed', 'Dismiss');
+         };
+        const reject = () => {
+          this.snackBar.open('Unable to close all positions', 'Dismiss');
+         };
         const handleNotFound = () => { };
         this.daytradeService.closeTrades(resolve, reject, handleNotFound);
       }
     });
+  }
+
+  purgeCart() {
+    this.cartService.deleteCart();
+  }
+
+  loadExamples() {
+    this.cartService.addToCart(this.vti);
+    this.cartService.addToCart(this.mu);
   }
 }

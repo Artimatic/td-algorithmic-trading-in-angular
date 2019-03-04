@@ -63,6 +63,13 @@ export class CartService {
     this.calculateTotals();
   }
 
+  deleteCart() {
+    this.sellOrders = [];
+    this.buyOrders = [];
+    this.otherOrders = [];
+  }
+
+
   calculateTotals() {
     this.buyTotal = this.buyOrders.reduce((acc, buy) => {
       return acc + (buy.quantity * buy.price);
