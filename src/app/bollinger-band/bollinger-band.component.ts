@@ -236,10 +236,12 @@ export class BollingerBandComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        const resolve = () => {
+        const resolve = (data) => {
+          console.log('close all resolved: ', data);
           this.snackBar.open('Open positions closed', 'Dismiss');
          };
-        const reject = () => {
+        const reject = (error) => {
+          console.log('close all error: ', error);
           this.snackBar.open('Unable to close all positions', 'Dismiss');
          };
         const handleNotFound = () => { };
