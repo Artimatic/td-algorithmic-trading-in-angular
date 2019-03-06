@@ -77,7 +77,8 @@ export class BollingerBandComponent implements OnInit {
       lossThreshold: -0.005,
       profitTarget: 0.004,
       spyMomentum: true,
-      sellAtClose: true
+      sellAtClose: true,
+      meanReversion1: true
     };
 
     this.vxx = {
@@ -130,7 +131,8 @@ export class BollingerBandComponent implements OnInit {
       lossThreshold: -0.005,
       profitTarget: 0.004,
       spyMomentum: true,
-      sellAtClose: true
+      sellAtClose: true,
+      meanReversion1: true
     };
 
     this.sh = {

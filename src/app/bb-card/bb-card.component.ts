@@ -817,7 +817,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
     }
     if (this.config.SpyMomentum) {
-      if (this.algoService.isMomentumBullish(signalPrice, high[0], this.mfi)) {
+      if (this.algoService.isMomentumBullish(signalPrice, high[0], this.mfi, roc, this.momentum)) {
         const log = `${this.order.holding.symbol} bb momentum Event - time: ${moment.unix(signalTime).format()}, bband high: ${high[0]}, mfi: ${this.mfi}`;
 
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
@@ -863,9 +863,9 @@ export class BbCardComponent implements OnInit, OnChanges {
       den = roc1;
 
     const momentumDiff = _.round(_.divide(num, den), 3);
-    const rocDiffRange = [0, 3];
+    const rocDiffRange = [0, 1.5];
 
-    if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
+    if (momentumDiff > rocDiffRange[0] || momentumDiff < rocDiffRange[1]) {
       if (signalPrice > upper[0] && (this.mfi > 46)) {
         const log = `BB overbought Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}, mid: ${mid[0]}, lower: ${lower[0]}`;
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
@@ -876,7 +876,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
     }
 
-    if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
+    if (momentumDiff > rocDiffRange[0] || momentumDiff < rocDiffRange[1]) {
       if (signalPrice < lower[0] && (this.mfi > 40)) {
         const log = `BB momentum Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}, mid: ${mid[0]}, lower: ${lower[0]}`;
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
