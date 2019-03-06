@@ -863,7 +863,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       den = roc1;
 
     const momentumDiff = _.round(_.divide(num, den), 3);
-    const rocDiffRange = [0, 1.5];
+    const rocDiffRange = [0, 1.8];
 
     if (momentumDiff > rocDiffRange[0] || momentumDiff < rocDiffRange[1]) {
       if (signalPrice > upper[0] && (this.mfi > 46)) {
@@ -877,7 +877,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
 
     if (momentumDiff > rocDiffRange[0] || momentumDiff < rocDiffRange[1]) {
-      if (signalPrice < lower[0] && (this.mfi > 40)) {
+      if (signalPrice < lower[0] && (this.mfi > 60)) {
         const log = `BB momentum Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}, mid: ${mid[0]}, lower: ${lower[0]}`;
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
 
@@ -906,9 +906,9 @@ export class BbCardComponent implements OnInit, OnChanges {
 
   processSpecialRules(closePrice: number, signalTime) {
     const score = this.scoringService.getScore(this.order.holding.symbol);
-    if (score && score.total > 1) {
+    if (score && score.total > 3) {
       const scorePct = _.round(_.divide(score.wins, score.total), 2);
-      if (scorePct < 0.5) {
+      if (scorePct < 0.25) {
         if (!this.isBacktest) {
           this.stop();
         }
