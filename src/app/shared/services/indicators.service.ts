@@ -47,6 +47,16 @@ export class IndicatorsService {
     return await this.backtestService.getROC(body).toPromise();
   }
 
+  async getVwma(close: number[], volume: number[], period: number): Promise<any[]> {
+    const body = {
+      close: this.fillInMissingReals(close),
+      volume: this.fillInMissingReals(volume),
+      period: period
+    };
+
+    return await this.backtestService.getVwma(body).toPromise();
+  }
+
   fillInMissingReals(reals: number[]) {
     for (let i = 1, length = reals.length; i < length; i++) {
       if (!reals[i]) {

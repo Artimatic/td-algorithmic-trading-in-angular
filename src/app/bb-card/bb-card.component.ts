@@ -32,6 +32,7 @@ import { Subscription } from 'rxjs/Subscription';
 import { AlgoService } from '../shared/services/algo.service';
 import { IndicatorsService } from '../shared/services/indicators.service';
 import { CartService } from '../shared/services/cart.service';
+import { JsonPipe } from '@angular/common';
 
 @Component({
   selector: 'app-bb-card',
@@ -77,8 +78,10 @@ export class BbCardComponent implements OnInit, OnChanges {
   backtestQuotes;
   momentum;
   mfi;
-  stopped;
-  isBacktest;
+  stopped: boolean;
+  isBacktest: boolean;
+  vwma: number;
+  trailingHighPrice: number;
 
   constructor(private _formBuilder: FormBuilder,
     private backtestService: BacktestService,
@@ -301,6 +304,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
         point.x = moment.unix(timestamps[i]).valueOf(); // the date
         point.y = closePrice; // close
+        point.description = this.vwma ? this.vwma.toFixed(2) : '';
 
         if (!this.live && i > this.bbandPeriod && !this.stopped) {
           const lastIndex = i;
@@ -485,7 +489,8 @@ export class BbCardComponent implements OnInit, OnChanges {
         crosshairs: true,
         shared: true,
         formatter: function () {
-          return moment(this.x).format('hh:mm') + '<br><b>Price:</b> ' + this.y + '<br>' + this.x;
+          return moment(this.x).format('hh:mm') + '<br><h3>Price:</h3> ' + Number(this.y).toFixed(2) + '<br>' +
+            '<h3>vwma:</h3> ' + this.points[0].point.options.description;
         }
       },
       plotOptions: {
@@ -927,10 +932,18 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
     if (this.positionCount > 0 && closePrice) {
       const estimatedPrice = this.daytradeService.estimateAverageBuyOrderPrice(this.orders);
+
+      if (this.trailingHighPrice && closePrice > estimatedPrice && closePrice > this.trailingHighPrice) {
+        this.trailingHighPrice = closePrice;
+      } else {
+        this.trailingHighPrice = estimatedPrice;
+      }
+
       const gains = this.daytradeService.getPercentChange(closePrice, estimatedPrice);
+      const trailingChange = this.daytradeService.getPercentChange(closePrice, this.trailingHighPrice);
 
       if (this.config.StopLoss) {
-        if (gains < this.firstFormGroup.value.lossThreshold) {
+        if (trailingChange < this.firstFormGroup.value.lossThreshold) {
           this.setWarning('Loss threshold met. Sending stop loss order. Estimated loss: ' +
             `${this.daytradeService.convertToFixedNumber(gains, 4) * 100}%`);
           const log = `${this.order.holding.symbol} Stop Loss triggered: ${closePrice}/${estimatedPrice}`;
@@ -1008,6 +1021,11 @@ export class BbCardComponent implements OnInit, OnChanges {
         return _.round(result[0][len], 3);
       });
 
+    this.vwma = await this.indicatorsService.getVwma(this.daytradeService.getSubArray(reals, 70), this.daytradeService.getSubArray(volumes, 70), 70)
+      .then((result) => {
+        const len = result[0].length - 1;
+        return _.round(result[0][len], 3);
+      });
     return this.buildOrder(quotes, timestamps, lastIndex, band, shortSma, roc, roc5);
   }
 

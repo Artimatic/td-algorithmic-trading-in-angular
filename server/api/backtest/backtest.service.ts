@@ -43,6 +43,11 @@ class BacktestService {
     return tulind.indicators.roc.indicator([real], [period]);
   }
 
+  getVwma(close, volume, period) {
+    return tulind.indicators.vwma.indicator([close, volume], [period]);
+  }
+
+
   evaluateStrategyAll(ticker, end, start) {
     console.log('Executing: ', ticker, new Date());
     startTime = moment();

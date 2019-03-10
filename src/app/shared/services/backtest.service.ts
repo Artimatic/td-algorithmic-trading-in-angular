@@ -187,4 +187,9 @@ export class BacktestService {
         return this.http.post(`${BASE_URL}api/backtest/roc`, data, {})
             .map(r => r.json());
     }
+
+    getVwma(data: any): Observable<any> {
+        return this.http.post(`${BASE_URL}api/backtest/vwma`, data, {})
+            .map(r => r.json());
+    }
 }

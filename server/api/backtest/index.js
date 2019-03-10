@@ -13,5 +13,6 @@ router.post('/infov2', handler.infoV2);
 router.post('/infov2chart', handler.infoV2Chart);
 router.post('/timeline', handler.timeline);
 router.post('/mfi', handler.mfi);
+router.post('/vwma', handler.vwma);
 
 module.exports = router;

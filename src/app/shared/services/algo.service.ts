@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import * as _ from 'lodash';
+import { IndicatorsService } from './indicators.service';
 
 @Injectable()
 export class AlgoService {
 
-  constructor() { }
+  constructor(private indicatorsService: IndicatorsService) { }
 
   isOversoldBullish(roc: any[], momentum: number, mfi: number): boolean {
     const rocLen = roc[0].length - 1;
@@ -78,5 +79,9 @@ export class AlgoService {
       }
     }
     return false;
+  }
+
+  isLowVwma(close: number[], volume: number[], period: number, lowest: number): Promise<any[]> {
+    return this.indicatorsService.getVwma(close, volume, period);
   }
 }
