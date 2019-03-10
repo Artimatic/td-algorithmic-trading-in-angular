@@ -31,6 +31,7 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
 import { Subscription } from 'rxjs/Subscription';
 import { AlgoService } from '../shared/services/algo.service';
 import { IndicatorsService } from '../shared/services/indicators.service';
+import { CartService } from '../shared/services/cart.service';
 
 @Component({
   selector: 'app-bb-card',
@@ -87,6 +88,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     private portfolioService: PortfolioService,
     private algoService: AlgoService,
     private indicatorsService: IndicatorsService,
+    public cartService: CartService,
     public dialog: MatDialog) { }
 
   ngOnInit() {
@@ -1049,5 +1051,9 @@ export class BbCardComponent implements OnInit, OnChanges {
       pref.push(OrderPref.useYahooData);
     }
     return pref;
+  }
+
+  delete() {
+    this.cartService.deleteOrder(this.order);
   }
 }

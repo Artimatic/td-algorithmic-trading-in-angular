@@ -1,4 +1,11 @@
 <mat-card>
+  <span class="delete-me">
+    <button mat-icon-button>
+        <a (click)="delete()" matTooltip="delete order">
+          <mat-icon>delete_forever</mat-icon>
+        </a>
+      </button>
+  </span>
   <div class="banner" *ngIf="error">
     <div class="banner-content">
       ERROR: {{error}}

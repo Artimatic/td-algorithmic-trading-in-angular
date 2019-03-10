@@ -1,5 +1,7 @@
 <button mat-icon-button *ngIf=!authenticated (click)="openDialog()">
-  <mat-icon>account_circle</mat-icon>
+    <a matTooltip="login">
+    <mat-icon>account_circle</mat-icon>
+  </a>
 </button>
 <div *ngIf=authenticated>
   <button mat-raised-button color="warn" (click)="logout()">LOGOUT</button>
