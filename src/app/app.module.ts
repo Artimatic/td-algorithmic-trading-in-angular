@@ -62,7 +62,7 @@ import { InstrumentPipe } from './shared/pipes/instrument.pipe';
 import { OrderDialogComponent } from './order-dialog/order-dialog.component';
 import { CartService } from './shared/services/cart.service';
 import { ExcelService } from './shared/services/excel-service.service';
-import { BollingerBandComponent } from './bollinger-band/bollinger-band.component';
+import { ShoppingListComponent } from './shopping-list/shopping-list.component';
 import { BbCardComponent } from './bb-card/bb-card.component';
 import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.component';
 import { ReportingComponent, ReportDialogComponent } from './reporting/reporting.component';
@@ -88,7 +88,7 @@ import { TerminalViewComponent } from './terminal-view/terminal-view.component';
     PortfolioViewComponent,
     InstrumentPipe,
     OrderDialogComponent,
-    BollingerBandComponent,
+    ShoppingListComponent,
     BbCardComponent,
     ConfirmDialogComponent,
     ReportingComponent,

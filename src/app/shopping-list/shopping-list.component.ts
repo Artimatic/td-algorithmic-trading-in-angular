@@ -11,11 +11,11 @@ import * as moment from 'moment';
 import * as _ from 'lodash';
 
 @Component({
-  selector: 'app-bollinger-band',
-  templateUrl: './bollinger-band.component.html',
-  styleUrls: ['./bollinger-band.component.css']
+  selector: 'app-shopping-list',
+  templateUrl: './shopping-list.component.html',
+  styleUrls: ['./shopping-list.component.css']
 })
-export class BollingerBandComponent implements OnInit {
+export class ShoppingListComponent implements OnInit {
   mu: SmartOrder;
   vti: SmartOrder;
   spxl: SmartOrder;
