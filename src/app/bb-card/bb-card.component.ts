@@ -33,6 +33,8 @@ import { AlgoService } from '../shared/services/algo.service';
 import { IndicatorsService } from '../shared/services/indicators.service';
 import { CartService } from '../shared/services/cart.service';
 import { JsonPipe } from '@angular/common';
+import { Indicators } from '../shared/models/indicators';
+import { CardOptions } from '../shared/models/card-options';
 
 @Component({
   selector: 'app-bb-card',
@@ -66,21 +68,19 @@ export class BbCardComponent implements OnInit, OnChanges {
   backtestLive: boolean;
   lastPrice: number;
   preferenceList: any[];
-  config;
-  showGraph;
+  config: CardOptions;
+  showGraph: boolean;
   tiles;
-  bbandPeriod;
+  bbandPeriod: number;
   dataInterval: string;
-  myPreferences;
+  myPreferences: OrderPref[];
   startTime;
   endTime;
   noonTime;
   backtestQuotes;
-  momentum;
-  mfi;
   stopped: boolean;
   isBacktest: boolean;
-  vwma: number;
+  indicators: Indicators;
   trailingHighPrice: number;
 
   constructor(private _formBuilder: FormBuilder,
@@ -120,6 +120,12 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.showGraph = false;
     this.bbandPeriod = 80;
     this.dataInterval = '1min';
+
+    this.indicators = {
+      mfi: null,
+      momentum: null,
+      vwma: null
+    };
 
     this.firstFormGroup = this._formBuilder.group({
       quantity: [this.order.quantity, Validators.required],
@@ -304,12 +310,13 @@ export class BbCardComponent implements OnInit, OnChanges {
 
         point.x = moment.unix(timestamps[i]).valueOf(); // the date
         point.y = closePrice; // close
-        point.description = this.vwma ? this.vwma.toFixed(2) : '';
 
         if (!this.live && i > this.bbandPeriod && !this.stopped) {
           const lastIndex = i;
           const firstIndex = i - this.bbandPeriod;
           const order = await this.runStrategy(quotes, timestamps, firstIndex, lastIndex);
+
+          point.description = this.indicators.vwma ? this.indicators.vwma.toFixed(2) : '';
 
           if (order) {
             if (order.side.toLowerCase() === 'buy') {
@@ -814,9 +821,13 @@ export class BbCardComponent implements OnInit, OnChanges {
       return null;
     }
 
+    if (this.indicators.vwma && price > this.indicators.vwma) {
+      return null;
+    }
+
     if (this.config.Mfi) {
-      if (this.algoService.isOversoldBullish(roc, this.momentum, this.mfi)) {
-        const log = `${this.order.holding.symbol} mfi oversold Event - time: ${moment.unix(signalTime).format()}, short rate of change: ${roc}, long rate of change: ${this.momentum}, mfi: ${this.mfi}`;
+      if (this.algoService.isOversoldBullish(roc, this.indicators.momentum, this.indicators.mfi)) {
+        const log = `${this.order.holding.symbol} mfi oversold Event - time: ${moment.unix(signalTime).format()}, short rate of change: ${roc}, long rate of change: ${this.indicators.momentum}, mfi: ${this.indicators.mfi}`;
 
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
         console.log(log);
@@ -824,8 +835,8 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
     }
     if (this.config.SpyMomentum) {
-      if (this.algoService.isMomentumBullish(signalPrice, high[0], this.mfi, roc, this.momentum)) {
-        const log = `${this.order.holding.symbol} bb momentum Event - time: ${moment.unix(signalTime).format()}, bband high: ${high[0]}, mfi: ${this.mfi}`;
+      if (this.algoService.isMomentumBullish(signalPrice, high[0], this.indicators.mfi, roc, this.indicators.momentum)) {
+        const log = `${this.order.holding.symbol} bb momentum Event - time: ${moment.unix(signalTime).format()}, bband high: ${high[0]}, mfi: ${this.indicators.mfi}`;
 
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
         console.log(log);
@@ -834,8 +845,8 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
 
     if (this.config.MeanReversion1) {
-      if (this.algoService.isBBandMeanReversionBullish(signalPrice, low[0], this.mfi, roc, this.momentum)) {
-        const log = `${this.order.holding.symbol} bb mean reversion Event - time: ${moment.unix(signalTime).format()}, bband low: ${low[0]}, mfi: ${this.mfi}`;
+      if (this.algoService.isBBandMeanReversionBullish(signalPrice, low[0], this.indicators.mfi, roc, this.indicators.momentum)) {
+        const log = `${this.order.holding.symbol} bb mean reversion Event - time: ${moment.unix(signalTime).format()}, bband low: ${low[0]}, mfi: ${this.indicators.mfi}`;
 
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
         console.log(log);
@@ -866,14 +877,14 @@ export class BbCardComponent implements OnInit, OnChanges {
 
     const rocLen = roc[0].length - 1;
     const roc1 = _.round(roc[0][rocLen], 3);
-    const num = this.momentum,
+    const num = this.indicators.momentum,
       den = roc1;
 
     const momentumDiff = _.round(_.divide(num, den), 3);
     const rocDiffRange = [0, 1.8];
 
     if (momentumDiff > rocDiffRange[0] || momentumDiff < rocDiffRange[1]) {
-      if (signalPrice > upper[0] && (this.mfi > 46)) {
+      if (signalPrice > upper[0] && (this.indicators.mfi > 46)) {
         const log = `BB overbought Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}, mid: ${mid[0]}, lower: ${lower[0]}`;
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
 
@@ -884,7 +895,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
 
     if (momentumDiff > rocDiffRange[0] || momentumDiff < rocDiffRange[1]) {
-      if (signalPrice < lower[0] && (this.mfi > 60)) {
+      if (signalPrice < lower[0] && (this.indicators.mfi > 60)) {
         const log = `BB momentum Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}, mid: ${mid[0]}, lower: ${lower[0]}`;
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
 
@@ -894,7 +905,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
     }
 
-    if (this.mfi > 76) {
+    if (this.indicators.mfi > 76) {
       const log = `mfi Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}`;
 
       this.reportingService.addAuditLog(this.order.holding.symbol, log);
@@ -1002,7 +1013,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     const shortSma = null;
 
     const roc = await this.indicatorsService.getROC(_.slice(reals, reals.length - 11), 10);
-    this.momentum = await this.indicatorsService.getROC(reals, 70)
+    this.indicators.momentum = await this.indicatorsService.getROC(reals, 70)
       .then((result) => {
         const rocLen = result[0].length - 1;
         const roc1 = _.round(result[0][rocLen], 3);
@@ -1011,7 +1022,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
     const roc5 = this.positionCount > 0 ? await this.indicatorsService.getROC(this.daytradeService.getSubArray(reals, 5), 5) : [];
 
-    this.mfi = await this.indicatorsService.getMFI(this.daytradeService.getSubArray(highs, 14),
+    this.indicators.mfi = await this.indicatorsService.getMFI(this.daytradeService.getSubArray(highs, 14),
       this.daytradeService.getSubArray(lows, 14),
       this.daytradeService.getSubArray(reals, 14),
       this.daytradeService.getSubArray(volumes, 14),
@@ -1021,7 +1032,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         return _.round(result[0][len], 3);
       });
 
-    this.vwma = await this.indicatorsService.getVwma(this.daytradeService.getSubArray(reals, 70), this.daytradeService.getSubArray(volumes, 70), 70)
+    this.indicators.vwma = await this.indicatorsService.getVwma(this.daytradeService.getSubArray(reals, 70), this.daytradeService.getSubArray(volumes, 70), 70)
       .then((result) => {
         const len = result[0].length - 1;
         return _.round(result[0][len], 3);
@@ -1039,7 +1050,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.reportingService.addAuditLog(this.order.holding.symbol, `${this.order.holding.symbol} - ${message}`);
   }
 
-  initPreferences() {
+  initPreferences(): OrderPref[] {
     const pref = [];
     if (this.order.useTakeProfit) {
       pref.push(OrderPref.TakeProfit);

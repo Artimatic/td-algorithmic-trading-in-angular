@@ -9,6 +9,7 @@ import * as moment from 'moment';
 import * as _ from 'lodash';
 import { IndicatorsService } from './indicators.service';
 import { CartService } from './cart.service';
+import { CardOptions } from '../models/card-options';
 
 @Injectable()
 export class DaytradeService {
@@ -55,8 +56,8 @@ export class DaytradeService {
     return period;
   }
 
-  parsePreferences(preferences) {
-    const config = {
+  parsePreferences(preferences): CardOptions {
+    const config: CardOptions = {
       TakeProfit: false,
       StopLoss: false,
       MeanReversion1: false,
