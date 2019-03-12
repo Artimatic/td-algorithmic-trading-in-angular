@@ -32,7 +32,6 @@ import { Subscription } from 'rxjs/Subscription';
 import { AlgoService } from '../shared/services/algo.service';
 import { IndicatorsService } from '../shared/services/indicators.service';
 import { CartService } from '../shared/services/cart.service';
-import { JsonPipe } from '@angular/common';
 import { Indicators } from '../shared/models/indicators';
 import { CardOptions } from '../shared/models/card-options';
 
