@@ -4,8 +4,7 @@
   "license": "MIT",
   "scripts": {
     "ng": "ng",
-    "start": "npm run build && nodemon dist/app.js --exec babel-node",
-    "start-server": "npm run build-ts && nodemon dist/app.js --exec babel-node",
+    "start": "npm run build && npm run serve",
     "build": "ng build --aot && npm run build-ts && npm run tslint",
     "serve": "node --max-old-space-size=8192 dist/app.js",
     "test": "ng test",
