@@ -41,7 +41,7 @@ export class ShoppingListComponent implements OnInit {
     public snackBar: MatSnackBar) { }
 
   ngOnInit() {
-    this.interval = 80808;
+    this.interval = 61800;
     this.startTime = moment('10:10am', 'h:mma');
     this.endTime = moment('3:55pm', 'h:mma');
 
