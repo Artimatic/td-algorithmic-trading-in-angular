@@ -704,6 +704,11 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
 
     if (this.firstFormGroup.value.orderType.toLowerCase() === 'buy') {
+      if (this.buyCount >= this.firstFormGroup.value.quantity) {
+        this.stop();
+        return null;
+      }
+
       const orderQuantity = this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
         this.firstFormGroup.value.orderSize,
         this.buyCount,
@@ -725,6 +730,11 @@ export class BbCardComponent implements OnInit, OnChanges {
 
       return this.sendBuy(buyOrder);
     } else if (this.firstFormGroup.value.orderType.toLowerCase() === 'sell') {
+      if (this.sellCount >= this.firstFormGroup.value.quantity) {
+        this.stop();
+        return null;
+      }
+
       const orderQuantity = this.daytradeService.getOrderQuantity(this.firstFormGroup.value.quantity,
         this.firstFormGroup.value.orderSize,
         this.sellCount);
@@ -928,7 +938,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     const score = this.scoringService.getScore(this.order.holding.symbol);
     if (score && score.total > 3) {
       const scorePct = _.round(_.divide(score.wins, score.total), 2);
-      if (scorePct < 0.25) {
+      if (scorePct < 0.33) {
         if (!this.isBacktest) {
           this.stop();
         }
