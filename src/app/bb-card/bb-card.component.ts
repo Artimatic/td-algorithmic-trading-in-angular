@@ -274,6 +274,9 @@ export class BbCardComponent implements OnInit, OnChanges {
             } else {
               return this.daytradeService.getIntradayYahoo(this.order.holding.symbol);
             }
+          })
+          .catch(() => {
+            return this.daytradeService.getIntradayYahoo(this.order.holding.symbol);
           });
 
     } else if (this.backtestQuotes.length) {
