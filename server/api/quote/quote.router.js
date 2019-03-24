@@ -11,8 +11,8 @@ exports.currentQuote = function (req, res, next) {
   QuoteController.getCurrentQuote(req, res);
 };
 
-exports.price = function (req, res, next) {
-  QuoteController.getPrice(req, res);
+exports.IEXIntraday = function (req, res, next) {
+  QuoteController.getIEXIntraday(req, res);
 };
 
 exports.rawQuote = function (req, res, next) {

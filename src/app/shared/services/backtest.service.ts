@@ -98,8 +98,8 @@ export class BacktestService {
             .map(r => r.json());
     }
 
-    getLastPriceIEX(data: any): Observable<any> {
-        return this.http.post(`${BASE_URL}api/quote/price`, data, {})
+    getIEXIntraday(data: any): Observable<any> {
+        return this.http.post(`${BASE_URL}api/quote/iex`, data, {})
             .map(r => r.json());
     }
 

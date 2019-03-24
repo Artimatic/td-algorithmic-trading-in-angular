@@ -126,7 +126,7 @@ class QuoteService {
     return RequestPromise(options);
   }
 
-  getPrice(symbol) {
+  getIEXIntradayPrices(symbol) {
     return IEX.getQuote(symbol);
   }
 

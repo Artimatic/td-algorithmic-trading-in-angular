@@ -252,7 +252,10 @@ export class ShoppingListComponent implements OnInit {
     });
   }
 
-  purgeCart() {
+  stopAndDeleteOrders() {
+    this.stop();
+    this.sub.unsubscribe();
+    this.sub = undefined;
     this.cartService.deleteCart();
   }
 

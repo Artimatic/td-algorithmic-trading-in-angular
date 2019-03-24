@@ -76,7 +76,7 @@ export class BbCardComponent implements OnInit, OnChanges {
   startTime;
   endTime;
   noonTime;
-  backtestQuotes;
+  backtestQuotes: JSON[];
   stopped: boolean;
   isBacktest: boolean;
   indicators: Indicators;
@@ -115,7 +115,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     });
     this.startTime = moment('10:10am', 'h:mma');
     this.noonTime = moment('1:10pm', 'h:mma');
-    this.endTime = moment('3:20pm', 'h:mma');
+    this.endTime = moment('3:30pm', 'h:mma');
     this.showGraph = false;
     this.bbandPeriod = 80;
     this.dataInterval = '1min';
@@ -369,20 +369,9 @@ export class BbCardComponent implements OnInit, OnChanges {
       this.volumeChart = this.initVolumeChart(volume);
     }
 
-    // TODO: Use moment timezones
-    // if (moment().isAfter(this.endTime)) {
-    //   this.reportingService.addAuditLog(this.order.holding.symbol, `Final Orders ${this.order.holding.name}`);
-
-    //   _.forEach(this.tiles, (tile) => {
-    //     _.forEach(tile.orders, (order) => {
-    //       const orderStr = JSON.stringify(order);
-    //       console.log(`Order: ${orderStr}`);
-    //       // this.reportingService.addAuditLog(`Order: ${orderStr}`);
-    //     });
-    //   });
-
-    //   this.stop();
-    // }
+    if (moment().utcOffset('-0500').isAfter(this.endTime.utcOffset('-0500'))) {
+      this.stop();
+    }
   }
 
   initVolumeChart(data): Chart {
@@ -722,10 +711,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         quotes.close[idx],
         timestamps[idx],
         quotes.low[idx] || quotes.close[idx],
-        quotes,
-        idx,
         band,
-        shortSma,
         roc);
 
       return this.sendBuy(buyOrder);
@@ -790,7 +776,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
         const buy: SmartOrder = buyQuantity <= 0 ? null :
           await this.buildBuyOrder(buyQuantity, quotes.close[idx], timestamps[idx],
-            quotes.low[idx] || quotes.close[idx], quotes, idx, band, shortSma, roc);
+            quotes.low[idx] || quotes.close[idx], band, roc);
 
         if (buy) {
           return this.sendBuy(buy);
@@ -804,10 +790,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     price,
     signalTime,
     signalPrice,
-    quotes,
-    idx: number,
     band: any[],
-    shortSma: any[],
     roc: any[]) {
 
     const high = band[2],
@@ -1095,6 +1078,7 @@ export class BbCardComponent implements OnInit, OnChanges {
   }
 
   delete() {
+    this.alive = false;
     this.cartService.deleteOrder(this.order);
   }
 }
