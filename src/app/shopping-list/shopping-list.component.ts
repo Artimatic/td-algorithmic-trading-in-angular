@@ -74,6 +74,7 @@ export class ShoppingListComponent implements OnInit {
       side: 'DayTrade',
       useTakeProfit: true,
       useStopLoss: true,
+      stopped: false,
       lossThreshold: -0.005,
       profitTarget: 0.004,
       spyMomentum: true,
@@ -128,6 +129,7 @@ export class ShoppingListComponent implements OnInit {
       side: 'Buy',
       useTakeProfit: true,
       useStopLoss: true,
+      stopped: false,
       lossThreshold: -0.005,
       profitTarget: 0.004,
       spyMomentum: true,
@@ -178,21 +180,6 @@ export class ShoppingListComponent implements OnInit {
     });
   }
 
-  triggerOrder(orders: SmartOrder[]) {
-    _.forEach(orders, (order: SmartOrder) => {
-      const startDelay = 60000 * _.round(this.ordersStarted / 5, 0);
-
-      console.log(`trigger start: ${order.holding.symbol} ${new Date()} ${startDelay}`);
-
-      setTimeout(() => {
-        console.log(`triggered: ${order.holding.symbol} ${new Date()} `);
-        order.triggered = true;
-      }, startDelay);
-
-      this.ordersStarted++;
-    });
-  }
-
   queueAlgos(orders: SmartOrder[]) {
     this.alive = true;
     let counter = 1;
@@ -201,6 +188,7 @@ export class ShoppingListComponent implements OnInit {
 
     _.forEach(orders, (order: SmartOrder) => {
       order.init = true;
+      order.stopped = false;
     });
 
     this.sub = TimerObservable.create(0, this.interval)
@@ -254,8 +242,16 @@ export class ShoppingListComponent implements OnInit {
 
   stopAndDeleteOrders() {
     this.stop();
-    this.sub.unsubscribe();
-    this.sub = undefined;
+    if (this.sub) {
+      this.sub.unsubscribe();
+      this.sub = undefined;
+    }
+    const buySells = this.cartService.sellOrders.concat(this.cartService.buyOrders);
+
+    _.forEach(buySells.concat(this.cartService.otherOrders), (order: SmartOrder) => {
+      order.stopped = true;
+    });
+
     this.cartService.deleteCart();
   }
 

@@ -1,13 +1,6 @@
 import { Component, OnChanges, Input, OnInit, ViewChild, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material';
-import 'rxjs/add/observable/concat';
-import 'rxjs/add/observable/defer';
-import 'rxjs/add/observable/merge';
-import 'rxjs/add/observable/of';
-import 'rxjs/add/operator/concatMap';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/operator/takeWhile';
 
 import { Chart } from 'angular-highcharts';
@@ -43,9 +36,9 @@ import { CardOptions } from '../shared/models/card-options';
 export class BbCardComponent implements OnInit, OnChanges {
   @ViewChild('stepper') stepper;
   @Input() order: SmartOrder;
-  @Input() triggered: boolean;
   @Input() triggeredBacktest: boolean;
   @Input() init: boolean;
+  @Input() tearDown: boolean;
   @Input() stepForward: number;
   @Input() backtestData: number;
   chart: Chart;
@@ -145,9 +138,10 @@ export class BbCardComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (_.get(changes, 'triggered.currentValue')) {
-      this.goLive();
-    } else if (_.get(changes, 'backtestData.currentValue')) {
+    if (_.get(changes, 'tearDown.currentValue')) {
+      this.stop();
+    }
+    else if (_.get(changes, 'backtestData.currentValue')) {
       this.backtest(this.backtestData);
     } else if (_.get(changes, 'triggeredBacktest.currentValue')) {
       this.backtest(this.backtestData);
@@ -1078,6 +1072,7 @@ export class BbCardComponent implements OnInit, OnChanges {
   }
 
   delete() {
+    this.order.stopped = true;
     this.alive = false;
     this.cartService.deleteOrder(this.order);
   }
