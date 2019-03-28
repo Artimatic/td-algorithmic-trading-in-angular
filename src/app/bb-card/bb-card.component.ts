@@ -958,7 +958,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
       if (this.trailingHighPrice && closePrice > estimatedPrice && closePrice > this.trailingHighPrice) {
         this.trailingHighPrice = closePrice;
-      } else {
+      } else if (!this.trailingHighPrice) {
         this.trailingHighPrice = estimatedPrice;
       }
 
@@ -966,10 +966,10 @@ export class BbCardComponent implements OnInit, OnChanges {
       const trailingChange = this.daytradeService.getPercentChange(closePrice, this.trailingHighPrice);
 
       if (this.config.StopLoss) {
-        if (trailingChange < this.firstFormGroup.value.lossThreshold) {
+        if (this.firstFormGroup.value.lossThreshold > trailingChange) {
           this.setWarning('Loss threshold met. Sending stop loss order. Estimated loss: ' +
             `${this.daytradeService.convertToFixedNumber(gains, 4) * 100}%`);
-          const log = `${this.order.holding.symbol} Stop Loss triggered: ${closePrice}/${estimatedPrice}`;
+          const log = `${this.order.holding.symbol} Trailing Stop Loss triggered: ${closePrice}/${estimatedPrice}`;
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
           console.log(log);
           const stopLossOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
