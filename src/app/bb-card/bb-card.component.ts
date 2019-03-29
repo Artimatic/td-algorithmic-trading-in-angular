@@ -102,12 +102,12 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.backtestLive = false;
     this.preferenceList = [OrderPref.TakeProfit,
     OrderPref.StopLoss,
+    OrderPref.TrailingStopLoss,
     OrderPref.MeanReversion1,
     OrderPref.Mfi,
     OrderPref.SpyMomentum,
     OrderPref.SellAtClose,
-    OrderPref.useYahooData
-    ];
+    OrderPref.useYahooData];
     Highcharts.setOptions({
       global: {
         useUTC: false
@@ -128,7 +128,8 @@ export class BbCardComponent implements OnInit, OnChanges {
 
     this.firstFormGroup = this._formBuilder.group({
       quantity: [this.order.quantity, Validators.required],
-      lossThreshold: [this.order.lossThreshold || -0.01, Validators.required],
+      lossThreshold: [this.order.lossThreshold || -0.005, Validators.required],
+      trailingStop: [this.order.trailingStop || -0.002, Validators.required],
       profitTarget: [{ value: this.order.profitTarget || 0.01, disabled: false }, Validators.required],
       orderSize: [this.order.orderSize || this.daytradeService.getDefaultOrderSize(this.order.quantity), Validators.required],
       orderType: [this.order.side, Validators.required],
@@ -939,41 +940,52 @@ export class BbCardComponent implements OnInit, OnChanges {
     if (score && score.total > 3) {
       const scorePct = _.round(_.divide(score.wins, score.total), 2);
       if (scorePct < 0.33) {
-        if (!this.isBacktest) {
-          this.stop();
-        }
-        const msg = 'Too many losses. Halting trading in Wins:' +
-          `${this.order.holding.symbol} ${score.wins} Loss: ${score.losses}`;
-
-        this.reportingService.addAuditLog(this.order.holding.symbol, msg);
-        console.log(msg);
         if (this.isBacktest) {
           console.log('Trading not halted in backtest mode.');
+        } else {
+          this.stop();
+          const msg = 'Too many losses. Halting trading in Wins:' +
+            `${this.order.holding.symbol} ${score.wins} Loss: ${score.losses}`;
+
+          this.reportingService.addAuditLog(this.order.holding.symbol, msg);
+          console.log(msg);
+
+          return this.closeAllPositions(closePrice, signalTime);
         }
-        return this.closeAllPositions(closePrice, signalTime);
       }
     }
     if (this.positionCount > 0 && closePrice) {
       const estimatedPrice = this.daytradeService.estimateAverageBuyOrderPrice(this.orders);
 
-      if (this.trailingHighPrice && closePrice > estimatedPrice && closePrice > this.trailingHighPrice) {
-        this.trailingHighPrice = closePrice;
-      } else if (!this.trailingHighPrice) {
-        this.trailingHighPrice = estimatedPrice;
-      }
-
       const gains = this.daytradeService.getPercentChange(closePrice, estimatedPrice);
-      const trailingChange = this.daytradeService.getPercentChange(closePrice, this.trailingHighPrice);
 
       if (this.config.StopLoss) {
-        if (this.firstFormGroup.value.lossThreshold > trailingChange) {
+        if (this.firstFormGroup.value.lossThreshold > gains) {
           this.setWarning('Loss threshold met. Sending stop loss order. Estimated loss: ' +
             `${this.daytradeService.convertToFixedNumber(gains, 4) * 100}%`);
-          const log = `${this.order.holding.symbol} Trailing Stop Loss triggered: ${closePrice}/${estimatedPrice}`;
+          const log = `${this.order.holding.symbol} Stop Loss triggered: ${closePrice}/${estimatedPrice}`;
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
           console.log(log);
           const stopLossOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
           return this.sendStopLoss(stopLossOrder);
+        }
+      }
+
+      if (this.config.TrailingStopLoss) {
+        if (closePrice > this.trailingHighPrice || closePrice > estimatedPrice) {
+          this.trailingHighPrice = closePrice;
+        }
+
+        const trailingChange = this.daytradeService.getPercentChange(closePrice, this.trailingHighPrice);
+
+        if (trailingChange && -0.002 > trailingChange) {
+          this.setWarning('Trailing Stop Loss triggered. Sending sell order. Estimated gain: ' +
+            `${this.daytradeService.convertToFixedNumber(trailingChange, 4) * 100}`);
+          const log = `${this.order.holding.symbol} Trailing Stop Loss triggered: ${closePrice}/${estimatedPrice}`;
+          this.reportingService.addAuditLog(this.order.holding.symbol, log);
+          console.log(log);
+          const sellOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
+          return this.sendSell(sellOrder);
         }
       }
 
@@ -1070,6 +1082,10 @@ export class BbCardComponent implements OnInit, OnChanges {
 
     if (this.order.useStopLoss) {
       pref.push(OrderPref.StopLoss);
+    }
+
+    if (this.order.useTrailingStopLoss) {
+      pref.push(OrderPref.TrailingStopLoss);
     }
 
     if (this.order.meanReversion1) {

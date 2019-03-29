@@ -32,8 +32,11 @@
         <mat-form-field hintLabel="Quantity">
           <input matInput type="number" placeholder="Quantity" formControlName="quantity" required>
         </mat-form-field>
-        <mat-form-field hintLabel="Loss circuit breaker">
-          <input matInput type="number" placeholder="Loss Threshold" formControlName="lossThreshold" required>
+        <mat-form-field hintLabel="Stop Loss">
+          <input matInput type="number" placeholder="Stop Loss" formControlName="lossThreshold" required>
+        </mat-form-field>
+        <mat-form-field hintLabel="Trailing stop loss">
+          <input matInput type="number" placeholder="Trailing Stop Loss" formControlName="trailingStop" required>
         </mat-form-field>
         <mat-form-field hintLabel="Profit exit">
           <input matInput type="number" placeholder="Profit Target" formControlName="profitTarget">

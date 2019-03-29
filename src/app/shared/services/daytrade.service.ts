@@ -27,12 +27,12 @@ export class DaytradeService {
   closeTrades(resolve: Function, reject: Function, handleNotFound: Function): void {
     _.forEach(this.cartService.otherOrders, (order: SmartOrder) => {
       this.portfolioService.getQuote(order.holding.symbol)
-      .toPromise()
-      .then((quote) => {
-        const sellOrder = this.createOrder(order.holding, 'Sell', order.positionCount,  1 * quote.last_trade_price, moment().unix());
+        .toPromise()
+        .then((quote) => {
+          const sellOrder = this.createOrder(order.holding, 'Sell', order.positionCount, 1 * quote.last_trade_price, moment().unix());
 
-        this.sendSell(sellOrder, 'market', resolve, reject, handleNotFound);
-      });
+          this.sendSell(sellOrder, 'market', resolve, reject, handleNotFound);
+        });
     });
   }
 
@@ -59,6 +59,7 @@ export class DaytradeService {
   parsePreferences(preferences): CardOptions {
     const config: CardOptions = {
       TakeProfit: false,
+      TrailingStopLoss: false,
       StopLoss: false,
       MeanReversion1: false,
       Mfi: false,
@@ -90,6 +91,9 @@ export class DaytradeService {
             break;
           case OrderPref.useYahooData:
             config.useYahooData = true;
+            break;
+          case OrderPref.TrailingStopLoss:
+            config.TrailingStopLoss = true;
             break;
         }
       });
@@ -462,7 +466,7 @@ export class DaytradeService {
       .toPromise()
       .then((quotes) => {
         quotes.chart.result[0].indicators.quote[0].close =
-        this.indicatorsService.fillInMissingReals(_.get(quotes, 'chart.result[0].indicators.quote[0].close'));
+          this.indicatorsService.fillInMissingReals(_.get(quotes, 'chart.result[0].indicators.quote[0].close'));
         return this.portfolioService.getQuote(symbol)
           .toPromise()
           .then((quote) => {
