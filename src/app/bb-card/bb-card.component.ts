@@ -849,7 +849,9 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
     if (this.config.SpyMomentum) {
       if (this.algoService.isMomentumBullish(signalPrice, high[0], this.indicators.mfi, roc, this.indicators.momentum)) {
-        const log = `${this.order.holding.symbol} bb momentum Event - time: ${moment.unix(signalTime).format()}, bband high: ${high[0]}, mfi: ${this.indicators.mfi}`;
+        const log = `${this.order.holding.symbol} bb momentum Event -` +
+          `time: ${moment.unix(signalTime).format()}, bband high: ${high[0]}, mfi: ${this.indicators.mfi}` +
+          `roc: ${roc}, long roc: ${this.indicators.momentum}`;
 
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
         console.log(log);
@@ -859,7 +861,9 @@ export class BbCardComponent implements OnInit, OnChanges {
 
     if (this.config.MeanReversion1) {
       if (this.algoService.isBBandMeanReversionBullish(signalPrice, low[0], this.indicators.mfi, roc, this.indicators.momentum)) {
-        const log = `${this.order.holding.symbol} bb mean reversion Event - time: ${moment.unix(signalTime).format()}, bband low: ${low[0]}, mfi: ${this.indicators.mfi}`;
+        const log = `${this.order.holding.symbol} bb mean reversion Event -` +
+          `time: ${moment.unix(signalTime).format()}, bband low: ${low[0]}, mfi: ${this.indicators.mfi},` +
+          `roc: ${roc}, long roc: ${this.indicators.momentum}`;
 
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
         console.log(log);
@@ -918,7 +922,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
     }
 
-    if (this.indicators.mfi > 76) {
+    if (this.indicators.mfi > 73) {
       const log = `mfi Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}`;
 
       this.reportingService.addAuditLog(this.order.holding.symbol, log);
@@ -939,7 +943,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     const score = this.scoringService.getScore(this.order.holding.symbol);
     if (score && score.total > 3) {
       const scorePct = _.round(_.divide(score.wins, score.total), 2);
-      if (scorePct < 0.33) {
+      if (scorePct < 0.39) {
         if (this.isBacktest) {
           console.log('Trading not halted in backtest mode.');
         } else {
@@ -1037,11 +1041,12 @@ export class BbCardComponent implements OnInit, OnChanges {
     const shortSma = null;
 
     const roc = await this.indicatorsService.getROC(_.slice(reals, reals.length - 11), 10);
+
     this.indicators.momentum = await this.indicatorsService.getROC(reals, 70)
       .then((result) => {
         const rocLen = result[0].length - 1;
         const roc1 = _.round(result[0][rocLen], 3);
-        return _.round(roc1, 3);
+        return _.round(roc1, 4);
       });
 
     const roc5 = this.positionCount > 0 ? await this.indicatorsService.getROC(this.daytradeService.getSubArray(reals, 5), 5) : [];
