@@ -17,6 +17,16 @@
         </tr>
       </thead>
       <tbody class="scrollContent">
+      <tr *ngFor="let buys of cartService.buyOrders">
+          <ng-container *ngIf="other.positionCount">
+            <td>
+              {{buys.holding.symbol}}
+            </td>
+            <td>
+              {{buys.positionCount}}
+            </td>
+          </ng-container>
+        </tr>
         <tr *ngFor="let other of cartService.otherOrders">
           <ng-container *ngIf="other.positionCount">
             <td>
@@ -32,7 +42,7 @@
   </div>
   <ul class="shell-body">
     <li *ngFor="let log of reportingService.logs; let i=index">
-      <div *ngIf="i>(reportingService.logs.length - 5)">
+      <div *ngIf="i>(reportingService.logs.length - 10)">
         {{log.time}} {{log.symbol}} {{log.message}}
     </div>
     </li>

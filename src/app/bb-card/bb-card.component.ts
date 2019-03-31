@@ -95,12 +95,12 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.backtestLive = false;
     this.preferenceList = [OrderPref.TakeProfit,
     OrderPref.StopLoss,
+    OrderPref.TrailingStopLoss,
     OrderPref.MeanReversion1,
     OrderPref.Mfi,
     OrderPref.SpyMomentum,
     OrderPref.SellAtClose,
-    OrderPref.useYahooData
-    ];
+    OrderPref.useYahooData];
     Highcharts.setOptions({
       global: {
         useUTC: false
@@ -121,7 +121,8 @@ export class BbCardComponent implements OnInit, OnChanges {
 
     this.firstFormGroup = this._formBuilder.group({
       quantity: [this.order.quantity, Validators.required],
-      lossThreshold: [this.order.lossThreshold || -0.01, Validators.required],
+      lossThreshold: [this.order.lossThreshold || -0.005, Validators.required],
+      trailingStop: [this.order.trailingStop || -0.002, Validators.required],
       profitTarget: [{ value: this.order.profitTarget || 0.01, disabled: false }, Validators.required],
       orderSize: [this.order.orderSize || this.daytradeService.getDefaultOrderSize(this.order.quantity), Validators.required],
       orderType: [this.order.side, Validators.required],
@@ -140,8 +141,7 @@ export class BbCardComponent implements OnInit, OnChanges {
   ngOnChanges(changes: SimpleChanges) {
     if (_.get(changes, 'tearDown.currentValue')) {
       this.stop();
-    }
-    else if (_.get(changes, 'backtestData.currentValue')) {
+    } else if (_.get(changes, 'backtestData.currentValue')) {
       this.backtest(this.backtestData);
     } else if (_.get(changes, 'triggeredBacktest.currentValue')) {
       this.backtest(this.backtestData);
@@ -825,7 +825,9 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
     if (this.config.SpyMomentum) {
       if (this.algoService.isMomentumBullish(signalPrice, high[0], this.indicators.mfi, roc, this.indicators.momentum)) {
-        const log = `${this.order.holding.symbol} bb momentum Event - time: ${moment.unix(signalTime).format()}, bband high: ${high[0]}, mfi: ${this.indicators.mfi}`;
+        const log = `${this.order.holding.symbol} bb momentum Event -` +
+          `time: ${moment.unix(signalTime).format()}, bband high: ${high[0]}, mfi: ${this.indicators.mfi}` +
+          `roc: ${roc}, long roc: ${this.indicators.momentum}`;
 
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
         console.log(log);
@@ -835,7 +837,9 @@ export class BbCardComponent implements OnInit, OnChanges {
 
     if (this.config.MeanReversion1) {
       if (this.algoService.isBBandMeanReversionBullish(signalPrice, low[0], this.indicators.mfi, roc, this.indicators.momentum)) {
-        const log = `${this.order.holding.symbol} bb mean reversion Event - time: ${moment.unix(signalTime).format()}, bband low: ${low[0]}, mfi: ${this.indicators.mfi}`;
+        const log = `${this.order.holding.symbol} bb mean reversion Event -` +
+          `time: ${moment.unix(signalTime).format()}, bband low: ${low[0]}, mfi: ${this.indicators.mfi},` +
+          `roc: ${roc}, long roc: ${this.indicators.momentum}`;
 
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
         console.log(log);
@@ -894,7 +898,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
     }
 
-    if (this.indicators.mfi > 76) {
+    if (this.indicators.mfi > 73) {
       const log = `mfi Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}`;
 
       this.reportingService.addAuditLog(this.order.holding.symbol, log);
@@ -915,35 +919,28 @@ export class BbCardComponent implements OnInit, OnChanges {
     const score = this.scoringService.getScore(this.order.holding.symbol);
     if (score && score.total > 3) {
       const scorePct = _.round(_.divide(score.wins, score.total), 2);
-      if (scorePct < 0.33) {
-        if (!this.isBacktest) {
-          this.stop();
-        }
-        const msg = 'Too many losses. Halting trading in Wins:' +
-          `${this.order.holding.symbol} ${score.wins} Loss: ${score.losses}`;
-
-        this.reportingService.addAuditLog(this.order.holding.symbol, msg);
-        console.log(msg);
+      if (scorePct < 0.39) {
         if (this.isBacktest) {
           console.log('Trading not halted in backtest mode.');
+        } else {
+          this.stop();
+          const msg = 'Too many losses. Halting trading in Wins:' +
+            `${this.order.holding.symbol} ${score.wins} Loss: ${score.losses}`;
+
+          this.reportingService.addAuditLog(this.order.holding.symbol, msg);
+          console.log(msg);
+
+          return this.closeAllPositions(closePrice, signalTime);
         }
-        return this.closeAllPositions(closePrice, signalTime);
       }
     }
     if (this.positionCount > 0 && closePrice) {
       const estimatedPrice = this.daytradeService.estimateAverageBuyOrderPrice(this.orders);
 
-      if (this.trailingHighPrice && closePrice > estimatedPrice && closePrice > this.trailingHighPrice) {
-        this.trailingHighPrice = closePrice;
-      } else {
-        this.trailingHighPrice = estimatedPrice;
-      }
-
       const gains = this.daytradeService.getPercentChange(closePrice, estimatedPrice);
-      const trailingChange = this.daytradeService.getPercentChange(closePrice, this.trailingHighPrice);
 
       if (this.config.StopLoss) {
-        if (trailingChange < this.firstFormGroup.value.lossThreshold) {
+        if (this.firstFormGroup.value.lossThreshold > gains) {
           this.setWarning('Loss threshold met. Sending stop loss order. Estimated loss: ' +
             `${this.daytradeService.convertToFixedNumber(gains, 4) * 100}%`);
           const log = `${this.order.holding.symbol} Stop Loss triggered: ${closePrice}/${estimatedPrice}`;
@@ -951,6 +948,24 @@ export class BbCardComponent implements OnInit, OnChanges {
           console.log(log);
           const stopLossOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
           return this.sendStopLoss(stopLossOrder);
+        }
+      }
+
+      if (this.config.TrailingStopLoss) {
+        if (closePrice > this.trailingHighPrice || closePrice > estimatedPrice) {
+          this.trailingHighPrice = closePrice;
+        }
+
+        const trailingChange = this.daytradeService.getPercentChange(closePrice, this.trailingHighPrice);
+
+        if (trailingChange && -0.002 > trailingChange) {
+          this.setWarning('Trailing Stop Loss triggered. Sending sell order. Estimated gain: ' +
+            `${this.daytradeService.convertToFixedNumber(trailingChange, 4) * 100}`);
+          const log = `${this.order.holding.symbol} Trailing Stop Loss triggered: ${closePrice}/${estimatedPrice}`;
+          this.reportingService.addAuditLog(this.order.holding.symbol, log);
+          console.log(log);
+          const sellOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
+          return this.sendSell(sellOrder);
         }
       }
 
@@ -1002,11 +1017,12 @@ export class BbCardComponent implements OnInit, OnChanges {
     const shortSma = null;
 
     const roc = await this.indicatorsService.getROC(_.slice(reals, reals.length - 11), 10);
+
     this.indicators.momentum = await this.indicatorsService.getROC(reals, 70)
       .then((result) => {
         const rocLen = result[0].length - 1;
         const roc1 = _.round(result[0][rocLen], 3);
-        return _.round(roc1, 3);
+        return _.round(roc1, 4);
       });
 
     const roc5 = this.positionCount > 0 ? await this.indicatorsService.getROC(this.daytradeService.getSubArray(reals, 5), 5) : [];
@@ -1047,6 +1063,10 @@ export class BbCardComponent implements OnInit, OnChanges {
 
     if (this.order.useStopLoss) {
       pref.push(OrderPref.StopLoss);
+    }
+
+    if (this.order.useTrailingStopLoss) {
+      pref.push(OrderPref.TrailingStopLoss);
     }
 
     if (this.order.meanReversion1) {

@@ -6,4 +6,5 @@ export interface CardOptions {
     SpyMomentum: boolean;
     SellAtClose: boolean;
     useYahooData: boolean;
+    TrailingStopLoss: boolean;
 }

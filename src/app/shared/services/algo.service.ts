@@ -58,7 +58,7 @@ export class AlgoService {
 
   isBBandMeanReversionBullish(price: number, low: number, mfi: number, roc: any[], momentum: number): boolean {
     const rocLen = roc[0].length - 1;
-    const roc1 = _.round(roc[0][rocLen], 3);
+    const roc1 = _.round(roc[0][rocLen], 4);
     let num, den;
     if (momentum > roc1) {
       num = momentum;
@@ -68,8 +68,8 @@ export class AlgoService {
       num = roc1;
     }
 
-    const momentumDiff = _.round(_.divide(num, den), 3);
-    const rocDiffRange = [-0.4, 0.3];
+    const momentumDiff = _.round(_.divide(num, den), 4);
+    const rocDiffRange = [-0.4, 1.8];
 
     if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
       if (price < low) {
