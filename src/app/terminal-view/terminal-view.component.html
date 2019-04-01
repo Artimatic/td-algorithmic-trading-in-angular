@@ -18,7 +18,7 @@
       </thead>
       <tbody class="scrollContent">
       <tr *ngFor="let buys of cartService.buyOrders">
-          <ng-container *ngIf="other.positionCount">
+          <ng-container *ngIf="buys.positionCount">
             <td>
               {{buys.holding.symbol}}
             </td>

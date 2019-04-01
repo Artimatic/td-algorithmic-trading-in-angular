@@ -7,7 +7,7 @@
     <button mat-raised-button color="primary" (click)="confirmStart()">Start</button>
   </div>
   <div *ngFor="let buys of cartService.buyOrders">
-    <app-score-board [title]="buys.holding.symbol" [score]="scoreKeeperService.profitLossHash[other.holding.symbol]"></app-score-board>
+    <app-score-board [title]="buys.holding.symbol" [score]="scoreKeeperService.profitLossHash[buys.holding.symbol]"></app-score-board>
   </div>
   <div *ngFor="let other of cartService.otherOrders">
     <app-score-board [title]="other.holding.symbol" [score]="scoreKeeperService.profitLossHash[other.holding.symbol]"></app-score-board>
