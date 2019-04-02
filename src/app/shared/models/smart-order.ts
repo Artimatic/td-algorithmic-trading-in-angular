@@ -14,6 +14,7 @@ export interface SmartOrder extends Order {
     meanReversion1?: boolean;
     useMfi?: boolean;
     spyMomentum?: boolean;
+    buyCloseSellOpen?: boolean;
     sellAtClose?: boolean;
     yahooData?: boolean;
     orderSize?: number;

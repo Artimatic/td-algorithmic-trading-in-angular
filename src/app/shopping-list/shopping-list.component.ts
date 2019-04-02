@@ -30,8 +30,8 @@ export class ShoppingListComponent implements OnInit {
 
   sub: Subscription;
 
-  startTime: moment.Moment;
-  endTime: moment.Moment;
+  marketOpenTime: moment.Moment;
+  marketCloseTime: moment.Moment;
 
   constructor(public cartService: CartService,
     public scoreKeeperService: ScoreKeeperService,
@@ -42,8 +42,8 @@ export class ShoppingListComponent implements OnInit {
 
   ngOnInit() {
     this.interval = 70800;
-    this.startTime = moment('10:10am', 'h:mma');
-    this.endTime = moment('3:55pm', 'h:mma');
+    this.marketOpenTime = moment('9:30am', 'h:mma');
+    this.marketCloseTime = moment('4:00pm', 'h:mma');
 
     this.ordersStarted = 0;
     this.spxl = {
@@ -54,7 +54,7 @@ export class ShoppingListComponent implements OnInit {
         name: 'Direxion Daily S&P 500  Bull 3x Shares',
         realtime_price: 49.52
       },
-      quantity: 60, price: 49.52,
+      quantity: 1, price: 49.52,
       submitted: false, pending: false,
       side: 'DayTrade',
       useTakeProfit: true,
@@ -194,8 +194,7 @@ export class ShoppingListComponent implements OnInit {
     this.sub = TimerObservable.create(0, this.interval)
       .takeWhile(() => this.alive)
       .subscribe(() => {
-        // TODO: Use moment timezones
-        if (moment().utcOffset('-0500').isAfter(this.startTime.utcOffset('-0500'))) {
+        if (moment().utcOffset('-0400').isAfter(this.marketOpenTime.utcOffset('-0400'))) {
           let executed = 0;
           while (executed < limit && lastIndex < orders.length) {
             orders[lastIndex].stepForward = counter;
@@ -206,7 +205,7 @@ export class ShoppingListComponent implements OnInit {
           if (lastIndex >= orders.length) {
             lastIndex = 0;
           }
-          if (moment().utcOffset('-0500').isAfter(this.endTime.utcOffset('-0500'))) {
+          if (moment().utcOffset('-0400').isAfter(this.marketCloseTime.utcOffset('-0400').subtract({minutes: 5}))) {
             this.reportingService.exportAuditHistory();
             this.stop();
           }

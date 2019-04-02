@@ -40,6 +40,12 @@ export class DaytradeService {
     return minutes.minutes() + minutes.hours() * 60;
   }
 
+  /*
+  * const timePeriod = this.daytradeService.tradePeriod(moment.unix(lastTimestamp), this.startTime, this.noonTime, this.endTime);
+  * if (timePeriod === 'pre' || timePeriod === 'after') {
+  *  return null;
+  * }
+  */
   tradePeriod(time: moment.Moment, start: moment.Moment, noon: moment.Moment, end: moment.Moment) {
     let period: String = 'pre';
     const minutes = this.minutesOfDay(time);
@@ -64,6 +70,7 @@ export class DaytradeService {
       MeanReversion1: false,
       Mfi: false,
       SpyMomentum: false,
+      BuyCloseSellOpen: false,
       SellAtClose: false,
       useYahooData: false
     };
@@ -85,6 +92,9 @@ export class DaytradeService {
             break;
           case OrderPref.SpyMomentum:
             config.SpyMomentum = true;
+            break;
+          case OrderPref.BuyCloseSellOpen:
+            config.BuyCloseSellOpen = true;
             break;
           case OrderPref.SellAtClose:
             config.SellAtClose = true;

@@ -55,6 +55,7 @@ export class BacktestViewComponent implements OnInit {
           meanReversion1: row.MeanReversion1 || null,
           useMfi: row.Mfi || null,
           spyMomentum: row.SpyMomentum || null,
+          buyCloseSellOpen: row.BuyCloseSellOpen || null,
           yahooData: row.YahooData || null,
           sellAtClose: row.SellAtClose || null,
           orderSize: row.OrderSize * 1 || null,

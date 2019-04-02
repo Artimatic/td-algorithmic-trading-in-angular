@@ -72,6 +72,7 @@ import { ScoreBoardComponent } from './score-board/score-board.component';
 import { TimelineViewComponent } from './timeline-view/timeline-view.component';
 import { BacktestViewComponent } from './backtest-view/backtest-view.component';
 import { TerminalViewComponent } from './terminal-view/terminal-view.component';
+import { SimpleCardComponent } from './simple-card/simple-card.component';
 
 @NgModule({
   declarations: [
@@ -99,6 +100,7 @@ import { TerminalViewComponent } from './terminal-view/terminal-view.component';
     TimelineViewComponent,
     BacktestViewComponent,
     TerminalViewComponent,
+    SimpleCardComponent,
   ],
   entryComponents: [
     LoginDialogComponent,

@@ -12,6 +12,7 @@ export interface OrderRow {
     MeanReversion1?: boolean;
     Mfi?: boolean;
     SpyMomentum?: boolean;
+    BuyCloseSellOpen?: boolean;
     SellAtClose?: boolean;
     YahooData?: boolean;
     OrderSize?: number;

@@ -6,5 +6,6 @@ export enum OrderPref {
     SpyMomentum = 'Use SPY Momentum',
     SellAtClose = 'Sell positions at close',
     useYahooData = 'Use Yahoo data',
-    TrailingStopLoss = 'Trailing Stop Loss'
+    TrailingStopLoss = 'Trailing Stop Loss',
+    BuyCloseSellOpen = 'Buy at Close, Sell at Open'
 }

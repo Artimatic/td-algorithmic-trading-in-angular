@@ -68,7 +68,6 @@ export class BbCardComponent implements OnInit, OnChanges {
   myPreferences: OrderPref[];
   startTime;
   endTime;
-  noonTime;
   backtestQuotes: JSON[];
   stopped: boolean;
   isBacktest: boolean;
@@ -99,6 +98,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     OrderPref.MeanReversion1,
     OrderPref.Mfi,
     OrderPref.SpyMomentum,
+    OrderPref.BuyCloseSellOpen,
     OrderPref.SellAtClose,
     OrderPref.useYahooData];
     Highcharts.setOptions({
@@ -106,8 +106,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         useUTC: false
       }
     });
-    this.startTime = moment('10:10am', 'h:mma');
-    this.noonTime = moment('1:10pm', 'h:mma');
+    this.startTime = moment('10:00am', 'h:mma');
     this.endTime = moment('3:30pm', 'h:mma');
     this.showGraph = false;
     this.bbandPeriod = 80;
@@ -363,7 +362,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       this.volumeChart = this.initVolumeChart(volume);
     }
 
-    if (moment().utcOffset('-0500').isAfter(this.endTime.utcOffset('-0500'))) {
+    if (moment().utcOffset('-0400').isAfter(this.endTime.utcOffset('-0400'))) {
       this.stop();
     }
   }
@@ -757,12 +756,6 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
 
       if (!sell) {
-        const lastTimestamp = timestamps[idx];
-        const timePeriod = this.daytradeService.tradePeriod(moment.unix(lastTimestamp), this.startTime, this.noonTime, this.endTime);
-
-        if (timePeriod === 'pre' || timePeriod === 'after') {
-          return null;
-        }
         const buyQuantity: number = this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
           this.firstFormGroup.value.orderSize,
           this.buyCount,
@@ -863,7 +856,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
 
     if (this.config.SellAtClose) {
-      if (moment.unix(signalTime).utcOffset('-0500').isAfter(this.endTime.utcOffset('-0500'))) {
+      if (moment.unix(signalTime).utcOffset('-0400').isAfter(this.endTime.utcOffset('-0400'))) {
         return this.closeAllPositions(price, signalTime);
       }
     }
@@ -1079,6 +1072,10 @@ export class BbCardComponent implements OnInit, OnChanges {
 
     if (this.order.spyMomentum) {
       pref.push(OrderPref.SpyMomentum);
+    }
+
+    if (this.order.buyCloseSellOpen) {
+      pref.push(OrderPref.BuyCloseSellOpen);
     }
 
     if (this.order.sellAtClose) {

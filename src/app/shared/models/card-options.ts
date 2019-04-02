@@ -7,4 +7,5 @@ export interface CardOptions {
     SellAtClose: boolean;
     useYahooData: boolean;
     TrailingStopLoss: boolean;
+    BuyCloseSellOpen: boolean;
 }
