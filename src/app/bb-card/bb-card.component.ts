@@ -5,9 +5,9 @@ import 'rxjs/add/operator/takeWhile';
 
 import { Chart } from 'angular-highcharts';
 import { DataPoint } from 'highcharts';
-import * as Highcharts from 'highcharts';
 
-import * as moment from 'moment';
+import * as Highcharts from 'highcharts';
+import * as moment from 'moment-timezone';
 import * as _ from 'lodash';
 
 import { OrderPref } from '../shared/enums/order-pref.enum';
@@ -106,8 +106,8 @@ export class BbCardComponent implements OnInit, OnChanges {
         useUTC: false
       }
     });
-    this.startTime = moment('10:00am', 'h:mma');
-    this.endTime = moment('3:30pm', 'h:mma');
+    this.startTime = moment.tz('10:00am', 'h:mma', 'America/New_York');
+    this.endTime = moment.tz('3:30pm', 'h:mma', 'America/New_York');
     this.showGraph = false;
     this.bbandPeriod = 80;
     this.dataInterval = '1min';
@@ -362,7 +362,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       this.volumeChart = this.initVolumeChart(volume);
     }
 
-    if (moment().utcOffset('-0400').isAfter(this.endTime.utcOffset('-0400'))) {
+    if (moment().isAfter(this.endTime)) {
       this.stop();
     }
   }
@@ -856,7 +856,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
 
     if (this.config.SellAtClose) {
-      if (moment.unix(signalTime).utcOffset('-0400').isAfter(this.endTime.utcOffset('-0400'))) {
+      if (moment.unix(signalTime).isAfter(this.endTime)) {
         return this.closeAllPositions(price, signalTime);
       }
     }

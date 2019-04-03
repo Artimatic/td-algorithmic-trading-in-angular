@@ -25,6 +25,13 @@
         <mat-form-field hintLabel="Quantity">
           <input matInput type="number" placeholder="Quantity" formControlName="quantity" required>
         </mat-form-field>
+        <mat-form-field>
+          <mat-select placeholder="Preferences" formControlName="preferences" [(ngModel)]="myPreferences" name="preferences" multiple>
+            <mat-option *ngFor="let pref of preferenceList" [value]="pref">
+              {{ pref }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
         <div>
           <button mat-button matStepperNext>Next</button>
         </div>
@@ -50,7 +57,7 @@
             <mat-card-header>
               <mat-card-title>{{order.holding.symbol}}</mat-card-title>
               <mat-card-subtitle>
-                <h1>Buy at Close, Sell at Open</h1>
+                <h1>Simple Algo</h1>
               </mat-card-subtitle>
             </mat-card-header>
           </div>

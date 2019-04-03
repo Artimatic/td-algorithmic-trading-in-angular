@@ -7,7 +7,7 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import { Subscription } from 'rxjs/Subscription';
 
-import * as moment from 'moment';
+import * as moment from 'moment-timezone';
 import * as _ from 'lodash';
 
 @Component({
@@ -42,8 +42,8 @@ export class ShoppingListComponent implements OnInit {
 
   ngOnInit() {
     this.interval = 70800;
-    this.marketOpenTime = moment('9:30am', 'h:mma');
-    this.marketCloseTime = moment('3:55pm', 'h:mma');
+    this.marketOpenTime = moment.tz('9:30am', 'h:mma', 'America/New_York');
+    this.marketCloseTime = moment.tz('3:55pm', 'h:mma', 'America/New_York');
 
     this.ordersStarted = 0;
     this.spxl = {
@@ -194,7 +194,7 @@ export class ShoppingListComponent implements OnInit {
     this.sub = TimerObservable.create(0, this.interval)
       .takeWhile(() => this.alive)
       .subscribe(() => {
-        if (moment().utcOffset('-0400').isAfter(this.marketOpenTime.utcOffset('-0400'))) {
+        if (moment().isAfter(this.marketOpenTime)) {
           let executed = 0;
           while (executed < limit && lastIndex < orders.length) {
             orders[lastIndex].stepForward = counter;
@@ -205,7 +205,7 @@ export class ShoppingListComponent implements OnInit {
           if (lastIndex >= orders.length) {
             lastIndex = 0;
           }
-          if (moment().utcOffset('-0400').isAfter(this.marketCloseTime.utcOffset('-0400'))) {
+          if (moment().isAfter(this.marketCloseTime)) {
             this.reportingService.exportAuditHistory();
             this.stop();
           }
