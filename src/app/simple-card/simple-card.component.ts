@@ -33,7 +33,10 @@ export class SimpleCardComponent implements OnInit {
   secondFormGroup: FormGroup;
 
   marketOpenTime: moment.Moment;
+  startTime: moment.Moment;
+
   marketCloseTime: moment.Moment;
+  stopTime: moment.Moment;
 
   tiles;
 
@@ -45,6 +48,11 @@ export class SimpleCardComponent implements OnInit {
     public dialog: MatDialog) { }
 
   ngOnInit() {
+    this.marketOpenTime = moment('9:30am', 'h:mma');
+    this.marketCloseTime = moment('4:00pm', 'h:mma');
+    this.startTime = moment('9:35am', 'h:mma');
+    this.stopTime = moment('3:55pm', 'h:mma');
+
     this.holdingCount = 0;
     this.interval = 180000;
     this.live = false;
@@ -67,11 +75,11 @@ export class SimpleCardComponent implements OnInit {
       .takeWhile(() => this.alive)
       .subscribe(() => {
         this.live = true;
-        if (moment().utcOffset('-0400').isAfter(this.marketCloseTime.utcOffset('-0400').subtract({minutes: 5})) &&
+        if (moment().utcOffset('-0400').isAfter(this.stopTime.utcOffset('-0400')) &&
           moment().utcOffset('-0400').isBefore(this.marketCloseTime.utcOffset('-0400'))) {
           this.buy();
         } else if (moment().utcOffset('-0400').isAfter(this.marketOpenTime.utcOffset('-0400')) &&
-          moment().utcOffset('-0400').isBefore(this.marketOpenTime.utcOffset('-0400').add({minutes: 5}))) {
+          moment().utcOffset('-0400').isBefore(this.startTime.utcOffset('-0400'))) {
           this.sell();
         } else if (moment().utcOffset('-0400').isAfter(this.marketCloseTime.utcOffset('-0400'))) {
           this.stop();

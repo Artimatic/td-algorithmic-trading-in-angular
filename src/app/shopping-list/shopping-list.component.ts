@@ -43,7 +43,7 @@ export class ShoppingListComponent implements OnInit {
   ngOnInit() {
     this.interval = 70800;
     this.marketOpenTime = moment('9:30am', 'h:mma');
-    this.marketCloseTime = moment('4:00pm', 'h:mma');
+    this.marketCloseTime = moment('3:55pm', 'h:mma');
 
     this.ordersStarted = 0;
     this.spxl = {
@@ -205,7 +205,7 @@ export class ShoppingListComponent implements OnInit {
           if (lastIndex >= orders.length) {
             lastIndex = 0;
           }
-          if (moment().utcOffset('-0400').isAfter(this.marketCloseTime.utcOffset('-0400').subtract({minutes: 5}))) {
+          if (moment().utcOffset('-0400').isAfter(this.marketCloseTime.utcOffset('-0400'))) {
             this.reportingService.exportAuditHistory();
             this.stop();
           }
