@@ -54,9 +54,10 @@ export class SimpleCardComponent implements OnInit {
 
   ngOnInit() {
     this.marketOpenTime = moment.tz('9:30am', 'h:mma', 'America/New_York');
+    this.startTime = moment.tz('9:40am', 'h:mma', 'America/New_York');
+
+    this.stopTime = moment.tz('3:50pm', 'h:mma', 'America/New_York');
     this.marketCloseTime = moment.tz('4:00pm', 'h:mma', 'America/New_York');
-    this.startTime = moment.tz('9:35am', 'h:mma', 'America/New_York');
-    this.stopTime = moment.tz('3:55pm', 'h:mma', 'America/New_York');
 
     this.preferenceList = [OrderPref.BuyCloseSellOpen];
 
@@ -105,11 +106,11 @@ export class SimpleCardComponent implements OnInit {
       .toPromise()
       .then((quote) => {
         const lastPrice: number = 1 * quote.last_trade_price;
-        const buyOrder = this.daytradeService.createOrder(this.order.holding, 'Buy', this.order.quantity, lastPrice, moment().unix());
+        const buyOrder = this.daytradeService.createOrder(this.order.holding, 'Buy', this.firstFormGroup.value.quantity, lastPrice, moment().unix());
         const log = `ORDER SENT ${moment(buyOrder.signalTime).format('hh:mm')} ${buyOrder.side} ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
 
         const resolve = () => {
-          this.holdingCount += this.order.quantity;
+          this.holdingCount += this.firstFormGroup.value.quantity;
           console.log(`${moment().format('hh:mm')} ${log}`);
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
         };
@@ -130,11 +131,11 @@ export class SimpleCardComponent implements OnInit {
       .then((quote) => {
         const lastPrice: number = 1 * quote.last_trade_price;
 
-        const sellOrder = this.daytradeService.createOrder(this.order.holding, 'Buy', this.order.quantity, lastPrice, moment().unix());
+        const sellOrder = this.daytradeService.createOrder(this.order.holding, 'Buy', this.firstFormGroup.value.quantity, lastPrice, moment().unix());
         const log = `ORDER SENT ${sellOrder.side} ${sellOrder.holding.symbol} ${sellOrder.quantity} ${sellOrder.price}`;
 
         const resolve = () => {
-          this.holdingCount -= this.order.quantity;
+          this.holdingCount -= this.firstFormGroup.value.quantity;
           console.log(`${moment().format('hh:mm')} ${log}`);
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
         };
