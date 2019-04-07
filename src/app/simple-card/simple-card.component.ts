@@ -62,7 +62,7 @@ export class SimpleCardComponent implements OnInit {
     this.preferenceList = [OrderPref.BuyCloseSellOpen];
 
     this.holdingCount = 0;
-    this.interval = 180000;
+    this.interval = 300000;
     this.live = false;
     this.alive = true;
     this.firstFormGroup = this._formBuilder.group({

@@ -49,19 +49,19 @@ export class RhTableComponent implements OnInit, OnChanges {
   algoControl = new FormControl();
   algoGroups: AlgoGroup[] = [
     {
-      name: 'Mean Reversion',
-      algorithm: [
-        {value: 'v1', viewValue: 'Moving Average Crossover'},
-        {value: 'v2', viewValue: 'Daily - Bollinger Band'},
-        {value: 'v5', viewValue: 'Daily - Money Flow Index'},
-        {value: 'v3', viewValue: 'Intraday - MFI'},
-        {value: 'v4', viewValue: 'Intraday - Bollinger Band'},
-      ]
-    },
-    {
       name: 'Update Database',
       algorithm: [
         {value: 'intraday', viewValue: 'Intraday Quotes'}
+      ]
+    },
+    {
+      name: 'Mean Reversion',
+      algorithm: [
+        {value: 'v2', viewValue: 'Daily - Bollinger Band'},
+        {value: 'v5', viewValue: 'Daily - Money Flow Index'},
+        {value: 'v1', viewValue: 'Daily - Moving Average Crossover'},
+        {value: 'v3', viewValue: 'Intraday - MFI'},
+        {value: 'v4', viewValue: 'Intraday - Bollinger Band'},
       ]
     }
   ];

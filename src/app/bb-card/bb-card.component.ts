@@ -570,7 +570,7 @@ export class BbCardComponent implements OnInit, OnChanges {
             this.stop();
           }
         };
-        this.daytradeService.sendBuy(buyOrder, 'market', resolve, reject);
+        this.daytradeService.sendBuy(buyOrder, 'limit', resolve, reject);
       } else {
         this.incrementBuy(buyOrder);
         console.log(`${moment().format('hh:mm')} ${log}`);
@@ -608,7 +608,7 @@ export class BbCardComponent implements OnInit, OnChanges {
           this.setWarning(`Trying to sell ${sellOrder.holding.symbol} position that doesn\'t exists`);
         };
 
-        this.daytradeService.sendSell(sellOrder, 'market', resolve, reject, handleNotFound);
+        this.daytradeService.sendSell(sellOrder, 'limit', resolve, reject, handleNotFound);
       } else {
         this.incrementSell(sellOrder);
 

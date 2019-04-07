@@ -44,7 +44,7 @@ export class AlgoService {
     }
 
     const momentumDiff = _.round(_.divide(num, den), 3);
-    const rocDiffRange = [0, 2];
+    const rocDiffRange = [0, 1];
 
     if (momentumDiff > rocDiffRange[1]) {
       if (price > high) {

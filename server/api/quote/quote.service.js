@@ -23,8 +23,8 @@ class QuoteService {
   * Interval: ["2m", "1d"]
   * Range: ["1d","5d","1mo","3mo","6mo","1y","2y","5y","10y","ytd","max"]
   */
-  getData(symbol, interval = '1d', range) {
-    return api.getHistoricalData(symbol, interval, range)
+  getData(symbol, interval = '1d', range = '1d') {
+    return this.getRawData(symbol, interval, range)
       .then((data) => {
         const quotes = _.get(data, 'chart.result[0].indicators.quote[0]', []);
         const timestamps = _.get(data, 'chart.result[0].timestamp', []);

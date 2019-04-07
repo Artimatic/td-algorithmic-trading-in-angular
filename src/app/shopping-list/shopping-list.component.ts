@@ -54,7 +54,7 @@ export class ShoppingListComponent implements OnInit {
         name: 'Direxion Daily S&P 500  Bull 3x Shares',
         realtime_price: 49.52
       },
-      quantity: 1, price: 49.52,
+      quantity: 10, price: 49.52,
       submitted: false, pending: false,
       side: 'DayTrade',
       useTakeProfit: true,
