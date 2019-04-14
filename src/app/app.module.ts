@@ -73,6 +73,7 @@ import { TimelineViewComponent } from './timeline-view/timeline-view.component';
 import { BacktestViewComponent } from './backtest-view/backtest-view.component';
 import { TerminalViewComponent } from './terminal-view/terminal-view.component';
 import { SimpleCardComponent } from './simple-card/simple-card.component';
+import { MachineLearningModule } from './machine-learning/machine-learning.module';
 
 @NgModule({
   declarations: [
@@ -142,6 +143,7 @@ import { SimpleCardComponent } from './simple-card/simple-card.component';
     MatStepperModule,
     MatSelectModule,
     MatTooltipModule,
+    MachineLearningModule
   ],
   providers: [
     BacktestService,

@@ -5,6 +5,7 @@ import { ResearchViewComponent } from './research-view/research-view.component';
 import { OptionsViewComponent } from './options-view/options-view.component';
 import { TimelineViewComponent } from './timeline-view/timeline-view.component';
 import { BacktestViewComponent } from './backtest-view/backtest-view.component';
+import { MachineLearningPageComponent } from './machine-learning/machine-learning-page/machine-learning-page.component';
 
 export const routes: Routes = [
   {
@@ -26,6 +27,10 @@ export const routes: Routes = [
   {
     path: 'backtest',
     component: BacktestViewComponent
+  },
+  {
+    path: 'machine-learning',
+    component: MachineLearningPageComponent
   },
   {
     path: '**',
