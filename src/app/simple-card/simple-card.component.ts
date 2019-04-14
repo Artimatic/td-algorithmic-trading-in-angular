@@ -94,9 +94,7 @@ export class SimpleCardComponent implements OnInit {
               }
         } else if (momentInst.isAfter(this.marketOpenTime) &&
             momentInst.isBefore(this.startTime)) {
-              if (this.holdingCount > 0) {
-                this.sell();
-              }
+            this.sell();
         }
       });
   }
