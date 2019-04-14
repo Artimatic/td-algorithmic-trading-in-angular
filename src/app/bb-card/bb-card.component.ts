@@ -1,5 +1,5 @@
 import { Component, OnChanges, Input, OnInit, ViewChild, SimpleChanges } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material';
 import 'rxjs/add/operator/takeWhile';
 
@@ -65,7 +65,6 @@ export class BbCardComponent implements OnInit, OnChanges {
   tiles;
   bbandPeriod: number;
   dataInterval: string;
-  myPreferences: OrderPref[];
   startTime;
   endTime;
   backtestQuotes: JSON[];
@@ -73,6 +72,7 @@ export class BbCardComponent implements OnInit, OnChanges {
   isBacktest: boolean;
   indicators: Indicators;
   trailingHighPrice: number;
+  preferences: FormControl;
 
   constructor(private _formBuilder: FormBuilder,
     private backtestService: BacktestService,
@@ -124,11 +124,11 @@ export class BbCardComponent implements OnInit, OnChanges {
       trailingStop: [this.order.trailingStop || -0.002, Validators.required],
       profitTarget: [{ value: this.order.profitTarget || 0.01, disabled: false }, Validators.required],
       orderSize: [this.order.orderSize || this.daytradeService.getDefaultOrderSize(this.order.quantity), Validators.required],
-      orderType: [this.order.side, Validators.required],
-      preferences: []
+      orderType: [this.order.side, Validators.required]
     });
 
-    this.myPreferences = this.initPreferences();
+    this.preferences = new FormControl();
+    this.preferences.setValue(this.initPreferences());
 
     this.secondFormGroup = this._formBuilder.group({
       secondCtrl: ['', Validators.required]

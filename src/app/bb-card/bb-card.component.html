@@ -45,7 +45,7 @@
           <input matInput type="number" placeholder="Orders" formControlName="orderSize" required>
         </mat-form-field>
         <mat-form-field>
-          <mat-select placeholder="Preferences" formControlName="preferences" [(ngModel)]="myPreferences" name="preferences" multiple>
+          <mat-select placeholder="Preferences" [formControl]="preferences" name="preferences" multiple>
             <mat-option *ngFor="let pref of preferenceList" [value]="pref">
               {{ pref }}
             </mat-option>

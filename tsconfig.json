@@ -1,6 +1,7 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    "importHelpers": true,
     "outDir": "./dist",
     "sourceMap": true,
     "declaration": false,
@@ -15,7 +16,8 @@
     "lib": [
       "es2017",
       "dom"
-    ]
+    ],
+    "baseUrl": "./"
   },
   "exclude": [
     "node_modules/*",

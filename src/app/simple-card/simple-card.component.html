@@ -1,10 +1,10 @@
 <mat-card>
   <span class="delete-me">
     <button mat-icon-button>
-        <a (click)="delete()" matTooltip="delete order">
-          <mat-icon>delete_forever</mat-icon>
-        </a>
-      </button>
+      <a (click)="delete()" matTooltip="delete order">
+        <mat-icon>delete_forever</mat-icon>
+      </a>
+    </button>
   </span>
   <div class="banner" *ngIf="error">
     <div class="banner-content">
@@ -26,7 +26,7 @@
           <input matInput type="number" placeholder="Quantity" formControlName="quantity" required>
         </mat-form-field>
         <mat-form-field>
-          <mat-select placeholder="Preferences" formControlName="preferences" [(ngModel)]="myPreferences" name="preferences" multiple>
+          <mat-select placeholder="Preferences" [formControl]="preferences" name="preferences" multiple>
             <mat-option *ngFor="let pref of preferenceList" [value]="pref">
               {{ pref }}
             </mat-option>
@@ -48,11 +48,13 @@
         </div>
         <div>
           <section class="example-section">
-            <mat-progress-bar class="progress-bar" [mode]="'determinate'" [color]="'primary'" [value]="progress()"></mat-progress-bar>
+            <mat-progress-bar class="progress-bar" [mode]="'determinate'" [color]="'primary'" [value]="progress()">
+            </mat-progress-bar>
           </section>
           Orders Submitted: {{ holdingCount}}/{{firstFormGroup.value.quantity || 0}} shares
         </div>
-        <div class="toolbar-content" fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px" fxLayoutGap.xs="0">
+        <div class="toolbar-content" fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px"
+          fxLayoutGap.xs="0">
           <div fxFlex="5%">
             <mat-card-header>
               <mat-card-title>{{order.holding.symbol}}</mat-card-title>

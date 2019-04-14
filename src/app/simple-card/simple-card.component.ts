@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild, Input } from '@angular/core';
 import { Subscription } from 'rxjs/Subscription';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import { SmartOrder } from '../shared/models/smart-order';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { CartService } from '../shared/services/cart.service';
 import { MatDialog } from '@angular/material';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
@@ -41,7 +41,7 @@ export class SimpleCardComponent implements OnInit {
 
   preferenceList: any[];
 
-  myPreferences: OrderPref[];
+  preferences: FormControl;
 
   tiles;
 
@@ -66,15 +66,15 @@ export class SimpleCardComponent implements OnInit {
     this.live = false;
     this.alive = true;
     this.firstFormGroup = this._formBuilder.group({
-      quantity: [this.order.quantity, Validators.required],
-      preferences: []
+      quantity: [this.order.quantity, Validators.required]
     });
 
     this.secondFormGroup = this._formBuilder.group({
       secondCtrl: ['', Validators.required]
     });
 
-    this.myPreferences = [OrderPref.BuyCloseSellOpen];
+    this.preferences = new FormControl();
+    this.preferences.setValue([OrderPref.BuyCloseSellOpen]);
 
     this.setup();
   }

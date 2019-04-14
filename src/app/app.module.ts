@@ -2,6 +2,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
+import { HttpClientModule } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 import { ChartModule } from 'angular-highcharts';
 
@@ -32,8 +33,6 @@ import {
   MatSelectModule,
   MatTooltipModule,
 } from '@angular/material';
-
-import { FlexLayoutModule } from '@angular/flex-layout';
 
 import { routes } from './app.routes';
 import { AppComponent } from './app.component';
@@ -115,6 +114,7 @@ import { MachineLearningModule } from './machine-learning/machine-learning.modul
     FormsModule,
     ReactiveFormsModule,
     HttpModule,
+    HttpClientModule,
     RouterModule.forRoot(routes, {
       enableTracing: true
     }),
@@ -129,7 +129,6 @@ import { MachineLearningModule } from './machine-learning/machine-learning.modul
     MatSidenavModule,
     MatExpansionModule,
     MatTableModule,
-    FlexLayoutModule,
     MatCheckboxModule,
     MatRadioModule,
     MatDialogModule,

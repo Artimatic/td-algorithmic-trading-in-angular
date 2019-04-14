@@ -1,27 +1,27 @@
-import { Http, RequestOptions, Headers } from '@angular/http';
-import { Observable } from 'rxjs/Observable';
+import {
+  HttpClient,
+  HttpHeaders
+} from '@angular/common/http';
+
+import { Observable } from 'rxjs';
 import { Injectable } from '@angular/core';
-import { Stock } from './../../shared';
 
 import { environment } from '../../../environments/environment';
-
-import { AlgoChartV2 } from '../models/algo-chart-v2';
 
 const BASE_URL = environment.appUrl;
 
 @Injectable()
 export class BacktestService {
 
-    constructor(private http: Http) { }
+    constructor(private http: HttpClient) { }
 
-    getInfo(data: any): Observable<Stock> {
-        return this.http.post(`${BASE_URL}api/mean-reversion/info`, data, {})
-            .map(r => r.json());
+    getInfo(data: any): Observable<any> {
+      return this.http.post(`${BASE_URL}api/mean-reversion/info`, data, {});
     }
 
     getInfoV2(symbol: string, to: string = null, from: string = null,
         short: number = 30, long: number = 90, deviation: number = 0.03,
-        period: number = 80): Observable<Stock> {
+        period: number = 80): Observable<any> {
 
         const data = {
             symbol,
@@ -29,13 +29,12 @@ export class BacktestService {
             from
         };
 
-        return this.http.post(`${BASE_URL}api/backtest/infov2`, data, {})
-            .map(r => r.json());
+        return this.http.post(`${BASE_URL}api/backtest/infov2`, data, {});
     }
 
     getInfoV2Chart(symbol: string, to: string = null, from: string = null,
         short: number = 30, long: number = 90, deviation: number = 0.03,
-        period: number = 80): Observable<AlgoChartV2[]> {
+        period: number = 80): Observable<any> {
 
         const data = {
             symbol,
@@ -43,11 +42,10 @@ export class BacktestService {
             from
         };
 
-        return this.http.post(`${BASE_URL}api/backtest/infov2chart`, data, {})
-            .map(r => r.json());
+        return this.http.post(`${BASE_URL}api/backtest/infov2chart`, data, {});
     }
 
-    getTimeline(symbol: string, from: string = null, to: string = null): Observable<any[]> {
+    getTimeline(symbol: string, from: string = null, to: string = null): Observable<any> {
 
         const data = {
             symbol,
@@ -55,8 +53,7 @@ export class BacktestService {
             from
         };
 
-        return this.http.post(`${BASE_URL}api/backtest/timeline`, data, {})
-            .map(r => r.json());
+        return this.http.post(`${BASE_URL}api/backtest/timeline`, data, {});
     }
 
     getBacktestChart(ticker: string,
@@ -64,7 +61,7 @@ export class BacktestService {
         end: string,
         deviation: number,
         short: number,
-        long: number): Observable<any[]> {
+        long: number): Observable<any> {
         const data = {
             ticker,
             start,
@@ -74,14 +71,13 @@ export class BacktestService {
             long
         };
 
-        return this.http.post(`${BASE_URL}api/backtest/chart`, data, {})
-            .map(r => r.json());
+        return this.http.post(`${BASE_URL}api/backtest/chart`, data, {});
     }
 
     getBacktestEvaluation(ticker: string,
         start: string,
         end: string,
-        algo: string): Observable<any[]> {
+        algo: string): Observable<any> {
         const data = {
             ticker,
             start,
@@ -89,28 +85,23 @@ export class BacktestService {
             algo
         };
 
-        return this.http.post(`${BASE_URL}api/backtest`, data, {})
-            .map(r => r.json());
+        return this.http.post(`${BASE_URL}api/backtest`, data, {});
     }
 
     getLastPriceTiingo(data: any): Observable<any> {
-        return this.http.post(`${BASE_URL}api/quote/current`, data, {})
-            .map(r => r.json());
+        return this.http.post(`${BASE_URL}api/quote/current`, data, {});
     }
 
     getIEXIntraday(data: any): Observable<any> {
-        return this.http.post(`${BASE_URL}api/quote/iex`, data, {})
-            .map(r => r.json());
+        return this.http.post(`${BASE_URL}api/quote/iex`, data, {});
     }
 
     getIntraday(data: any): Observable<any> {
-        return this.http.post(`${BASE_URL}api/quote/intraday`, data, {})
-            .map(r => r.json());
+        return this.http.post(`${BASE_URL}api/quote/intraday`, data, {});
     }
 
     getIntradayV3(data: any): Observable<any> {
-        return this.http.post(`${BASE_URL}api/quote/raw`, data, {})
-            .map(r => r.json());
+        return this.http.post(`${BASE_URL}api/quote/raw`, data, {});
     }
 
     getIntradayV4(symbol: string, startDate: string): Observable<any> {
@@ -118,8 +109,7 @@ export class BacktestService {
             symbol,
             startDate
         };
-        return this.http.post(`${BASE_URL}api/quote/intraday-tiingo`, data, {})
-            .map(r => r.json());
+        return this.http.post(`${BASE_URL}api/quote/intraday-tiingo`, data, {});
     }
 
     getYahooIntraday(symbol: string): Observable<any> {
@@ -129,67 +119,57 @@ export class BacktestService {
             range: '1d'
         };
 
-        return this.http.post(`${BASE_URL}api/quote`, body, {})
-            .map(r => r.json());
+        return this.http.post(`${BASE_URL}api/quote`, body, {});
     }
 
     getIntraday2(data: any): Observable<any> {
-        return this.http.post(`${BASE_URL}api/quote/intraday2`, data, {})
-            .map(r => r.json());
+        return this.http.post(`${BASE_URL}api/quote/intraday2`, data, {});
     }
 
     postIntraday(data: JSON): Observable<any> {
-        return this.http.post(`${BASE_URL}api/quote/historical-intraday`, data, {})
-            .map(r => r.json());
+        return this.http.post(`${BASE_URL}api/quote/historical-intraday`, data, {});
     }
 
     findIntraday(data: JSON): Observable<any> {
         const body = JSON.stringify(data);
 
-        const headers = new Headers({ 'Content-Type': 'application/json' });
-        const options = new RequestOptions({
+        const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+        const options = {
             headers: headers,
             body: body
-        });
+        };
 
-        return this.http.get(`${BASE_URL}api/quote/historical-intraday`, options)
-            .map(r => r.json());
+        return this.http.get(`${BASE_URL}api/quote/historical-intraday`, options);
     }
 
 
     getQuote(data: any): Observable<any> {
-        return this.http.post(`${BASE_URL}api/quote`, data, {})
-            .map(r => r.json());
+        return this.http.post(`${BASE_URL}api/quote`, data, {});
     }
 
     getOptionChain(symbol: String): Observable<any> {
         const body = { symbol: symbol };
-        return this.http.post(`${BASE_URL}api/quote/optionchain`, body, {})
-            .map(r => r.json());
+        return this.http.post(`${BASE_URL}api/quote/optionchain`, body, {});
     }
 
     getBBands(data: any): Observable<any> {
-        return this.http.post(`${BASE_URL}api/backtest/bbands`, data, {})
-            .map(r => r.json());
+        return this.http.post(`${BASE_URL}api/backtest/bbands`, data, {});
     }
 
     getSMA(data: any): Observable<any> {
-        return this.http.post(`${BASE_URL}api/backtest/sma`, data, {})
-            .map(r => r.json());
+        return this.http.post(`${BASE_URL}api/backtest/sma`, data, {});
     }
 
     getMFI(data: any): Observable<any> {
-        return this.http.post(`${BASE_URL}api/backtest/mfi`, data, {})
-            .map(r => r.json());
+        return this.http.post(`${BASE_URL}api/backtest/mfi`, data, {});
     }
 
     getROC(data: any): Observable<any> {
-        return this.http.post(`${BASE_URL}api/backtest/roc`, data, {})
-            .map(r => r.json());
+        return this.http.post(`${BASE_URL}api/backtest/roc`, data, {});
     }
 
     getVwma(data: any): Observable<any> {
         return this.http.post(`${BASE_URL}api/backtest/vwma`, data, {})
-            .map(r => r.json());
+            ;
     }
 }

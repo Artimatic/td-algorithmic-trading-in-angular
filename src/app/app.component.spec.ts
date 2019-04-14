@@ -34,8 +34,6 @@ import {
   MatTooltipModule,
 } from '@angular/material';
 
-import { FlexLayoutModule } from '@angular/flex-layout';
-
 import { routes } from './app.routes';
 import { BulkBacktestComponent } from './bulk-backtest';
 import { XlsImportComponent } from './xls-import/xls-import.component';
@@ -114,7 +112,6 @@ describe('AppComponent', () => {
         MatSidenavModule,
         MatExpansionModule,
         MatTableModule,
-        FlexLayoutModule,
         MatCheckboxModule,
         MatRadioModule,
         MatDialogModule,
