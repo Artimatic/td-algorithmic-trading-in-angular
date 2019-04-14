@@ -1,31 +1,41 @@
 <mat-card>
-  <div class="table-container mat-elevation-z8">
-    <mat-grid-list cols="3" rowHeight="76px">
-      <mat-grid-tile>
-        <form [formGroup]="form" novalidate>
-          <mat-form-field>
-            <input matInput formControlName="query" placeholder="Enter ticker symbol"/>
-          </mat-form-field>
-        </form>
-      </mat-grid-tile>
-      <mat-grid-tile>
-        <div>
-          Start
-          <input type="date" [ngModel]="startDate | date:'yyyy-MM-dd'" (ngModelChange)="startDate = $event">
-        </div>
-      </mat-grid-tile>
-      <mat-grid-tile>
-        <div>
-          End
-          <input type="date" [ngModel]="endDate | date:'yyyy-MM-dd'" (ngModelChange)="endDate = $event">
-        </div>        
-      </mat-grid-tile>
-      <mat-grid-tile>
-        <button mat-raised-button color="primary" (click)="findTimeline()">find</button>
-      </mat-grid-tile>
-    </mat-grid-list>
-    <section>
-        <div [chart]="chart"></div>
+  <mat-card-header>
+    <mat-card-title>Timeline Algorithm</mat-card-title>
+    <mat-card-subtitle>Find a chain of days that match the input days</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+
+    <div class="table-container mat-elevation-z8">
+      <mat-grid-list cols="3" rowHeight="76px">
+        <mat-grid-tile>
+          <form [formGroup]="form" novalidate>
+            <mat-form-field>
+              <input matInput formControlName="query" placeholder="Enter ticker symbol" />
+            </mat-form-field>
+          </form>
+        </mat-grid-tile>
+        <mat-grid-tile>
+          <div>
+            Start
+            <input type="date" [ngModel]="startDate | date:'yyyy-MM-dd'" (ngModelChange)="startDate = $event">
+          </div>
+        </mat-grid-tile>
+        <mat-grid-tile>
+          <div>
+            End
+            <input type="date" [ngModel]="endDate | date:'yyyy-MM-dd'" (ngModelChange)="endDate = $event">
+          </div>
+        </mat-grid-tile>
+        <mat-grid-tile>
+          <button mat-raised-button color="primary" (click)="findTimeline()">find</button>
+        </mat-grid-tile>
+      </mat-grid-list>
+      <section>
+        <div [chart]="openPriceChart"></div>
       </section>
-  </div>
+      <section>
+        <div [chart]="closePriceChart"></div>
+      </section>
+    </div>
+  </mat-card-content>
 </mat-card>

@@ -1,8 +1,9 @@
 <div class="shopping-list">
   <h3 mat-subheader>Shopping List</h3>
+  <p>Import and execute your trading algorithms here</p>
   <div>
     <button mat-button color="warn" (click)="stopAndDeleteOrders()">Delete Orders</button>
-    <button mat-raised-button color="warn" (click)="closeAllTrades()">Close All Trades</button>
+    <button mat-raised-button color="warn" (click)="closeAllTrades()">Close Opened DayTrades</button>
     <button mat-button color="primary" (click)="loadExamples()">Load Example Orders</button>
     <button mat-raised-button color="primary" (click)="confirmStart()">Start</button>
   </div>

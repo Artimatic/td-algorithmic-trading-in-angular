@@ -1,5 +1,5 @@
 <mat-tab-group>
-    <mat-tab label="Daytrading">
+    <mat-tab label="Daytrading Backtesting">
         <mat-accordion>
             <mat-expansion-panel>
                 <mat-expansion-panel-header>
@@ -13,7 +13,7 @@
                 <app-xls-import (onImport)="import($event)"></app-xls-import>
             </mat-expansion-panel>
         </mat-accordion>
-        <h3 mat-subheader>Shopping List</h3>
+        <h3 mat-subheader>Order List</h3>
         <div class="card-container">
             <div>
                 <button mat-button color="secondary" (click)="confirmBacktest()">Backtest</button>
