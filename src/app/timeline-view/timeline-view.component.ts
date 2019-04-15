@@ -55,6 +55,14 @@ export class TimelineViewComponent implements OnInit {
       });
   }
 
+  initUpPoint() {
+    return { up: 1, down: 0, total: 1 };
+  }
+
+  initDownPoint() {
+    return { up: 0, down: 1, total: 1 };
+  }
+
   parseTimelineData(timelineMatchArr, referenceIdx) {
     const greenSeries = [],
       redSeries = [],
@@ -73,19 +81,23 @@ export class TimelineViewComponent implements OnInit {
         const current = timelineMatchArr[i];
         for (let j = 0, cc = current.length; j < cc; j++) {
           const signal = current[j].input[referenceIdx];
-          if (signal && j > constant.length) {
-            if (j >= counts.length) {
-              counts.push({ up: 1, down: 0, total: 1 });
+          if (j >= constant.length) {
+            if (signal === 1) {
+              if (j >= counts.length) {
+                counts.push(this.initUpPoint());
+              } else {
+                counts[j].up++;
+                counts[j].total++;
+              }
+            } else if (signal === 0) {
+              if (j >= counts.length) {
+                counts.push(this.initDownPoint());
+              } else {
+                counts[j].down++;
+                counts[j].total++;
+              }
             } else {
-              counts[j].up++;
-              counts[j].total++;
-            }
-          } else {
-            if (j >= counts.length) {
-              counts.push({ up: 0, down: 1, total: 1 });
-            } else {
-              counts[j].down++;
-              counts[j].total++;
+              throw new TypeError('Unknown signal');
             }
           }
         }
@@ -95,7 +107,7 @@ export class TimelineViewComponent implements OnInit {
       redSeries.push({ x: constantLen - 1, y: constant[constantLen - 1] });
 
       const countsLen = counts.length;
-      if (countsLen > constantLen) {
+      if (constantLen < countsLen) {
         for (let k = constantLen; k < countsLen; k++) {
           const sums = counts[k];
 
