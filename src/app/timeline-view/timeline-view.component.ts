@@ -45,7 +45,7 @@ export class TimelineViewComponent implements OnInit {
         this.openPriceChart = this.initChart(openPriceSeries);
         this.closePriceChart = this.initChart(closePriceSeries);
 
-        return;
+        return result;
       })
       .subscribe((timelineData: any) => {
         console.log('time: ', timelineData);
@@ -73,21 +73,19 @@ export class TimelineViewComponent implements OnInit {
         const current = timelineMatchArr[i];
         for (let j = 0, cc = current.length; j < cc; j++) {
           const signal = current[j].input[referenceIdx];
-          if (j < constant.length) {
-            if (signal) {
-              if (j >= counts.length) {
-                counts.push({ up: 1, down: 0, total: 1 });
-              } else {
-                counts[j].up++;
-                counts[j].total++;
-              }
+          if (signal && j > constant.length) {
+            if (j >= counts.length) {
+              counts.push({ up: 1, down: 0, total: 1 });
             } else {
-              if (j >= counts.length) {
-                counts.push({ up: 0, down: 1, total: 1 });
-              } else {
-                counts[j].down++;
-                counts[j].total++;
-              }
+              counts[j].up++;
+              counts[j].total++;
+            }
+          } else {
+            if (j >= counts.length) {
+              counts.push({ up: 0, down: 1, total: 1 });
+            } else {
+              counts[j].down++;
+              counts[j].total++;
             }
           }
         }
@@ -101,8 +99,17 @@ export class TimelineViewComponent implements OnInit {
         for (let k = constantLen; k < countsLen; k++) {
           const sums = counts[k];
 
-          greenSeries.push({ x: k, y: 1, name: `Closed up: ${sums.up}\/${sums.total}` });
-          redSeries.push({ x: k, y: 0, name: `Closed down: ${sums.down}\/${sums.total}` });
+          let title = 'Unknown';
+          switch (referenceIdx) {
+            case 1:
+              title = ' Closed';
+              break;
+            case 2:
+              title = 'Opened';
+              break;
+          }
+          greenSeries.push({ x: k, y: 1, name: `${title} up: ${sums.up}\/${sums.total}` });
+          redSeries.push({ x: k, y: 0, name: `${title} down: ${sums.down}\/${sums.total}` });
         }
       }
 
