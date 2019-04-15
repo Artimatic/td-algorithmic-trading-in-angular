@@ -115,9 +115,7 @@ import { MachineLearningModule } from './machine-learning/machine-learning.modul
     ReactiveFormsModule,
     HttpModule,
     HttpClientModule,
-    RouterModule.forRoot(routes, {
-      enableTracing: true
-    }),
+    RouterModule.forRoot(routes),
     MatMenuModule,
     MatToolbarModule,
     MatIconModule,
