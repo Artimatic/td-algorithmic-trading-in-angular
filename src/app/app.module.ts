@@ -34,6 +34,8 @@ import {
   MatTooltipModule,
 } from '@angular/material';
 
+import { FlexLayoutModule } from '@angular/flex-layout';
+
 import { routes } from './app.routes';
 import { AppComponent } from './app.component';
 import { BulkBacktestComponent } from './bulk-backtest';
@@ -140,7 +142,8 @@ import { MachineLearningModule } from './machine-learning/machine-learning.modul
     MatStepperModule,
     MatSelectModule,
     MatTooltipModule,
-    MachineLearningModule
+    MachineLearningModule,
+    FlexLayoutModule
   ],
   providers: [
     BacktestService,
