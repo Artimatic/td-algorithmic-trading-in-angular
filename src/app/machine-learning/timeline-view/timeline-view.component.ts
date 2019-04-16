@@ -131,14 +131,14 @@ export class TimelineViewComponent implements OnInit {
 
 
       return [{
-        name: 'Constant',
+        name: 'Matching Sequence',
         data: constant
       }, {
-        name: 'Green',
+        name: 'Up days',
         data: greenSeries,
         dashStyle: 'dash'
       }, {
-        name: 'Red',
+        name: 'Down days',
         data: redSeries,
         dashStyle: 'dash'
       }];

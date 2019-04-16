@@ -1,11 +1,39 @@
 <mat-card>
   <mat-card-header>
-    <mat-card-title>Timeline Algorithm</mat-card-title>
-    <mat-card-subtitle>Find a chain of days that match the input days</mat-card-subtitle>
+    <mat-card-title>Sequence of Events</mat-card-title>
+    <mat-card-subtitle>Find sequences of days that match the input days</mat-card-subtitle>
   </mat-card-header>
   <mat-card-content>
+    <mat-accordion>
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            Opening Price
+          </mat-panel-title>
+          <mat-panel-description>
+            1 indicates day opened up, 0 indicates day opened down
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+        <section>
+          <div [chart]="openPriceChart"></div>
+        </section>
+      </mat-expansion-panel>
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            Closing Price
+          </mat-panel-title>
+          <mat-panel-description>
+            1 indicates day closed up, 0 indicates day closed down
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+        <section>
+          <div [chart]="closePriceChart"></div>
+        </section>
+      </mat-expansion-panel>
+    </mat-accordion>
+    <mat-card-actions>
 
-    <div class="table-container mat-elevation-z8">
       <mat-grid-list cols="3" rowHeight="76px">
         <mat-grid-tile>
           <form [formGroup]="form" novalidate>
@@ -29,18 +57,12 @@
         <mat-grid-tile>
           <div *ngIf="isLoading">
             <mat-spinner></mat-spinner>
-        </div>
-        <span *ngIf="!isLoading">
-          <button mat-raised-button color="primary" (click)="findTimeline()">find</button>
-        </span>
+          </div>
+          <span *ngIf="!isLoading">
+            <button mat-raised-button color="primary" (click)="findTimeline()">find</button>
+          </span>
         </mat-grid-tile>
       </mat-grid-list>
-      <section>
-        <div [chart]="openPriceChart"></div>
-      </section>
-      <section>
-        <div [chart]="closePriceChart"></div>
-      </section>
-    </div>
+    </mat-card-actions>
   </mat-card-content>
 </mat-card>
