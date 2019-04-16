@@ -70,11 +70,9 @@ import { ReportingComponent, ReportDialogComponent } from './reporting/reporting
 import { ResearchViewComponent } from './research-view/research-view.component';
 import { OptionsViewComponent } from './options-view/options-view.component';
 import { ScoreBoardComponent } from './score-board/score-board.component';
-import { TimelineViewComponent } from './timeline-view/timeline-view.component';
 import { BacktestViewComponent } from './backtest-view/backtest-view.component';
 import { TerminalViewComponent } from './terminal-view/terminal-view.component';
 import { SimpleCardComponent } from './simple-card/simple-card.component';
-import { MachineLearningModule } from './machine-learning/machine-learning.module';
 
 @NgModule({
   declarations: [
@@ -99,7 +97,6 @@ import { MachineLearningModule } from './machine-learning/machine-learning.modul
     ResearchViewComponent,
     OptionsViewComponent,
     ScoreBoardComponent,
-    TimelineViewComponent,
     BacktestViewComponent,
     TerminalViewComponent,
     SimpleCardComponent,
@@ -142,7 +139,6 @@ import { MachineLearningModule } from './machine-learning/machine-learning.modul
     MatStepperModule,
     MatSelectModule,
     MatTooltipModule,
-    MachineLearningModule,
     FlexLayoutModule
   ],
   providers: [

@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { BacktestService } from '../shared';
+import { BacktestService } from '../../shared';
 import * as moment from 'moment';
-import { MatSnackBar } from '../../../node_modules/@angular/material';
+import { MatSnackBar } from '@angular/material';
 import { Chart } from 'angular-highcharts';
-import { FormGroup, FormBuilder } from '../../../node_modules/@angular/forms';
+import { FormGroup, FormBuilder } from '@angular/forms';
 
 @Component({
   selector: 'app-timeline-view',
@@ -17,6 +17,7 @@ export class TimelineViewComponent implements OnInit {
   closePriceChart: Chart;
   form: FormGroup;
   symbol = 'SPY';
+  isLoading: boolean;
 
   constructor(
     private _formBuilder: FormBuilder,
@@ -30,12 +31,13 @@ export class TimelineViewComponent implements OnInit {
     this.form = this._formBuilder.group({
       query: this.symbol
     });
+    this.isLoading = false;
   }
 
   findTimeline(): void {
+    this.isLoading = true;
     const endDate = moment(this.endDate).format('YYYY-MM-DD');
     const startDate = moment(this.startDate).format('YYYY-MM-DD');
-
     this.backtestService.getTimeline(this.form.value.query, startDate, endDate)
       .map(result => {
 
@@ -49,9 +51,11 @@ export class TimelineViewComponent implements OnInit {
       })
       .subscribe((timelineData: any) => {
         console.log('time: ', timelineData);
+        this.isLoading = false;
       }, error => {
         console.log('error: ', error);
         this.snackBar.open(`Error`, 'Dismiss');
+        this.isLoading = false;
       });
   }
 

@@ -27,7 +27,12 @@
           </div>
         </mat-grid-tile>
         <mat-grid-tile>
+          <div *ngIf="isLoading">
+            <mat-spinner></mat-spinner>
+        </div>
+        <span *ngIf="!isLoading">
           <button mat-raised-button color="primary" (click)="findTimeline()">find</button>
+        </span>
         </mat-grid-tile>
       </mat-grid-list>
       <section>
