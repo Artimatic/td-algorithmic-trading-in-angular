@@ -30,6 +30,7 @@ export default {
   },
   apps: {
     goliath: _.get(credentials, 'default.goliathUrl', _.get(credentials, 'goliathUrl', null)),
+    armadillo: _.get(credentials, 'default.armadilloUrl', _.get(credentials, 'armadilloUrl', null)),
     tiingo: 'https://api.tiingo.com/'
   }
 };

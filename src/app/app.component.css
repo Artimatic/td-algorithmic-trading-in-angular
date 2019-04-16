@@ -5,3 +5,7 @@
 .toolbar-content {
   width: 100%;
 }
+
+mat-chip {
+  max-width: 125px;
+}

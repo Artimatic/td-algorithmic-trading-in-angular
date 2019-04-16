@@ -169,7 +169,14 @@ export class BacktestService {
     }
 
     getVwma(data: any): Observable<any> {
-        return this.http.post(`${BASE_URL}api/backtest/vwma`, data, {})
-            ;
+        return this.http.post(`${BASE_URL}api/backtest/vwma`, data, {});
+    }
+
+    pingGoliath() {
+        return this.http.get(`${BASE_URL}api/backtest/data-status`);
+    }
+
+    pingArmidillo() {
+        return this.http.get(`${BASE_URL}api/backtest/analysis-status`);
     }
 }

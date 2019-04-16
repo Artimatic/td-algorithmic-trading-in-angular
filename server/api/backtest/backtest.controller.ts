@@ -142,6 +142,18 @@ class BacktestController extends BaseController {
     .then((data) => BaseController.requestGetSuccessHandler(response, data))
     .catch((err) => BaseController.requestErrorHandler(response, err));
   }
+
+  getDataStatus(request, response) {
+    BacktestService.checkServiceStatus('data')
+    .then((data) => BaseController.requestGetSuccessHandler(response, data))
+    .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+  getAnalysisStatus(request, response) {
+    BacktestService.checkServiceStatus('ml')
+    .then((data) => BaseController.requestGetSuccessHandler(response, data))
+    .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
 }
 
 export default new BacktestController();

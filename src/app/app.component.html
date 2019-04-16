@@ -35,6 +35,23 @@
           </a>
         </button>
       </mat-list-item>
+      <mat-list-item role="listitem">
+        <h3>Service Status:</h3>
+      </mat-list-item>
+      <mat-list-item role="listitem">
+        <mat-chip-list class="mat-chip-list-stacked" multiple>
+          <mat-chip color="primary" [selected]="dataStatus" (click)="checkStatus()">
+            <h5>
+              Station Data Service
+            </h5>
+          </mat-chip>
+          <mat-chip color="primary" [selected]="mlStatus" (click)="checkStatus()">
+            <h5>
+              Station Analysis Service
+            </h5>
+          </mat-chip>
+        </mat-chip-list>
+      </mat-list-item>
     </mat-list>
 
   </mat-sidenav>
