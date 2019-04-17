@@ -1,11 +1,10 @@
 import { Injectable } from '@angular/core';
 import * as _ from 'lodash';
-import { IndicatorsService } from './indicators.service';
 
 @Injectable()
 export class AlgoService {
 
-  constructor(private indicatorsService: IndicatorsService) { }
+  constructor() { }
 
   isOversoldBullish(roc: any[], momentum: number, mfi: number): boolean {
     const rocLen = roc[0].length - 1;
@@ -44,10 +43,10 @@ export class AlgoService {
     }
 
     const momentumDiff = _.round(_.divide(num, den), 3);
-    const rocDiffRange = [0, 1];
+    const rocDiffRange = [0, 0.7];
 
     if (momentumDiff > rocDiffRange[1]) {
-      if (price > high) {
+      if (price >= high) {
         if (mfi > 55 && mfi < 80) {
           return true;
         }
@@ -69,19 +68,15 @@ export class AlgoService {
     }
 
     const momentumDiff = _.round(_.divide(num, den), 4);
-    const rocDiffRange = [-0.4, 0.8];
+    const rocDiffRange = [-0.4, 0.7];
 
     if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
-      if (price < low) {
-        if (mfi > 0 && mfi < 36) {
+      if (price <= low) {
+        if (mfi > 0 && mfi < 38) {
           return true;
         }
       }
     }
     return false;
-  }
-
-  isLowVwma(close: number[], volume: number[], period: number, lowest: number): Promise<any[]> {
-    return this.indicatorsService.getVwma(close, volume, period);
   }
 }
