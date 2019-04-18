@@ -8,7 +8,7 @@ export class AlgoService {
 
   isOversoldBullish(roc10: number, momentum: number, mfi: number): boolean {
     const momentumDiff = _.round(_.divide(momentum, roc10), 3);
-    const rocDiffRange = [-0.5, 0.7];
+    const rocDiffRange = [-0.5, 0.6];
 
     if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
       if (mfi < 10) {
@@ -21,7 +21,7 @@ export class AlgoService {
 
   isMomentumBullish(price: number, mid: number, mfi: number, roc10: number, momentum: number): boolean {
     const momentumDiff = _.round(_.divide(momentum, roc10), 3);
-    const rocDiffRange = [-0.5, 0.7];
+    const rocDiffRange = [-0.5, 0.6];
 
     if (momentumDiff > rocDiffRange[1]) {
       if (price >= mid) {
@@ -35,7 +35,7 @@ export class AlgoService {
 
   isBBandMeanReversionBullish(price: number, low: number, mfi: number, roc10: number, momentum: number): boolean {
     const momentumDiff = _.round(_.divide(momentum, roc10), 4);
-    const rocDiffRange = [-0.4, 0.7];
+    const rocDiffRange = [-0.4, 0.6];
 
     if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
       if (price <= low) {
