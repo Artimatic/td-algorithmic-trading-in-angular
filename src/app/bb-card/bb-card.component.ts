@@ -115,7 +115,9 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.indicators = {
       mfi: null,
       momentum: null,
-      vwma: null
+      vwma: null,
+      roc10: null,
+      band: null
     };
 
     this.firstFormGroup = this._formBuilder.group({
@@ -311,7 +313,13 @@ export class BbCardComponent implements OnInit, OnChanges {
           const firstIndex = i - this.bbandPeriod;
           const order = await this.runStrategy(quotes, timestamps, firstIndex, lastIndex);
 
-          point.description = this.indicators.vwma ? this.indicators.vwma.toFixed(2) : '';
+          // const vwmaDesc = this.indicators.vwma ? this.indicators.vwma.toFixed(2) : '';
+          // const rocDesc = `roc10: ${this.indicators.roc10}, `;
+          // const bandDesc = `band: ${this.indicators.band}, `;
+          // const momentumDesc = `roc70: ${this.indicators.momentum}, `;
+          // const mfiDesc = `mfi: ${this.indicators.mfi} `;
+
+          point.description = '';
 
           if (order) {
             if (order.side.toLowerCase() === 'buy') {
@@ -481,7 +489,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         shared: true,
         formatter: function () {
           return moment(this.x).format('hh:mm') + '<br><h3>Price:</h3> ' + Number(this.y).toFixed(2) + '<br>' +
-            '<h3>vwma:</h3> ' + this.points[0].point.options.description;
+            '<h3>indicators:</h3> ' + this.points[0].point.options.description;
         }
       },
       plotOptions: {
@@ -521,7 +529,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.sellCount = 0;
     this.positionCount = 0;
     this.orders = [];
-    this.config = this.daytradeService.parsePreferences(this.firstFormGroup.value.preferences);
+    this.config = this.daytradeService.parsePreferences(this.preferences.value);
     this.warning = '';
     this.stopped = false;
     this.scoringService.resetScore(this.order.holding.symbol);
@@ -670,12 +678,9 @@ export class BbCardComponent implements OnInit, OnChanges {
   async buildOrder(quotes,
     timestamps,
     idx,
-    band: any[],
-    shortSma: any[],
-    roc: any[],
-    roc5: any[]) {
+    indicators: Indicators) {
 
-    if (band.length !== 3) {
+    if (indicators.band.length !== 3) {
       return null;
     }
 
@@ -704,8 +709,8 @@ export class BbCardComponent implements OnInit, OnChanges {
         quotes.close[idx],
         timestamps[idx],
         quotes.low[idx] || quotes.close[idx],
-        band,
-        roc);
+        indicators.band,
+        indicators.roc10);
 
       return this.sendBuy(buyOrder);
     } else if (this.firstFormGroup.value.orderType.toLowerCase() === 'sell') {
@@ -726,11 +731,8 @@ export class BbCardComponent implements OnInit, OnChanges {
         quotes.close[idx],
         timestamps[idx],
         quotes.high[idx] || quotes.close[idx],
-        quotes,
-        idx,
-        band,
-        shortSma,
-        roc);
+        indicators.band,
+        indicators.roc10);
 
       return this.sendSell(sellOrder);
     } else if (this.firstFormGroup.value.orderType.toLowerCase() === 'daytrade') {
@@ -745,11 +747,8 @@ export class BbCardComponent implements OnInit, OnChanges {
           quotes.close[idx],
           timestamps[idx],
           quotes.high[idx] || quotes.close[idx],
-          quotes,
-          idx,
-          band,
-          shortSma,
-          roc5);
+          indicators.band,
+          indicators.roc10);
 
       if (sell && this.buyCount >= this.sellCount) {
         return this.sendStopLoss(sell);
@@ -763,7 +762,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
         const buy: SmartOrder = buyQuantity <= 0 ? null :
           await this.buildBuyOrder(buyQuantity, quotes.close[idx], timestamps[idx],
-            quotes.low[idx] || quotes.close[idx], band, roc);
+            quotes.low[idx] || quotes.close[idx], indicators.band, indicators.roc10);
 
         if (buy) {
           return this.sendBuy(buy);
@@ -778,10 +777,10 @@ export class BbCardComponent implements OnInit, OnChanges {
     signalTime,
     signalPrice,
     band: any[],
-    roc: any[]) {
+    roc: number) {
 
     const high = band[2],
-      // mid = band[1],
+      mid = band[1],
       low = band[0];
 
     const pricePaid = this.daytradeService.estimateAverageBuyOrderPrice(this.orders);
@@ -817,9 +816,9 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
     }
     if (this.config.SpyMomentum) {
-      if (this.algoService.isMomentumBullish(signalPrice, high[0], this.indicators.mfi, roc, this.indicators.momentum)) {
+      if (this.algoService.isMomentumBullish(signalPrice, mid[0], this.indicators.mfi, roc, this.indicators.momentum)) {
         const log = `${this.order.holding.symbol} bb momentum Event -` +
-          `time: ${moment.unix(signalTime).format()}, bband high: ${high[0]}, mfi: ${this.indicators.mfi}` +
+          `time: ${moment.unix(signalTime).format()}, bband mid: ${mid[0]}, mfi: ${this.indicators.mfi}` +
           `roc: ${roc}, long roc: ${this.indicators.momentum}`;
 
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
@@ -842,7 +841,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     return null;
   }
 
-  buildSellOrder(orderQuantity: number, price, signalTime, signalPrice, quotes, idx: number, band: any[], shortSma: any[], roc: any[]) {
+  buildSellOrder(orderQuantity: number, price, signalTime, signalPrice, band: any[], roc1: number) {
     const upper = band[2],
       mid = band[1],
       lower = band[0];
@@ -861,13 +860,11 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
     }
 
-    const rocLen = roc[0].length - 1;
-    const roc1 = _.round(roc[0][rocLen], 3);
     const num = this.indicators.momentum,
       den = roc1;
 
     const momentumDiff = _.round(_.divide(num, den), 3);
-    const rocDiffRange = [0, 1.8];
+    const rocDiffRange = [0, 0.5];
 
     if (momentumDiff > rocDiffRange[0] || momentumDiff < rocDiffRange[1]) {
       if (signalPrice > upper[0] && (this.indicators.mfi > 46)) {
@@ -1005,11 +1002,15 @@ export class BbCardComponent implements OnInit, OnChanges {
       // this.reportingService.addAuditLog(this.order.holding.symbol, log);
       return null;
     }
-    const band = await this.indicatorsService.getBBand(reals, this.bbandPeriod);
+    this.indicators.band = await this.indicatorsService.getBBand(reals, this.bbandPeriod);
     // const shortSma = await this.daytradeService.getSMA(reals, 5);
-    const shortSma = null;
 
-    const roc = await this.indicatorsService.getROC(_.slice(reals, reals.length - 11), 10);
+    this.indicators.roc10 = await this.indicatorsService.getROC(_.slice(reals, reals.length - 11), 10)
+      .then((result) => {
+        const rocLen = result[0].length - 1;
+        const roc1 = _.round(result[0][rocLen], 3);
+        return _.round(roc1, 4);
+      });
 
     this.indicators.momentum = await this.indicatorsService.getROC(reals, 70)
       .then((result) => {
@@ -1017,8 +1018,6 @@ export class BbCardComponent implements OnInit, OnChanges {
         const roc1 = _.round(result[0][rocLen], 3);
         return _.round(roc1, 4);
       });
-
-    const roc5 = this.positionCount > 0 ? await this.indicatorsService.getROC(this.daytradeService.getSubArray(reals, 5), 5) : [];
 
     this.indicators.mfi = await this.indicatorsService.getMFI(this.daytradeService.getSubArray(highs, 14),
       this.daytradeService.getSubArray(lows, 14),
@@ -1035,7 +1034,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         const len = result[0].length - 1;
         return _.round(result[0][len], 3);
       });
-    return this.buildOrder(quotes, timestamps, lastIndex, band, shortSma, roc, roc5);
+    return this.buildOrder(quotes, timestamps, lastIndex, this.indicators);
   }
 
   hasReachedDayTradeOrderLimit() {

@@ -6,20 +6,9 @@ export class AlgoService {
 
   constructor() { }
 
-  isOversoldBullish(roc: any[], momentum: number, mfi: number): boolean {
-    const rocLen = roc[0].length - 1;
-    const roc1 = _.round(roc[0][rocLen], 3);
-    let num, den;
-    if (momentum > roc1) {
-      num = momentum;
-      den = roc1;
-    } else {
-      den = momentum;
-      num = roc1;
-    }
-
-    const momentumDiff = _.round(_.divide(num, den), 3);
-    const rocDiffRange = [-0.4, 0.1];
+  isOversoldBullish(roc10: number, momentum: number, mfi: number): boolean {
+    const momentumDiff = _.round(_.divide(momentum, roc10), 3);
+    const rocDiffRange = [-0.5, 0.7];
 
     if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
       if (mfi < 10) {
@@ -30,23 +19,12 @@ export class AlgoService {
   }
 
 
-  isMomentumBullish(price: number, high: number, mfi: number, roc: any[], momentum: number): boolean {
-    const rocLen = roc[0].length - 1;
-    const roc1 = _.round(roc[0][rocLen], 3);
-    let num, den;
-    if (momentum > roc1) {
-      num = momentum;
-      den = roc1;
-    } else {
-      den = momentum;
-      num = roc1;
-    }
-
-    const momentumDiff = _.round(_.divide(num, den), 3);
-    const rocDiffRange = [0, 0.7];
+  isMomentumBullish(price: number, mid: number, mfi: number, roc10: number, momentum: number): boolean {
+    const momentumDiff = _.round(_.divide(momentum, roc10), 3);
+    const rocDiffRange = [-0.5, 0.7];
 
     if (momentumDiff > rocDiffRange[1]) {
-      if (price >= high) {
+      if (price >= mid) {
         if (mfi > 55 && mfi < 80) {
           return true;
         }
@@ -55,19 +33,8 @@ export class AlgoService {
     return false;
   }
 
-  isBBandMeanReversionBullish(price: number, low: number, mfi: number, roc: any[], momentum: number): boolean {
-    const rocLen = roc[0].length - 1;
-    const roc1 = _.round(roc[0][rocLen], 4);
-    let num, den;
-    if (momentum > roc1) {
-      num = momentum;
-      den = roc1;
-    } else {
-      den = momentum;
-      num = roc1;
-    }
-
-    const momentumDiff = _.round(_.divide(num, den), 4);
+  isBBandMeanReversionBullish(price: number, low: number, mfi: number, roc10: number, momentum: number): boolean {
+    const momentumDiff = _.round(_.divide(momentum, roc10), 4);
     const rocDiffRange = [-0.4, 0.7];
 
     if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
