@@ -779,8 +779,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     band: any[],
     roc: number) {
 
-    const high = band[2],
-      mid = band[1],
+    const mid = band[1],
       low = band[0];
 
     const pricePaid = this.daytradeService.estimateAverageBuyOrderPrice(this.orders);
