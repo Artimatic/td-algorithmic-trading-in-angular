@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Chart } from 'angular-highcharts';
-import { DataPoint } from 'highcharts';
+import { Point } from 'highcharts';
 import * as moment from 'moment';
 import { MatSnackBar } from '@angular/material';
 
@@ -34,7 +34,7 @@ export class ProductViewComponent implements OnInit {
     return Math.abs(Math.abs(v1 - v2) / ((v1 + v2) / 2));
   }
 
-  add(y: DataPoint) {
+  add(y: Point) {
     this.chart.addPoint(y);
   }
 
@@ -48,7 +48,7 @@ export class ProductViewComponent implements OnInit {
       .map(result => {
         const time = [],
           seriesData = [];
-        let signal: DataPoint;
+        let signal;
 
         result.forEach(day => {
           time.push(day.date);
@@ -124,7 +124,7 @@ export class ProductViewComponent implements OnInit {
       .map(result => {
         const time = [],
           seriesData = [];
-        let signal: DataPoint;
+        let signal;
         result.forEach(day => {
           time.push(day.date);
           switch (day.action) {

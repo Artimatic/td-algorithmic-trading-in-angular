@@ -3,8 +3,7 @@ import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms'
 import { MatDialog } from '@angular/material';
 import 'rxjs/add/operator/takeWhile';
 
-import { Chart } from 'angular-highcharts';
-import { DataPoint } from 'highcharts';
+import { Chart, StockChart } from 'angular-highcharts';
 
 import * as Highcharts from 'highcharts';
 import * as moment from 'moment-timezone';
@@ -27,6 +26,7 @@ import { IndicatorsService } from '../shared/services/indicators.service';
 import { CartService } from '../shared/services/cart.service';
 import { Indicators } from '../shared/models/indicators';
 import { CardOptions } from '../shared/models/card-options';
+import { Point } from 'angular-highcharts/lib/chart';
 
 @Component({
   selector: 'app-bb-card',
@@ -303,7 +303,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       for (let i = 0; i < dataLength; i += 1) {
         const closePrice = quotes.close[i];
 
-        const point: DataPoint = {};
+        const point: Point = { x: null, y: null };
 
         point.x = moment.unix(timestamps[i]).valueOf(); // the date
         point.y = closePrice; // close
@@ -311,7 +311,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         if (!this.live && i > this.bbandPeriod && !this.stopped) {
           const lastIndex = i;
           const firstIndex = i - this.bbandPeriod;
-          const order = await this.runStrategy(quotes, timestamps, firstIndex, lastIndex);
+          await this.runStrategy(quotes, timestamps, firstIndex, lastIndex);
 
           // const vwmaDesc = this.indicators.vwma ? this.indicators.vwma.toFixed(2) : '';
           // const rocDesc = `roc10: ${this.indicators.roc10}, `;
@@ -321,42 +321,42 @@ export class BbCardComponent implements OnInit, OnChanges {
 
           point.description = '';
 
-          if (order) {
-            if (order.side.toLowerCase() === 'buy') {
-              point.marker = {
-                symbol: 'triangle',
-                fillColor: 'green',
-                radius: 5
-              };
-            } else if (order.side.toLowerCase() === 'sell') {
-              point.marker = {
-                symbol: 'triangle-down',
-                fillColor: 'red',
-                radius: 5
-              };
-            }
-          }
+          // if (order) {
+          //   if (order.side.toLowerCase() === 'buy') {
+          //     point.marker = {
+          //       symbol: 'triangle',
+          //       fillColor: 'green',
+          //       radius: 5
+          //     };
+          //   } else if (order.side.toLowerCase() === 'sell') {
+          //     point.marker = {
+          //       symbol: 'triangle-down',
+          //       fillColor: 'red',
+          //       radius: 5
+          //     };
+          //   }
+          // }
         }
 
-        const foundOrder = this.orders.find((order) => {
-          return point.x === order.signalTime;
-        });
+        // const foundOrder = this.orders.find((order) => {
+        //   return point.x === order.signalTime;
+        // });
 
-        if (foundOrder) {
-          if (foundOrder.side.toLowerCase() === 'buy') {
-            point.marker = {
-              symbol: 'triangle',
-              fillColor: 'green',
-              radius: 5
-            };
-          } else if (foundOrder.side.toLowerCase() === 'sell') {
-            point.marker = {
-              symbol: 'triangle-down',
-              fillColor: 'red',
-              radius: 5
-            };
-          }
-        }
+        // if (foundOrder) {
+        //   if (foundOrder.side.toLowerCase() === 'buy') {
+        //     point.marker = {
+        //       symbol: 'triangle',
+        //       fillColor: 'green',
+        //       radius: 5
+        //     };
+        //   } else if (foundOrder.side.toLowerCase() === 'sell') {
+        //     point.marker = {
+        //       symbol: 'triangle-down',
+        //       fillColor: 'red',
+        //       radius: 5
+        //     };
+        //   }
+        // }
 
         this.chart.addPoint(point);
 
@@ -367,7 +367,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
 
       this.tiles = this.daytradeService.buildTileList(this.orders);
-      this.volumeChart = this.initVolumeChart(volume);
+      // this.volumeChart = this.initVolumeChart(volume);
     }
 
     if (moment().isAfter(this.endTime)) {
@@ -510,6 +510,27 @@ export class BbCardComponent implements OnInit, OnChanges {
         name: title,
         id: title,
         data: []
+      }]
+    });
+  }
+
+  initPriceChartv2(): StockChart {
+    return new StockChart({
+      rangeSelector: {
+        selected: 1
+      },
+      title: {
+        text: 'AAPL Stock Price'
+      },
+      series: [{
+        tooltip: {
+          valueDecimals: 2
+        },
+        name: 'AAPL',
+        data: [
+          [1293580800000, 46.47],
+          [1293667200000, 46.24]
+        ]
       }]
     });
   }
