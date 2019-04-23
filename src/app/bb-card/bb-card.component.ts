@@ -303,60 +303,60 @@ export class BbCardComponent implements OnInit, OnChanges {
       for (let i = 0; i < dataLength; i += 1) {
         const closePrice = quotes.close[i];
 
-        const point: Point = { x: null, y: null };
-
-        point.x = moment.unix(timestamps[i]).valueOf(); // the date
-        point.y = closePrice; // close
+        const point: Point = {
+          x: moment.unix(timestamps[i]).valueOf(),
+          y: closePrice
+        };
 
         if (!this.live && i > this.bbandPeriod && !this.stopped) {
           const lastIndex = i;
           const firstIndex = i - this.bbandPeriod;
-          await this.runStrategy(quotes, timestamps, firstIndex, lastIndex);
+          const order = await this.runStrategy(quotes, timestamps, firstIndex, lastIndex);
 
-          // const vwmaDesc = this.indicators.vwma ? this.indicators.vwma.toFixed(2) : '';
-          // const rocDesc = `roc10: ${this.indicators.roc10}, `;
-          // const bandDesc = `band: ${this.indicators.band}, `;
-          // const momentumDesc = `roc70: ${this.indicators.momentum}, `;
-          // const mfiDesc = `mfi: ${this.indicators.mfi} `;
+          const vwmaDesc = this.indicators.vwma ? this.indicators.vwma.toFixed(2) : '';
+          const rocDesc = `roc10:${this.indicators.roc10}, `;
+          const bandDesc = `band:${this.indicators.band}, `;
+          const momentumDesc = `roc70:${this.indicators.momentum}, `;
+          const mfiDesc = `mfi:${this.indicators.mfi} `;
 
-          point.description = '';
+          point.description = `${vwmaDesc}${rocDesc}${bandDesc}${momentumDesc}${mfiDesc}`;
 
-          // if (order) {
-          //   if (order.side.toLowerCase() === 'buy') {
-          //     point.marker = {
-          //       symbol: 'triangle',
-          //       fillColor: 'green',
-          //       radius: 5
-          //     };
-          //   } else if (order.side.toLowerCase() === 'sell') {
-          //     point.marker = {
-          //       symbol: 'triangle-down',
-          //       fillColor: 'red',
-          //       radius: 5
-          //     };
-          //   }
-          // }
+          if (order) {
+            if (order.side.toLowerCase() === 'buy') {
+              point.marker = {
+                symbol: 'triangle',
+                fillColor: 'green',
+                radius: 5
+              };
+            } else if (order.side.toLowerCase() === 'sell') {
+              point.marker = {
+                symbol: 'triangle-down',
+                fillColor: 'red',
+                radius: 5
+              };
+            }
+          }
         }
 
-        // const foundOrder = this.orders.find((order) => {
-        //   return point.x === order.signalTime;
-        // });
+        const foundOrder = this.orders.find((order) => {
+          return point.x === order.signalTime;
+        });
 
-        // if (foundOrder) {
-        //   if (foundOrder.side.toLowerCase() === 'buy') {
-        //     point.marker = {
-        //       symbol: 'triangle',
-        //       fillColor: 'green',
-        //       radius: 5
-        //     };
-        //   } else if (foundOrder.side.toLowerCase() === 'sell') {
-        //     point.marker = {
-        //       symbol: 'triangle-down',
-        //       fillColor: 'red',
-        //       radius: 5
-        //     };
-        //   }
-        // }
+        if (foundOrder) {
+          if (foundOrder.side.toLowerCase() === 'buy') {
+            point.marker = {
+              symbol: 'triangle',
+              fillColor: 'green',
+              radius: 5
+            };
+          } else if (foundOrder.side.toLowerCase() === 'sell') {
+            point.marker = {
+              symbol: 'triangle-down',
+              fillColor: 'red',
+              radius: 5
+            };
+          }
+        }
 
         this.chart.addPoint(point);
 
@@ -473,17 +473,6 @@ export class BbCardComponent implements OnInit, OnChanges {
           }
         }
       },
-      yAxis: {
-        endOnTick: false,
-        startOnTick: false,
-        labels: {
-          enabled: false
-        },
-        title: {
-          text: null
-        },
-        tickPositions: [0]
-      },
       tooltip: {
         crosshairs: true,
         shared: true,
@@ -503,7 +492,8 @@ export class BbCardComponent implements OnInit, OnChanges {
         series: {
           marker: {
             enabled: true
-          }
+          },
+          turboThreshold: 5000
         }
       },
       series: [{
