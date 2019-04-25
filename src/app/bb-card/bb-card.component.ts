@@ -67,6 +67,7 @@ export class BbCardComponent implements OnInit, OnChanges {
   dataInterval: string;
   startTime;
   endTime;
+  sellTime;
   backtestQuotes: JSON[];
   stopped: boolean;
   isBacktest: boolean;
@@ -107,7 +108,8 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
     });
     this.startTime = moment.tz('10:00am', 'h:mma', 'America/New_York');
-    this.endTime = moment.tz('3:30pm', 'h:mma', 'America/New_York');
+    this.endTime = moment.tz('3:45pm', 'h:mma', 'America/New_York');
+    this.sellTime = moment.tz('3:30pm', 'h:mma', 'America/New_York');
     this.showGraph = false;
     this.bbandPeriod = 80;
     this.dataInterval = '1min';
@@ -865,7 +867,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
 
     if (this.config.SellAtClose) {
-      if (moment.unix(signalTime).isAfter(this.endTime)) {
+      if (moment.unix(signalTime).isAfter(this.sellTime)) {
         return this.closeAllPositions(price, signalTime);
       }
     }
