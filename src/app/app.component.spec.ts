@@ -51,7 +51,7 @@ import { RhInputComponent } from './rh-input/rh-input.component';
 import { ProductViewComponent } from './product-view/product-view.component';
 import { LoginComponent } from './login/login.component';
 import { LoginDialogComponent } from './login-dialog/login-dialog.component';
-import { MainViewComponent } from './main-view/main-view.component';
+import { TradeViewComponent } from './trade-view/trade-view.component';
 import { PortfolioTableComponent } from './portfolio-table/portfolio-table.component';
 import { PortfolioViewComponent } from './portfolio-view/portfolio-view.component';
 import { InstrumentPipe } from './shared/pipes/instrument.pipe';
@@ -79,7 +79,7 @@ describe('AppComponent', () => {
         ProductViewComponent,
         LoginComponent,
         LoginDialogComponent,
-        MainViewComponent,
+        TradeViewComponent,
         PortfolioTableComponent,
         PortfolioViewComponent,
         InstrumentPipe,

@@ -1,44 +1,51 @@
 <mat-sidenav-container>
   <mat-sidenav mode="side" opened>
     <mat-list role="list">
-      <mat-list-item role="listitem">
+      <mat-nav-list role="listitem">
         <app-reporting></app-reporting>
-      </mat-list-item>
-      <mat-list-item role="listitem">
+      </mat-nav-list>
+      <mat-nav-list role="listitem">
         <app-login></app-login>
-      </mat-list-item>
-      <mat-list-item role="listitem">
+      </mat-nav-list>
+      <mat-nav-list role="listitem">
         <button mat-icon-button>
-          <a routerLink="/home" matTooltip="trade">
+          <a routerLink="/overview" matTooltip="overview">
+            <mat-icon>home</mat-icon>
+          </a>
+        </button>
+      </mat-nav-list>
+      <mat-nav-list role="listitem">
+        <button mat-icon-button>
+          <a routerLink="/trade-view" matTooltip="trade">
             <mat-icon>shop</mat-icon>
           </a>
         </button>
-      </mat-list-item>
-      <mat-list-item role="listitem">
+      </mat-nav-list>
+      <mat-nav-list role="listitem">
         <button mat-icon-button>
           <a routerLink="/research" matTooltip="screen stocks">
             <mat-icon>assessment</mat-icon>
           </a>
         </button>
-      </mat-list-item>
-      <mat-list-item role="listitem">
+      </mat-nav-list>
+      <mat-nav-list role="listitem">
         <button mat-icon-button>
           <a routerLink="/backtest" matTooltip="backtest intraday">
             <mat-icon>archive</mat-icon>
           </a>
         </button>
-      </mat-list-item>
-      <mat-list-item role="listitem">
+      </mat-nav-list>
+      <mat-nav-list role="listitem">
         <button mat-icon-button>
           <a routerLink="/deep-analysis/timeline" matTooltip="deep analysis">
             <mat-icon>trending_up</mat-icon>
           </a>
         </button>
-      </mat-list-item>
-      <mat-list-item role="listitem">
+      </mat-nav-list>
+      <mat-nav-list role="listitem">
         <h3>Service Status:</h3>
-      </mat-list-item>
-      <mat-list-item role="listitem">
+      </mat-nav-list>
+      <mat-nav-list role="listitem">
         <mat-chip-list class="mat-chip-list-stacked" multiple>
           <mat-chip color="primary" [selected]="dataStatus" (click)="checkStatus()">
             <h5>
@@ -51,7 +58,7 @@
             </h5>
           </mat-chip>
         </mat-chip-list>
-      </mat-list-item>
+      </mat-nav-list>
     </mat-list>
 
   </mat-sidenav>

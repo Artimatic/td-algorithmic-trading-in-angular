@@ -2,11 +2,11 @@ import { Component } from '@angular/core';
 import { AuthenticationService } from '../shared';
 
 @Component({
-  selector: 'app-main-view',
-  templateUrl: './main-view.component.html',
-  styleUrls: ['./main-view.component.css']
+  selector: 'app-trade-view',
+  templateUrl: './trade-view.component.html',
+  styleUrls: ['./trade-view.component.css']
 })
-export class MainViewComponent {
+export class TradeViewComponent {
   isLinear = false;
 
   constructor(private authenticationService: AuthenticationService) { }

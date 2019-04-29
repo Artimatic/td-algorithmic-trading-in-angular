@@ -26,13 +26,15 @@ export class AppComponent implements OnInit {
     this.backtestService.pingGoliath().subscribe(
       (data: ServiceStatus) => {
         console.log('data service:', data);
-        switch (data.status) {
-          case 'UP':
-            this.dataStatus = true;
-            break;
-          case 'DOWN':
-            this.dataStatus = false;
-            break;
+        if (data) {
+          switch (data.status) {
+            case 'UP':
+              this.dataStatus = true;
+              break;
+            case 'DOWN':
+              this.dataStatus = false;
+              break;
+          }
         }
       },
       () => {
@@ -42,14 +44,15 @@ export class AppComponent implements OnInit {
     this.backtestService.pingArmidillo().subscribe(
       (data: ServiceStatus) => {
         console.log('ml service:', data);
-
-        switch (data.status) {
-          case 'UP':
-            this.mlStatus = true;
-            break;
-          case 'DOWN':
-            this.mlStatus = false;
-            break;
+        if (data) {
+          switch (data.status) {
+            case 'UP':
+              this.mlStatus = true;
+              break;
+            case 'DOWN':
+              this.mlStatus = false;
+              break;
+          }
         }
       },
       () => {
