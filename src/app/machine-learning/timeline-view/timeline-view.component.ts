@@ -4,6 +4,7 @@ import * as moment from 'moment';
 import { MatSnackBar } from '@angular/material';
 import { Chart } from 'angular-highcharts';
 import { FormGroup, FormBuilder } from '@angular/forms';
+import { TodoService } from '../../overview/todo-list/todo.service';
 
 @Component({
   selector: 'app-timeline-view',
@@ -22,7 +23,8 @@ export class TimelineViewComponent implements OnInit {
   constructor(
     private _formBuilder: FormBuilder,
     public snackBar: MatSnackBar,
-    private backtestService: BacktestService) { }
+    private backtestService: BacktestService,
+    private todoService: TodoService) { }
 
   ngOnInit() {
     this.endDate = new Date();
@@ -32,6 +34,7 @@ export class TimelineViewComponent implements OnInit {
       query: this.symbol
     });
     this.isLoading = false;
+    this.todoService.setMarketAnalysis();
   }
 
   findTimeline(): void {

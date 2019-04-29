@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { TodoService } from './todo.service';
 
 @Component({
   selector: 'app-todo-list',
@@ -6,12 +7,16 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./todo-list.component.css']
 })
 export class TodoListComponent implements OnInit {
+  marketAnalysis: boolean;
   screenStocks: boolean;
+  intradayBacktest: boolean;
 
-  constructor() { }
+  constructor(private todoService: TodoService) { }
 
   ngOnInit() {
-    this.screenStocks = false;
+    this.marketAnalysis = this.todoService.marketAnalysis;
+    this.screenStocks = this.todoService.screenStocks;
+    this.intradayBacktest = this.todoService.intradayBacktest;
   }
 
 }

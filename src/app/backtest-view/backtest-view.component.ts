@@ -7,6 +7,7 @@ import { Holding } from '../shared/models';
 import * as _ from 'lodash';
 import { OrderRow } from '../shared/models/order-row';
 import { MatSnackBar } from '@angular/material';
+import { TodoService } from '../overview/todo-list/todo.service';
 
 @Component({
   selector: 'app-backtest-view',
@@ -22,11 +23,13 @@ export class BacktestViewComponent implements OnInit {
     public cartService: CartService,
     public scoreKeeperService: ScoreKeeperService,
     private backtestService: BacktestService,
-    public snackBar: MatSnackBar
+    public snackBar: MatSnackBar,
+    private todoService: TodoService
     ) { }
 
   ngOnInit() {
     this.backtestData = {};
+    this.todoService.setIntradayBacktest();
   }
 
   import(file) {
