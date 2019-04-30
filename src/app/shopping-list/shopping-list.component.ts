@@ -1,27 +1,29 @@
 import { Component, OnInit } from '@angular/core';
 import { CartService } from '../shared/services/cart.service';
 import { SmartOrder } from '../shared/models/smart-order';
-import { ScoreKeeperService, ReportingService, DaytradeService } from '../shared';
-import { MatDialog } from '@angular/material';
+import { ScoreKeeperService, ReportingService, DaytradeService, PortfolioService } from '../shared';
+import { MatDialog, MatSnackBar } from '@angular/material';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import { Subscription } from 'rxjs/Subscription';
 
-import * as moment from 'moment';
+import * as moment from 'moment-timezone';
 import * as _ from 'lodash';
+import { Holding } from '../shared/models';
 
 @Component({
-  selector: 'app-bollinger-band',
-  templateUrl: './bollinger-band.component.html',
-  styleUrls: ['./bollinger-band.component.css']
+  selector: 'app-shopping-list',
+  templateUrl: './shopping-list.component.html',
+  styleUrls: ['./shopping-list.component.css']
 })
-export class BollingerBandComponent implements OnInit {
+export class ShoppingListComponent implements OnInit {
   mu: SmartOrder;
   vti: SmartOrder;
   spxl: SmartOrder;
   vxx: SmartOrder;
   uvxy: SmartOrder;
   sh: SmartOrder;
+  spxu: SmartOrder;
 
   ordersStarted: number;
   interval: number;
@@ -30,21 +32,21 @@ export class BollingerBandComponent implements OnInit {
 
   sub: Subscription;
 
-  startTime: moment.Moment;
-  endTime: moment.Moment;
-  noonTime: moment.Moment;
+  marketOpenTime: moment.Moment;
+  marketCloseTime: moment.Moment;
 
   constructor(public cartService: CartService,
     public scoreKeeperService: ScoreKeeperService,
     public dialog: MatDialog,
     private reportingService: ReportingService,
-    private daytradeService: DaytradeService) { }
+    private daytradeService: DaytradeService,
+    public snackBar: MatSnackBar,
+    private portfolioService: PortfolioService) { }
 
   ngOnInit() {
-    this.interval = 80808;
-    this.startTime = moment('10:10am', 'h:mma');
-    this.noonTime = moment('1:10pm', 'h:mma');
-    this.endTime = moment('3:55pm', 'h:mma');
+    this.interval = 70800;
+    this.marketOpenTime = moment.tz('9:30am', 'h:mma', 'America/New_York');
+    this.marketCloseTime = moment.tz('3:55pm', 'h:mma', 'America/New_York');
 
     this.ordersStarted = 0;
     this.spxl = {
@@ -55,7 +57,7 @@ export class BollingerBandComponent implements OnInit {
         name: 'Direxion Daily S&P 500  Bull 3x Shares',
         realtime_price: 49.52
       },
-      quantity: 60, price: 49.52,
+      quantity: 10, price: 49.52,
       submitted: false, pending: false,
       side: 'DayTrade',
       useTakeProfit: true,
@@ -74,7 +76,13 @@ export class BollingerBandComponent implements OnInit {
       submitted: false, pending: false,
       side: 'DayTrade',
       useTakeProfit: true,
-      useStopLoss: true
+      useStopLoss: true,
+      stopped: false,
+      lossThreshold: -0.005,
+      profitTarget: 0.004,
+      spyMomentum: true,
+      sellAtClose: true,
+      meanReversion1: true
     };
 
     this.vxx = {
@@ -89,7 +97,11 @@ export class BollingerBandComponent implements OnInit {
       submitted: false, pending: false,
       side: 'DayTrade',
       useTakeProfit: true,
-      useStopLoss: true
+      useStopLoss: true,
+      lossThreshold: -0.005,
+      profitTarget: 0.004,
+      spyMomentum: true,
+      sellAtClose: true
     };
 
     this.uvxy = {
@@ -117,7 +129,15 @@ export class BollingerBandComponent implements OnInit {
       },
       quantity: 60, price: 54.59000015258789,
       submitted: false, pending: false,
-      side: 'Buy'
+      side: 'Buy',
+      useTakeProfit: true,
+      useStopLoss: true,
+      stopped: false,
+      lossThreshold: -0.005,
+      profitTarget: 0.004,
+      spyMomentum: true,
+      sellAtClose: true,
+      meanReversion1: true
     };
 
     this.sh = {
@@ -138,6 +158,36 @@ export class BollingerBandComponent implements OnInit {
       spyMomentum: true,
       sellAtClose: true
     };
+
+    this.portfolioService.getInstruments('SPXU').subscribe((response) => {
+      const instruments = response.results[0];
+      const newHolding: Holding = {
+        instrument: instruments.url,
+        symbol: instruments.symbol,
+        name: instruments.name
+      };
+
+      const order: SmartOrder = {
+        holding: newHolding,
+        quantity: 10,
+        price: 28.24,
+        submitted: false,
+        pending: false,
+        side: 'DayTrade',
+        useTakeProfit: true,
+        useStopLoss: true,
+        lossThreshold: -0.002,
+        profitTarget: 0.004,
+        spyMomentum: true,
+        sellAtClose: true
+      };
+      this.spxu = order;
+    },
+    (error) => {
+      this.snackBar.open('Error getting instruments', 'Dismiss', {
+        duration: 2000,
+      });
+    });
   }
 
   deleteSellOrder(deleteOrder: SmartOrder) {
@@ -163,21 +213,6 @@ export class BollingerBandComponent implements OnInit {
     });
   }
 
-  triggerOrder(orders: SmartOrder[]) {
-    _.forEach(orders, (order: SmartOrder) => {
-      const startDelay = 60000 * _.round(this.ordersStarted / 5, 0);
-
-      console.log(`trigger start: ${order.holding.symbol} ${new Date()} ${startDelay}`);
-
-      setTimeout(() => {
-        console.log(`triggered: ${order.holding.symbol} ${new Date()} `);
-        order.triggered = true;
-      }, startDelay);
-
-      this.ordersStarted++;
-    });
-  }
-
   queueAlgos(orders: SmartOrder[]) {
     this.alive = true;
     let counter = 1;
@@ -186,13 +221,13 @@ export class BollingerBandComponent implements OnInit {
 
     _.forEach(orders, (order: SmartOrder) => {
       order.init = true;
+      order.stopped = false;
     });
 
     this.sub = TimerObservable.create(0, this.interval)
       .takeWhile(() => this.alive)
       .subscribe(() => {
-        // TODO: Use moment timezones
-        if (moment().utcOffset('-0500').isAfter(this.startTime.utcOffset('-0500'))) {
+        if (moment().isAfter(this.marketOpenTime)) {
           let executed = 0;
           while (executed < limit && lastIndex < orders.length) {
             orders[lastIndex].stepForward = counter;
@@ -203,7 +238,7 @@ export class BollingerBandComponent implements OnInit {
           if (lastIndex >= orders.length) {
             lastIndex = 0;
           }
-          if (moment().utcOffset('-0500').isAfter(this.endTime.utcOffset('-0500'))) {
+          if (moment().isAfter(this.marketCloseTime)) {
             this.reportingService.exportAuditHistory();
             this.stop();
           }
@@ -223,11 +258,37 @@ export class BollingerBandComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        const resolve = () => { };
-        const reject = () => { };
+        const resolve = (data) => {
+          console.log('close all resolved: ', data);
+          this.snackBar.open('Open positions closed', 'Dismiss');
+         };
+        const reject = (error) => {
+          console.log('close all error: ', error);
+          this.snackBar.open('Unable to close all positions', 'Dismiss');
+         };
         const handleNotFound = () => { };
         this.daytradeService.closeTrades(resolve, reject, handleNotFound);
       }
     });
+  }
+
+  stopAndDeleteOrders() {
+    this.stop();
+    if (this.sub) {
+      this.sub.unsubscribe();
+      this.sub = undefined;
+    }
+    const buySells = this.cartService.sellOrders.concat(this.cartService.buyOrders);
+
+    _.forEach(buySells.concat(this.cartService.otherOrders), (order: SmartOrder) => {
+      order.stopped = true;
+    });
+
+    this.cartService.deleteCart();
+  }
+
+  loadExamples() {
+    this.cartService.addToCart(this.vti);
+    this.cartService.addToCart(this.mu);
   }
 }

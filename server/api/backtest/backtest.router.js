@@ -39,3 +39,7 @@ export let roc = (request, response) => {
 export let mfi = (request, response) => {
   BacktestController.getMfi(request, response);
 };
+
+export let vwma = (request, response) => {
+  BacktestController.getVwma(request, response);
+};

@@ -63,6 +63,40 @@ export class CartService {
     this.calculateTotals();
   }
 
+  deleteDaytrade(deleteOrder: SmartOrder) {
+    const index = this.otherOrders.findIndex((order) => {
+      if (deleteOrder.price === order.price
+        && deleteOrder.holding.symbol === order.holding.symbol
+        && deleteOrder.quantity === order.quantity) {
+        return true;
+      }
+      return false;
+    });
+    this.otherOrders.splice(index, 1);
+    this.calculateTotals();
+  }
+
+  deleteOrder(order: SmartOrder) {
+    switch (order.side.toLowerCase()) {
+      case 'sell':
+        this.deleteSell(order);
+      break;
+      case 'buy':
+        this.deleteBuy(order);
+      break;
+      case 'daytrade':
+        this.deleteDaytrade(order);
+      break;
+    }
+  }
+
+  deleteCart() {
+    this.sellOrders = [];
+    this.buyOrders = [];
+    this.otherOrders = [];
+  }
+
+
   calculateTotals() {
     this.buyTotal = this.buyOrders.reduce((acc, buy) => {
       return acc + (buy.quantity * buy.price);

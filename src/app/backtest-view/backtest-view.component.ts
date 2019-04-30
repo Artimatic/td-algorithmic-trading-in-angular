@@ -7,6 +7,7 @@ import { Holding } from '../shared/models';
 import * as _ from 'lodash';
 import { OrderRow } from '../shared/models/order-row';
 import { MatSnackBar } from '@angular/material';
+import { TodoService } from '../overview/todo-list/todo.service';
 
 @Component({
   selector: 'app-backtest-view',
@@ -22,11 +23,13 @@ export class BacktestViewComponent implements OnInit {
     public cartService: CartService,
     public scoreKeeperService: ScoreKeeperService,
     private backtestService: BacktestService,
-    public snackBar: MatSnackBar
+    public snackBar: MatSnackBar,
+    private todoService: TodoService
     ) { }
 
   ngOnInit() {
     this.backtestData = {};
+    this.todoService.setIntradayBacktest();
   }
 
   import(file) {
@@ -47,12 +50,15 @@ export class BacktestViewComponent implements OnInit {
           pending: false,
           side: row.side,
           lossThreshold: row.Stop * 1 || null,
+          trailingStop: row.TrailingStop || null,
           profitTarget: row.Target * 1 || null,
           useStopLoss: row.StopLoss || null,
+          useTrailingStopLoss: row.TrailingStopLoss || null,
           useTakeProfit: row.TakeProfit || null,
           meanReversion1: row.MeanReversion1 || null,
           useMfi: row.Mfi || null,
           spyMomentum: row.SpyMomentum || null,
+          buyCloseSellOpen: row.BuyCloseSellOpen || null,
           yahooData: row.YahooData || null,
           sellAtClose: row.SellAtClose || null,
           orderSize: row.OrderSize * 1 || null,

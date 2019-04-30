@@ -7,16 +7,19 @@ export interface SmartOrder extends Order {
     signalTime?: number;
     lossThreshold?: number;
     profitTarget?: number;
+    trailingStop?: number;
     useStopLoss?: boolean;
+    useTrailingStopLoss?: boolean;
     useTakeProfit?: boolean;
     meanReversion1?: boolean;
     useMfi?: boolean;
     spyMomentum?: boolean;
+    buyCloseSellOpen?: boolean;
     sellAtClose?: boolean;
     yahooData?: boolean;
     orderSize?: number;
-    triggered?: boolean;
     triggeredBacktest?: boolean;
     init?: boolean;
     stepForward?: number;
+    stopped?: boolean;
 }

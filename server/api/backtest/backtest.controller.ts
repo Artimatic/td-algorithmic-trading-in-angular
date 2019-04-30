@@ -115,6 +115,16 @@ class BacktestController extends BaseController {
     }
   }
 
+  getVwma(request, response) {
+    if (_.isEmpty(request.body)) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    } else {
+      BacktestService.getVwma(request.body.close, request.body.volume, request.body.period)
+        .then((data) => BaseController.requestGetSuccessHandler(response, data))
+        .catch((err) => BaseController.requestErrorHandler(response, err));
+    }
+  }
+
   getInfoV2(request, response) {
     BacktestService.getInfoV2(request.body.symbol, request.body.to, request.body.from)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
@@ -129,6 +139,18 @@ class BacktestController extends BaseController {
 
   getHistoricalMatches(request, response) {
     BacktestService.getHistoricalMatches(request.body.symbol, request.body.to, request.body.from)
+    .then((data) => BaseController.requestGetSuccessHandler(response, data))
+    .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+  getDataStatus(request, response) {
+    BacktestService.checkServiceStatus('data')
+    .then((data) => BaseController.requestGetSuccessHandler(response, data))
+    .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+  getAnalysisStatus(request, response) {
+    BacktestService.checkServiceStatus('ml')
     .then((data) => BaseController.requestGetSuccessHandler(response, data))
     .catch((err) => BaseController.requestErrorHandler(response, err));
   }

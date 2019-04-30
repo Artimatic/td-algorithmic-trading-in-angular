@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { BollingerBandComponent } from './bollinger-band.component';
+import { TradeViewComponent } from './trade-view.component';
 
-describe('BollingerBandComponent', () => {
-  let component: BollingerBandComponent;
-  let fixture: ComponentFixture<BollingerBandComponent>;
+describe('MainViewComponent', () => {
+  let component: TradeViewComponent;
+  let fixture: ComponentFixture<TradeViewComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ BollingerBandComponent ]
+      declarations: [ TradeViewComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(BollingerBandComponent);
+    fixture = TestBed.createComponent(TradeViewComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

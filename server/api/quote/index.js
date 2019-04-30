@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.post('/', handler.quote);
 router.post('/current', handler.currentQuote);
-router.post('/price', handler.price);
+router.post('/iex', handler.IEXIntraday);
 router.post('/raw', handler.rawQuote);
 router.post('/intraday', handler.intraday);
 router.post('/intraday2', handler.intradayv2);

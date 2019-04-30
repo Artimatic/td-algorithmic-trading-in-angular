@@ -1,4 +1,11 @@
 <mat-card>
+  <span class="delete-me">
+    <button mat-icon-button>
+        <a (click)="delete()" matTooltip="delete order">
+          <mat-icon>delete_forever</mat-icon>
+        </a>
+      </button>
+  </span>
   <div class="banner" *ngIf="error">
     <div class="banner-content">
       ERROR: {{error}}
@@ -25,8 +32,11 @@
         <mat-form-field hintLabel="Quantity">
           <input matInput type="number" placeholder="Quantity" formControlName="quantity" required>
         </mat-form-field>
-        <mat-form-field hintLabel="Loss circuit breaker">
-          <input matInput type="number" placeholder="Loss Threshold" formControlName="lossThreshold" required>
+        <mat-form-field hintLabel="Stop Loss">
+          <input matInput type="number" placeholder="Stop Loss" formControlName="lossThreshold" required>
+        </mat-form-field>
+        <mat-form-field hintLabel="Trailing stop loss">
+          <input matInput type="number" placeholder="Trailing Stop Loss" formControlName="trailingStop" required>
         </mat-form-field>
         <mat-form-field hintLabel="Profit exit">
           <input matInput type="number" placeholder="Profit Target" formControlName="profitTarget">
@@ -35,7 +45,7 @@
           <input matInput type="number" placeholder="Orders" formControlName="orderSize" required>
         </mat-form-field>
         <mat-form-field>
-          <mat-select placeholder="Preferences" formControlName="preferences" [(ngModel)]="myPreferences" name="preferences" multiple>
+          <mat-select placeholder="Preferences" [formControl]="preferences" name="preferences" multiple>
             <mat-option *ngFor="let pref of preferenceList" [value]="pref">
               {{ pref }}
             </mat-option>
@@ -76,7 +86,7 @@
           <div fxFlex="95%">
             <div *ngIf="showGraph">
               <div [chart]="chart"></div>
-              <div [chart]="volumeChart"></div>
+              <!-- <div [chart]="volumeChart"></div> -->
             </div>
             <div class="order-log" *ngIf="!showGraph">
               <mat-grid-list cols="3" rowHeight="150px">

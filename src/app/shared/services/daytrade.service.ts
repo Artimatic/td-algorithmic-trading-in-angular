@@ -9,6 +9,7 @@ import * as moment from 'moment';
 import * as _ from 'lodash';
 import { IndicatorsService } from './indicators.service';
 import { CartService } from './cart.service';
+import { CardOptions } from '../models/card-options';
 
 @Injectable()
 export class DaytradeService {
@@ -26,12 +27,12 @@ export class DaytradeService {
   closeTrades(resolve: Function, reject: Function, handleNotFound: Function): void {
     _.forEach(this.cartService.otherOrders, (order: SmartOrder) => {
       this.portfolioService.getQuote(order.holding.symbol)
-      .toPromise()
-      .then((quote) => {
-        const sellOrder = this.createOrder(order.holding, 'Sell', order.positionCount,  1 * quote.last_trade_price, moment().unix());
+        .toPromise()
+        .then((quote) => {
+          const sellOrder = this.createOrder(order.holding, 'Sell', order.positionCount, 1 * quote.last_trade_price, moment().unix());
 
-        this.sendSell(sellOrder, 'market', resolve, reject, handleNotFound);
-      });
+          this.sendSell(sellOrder, 'market', resolve, reject, handleNotFound);
+        });
     });
   }
 
@@ -39,6 +40,12 @@ export class DaytradeService {
     return minutes.minutes() + minutes.hours() * 60;
   }
 
+  /*
+  * const timePeriod = this.daytradeService.tradePeriod(moment.unix(lastTimestamp), this.startTime, this.noonTime, this.endTime);
+  * if (timePeriod === 'pre' || timePeriod === 'after') {
+  *  return null;
+  * }
+  */
   tradePeriod(time: moment.Moment, start: moment.Moment, noon: moment.Moment, end: moment.Moment) {
     let period: String = 'pre';
     const minutes = this.minutesOfDay(time);
@@ -55,13 +62,15 @@ export class DaytradeService {
     return period;
   }
 
-  parsePreferences(preferences) {
-    const config = {
+  parsePreferences(preferences): CardOptions {
+    const config: CardOptions = {
       TakeProfit: false,
+      TrailingStopLoss: false,
       StopLoss: false,
       MeanReversion1: false,
       Mfi: false,
       SpyMomentum: false,
+      BuyCloseSellOpen: false,
       SellAtClose: false,
       useYahooData: false
     };
@@ -84,11 +93,17 @@ export class DaytradeService {
           case OrderPref.SpyMomentum:
             config.SpyMomentum = true;
             break;
+          case OrderPref.BuyCloseSellOpen:
+            config.BuyCloseSellOpen = true;
+            break;
           case OrderPref.SellAtClose:
             config.SellAtClose = true;
             break;
           case OrderPref.useYahooData:
             config.useYahooData = true;
+            break;
+          case OrderPref.TrailingStopLoss:
+            config.TrailingStopLoss = true;
             break;
         }
       });
@@ -461,7 +476,7 @@ export class DaytradeService {
       .toPromise()
       .then((quotes) => {
         quotes.chart.result[0].indicators.quote[0].close =
-        this.indicatorsService.fillInMissingReals(_.get(quotes, 'chart.result[0].indicators.quote[0].close'));
+          this.indicatorsService.fillInMissingReals(_.get(quotes, 'chart.result[0].indicators.quote[0].close'));
         return this.portfolioService.getQuote(symbol)
           .toPromise()
           .then((quote) => {

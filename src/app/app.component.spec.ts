@@ -34,8 +34,6 @@ import {
   MatTooltipModule,
 } from '@angular/material';
 
-import { FlexLayoutModule } from '@angular/flex-layout';
-
 import { routes } from './app.routes';
 import { BulkBacktestComponent } from './bulk-backtest';
 import { XlsImportComponent } from './xls-import/xls-import.component';
@@ -53,14 +51,14 @@ import { RhInputComponent } from './rh-input/rh-input.component';
 import { ProductViewComponent } from './product-view/product-view.component';
 import { LoginComponent } from './login/login.component';
 import { LoginDialogComponent } from './login-dialog/login-dialog.component';
-import { MainViewComponent } from './main-view/main-view.component';
+import { TradeViewComponent } from './trade-view/trade-view.component';
 import { PortfolioTableComponent } from './portfolio-table/portfolio-table.component';
 import { PortfolioViewComponent } from './portfolio-view/portfolio-view.component';
 import { InstrumentPipe } from './shared/pipes/instrument.pipe';
 import { OrderDialogComponent } from './order-dialog/order-dialog.component';
 import { CartService } from './shared/services/cart.service';
 import { ExcelService } from './shared/services/excel-service.service';
-import { BollingerBandComponent } from './bollinger-band/bollinger-band.component';
+import { ShoppingListComponent } from './shopping-list/shopping-list.component';
 import { BbCardComponent } from './bb-card/bb-card.component';
 import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.component';
 import { ReportingComponent, ReportDialogComponent } from './reporting/reporting.component';
@@ -81,12 +79,12 @@ describe('AppComponent', () => {
         ProductViewComponent,
         LoginComponent,
         LoginDialogComponent,
-        MainViewComponent,
+        TradeViewComponent,
         PortfolioTableComponent,
         PortfolioViewComponent,
         InstrumentPipe,
         OrderDialogComponent,
-        BollingerBandComponent,
+        ShoppingListComponent,
         BbCardComponent,
         ConfirmDialogComponent,
         ReportingComponent,
@@ -114,7 +112,6 @@ describe('AppComponent', () => {
         MatSidenavModule,
         MatExpansionModule,
         MatTableModule,
-        FlexLayoutModule,
         MatCheckboxModule,
         MatRadioModule,
         MatDialogModule,

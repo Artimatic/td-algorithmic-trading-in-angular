@@ -1,0 +1,40 @@
+<div class="shopping-list">
+  <h3 mat-subheader>Shopping List</h3>
+  <p>Import and execute your trading algorithms here</p>
+  <div>
+    <button mat-button color="warn" (click)="stopAndDeleteOrders()">Delete Orders</button>
+    <button mat-raised-button color="warn" (click)="closeAllTrades()">Close Opened DayTrades</button>
+    <button mat-button color="primary" (click)="loadExamples()">Load Example Orders</button>
+    <button mat-raised-button color="primary" (click)="confirmStart()">Start</button>
+  </div>
+  <div *ngFor="let buys of cartService.buyOrders">
+    <app-score-board [title]="buys.holding.symbol" [score]="scoreKeeperService.profitLossHash[buys.holding.symbol]"></app-score-board>
+  </div>
+  <div *ngFor="let other of cartService.otherOrders">
+    <app-score-board [title]="other.holding.symbol" [score]="scoreKeeperService.profitLossHash[other.holding.symbol]"></app-score-board>
+  </div>
+  <app-score-board [title]="'Total'" [score]="scoreKeeperService.total"></app-score-board>
+  <div *ngFor="let sell of cartService.sellOrders">
+    <app-bb-card [order]="sell" [triggeredBacktest]="sell.triggeredBacktest" [init]="sell.init"
+      [stepForward]="sell.stepForward" [tearDown]="sell.stopped">
+    </app-bb-card>
+  </div>
+  <div *ngFor="let buy of cartService.buyOrders">
+    <app-bb-card [order]="buy" [triggeredBacktest]="buy.triggeredBacktest" [init]="buy.init"
+      [stepForward]="buy.stepForward" [tearDown]="buy.stopped">
+    </app-bb-card>
+  </div>
+  <div *ngFor="let other of cartService.otherOrders">
+    <app-bb-card [order]="other" [triggeredBacktest]="other.triggeredBacktest" [init]="other.init"
+      [stepForward]="other.stepForward" [tearDown]="other.stopped">
+    </app-bb-card>
+  </div>
+  <hr>
+  <h3>Default Orders</h3>
+  <app-simple-card [order]="spxl">
+  </app-simple-card>
+  <span *ngIf="spxu">  
+    <app-simple-card [order]="spxu">
+    </app-simple-card>
+  </span>
+</div>

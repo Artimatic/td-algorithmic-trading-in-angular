@@ -1,51 +1,76 @@
 <mat-sidenav-container>
   <mat-sidenav mode="side" opened>
     <mat-list role="list">
-      <mat-list-item role="listitem">
+      <mat-nav-list role="listitem">
         <app-reporting></app-reporting>
-      </mat-list-item>
-      <mat-list-item role="listitem">
+      </mat-nav-list>
+      <mat-nav-list role="listitem">
         <app-login></app-login>
-      </mat-list-item>
-      <mat-list-item role="listitem">
-        <button mat-icon-button>
-          <a routerLink="/home" matTooltip="trade">
+      </mat-nav-list>
+      <mat-nav-list role="listitem">
+        <a routerLink="/overview" matTooltip="overview">
+          <button mat-button class="nav-item">
+            <mat-icon>home</mat-icon>
+            Home
+          </button>
+        </a>
+      </mat-nav-list>
+      <mat-nav-list role="listitem">
+        <a routerLink="/trade-view" matTooltip="trade">
+          <button mat-button class="nav-item">
             <mat-icon>shop</mat-icon>
-          </a>
-        </button>
-      </mat-list-item>
-      <mat-list-item role="listitem">
-        <button mat-icon-button>
-          <a routerLink="/research" matTooltip="research">
+            Live Trading
+          </button>
+        </a>
+      </mat-nav-list>
+      <mat-nav-list role="listitem">
+        <a routerLink="/research" matTooltip="screen stocks">
+          <button mat-button class="nav-item">
             <mat-icon>assessment</mat-icon>
-          </a>
-        </button>
-      </mat-list-item>
-      <mat-list-item role="listitem">
-        <button mat-icon-button>
-          <a routerLink="/options" matTooltip="options">
-            <mat-icon>insert_link</mat-icon>
-          </a>
-        </button>
-      </mat-list-item>
-      <mat-list-item role="listitem">
-        <button mat-icon-button>
-          <a routerLink="/timeline" matTooltip="timeline">
-            <mat-icon>trending_up</mat-icon>
-          </a>
-        </button>
-      </mat-list-item>
-      <mat-list-item role="listitem">
-        <button mat-icon-button>
-          <a routerLink="/backtest" matTooltip="backtest">
+            Screen Stocks
+          </button>
+        </a>
+      </mat-nav-list>
+      <mat-nav-list role="listitem">
+        <a routerLink="/backtest" matTooltip="backtest intraday">
+          <button mat-button class="nav-item">
             <mat-icon>archive</mat-icon>
-          </a>
-        </button>
-      </mat-list-item>
+            Backtest Intraday
+          </button>
+        </a>
+      </mat-nav-list>
+      <mat-nav-list role="listitem">
+        <a routerLink="/deep-analysis/timeline" matTooltip="deep analysis">
+          <button mat-button class="nav-item">
+            <mat-icon>trending_up</mat-icon>
+            Market Analysis
+          </button>
+        </a>
+      </mat-nav-list>
+      <mat-nav-list class="mat-chip-list-stacked" role="listitem">
+        <h3>Status:</h3>
+        <mat-chip-list multiple>
+          <mat-chip color="primary" [selected]="dataStatus" (click)="checkStatus()">
+            <h5>
+              Station Data Service
+            </h5>
+          </mat-chip>
+          <mat-chip color="primary" [selected]="mlStatus" (click)="checkStatus()">
+            <h5>
+              Station Analysis Service
+            </h5>
+          </mat-chip>
+        </mat-chip-list>
+      </mat-nav-list>
+      <mat-nav-list role="listitem">
+        <app-todo-list></app-todo-list>
+      </mat-nav-list>
     </mat-list>
 
   </mat-sidenav>
   <mat-sidenav-content>
-    <router-outlet></router-outlet>
+    <div class="main-container">
+      <router-outlet></router-outlet>
+    </div>
   </mat-sidenav-content>
 </mat-sidenav-container>

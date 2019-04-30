@@ -12,7 +12,8 @@ import BaseErrors from '../../components/errors/baseErrors';
 import * as tulind from 'tulind';
 import configurations from '../../config/environment';
 
-const appUrl = configurations.apps.goliath;
+const dataServiceUrl = configurations.apps.goliath;
+const mlServiceUrl = configurations.apps.armadillo;
 
 const config = {
   shortTerm: [3, 103],
@@ -42,6 +43,11 @@ class BacktestService {
   getRateOfChange(real, period) {
     return tulind.indicators.roc.indicator([real], [period]);
   }
+
+  getVwma(close, volume, period) {
+    return tulind.indicators.vwma.indicator([close, volume], [period]);
+  }
+
 
   evaluateStrategyAll(ticker, end, start) {
     console.log('Executing: ', ticker, new Date());
@@ -708,7 +714,7 @@ class BacktestService {
     const from = moment(startDate).format('YYYY-MM-DD');
 
 
-    const query = `${appUrl}backtest/strategy/mean-reversion/train?` +
+    const query = `${dataServiceUrl}backtest/strategy/mean-reversion/train?` +
       `symbol=${symbol}&to=${to}&from=${from}` +
       `&s=30&l=90&d=0.03&p=80`;
 
@@ -732,7 +738,7 @@ class BacktestService {
     const from = moment(startDate).format('YYYY-MM-DD');
 
     console.log('to: ', to, ' from:', from);
-    const query = `${appUrl}backtest/strategy/mean-reversion/chart?` +
+    const query = `${dataServiceUrl}backtest/strategy/mean-reversion/chart?` +
       `symbol=${symbol}&to=${to}&from=${from}` +
       `&s=30&l=90&d=0.03&p=80`;
 
@@ -756,7 +762,7 @@ class BacktestService {
     const from = moment(startDate).format('YYYY-MM-DD');
 
     console.log('to: ', to, ' from:', from);
-    const post = `${appUrl}backtest/train/find`;
+    const post = `${dataServiceUrl}backtest/train/find`;
 
     const options = {
       method: 'POST',
@@ -768,6 +774,28 @@ class BacktestService {
         save: false
       },
       json: true
+    };
+
+    return RequestPromise(options)
+      .catch((error) => {
+        console.log('Error: ', error);
+      });
+  }
+
+  checkServiceStatus(serviceName) {
+    let serviceUrl = '';
+    switch (serviceName) {
+      case 'data':
+        serviceUrl = `${dataServiceUrl}actuator/health`;
+      break;
+      case 'ml':
+        serviceUrl = `${mlServiceUrl}health`;
+      break;
+    }
+
+    const options = {
+      method: 'GET',
+      uri: serviceUrl
     };
 
     return RequestPromise(options)

@@ -1,20 +1,12 @@
 import { Component, OnChanges, Input, OnInit, ViewChild, SimpleChanges } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material';
-import 'rxjs/add/observable/concat';
-import 'rxjs/add/observable/defer';
-import 'rxjs/add/observable/merge';
-import 'rxjs/add/observable/of';
-import 'rxjs/add/operator/concatMap';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/operator/takeWhile';
 
-import { Chart } from 'angular-highcharts';
-import { DataPoint } from 'highcharts';
-import * as Highcharts from 'highcharts';
+import { Chart, StockChart } from 'angular-highcharts';
 
-import * as moment from 'moment';
+import * as Highcharts from 'highcharts';
+import * as moment from 'moment-timezone';
 import * as _ from 'lodash';
 
 import { OrderPref } from '../shared/enums/order-pref.enum';
@@ -31,6 +23,10 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
 import { Subscription } from 'rxjs/Subscription';
 import { AlgoService } from '../shared/services/algo.service';
 import { IndicatorsService } from '../shared/services/indicators.service';
+import { CartService } from '../shared/services/cart.service';
+import { Indicators } from '../shared/models/indicators';
+import { CardOptions } from '../shared/models/card-options';
+import { Point } from 'angular-highcharts/lib/chart';
 
 @Component({
   selector: 'app-bb-card',
@@ -40,9 +36,9 @@ import { IndicatorsService } from '../shared/services/indicators.service';
 export class BbCardComponent implements OnInit, OnChanges {
   @ViewChild('stepper') stepper;
   @Input() order: SmartOrder;
-  @Input() triggered: boolean;
   @Input() triggeredBacktest: boolean;
   @Input() init: boolean;
+  @Input() tearDown: boolean;
   @Input() stepForward: number;
   @Input() backtestData: number;
   chart: Chart;
@@ -64,20 +60,20 @@ export class BbCardComponent implements OnInit, OnChanges {
   backtestLive: boolean;
   lastPrice: number;
   preferenceList: any[];
-  config;
-  showGraph;
+  config: CardOptions;
+  showGraph: boolean;
   tiles;
-  bbandPeriod;
+  bbandPeriod: number;
   dataInterval: string;
-  myPreferences;
   startTime;
   endTime;
-  noonTime;
-  backtestQuotes;
-  momentum;
-  mfi;
-  stopped;
-  isBacktest;
+  sellTime;
+  backtestQuotes: JSON[];
+  stopped: boolean;
+  isBacktest: boolean;
+  indicators: Indicators;
+  trailingHighPrice: number;
+  preferences: FormControl;
 
   constructor(private _formBuilder: FormBuilder,
     private backtestService: BacktestService,
@@ -87,6 +83,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     private portfolioService: PortfolioService,
     private algoService: AlgoService,
     private indicatorsService: IndicatorsService,
+    public cartService: CartService,
     public dialog: MatDialog) { }
 
   ngOnInit() {
@@ -98,34 +95,44 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.backtestLive = false;
     this.preferenceList = [OrderPref.TakeProfit,
     OrderPref.StopLoss,
+    OrderPref.TrailingStopLoss,
     OrderPref.MeanReversion1,
     OrderPref.Mfi,
     OrderPref.SpyMomentum,
+    OrderPref.BuyCloseSellOpen,
     OrderPref.SellAtClose,
-    OrderPref.useYahooData
-    ];
+    OrderPref.useYahooData];
     Highcharts.setOptions({
       global: {
         useUTC: false
       }
     });
-    this.startTime = moment('10:10am', 'h:mma');
-    this.noonTime = moment('1:10pm', 'h:mma');
-    this.endTime = moment('3:20pm', 'h:mma');
+    this.startTime = moment.tz('10:00am', 'h:mma', 'America/New_York');
+    this.endTime = moment.tz('3:45pm', 'h:mma', 'America/New_York');
+    this.sellTime = moment.tz('3:30pm', 'h:mma', 'America/New_York');
     this.showGraph = false;
     this.bbandPeriod = 80;
     this.dataInterval = '1min';
 
+    this.indicators = {
+      mfi: null,
+      momentum: null,
+      vwma: null,
+      roc10: null,
+      band: null
+    };
+
     this.firstFormGroup = this._formBuilder.group({
       quantity: [this.order.quantity, Validators.required],
-      lossThreshold: [this.order.lossThreshold || -0.01, Validators.required],
+      lossThreshold: [this.order.lossThreshold || -0.005, Validators.required],
+      trailingStop: [this.order.trailingStop || -0.002, Validators.required],
       profitTarget: [{ value: this.order.profitTarget || 0.01, disabled: false }, Validators.required],
       orderSize: [this.order.orderSize || this.daytradeService.getDefaultOrderSize(this.order.quantity), Validators.required],
-      orderType: [this.order.side, Validators.required],
-      preferences: []
+      orderType: [this.order.side, Validators.required]
     });
 
-    this.myPreferences = this.initPreferences();
+    this.preferences = new FormControl();
+    this.preferences.setValue(this.initPreferences());
 
     this.secondFormGroup = this._formBuilder.group({
       secondCtrl: ['', Validators.required]
@@ -135,8 +142,8 @@ export class BbCardComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (_.get(changes, 'triggered.currentValue')) {
-      this.goLive();
+    if (_.get(changes, 'tearDown.currentValue')) {
+      this.stop();
     } else if (_.get(changes, 'backtestData.currentValue')) {
       this.backtest(this.backtestData);
     } else if (_.get(changes, 'triggeredBacktest.currentValue')) {
@@ -264,6 +271,9 @@ export class BbCardComponent implements OnInit, OnChanges {
             } else {
               return this.daytradeService.getIntradayYahoo(this.order.holding.symbol);
             }
+          })
+          .catch(() => {
+            return this.daytradeService.getIntradayYahoo(this.order.holding.symbol);
           });
 
     } else if (this.backtestQuotes.length) {
@@ -295,15 +305,23 @@ export class BbCardComponent implements OnInit, OnChanges {
       for (let i = 0; i < dataLength; i += 1) {
         const closePrice = quotes.close[i];
 
-        const point: DataPoint = {};
-
-        point.x = moment.unix(timestamps[i]).valueOf(); // the date
-        point.y = closePrice; // close
+        const point: Point = {
+          x: moment.unix(timestamps[i]).valueOf(),
+          y: closePrice
+        };
 
         if (!this.live && i > this.bbandPeriod && !this.stopped) {
           const lastIndex = i;
           const firstIndex = i - this.bbandPeriod;
           const order = await this.runStrategy(quotes, timestamps, firstIndex, lastIndex);
+
+          const vwmaDesc = this.indicators.vwma ? this.indicators.vwma.toFixed(2) : '';
+          const rocDesc = `roc10:${this.indicators.roc10}, `;
+          const bandDesc = `band:${this.indicators.band}, `;
+          const momentumDesc = `roc70:${this.indicators.momentum}, `;
+          const mfiDesc = `mfi:${this.indicators.mfi} `;
+
+          point.description = `${vwmaDesc}${rocDesc}${bandDesc}${momentumDesc}${mfiDesc}`;
 
           if (order) {
             if (order.side.toLowerCase() === 'buy') {
@@ -351,23 +369,12 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
 
       this.tiles = this.daytradeService.buildTileList(this.orders);
-      this.volumeChart = this.initVolumeChart(volume);
+      // this.volumeChart = this.initVolumeChart(volume);
     }
 
-    // TODO: Use moment timezones
-    // if (moment().isAfter(this.endTime)) {
-    //   this.reportingService.addAuditLog(this.order.holding.symbol, `Final Orders ${this.order.holding.name}`);
-
-    //   _.forEach(this.tiles, (tile) => {
-    //     _.forEach(tile.orders, (order) => {
-    //       const orderStr = JSON.stringify(order);
-    //       console.log(`Order: ${orderStr}`);
-    //       // this.reportingService.addAuditLog(`Order: ${orderStr}`);
-    //     });
-    //   });
-
-    //   this.stop();
-    // }
+    if (moment().isAfter(this.endTime)) {
+      this.stop();
+    }
   }
 
   initVolumeChart(data): Chart {
@@ -468,22 +475,12 @@ export class BbCardComponent implements OnInit, OnChanges {
           }
         }
       },
-      yAxis: {
-        endOnTick: false,
-        startOnTick: false,
-        labels: {
-          enabled: false
-        },
-        title: {
-          text: null
-        },
-        tickPositions: [0]
-      },
       tooltip: {
         crosshairs: true,
         shared: true,
         formatter: function () {
-          return moment(this.x).format('hh:mm') + '<br><b>Price:</b> ' + this.y + '<br>' + this.x;
+          return moment(this.x).format('hh:mm') + '<br><h3>Price:</h3> ' + Number(this.y).toFixed(2) + '<br>' +
+            '<h3>indicators:</h3> ' + this.points[0].point.options.description;
         }
       },
       plotOptions: {
@@ -497,13 +494,35 @@ export class BbCardComponent implements OnInit, OnChanges {
         series: {
           marker: {
             enabled: true
-          }
+          },
+          turboThreshold: 5000
         }
       },
       series: [{
         name: title,
         id: title,
         data: []
+      }]
+    });
+  }
+
+  initPriceChartv2(): StockChart {
+    return new StockChart({
+      rangeSelector: {
+        selected: 1
+      },
+      title: {
+        text: 'AAPL Stock Price'
+      },
+      series: [{
+        tooltip: {
+          valueDecimals: 2
+        },
+        name: 'AAPL',
+        data: [
+          [1293580800000, 46.47],
+          [1293667200000, 46.24]
+        ]
       }]
     });
   }
@@ -523,7 +542,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.sellCount = 0;
     this.positionCount = 0;
     this.orders = [];
-    this.config = this.daytradeService.parsePreferences(this.firstFormGroup.value.preferences);
+    this.config = this.daytradeService.parsePreferences(this.preferences.value);
     this.warning = '';
     this.stopped = false;
     this.scoringService.resetScore(this.order.holding.symbol);
@@ -572,7 +591,7 @@ export class BbCardComponent implements OnInit, OnChanges {
             this.stop();
           }
         };
-        this.daytradeService.sendBuy(buyOrder, 'market', resolve, reject);
+        this.daytradeService.sendBuy(buyOrder, 'limit', resolve, reject);
       } else {
         this.incrementBuy(buyOrder);
         console.log(`${moment().format('hh:mm')} ${log}`);
@@ -610,7 +629,7 @@ export class BbCardComponent implements OnInit, OnChanges {
           this.setWarning(`Trying to sell ${sellOrder.holding.symbol} position that doesn\'t exists`);
         };
 
-        this.daytradeService.sendSell(sellOrder, 'market', resolve, reject, handleNotFound);
+        this.daytradeService.sendSell(sellOrder, 'limit', resolve, reject, handleNotFound);
       } else {
         this.incrementSell(sellOrder);
 
@@ -672,12 +691,9 @@ export class BbCardComponent implements OnInit, OnChanges {
   async buildOrder(quotes,
     timestamps,
     idx,
-    band: any[],
-    shortSma: any[],
-    roc: any[],
-    roc5: any[]) {
+    indicators: Indicators) {
 
-    if (band.length !== 3) {
+    if (indicators.band.length !== 3) {
       return null;
     }
 
@@ -688,6 +704,11 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
 
     if (this.firstFormGroup.value.orderType.toLowerCase() === 'buy') {
+      if (this.buyCount >= this.firstFormGroup.value.quantity) {
+        this.stop();
+        return null;
+      }
+
       const orderQuantity = this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
         this.firstFormGroup.value.orderSize,
         this.buyCount,
@@ -701,14 +722,16 @@ export class BbCardComponent implements OnInit, OnChanges {
         quotes.close[idx],
         timestamps[idx],
         quotes.low[idx] || quotes.close[idx],
-        quotes,
-        idx,
-        band,
-        shortSma,
-        roc);
+        indicators.band,
+        indicators.roc10);
 
       return this.sendBuy(buyOrder);
     } else if (this.firstFormGroup.value.orderType.toLowerCase() === 'sell') {
+      if (this.sellCount >= this.firstFormGroup.value.quantity) {
+        this.stop();
+        return null;
+      }
+
       const orderQuantity = this.daytradeService.getOrderQuantity(this.firstFormGroup.value.quantity,
         this.firstFormGroup.value.orderSize,
         this.sellCount);
@@ -721,11 +744,8 @@ export class BbCardComponent implements OnInit, OnChanges {
         quotes.close[idx],
         timestamps[idx],
         quotes.high[idx] || quotes.close[idx],
-        quotes,
-        idx,
-        band,
-        shortSma,
-        roc);
+        indicators.band,
+        indicators.roc10);
 
       return this.sendSell(sellOrder);
     } else if (this.firstFormGroup.value.orderType.toLowerCase() === 'daytrade') {
@@ -740,23 +760,14 @@ export class BbCardComponent implements OnInit, OnChanges {
           quotes.close[idx],
           timestamps[idx],
           quotes.high[idx] || quotes.close[idx],
-          quotes,
-          idx,
-          band,
-          shortSma,
-          roc5);
+          indicators.band,
+          indicators.roc10);
 
       if (sell && this.buyCount >= this.sellCount) {
         return this.sendStopLoss(sell);
       }
 
       if (!sell) {
-        const lastTimestamp = timestamps[idx];
-        const timePeriod = this.daytradeService.tradePeriod(moment.unix(lastTimestamp), this.startTime, this.noonTime, this.endTime);
-
-        if (timePeriod === 'pre' || timePeriod === 'after') {
-          return null;
-        }
         const buyQuantity: number = this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
           this.firstFormGroup.value.orderSize,
           this.buyCount,
@@ -764,7 +775,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
         const buy: SmartOrder = buyQuantity <= 0 ? null :
           await this.buildBuyOrder(buyQuantity, quotes.close[idx], timestamps[idx],
-            quotes.low[idx] || quotes.close[idx], quotes, idx, band, shortSma, roc);
+            quotes.low[idx] || quotes.close[idx], indicators.band, indicators.roc10);
 
         if (buy) {
           return this.sendBuy(buy);
@@ -778,14 +789,10 @@ export class BbCardComponent implements OnInit, OnChanges {
     price,
     signalTime,
     signalPrice,
-    quotes,
-    idx: number,
     band: any[],
-    shortSma: any[],
-    roc: any[]) {
+    roc: number) {
 
-    const high = band[2],
-      // mid = band[1],
+    const mid = band[1],
       low = band[0];
 
     const pricePaid = this.daytradeService.estimateAverageBuyOrderPrice(this.orders);
@@ -807,9 +814,13 @@ export class BbCardComponent implements OnInit, OnChanges {
       return null;
     }
 
+    if (this.indicators.vwma && price > this.indicators.vwma) {
+      return null;
+    }
+
     if (this.config.Mfi) {
-      if (this.algoService.isOversoldBullish(roc, this.momentum, this.mfi)) {
-        const log = `${this.order.holding.symbol} mfi oversold Event - time: ${moment.unix(signalTime).format()}, short rate of change: ${roc}, long rate of change: ${this.momentum}, mfi: ${this.mfi}`;
+      if (this.algoService.isOversoldBullish(roc, this.indicators.momentum, this.indicators.mfi)) {
+        const log = `${this.order.holding.symbol} mfi oversold Event - time: ${moment.unix(signalTime).format()}, short rate of change: ${roc}, long rate of change: ${this.indicators.momentum}, mfi: ${this.indicators.mfi}`;
 
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
         console.log(log);
@@ -817,8 +828,10 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
     }
     if (this.config.SpyMomentum) {
-      if (this.algoService.isMomentumBullish(signalPrice, high[0], this.mfi)) {
-        const log = `${this.order.holding.symbol} bb momentum Event - time: ${moment.unix(signalTime).format()}, bband high: ${high[0]}, mfi: ${this.mfi}`;
+      if (this.algoService.isMomentumBullish(signalPrice, mid[0], this.indicators.mfi, roc, this.indicators.momentum)) {
+        const log = `${this.order.holding.symbol} bb momentum Event -` +
+          `time: ${moment.unix(signalTime).format()}, bband mid: ${mid[0]}, mfi: ${this.indicators.mfi}` +
+          `roc: ${roc}, long roc: ${this.indicators.momentum}`;
 
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
         console.log(log);
@@ -827,8 +840,10 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
 
     if (this.config.MeanReversion1) {
-      if (this.algoService.isBBandMeanReversionBullish(signalPrice, low[0], this.mfi, roc, this.momentum)) {
-        const log = `${this.order.holding.symbol} bb mean reversion Event - time: ${moment.unix(signalTime).format()}, bband low: ${low[0]}, mfi: ${this.mfi}`;
+      if (this.algoService.isBBandMeanReversionBullish(signalPrice, low[0], this.indicators.mfi, roc, this.indicators.momentum)) {
+        const log = `${this.order.holding.symbol} bb mean reversion Event -` +
+          `time: ${moment.unix(signalTime).format()}, bband low: ${low[0]}, mfi: ${this.indicators.mfi},` +
+          `roc: ${roc}, long roc: ${this.indicators.momentum}`;
 
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
         console.log(log);
@@ -838,7 +853,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     return null;
   }
 
-  buildSellOrder(orderQuantity: number, price, signalTime, signalPrice, quotes, idx: number, band: any[], shortSma: any[], roc: any[]) {
+  buildSellOrder(orderQuantity: number, price, signalTime, signalPrice, band: any[], roc1: number) {
     const upper = band[2],
       mid = band[1],
       lower = band[0];
@@ -852,21 +867,19 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
 
     if (this.config.SellAtClose) {
-      if (moment.unix(signalTime).utcOffset('-0500').isAfter(this.endTime.utcOffset('-0500'))) {
+      if (moment.unix(signalTime).isAfter(this.sellTime)) {
         return this.closeAllPositions(price, signalTime);
       }
     }
 
-    const rocLen = roc[0].length - 1;
-    const roc1 = _.round(roc[0][rocLen], 3);
-    const num = this.momentum,
+    const num = this.indicators.momentum,
       den = roc1;
 
     const momentumDiff = _.round(_.divide(num, den), 3);
-    const rocDiffRange = [0, 3];
+    const rocDiffRange = [0, 0.5];
 
-    if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
-      if (signalPrice > upper[0] && (this.mfi > 46)) {
+    if (momentumDiff > rocDiffRange[0] || momentumDiff < rocDiffRange[1]) {
+      if (signalPrice > upper[0] && (this.indicators.mfi > 46)) {
         const log = `BB overbought Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}, mid: ${mid[0]}, lower: ${lower[0]}`;
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
 
@@ -876,8 +889,8 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
     }
 
-    if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
-      if (signalPrice < lower[0] && (this.mfi > 40)) {
+    if (momentumDiff > rocDiffRange[0] || momentumDiff < rocDiffRange[1]) {
+      if (signalPrice < lower[0] && (this.indicators.mfi > 60)) {
         const log = `BB momentum Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}, mid: ${mid[0]}, lower: ${lower[0]}`;
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
 
@@ -887,7 +900,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
     }
 
-    if (this.mfi > 76) {
+    if (this.indicators.mfi > 73) {
       const log = `mfi Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}`;
 
       this.reportingService.addAuditLog(this.order.holding.symbol, log);
@@ -906,29 +919,30 @@ export class BbCardComponent implements OnInit, OnChanges {
 
   processSpecialRules(closePrice: number, signalTime) {
     const score = this.scoringService.getScore(this.order.holding.symbol);
-    if (score && score.total > 1) {
+    if (score && score.total > 3) {
       const scorePct = _.round(_.divide(score.wins, score.total), 2);
-      if (scorePct < 0.5) {
-        if (!this.isBacktest) {
-          this.stop();
-        }
-        const msg = 'Too many losses. Halting trading in Wins:' +
-          `${this.order.holding.symbol} ${score.wins} Loss: ${score.losses}`;
-
-        this.reportingService.addAuditLog(this.order.holding.symbol, msg);
-        console.log(msg);
+      if (scorePct < 0.39) {
         if (this.isBacktest) {
           console.log('Trading not halted in backtest mode.');
+        } else {
+          this.stop();
+          const msg = 'Too many losses. Halting trading in Wins:' +
+            `${this.order.holding.symbol} ${score.wins} Loss: ${score.losses}`;
+
+          this.reportingService.addAuditLog(this.order.holding.symbol, msg);
+          console.log(msg);
+
+          return this.closeAllPositions(closePrice, signalTime);
         }
-        return this.closeAllPositions(closePrice, signalTime);
       }
     }
     if (this.positionCount > 0 && closePrice) {
       const estimatedPrice = this.daytradeService.estimateAverageBuyOrderPrice(this.orders);
+
       const gains = this.daytradeService.getPercentChange(closePrice, estimatedPrice);
 
       if (this.config.StopLoss) {
-        if (gains < this.firstFormGroup.value.lossThreshold) {
+        if (this.firstFormGroup.value.lossThreshold > gains) {
           this.setWarning('Loss threshold met. Sending stop loss order. Estimated loss: ' +
             `${this.daytradeService.convertToFixedNumber(gains, 4) * 100}%`);
           const log = `${this.order.holding.symbol} Stop Loss triggered: ${closePrice}/${estimatedPrice}`;
@@ -936,6 +950,24 @@ export class BbCardComponent implements OnInit, OnChanges {
           console.log(log);
           const stopLossOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
           return this.sendStopLoss(stopLossOrder);
+        }
+      }
+
+      if (this.config.TrailingStopLoss) {
+        if (closePrice > this.trailingHighPrice || closePrice > estimatedPrice) {
+          this.trailingHighPrice = closePrice;
+        }
+
+        const trailingChange = this.daytradeService.getPercentChange(closePrice, this.trailingHighPrice);
+
+        if (trailingChange && -0.002 > trailingChange) {
+          this.setWarning('Trailing Stop Loss triggered. Sending sell order. Estimated gain: ' +
+            `${this.daytradeService.convertToFixedNumber(trailingChange, 4) * 100}`);
+          const log = `${this.order.holding.symbol} Trailing Stop Loss triggered: ${closePrice}/${estimatedPrice}`;
+          this.reportingService.addAuditLog(this.order.holding.symbol, log);
+          console.log(log);
+          const sellOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
+          return this.sendSell(sellOrder);
         }
       }
 
@@ -982,21 +1014,24 @@ export class BbCardComponent implements OnInit, OnChanges {
       // this.reportingService.addAuditLog(this.order.holding.symbol, log);
       return null;
     }
-    const band = await this.indicatorsService.getBBand(reals, this.bbandPeriod);
+    this.indicators.band = await this.indicatorsService.getBBand(reals, this.bbandPeriod);
     // const shortSma = await this.daytradeService.getSMA(reals, 5);
-    const shortSma = null;
 
-    const roc = await this.indicatorsService.getROC(_.slice(reals, reals.length - 11), 10);
-    this.momentum = await this.indicatorsService.getROC(reals, 70)
+    this.indicators.roc10 = await this.indicatorsService.getROC(_.slice(reals, reals.length - 11), 10)
       .then((result) => {
         const rocLen = result[0].length - 1;
         const roc1 = _.round(result[0][rocLen], 3);
-        return _.round(roc1, 3);
+        return _.round(roc1, 4);
       });
 
-    const roc5 = this.positionCount > 0 ? await this.indicatorsService.getROC(this.daytradeService.getSubArray(reals, 5), 5) : [];
+    this.indicators.momentum = await this.indicatorsService.getROC(reals, 70)
+      .then((result) => {
+        const rocLen = result[0].length - 1;
+        const roc1 = _.round(result[0][rocLen], 3);
+        return _.round(roc1, 4);
+      });
 
-    this.mfi = await this.indicatorsService.getMFI(this.daytradeService.getSubArray(highs, 14),
+    this.indicators.mfi = await this.indicatorsService.getMFI(this.daytradeService.getSubArray(highs, 14),
       this.daytradeService.getSubArray(lows, 14),
       this.daytradeService.getSubArray(reals, 14),
       this.daytradeService.getSubArray(volumes, 14),
@@ -1006,7 +1041,12 @@ export class BbCardComponent implements OnInit, OnChanges {
         return _.round(result[0][len], 3);
       });
 
-    return this.buildOrder(quotes, timestamps, lastIndex, band, shortSma, roc, roc5);
+    this.indicators.vwma = await this.indicatorsService.getVwma(this.daytradeService.getSubArray(reals, 70), this.daytradeService.getSubArray(volumes, 70), 70)
+      .then((result) => {
+        const len = result[0].length - 1;
+        return _.round(result[0][len], 3);
+      });
+    return this.buildOrder(quotes, timestamps, lastIndex, this.indicators);
   }
 
   hasReachedDayTradeOrderLimit() {
@@ -1019,7 +1059,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.reportingService.addAuditLog(this.order.holding.symbol, `${this.order.holding.symbol} - ${message}`);
   }
 
-  initPreferences() {
+  initPreferences(): OrderPref[] {
     const pref = [];
     if (this.order.useTakeProfit) {
       pref.push(OrderPref.TakeProfit);
@@ -1027,6 +1067,10 @@ export class BbCardComponent implements OnInit, OnChanges {
 
     if (this.order.useStopLoss) {
       pref.push(OrderPref.StopLoss);
+    }
+
+    if (this.order.useTrailingStopLoss) {
+      pref.push(OrderPref.TrailingStopLoss);
     }
 
     if (this.order.meanReversion1) {
@@ -1041,6 +1085,10 @@ export class BbCardComponent implements OnInit, OnChanges {
       pref.push(OrderPref.SpyMomentum);
     }
 
+    if (this.order.buyCloseSellOpen) {
+      pref.push(OrderPref.BuyCloseSellOpen);
+    }
+
     if (this.order.sellAtClose) {
       pref.push(OrderPref.SellAtClose);
     }
@@ -1049,5 +1097,11 @@ export class BbCardComponent implements OnInit, OnChanges {
       pref.push(OrderPref.useYahooData);
     }
     return pref;
+  }
+
+  delete() {
+    this.order.stopped = true;
+    this.alive = false;
+    this.cartService.deleteOrder(this.order);
   }
 }

@@ -2,6 +2,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
+import { HttpClientModule } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 import { ChartModule } from 'angular-highcharts';
 
@@ -55,23 +56,24 @@ import { RhInputComponent } from './rh-input/rh-input.component';
 import { ProductViewComponent } from './product-view/product-view.component';
 import { LoginComponent } from './login/login.component';
 import { LoginDialogComponent } from './login-dialog/login-dialog.component';
-import { MainViewComponent } from './main-view/main-view.component';
+import { TradeViewComponent } from './trade-view/trade-view.component';
 import { PortfolioTableComponent } from './portfolio-table/portfolio-table.component';
 import { PortfolioViewComponent } from './portfolio-view/portfolio-view.component';
 import { InstrumentPipe } from './shared/pipes/instrument.pipe';
 import { OrderDialogComponent } from './order-dialog/order-dialog.component';
 import { CartService } from './shared/services/cart.service';
 import { ExcelService } from './shared/services/excel-service.service';
-import { BollingerBandComponent } from './bollinger-band/bollinger-band.component';
+import { ShoppingListComponent } from './shopping-list/shopping-list.component';
 import { BbCardComponent } from './bb-card/bb-card.component';
 import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.component';
 import { ReportingComponent, ReportDialogComponent } from './reporting/reporting.component';
 import { ResearchViewComponent } from './research-view/research-view.component';
 import { OptionsViewComponent } from './options-view/options-view.component';
 import { ScoreBoardComponent } from './score-board/score-board.component';
-import { TimelineViewComponent } from './timeline-view/timeline-view.component';
 import { BacktestViewComponent } from './backtest-view/backtest-view.component';
 import { TerminalViewComponent } from './terminal-view/terminal-view.component';
+import { SimpleCardComponent } from './simple-card/simple-card.component';
+import { OverviewModule } from './overview/overview.module';
 
 @NgModule({
   declarations: [
@@ -83,12 +85,12 @@ import { TerminalViewComponent } from './terminal-view/terminal-view.component';
     ProductViewComponent,
     LoginComponent,
     LoginDialogComponent,
-    MainViewComponent,
+    TradeViewComponent,
     PortfolioTableComponent,
     PortfolioViewComponent,
     InstrumentPipe,
     OrderDialogComponent,
-    BollingerBandComponent,
+    ShoppingListComponent,
     BbCardComponent,
     ConfirmDialogComponent,
     ReportingComponent,
@@ -96,9 +98,9 @@ import { TerminalViewComponent } from './terminal-view/terminal-view.component';
     ResearchViewComponent,
     OptionsViewComponent,
     ScoreBoardComponent,
-    TimelineViewComponent,
     BacktestViewComponent,
     TerminalViewComponent,
+    SimpleCardComponent,
   ],
   entryComponents: [
     LoginDialogComponent,
@@ -112,9 +114,8 @@ import { TerminalViewComponent } from './terminal-view/terminal-view.component';
     FormsModule,
     ReactiveFormsModule,
     HttpModule,
-    RouterModule.forRoot(routes, {
-      enableTracing: true
-    }),
+    HttpClientModule,
+    RouterModule.forRoot(routes),
     MatMenuModule,
     MatToolbarModule,
     MatIconModule,
@@ -126,7 +127,6 @@ import { TerminalViewComponent } from './terminal-view/terminal-view.component';
     MatSidenavModule,
     MatExpansionModule,
     MatTableModule,
-    FlexLayoutModule,
     MatCheckboxModule,
     MatRadioModule,
     MatDialogModule,
@@ -140,6 +140,8 @@ import { TerminalViewComponent } from './terminal-view/terminal-view.component';
     MatStepperModule,
     MatSelectModule,
     MatTooltipModule,
+    FlexLayoutModule,
+    OverviewModule,
   ],
   providers: [
     BacktestService,
