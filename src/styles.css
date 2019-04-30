@@ -5,3 +5,8 @@ body {
   display: block;
   margin: 0;
 }
+
+button.nav-item {
+  width:200px;
+  text-align: left;
+}

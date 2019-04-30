@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { TodoService } from './todo.service';
 
 @Component({
@@ -6,17 +6,7 @@ import { TodoService } from './todo.service';
   templateUrl: './todo-list.component.html',
   styleUrls: ['./todo-list.component.css']
 })
-export class TodoListComponent implements OnInit {
-  marketAnalysis: boolean;
-  screenStocks: boolean;
-  intradayBacktest: boolean;
-
+export class TodoListComponent {
   constructor(private todoService: TodoService) { }
-
-  ngOnInit() {
-    this.marketAnalysis = this.todoService.marketAnalysis;
-    this.screenStocks = this.todoService.screenStocks;
-    this.intradayBacktest = this.todoService.intradayBacktest;
-  }
 
 }

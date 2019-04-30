@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, Input } from '@angular/core';
+import { Component, OnInit, ViewChild, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { Subscription } from 'rxjs/Subscription';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import { SmartOrder } from '../shared/models/smart-order';
@@ -10,12 +10,14 @@ import * as moment from 'moment-timezone';
 import { DaytradeService, PortfolioService, ReportingService } from '../shared';
 import { OrderPref } from '../shared/enums/order-pref.enum';
 
+import * as _ from 'lodash';
+
 @Component({
   selector: 'app-simple-card',
   templateUrl: './simple-card.component.html',
   styleUrls: ['./simple-card.component.css']
 })
-export class SimpleCardComponent implements OnInit {
+export class SimpleCardComponent implements OnInit, OnChanges {
   @ViewChild('stepper') stepper;
   @Input() order: SmartOrder;
 
@@ -65,8 +67,9 @@ export class SimpleCardComponent implements OnInit {
     this.interval = 300000;
     this.live = false;
     this.alive = true;
+
     this.firstFormGroup = this._formBuilder.group({
-      quantity: [this.order.quantity, Validators.required]
+      quantity: [_.get(this.order, 'quantity', 10), Validators.required]
     });
 
     this.secondFormGroup = this._formBuilder.group({
@@ -79,6 +82,14 @@ export class SimpleCardComponent implements OnInit {
     this.setup();
   }
 
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes.order.currentValue) {
+      this.firstFormGroup = this._formBuilder.group({
+        quantity: [this.order.quantity, Validators.required]
+      });
+    }
+  }
+
   goLive() {
     this.setup();
     this.alive = true;
@@ -88,13 +99,13 @@ export class SimpleCardComponent implements OnInit {
         this.live = true;
         const momentInst = moment();
         if (momentInst.isAfter(this.stopTime) &&
-            momentInst.isBefore(this.marketCloseTime)) {
-              if (this.holdingCount === 0) {
-                this.buy();
-              }
+          momentInst.isBefore(this.marketCloseTime)) {
+          if (this.holdingCount === 0) {
+            this.buy();
+          }
         } else if (momentInst.isAfter(this.marketOpenTime) &&
-            momentInst.isBefore(this.startTime)) {
-            this.sell();
+          momentInst.isBefore(this.startTime)) {
+          this.sell();
         }
       });
   }

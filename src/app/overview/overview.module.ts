@@ -14,6 +14,7 @@ import { FormsModule } from '@angular/forms';
     MatListModule,
     MatCheckboxModule,
     FormsModule,
-  ]
+  ],
+  exports: [TodoListComponent]
 })
 export class OverviewModule { }

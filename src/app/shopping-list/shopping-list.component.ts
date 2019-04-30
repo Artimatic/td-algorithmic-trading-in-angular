@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CartService } from '../shared/services/cart.service';
 import { SmartOrder } from '../shared/models/smart-order';
-import { ScoreKeeperService, ReportingService, DaytradeService } from '../shared';
+import { ScoreKeeperService, ReportingService, DaytradeService, PortfolioService } from '../shared';
 import { MatDialog, MatSnackBar } from '@angular/material';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
@@ -9,6 +9,7 @@ import { Subscription } from 'rxjs/Subscription';
 
 import * as moment from 'moment-timezone';
 import * as _ from 'lodash';
+import { Holding } from '../shared/models';
 
 @Component({
   selector: 'app-shopping-list',
@@ -22,6 +23,7 @@ export class ShoppingListComponent implements OnInit {
   vxx: SmartOrder;
   uvxy: SmartOrder;
   sh: SmartOrder;
+  spxu: SmartOrder;
 
   ordersStarted: number;
   interval: number;
@@ -38,7 +40,8 @@ export class ShoppingListComponent implements OnInit {
     public dialog: MatDialog,
     private reportingService: ReportingService,
     private daytradeService: DaytradeService,
-    public snackBar: MatSnackBar) { }
+    public snackBar: MatSnackBar,
+    private portfolioService: PortfolioService) { }
 
   ngOnInit() {
     this.interval = 70800;
@@ -155,6 +158,36 @@ export class ShoppingListComponent implements OnInit {
       spyMomentum: true,
       sellAtClose: true
     };
+
+    this.portfolioService.getInstruments('SPXU').subscribe((response) => {
+      const instruments = response.results[0];
+      const newHolding: Holding = {
+        instrument: instruments.url,
+        symbol: instruments.symbol,
+        name: instruments.name
+      };
+
+      const order: SmartOrder = {
+        holding: newHolding,
+        quantity: 10,
+        price: 28.24,
+        submitted: false,
+        pending: false,
+        side: 'DayTrade',
+        useTakeProfit: true,
+        useStopLoss: true,
+        lossThreshold: -0.002,
+        profitTarget: 0.004,
+        spyMomentum: true,
+        sellAtClose: true
+      };
+      this.spxu = order;
+    },
+    (error) => {
+      this.snackBar.open('Error getting instruments', 'Dismiss', {
+        duration: 2000,
+      });
+    });
   }
 
   deleteSellOrder(deleteOrder: SmartOrder) {
