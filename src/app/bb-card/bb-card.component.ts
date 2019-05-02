@@ -868,6 +868,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
     if (this.config.SellAtClose) {
       if (moment.unix(signalTime).isAfter(this.sellTime)) {
+        this.stop();
         return this.closeAllPositions(price, signalTime);
       }
     }
