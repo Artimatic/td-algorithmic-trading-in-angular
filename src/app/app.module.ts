@@ -74,6 +74,7 @@ import { BacktestViewComponent } from './backtest-view/backtest-view.component';
 import { TerminalViewComponent } from './terminal-view/terminal-view.component';
 import { SimpleCardComponent } from './simple-card/simple-card.component';
 import { OverviewModule } from './overview/overview.module';
+import { SettingsModule } from './settings/settings.module';
 
 @NgModule({
   declarations: [
@@ -106,7 +107,7 @@ import { OverviewModule } from './overview/overview.module';
     LoginDialogComponent,
     OrderDialogComponent,
     ConfirmDialogComponent,
-    ReportDialogComponent
+    ReportDialogComponent,
   ],
   imports: [
     BrowserModule,
@@ -142,6 +143,7 @@ import { OverviewModule } from './overview/overview.module';
     MatTooltipModule,
     FlexLayoutModule,
     OverviewModule,
+    SettingsModule
   ],
   providers: [
     BacktestService,

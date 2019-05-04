@@ -22,7 +22,8 @@
             ],
             "styles": [
               "src/styles.css",
-              "src/robinhood-merchant-theme.scss"
+              "src/robinhood-merchant-theme.scss",
+              "src/bootstrap.min.css"
             ],
             "scripts": [
               "node_modules/xlsx/dist/xlsx.full.min.js",

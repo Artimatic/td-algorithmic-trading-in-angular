@@ -1,6 +1,7 @@
 <div class="shopping-list">
   <h3 mat-subheader>Shopping List</h3>
   <p>Import and execute your trading algorithms here</p>
+  <app-setting-controls></app-setting-controls>
   <div>
     <button mat-button color="warn" (click)="stopAndDeleteOrders()">Delete Orders</button>
     <button mat-raised-button color="warn" (click)="closeAllTrades()">Close Opened DayTrades</button>
@@ -30,7 +31,7 @@
     </app-bb-card>
   </div>
   <hr>
-  <h3>Default Orders</h3>
+  <h3 matTooltip="Disregards global settings.">Default Orders</h3>
   <app-simple-card [order]="spxl">
   </app-simple-card>
   <span *ngIf="spxu">  
