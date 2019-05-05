@@ -1,25 +1,32 @@
 <div class="setting-controls-container">
-    <mat-grid-list cols="3" rowHeight="50px">
+    <mat-grid-list cols="4" rowHeight="50px">
         <mat-grid-tile>
             <label matTooltip="Orders start time">
                 Start
             </label>
-            <span style="display:none">&nbsp;</span>
+            <span>&nbsp;</span>
             <timepicker [(ngModel)]="globalSettingsService.startTime" [showMeridian]="ismeridian"></timepicker>
         </mat-grid-tile>
         <mat-grid-tile>
             <label matTooltip="When to close order if 'sell at close' is set. Must be before stop time">
                 Sell to Close
             </label>
-            <span style="display:none">&nbsp;</span>
+            <span>&nbsp;</span>
             <timepicker [(ngModel)]="globalSettingsService.sellAtCloseTime" [showMeridian]="ismeridian"></timepicker>
         </mat-grid-tile>
         <mat-grid-tile>
             <label matTooltip="Orders stop time">
                 Stop
             </label>
-            <span style="display:none">&nbsp;</span>
+            <span>&nbsp;</span>
             <timepicker [(ngModel)]="globalSettingsService.stopTime" [showMeridian]="ismeridian"></timepicker>
+        </mat-grid-tile>
+        <mat-grid-tile>
+            <label matTooltip="Max loss threshold. Buying will stop if met.">
+                Loss threshold
+            </label>
+            <span>$&nbsp;</span>
+            <input [(ngModel)]="globalSettingsService.maxLoss">
         </mat-grid-tile>
     </mat-grid-list>
 </div>

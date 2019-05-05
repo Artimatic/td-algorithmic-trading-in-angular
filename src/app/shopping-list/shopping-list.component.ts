@@ -10,6 +10,7 @@ import { Subscription } from 'rxjs/Subscription';
 import * as moment from 'moment-timezone';
 import * as _ from 'lodash';
 import { Holding } from '../shared/models';
+import { GlobalSettingsService } from '../settings/global-settings.service';
 
 @Component({
   selector: 'app-shopping-list',
@@ -32,21 +33,17 @@ export class ShoppingListComponent implements OnInit {
 
   sub: Subscription;
 
-  marketOpenTime: moment.Moment;
-  marketCloseTime: moment.Moment;
-
   constructor(public cartService: CartService,
     public scoreKeeperService: ScoreKeeperService,
     public dialog: MatDialog,
     private reportingService: ReportingService,
     private daytradeService: DaytradeService,
     public snackBar: MatSnackBar,
-    private portfolioService: PortfolioService) { }
+    private portfolioService: PortfolioService,
+    private globalSettingsService: GlobalSettingsService) { }
 
   ngOnInit() {
     this.interval = 70800;
-    this.marketOpenTime = moment.tz('9:30am', 'h:mma', 'America/New_York');
-    this.marketCloseTime = moment.tz('3:55pm', 'h:mma', 'America/New_York');
 
     this.ordersStarted = 0;
     this.spxl = {
@@ -227,7 +224,7 @@ export class ShoppingListComponent implements OnInit {
     this.sub = TimerObservable.create(0, this.interval)
       .takeWhile(() => this.alive)
       .subscribe(() => {
-        if (moment().isAfter(this.marketOpenTime)) {
+        if (moment().isAfter(moment(this.globalSettingsService.startTime))) {
           let executed = 0;
           while (executed < limit && lastIndex < orders.length) {
             orders[lastIndex].stepForward = counter;
@@ -238,7 +235,7 @@ export class ShoppingListComponent implements OnInit {
           if (lastIndex >= orders.length) {
             lastIndex = 0;
           }
-          if (moment().isAfter(this.marketCloseTime)) {
+          if (moment().isAfter(moment(this.globalSettingsService.stopTime))) {
             this.reportingService.exportAuditHistory();
             this.stop();
           }
