@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms'
 import { MatDialog } from '@angular/material';
 import 'rxjs/add/operator/takeWhile';
 
-import { Chart, StockChart } from 'angular-highcharts';
+import { Chart } from 'angular-highcharts';
 
 import * as Highcharts from 'highcharts';
 import * as moment from 'moment-timezone';
