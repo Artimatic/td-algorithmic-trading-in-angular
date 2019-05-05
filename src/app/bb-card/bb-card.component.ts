@@ -788,6 +788,10 @@ export class BbCardComponent implements OnInit, OnChanges {
       return null;
     }
 
+    if (this.scoringService.total < 0 && this.scoringService.total < this.globalSettingsService.maxLoss * -1) {
+      return null;
+    }
+
     if (this.config.Mfi) {
       if (this.algoService.isOversoldBullish(roc, this.indicators.momentum, this.indicators.mfi)) {
         const log = `${this.order.holding.symbol} mfi oversold Event - time: ${moment.unix(signalTime).format()}, short rate of change: ${roc}, long rate of change: ${this.indicators.momentum}, mfi: ${this.indicators.mfi}`;
