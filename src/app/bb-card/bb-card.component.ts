@@ -365,6 +365,12 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
 
       this.tiles = this.daytradeService.buildTileList(this.orders);
+
+      if (this.config.SellAtClose) {
+        if (moment().isAfter(moment(this.globalSettingsService.sellAtCloseTime))) {
+          this.stop();
+        }
+      }
     }
   }
 
@@ -842,7 +848,6 @@ export class BbCardComponent implements OnInit, OnChanges {
 
     if (this.config.SellAtClose) {
       if (moment.unix(signalTime).isAfter(moment(this.globalSettingsService.sellAtCloseTime))) {
-        this.stop();
         return this.closeAllPositions(price, signalTime);
       }
     }
