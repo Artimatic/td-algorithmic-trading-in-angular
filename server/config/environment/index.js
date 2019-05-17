@@ -28,6 +28,9 @@ export default {
   tiingo: {
     key: _.get(credentials, 'default.tiingo.key', _.get(credentials, 'tiingo.key', null)),
   },
+  robinhood: {
+    deviceId: _.get(credentials, 'default.robinhood.deviceId', _.get(credentials, 'robinhood.deviceId', null)),
+  },
   apps: {
     goliath: _.get(credentials, 'default.goliathUrl', _.get(credentials, 'goliathUrl', null)),
     armadillo: _.get(credentials, 'default.armadilloUrl', _.get(credentials, 'armadilloUrl', null)),

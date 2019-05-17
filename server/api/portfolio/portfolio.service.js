@@ -4,36 +4,56 @@ import * as Robinhood from 'robinhood';
 const RobinHoodApi = require('robinhood-api');
 const robinhood = new RobinHoodApi();
 
+import configurations from '../../config/environment';
+
+const robinhood = {
+  deviceToken: configurations.robinhood.deviceId
+};
+
 const apiUrl = 'https://api.robinhood.com/';
 
 class PortfolioService {
   login(username, password, reply) {
-    return request.post({
+    let options = {
       uri: apiUrl + 'oauth2/token/',
+      headers: {
+        'X-Robinhood-API-Version': '1.265.0'
+      },
       form: {
         username: username,
         password: password,
         client_id: 'c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS',
         grant_type: 'password',
+        expires_in: 86400,
+        device_token: robinhood.deviceToken,
         scope: 'internal'
       }
-    })
+    };
+
+    return request.post(options)
       .then(() => reply.status(200).send({}))
       .catch((e) => (reply.status(401).send(e)));
   }
 
   mfaLogin(username, password, code, reply) {
-    return request.post({
+    let options = {
       uri: apiUrl + 'oauth2/token/',
+      headers: {
+        'X-Robinhood-API-Version': '1.265.0'
+      },
       form: {
         username: username,
         password: password,
         client_id: 'c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS',
         grant_type: 'password',
+        expires_in: 86400,
+        device_token: robinhood.deviceToken,
         scope: 'internal',
         mfa_code: code
       }
-    })
+    };
+
+    return request.post(options)
       .then((response) => reply.status(200).send(response))
       .catch((e) => (reply.status(401).send(e)));
   }
@@ -111,7 +131,7 @@ class PortfolioService {
       'Authorization': `Bearer ${token}`
     };
 
-    console.log('Sell order: ',{
+    console.log('Sell order: ', {
       account: account,
       instrument: instrumentUrl,
       price: price,
