@@ -99,10 +99,8 @@ export class SimpleCardComponent implements OnInit, OnChanges {
         this.live = true;
         const momentInst = moment();
         if (momentInst.isAfter(this.stopTime) &&
-          momentInst.isBefore(this.marketCloseTime)) {
-          if (this.holdingCount === 0) {
-            this.buy();
-          }
+            momentInst.isBefore(this.marketCloseTime)) {
+          this.buy();
         } else if (momentInst.isAfter(this.marketOpenTime) &&
           momentInst.isBefore(this.startTime)) {
           this.sell();

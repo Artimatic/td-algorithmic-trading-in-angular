@@ -365,11 +365,11 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
 
       this.tiles = this.daytradeService.buildTileList(this.orders);
+    }
 
-      if (this.config.SellAtClose) {
-        if (moment().isAfter(moment(this.globalSettingsService.sellAtCloseTime))) {
-          this.stop();
-        }
+    if (this.config.SellAtClose) {
+      if (moment().isAfter(moment(this.globalSettingsService.sellAtCloseTime)) && this.positionCount <= 0) {
+        this.stop();
       }
     }
   }
