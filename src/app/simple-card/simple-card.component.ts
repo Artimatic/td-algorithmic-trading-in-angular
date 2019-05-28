@@ -58,8 +58,8 @@ export class SimpleCardComponent implements OnInit, OnChanges {
     this.marketOpenTime = moment.tz('9:30am', 'h:mma', 'America/New_York');
     this.startTime = moment.tz('9:36am', 'h:mma', 'America/New_York');
 
-    this.stopTime = moment.tz('3:52pm', 'h:mma', 'America/New_York');
-    this.marketCloseTime = moment.tz('3:38pm', 'h:mma', 'America/New_York');
+    this.stopTime = moment.tz('3:53pm', 'h:mma', 'America/New_York');
+    this.marketCloseTime = moment.tz('4:00pm', 'h:mma', 'America/New_York');
 
     this.preferenceList = [OrderPref.BuyCloseSellOpen];
 
