@@ -75,6 +75,7 @@ import { TerminalViewComponent } from './terminal-view/terminal-view.component';
 import { SimpleCardComponent } from './simple-card/simple-card.component';
 import { OverviewModule } from './overview/overview.module';
 import { SettingsModule } from './settings/settings.module';
+import { MachineLearningModule } from './machine-learning/machine-learning.module';
 
 @NgModule({
   declarations: [
@@ -143,7 +144,8 @@ import { SettingsModule } from './settings/settings.module';
     MatTooltipModule,
     FlexLayoutModule,
     OverviewModule,
-    SettingsModule
+    SettingsModule,
+    MachineLearningModule,
   ],
   providers: [
     BacktestService,
