@@ -58,7 +58,7 @@ export class SimpleCardComponent implements OnInit, OnChanges {
     this.marketOpenTime = moment.tz('9:30am', 'h:mma', 'America/New_York');
     this.startTime = moment.tz('9:36am', 'h:mma', 'America/New_York');
 
-    this.stopTime = moment.tz('3:53pm', 'h:mma', 'America/New_York');
+    this.stopTime = moment.tz('3:50pm', 'h:mma', 'America/New_York');
     this.marketCloseTime = moment.tz('4:00pm', 'h:mma', 'America/New_York');
 
     this.preferenceList = [OrderPref.BuyCloseSellOpen];
@@ -100,7 +100,9 @@ export class SimpleCardComponent implements OnInit, OnChanges {
         const momentInst = moment();
         if (momentInst.isAfter(this.stopTime) &&
             momentInst.isBefore(this.marketCloseTime)) {
-          this.buy();
+          if (this.holdingCount <  this.order.quantity) {
+            this.buy();
+          }
         } else if (momentInst.isAfter(this.marketOpenTime) &&
           momentInst.isBefore(this.startTime)) {
           this.sell();
@@ -142,7 +144,7 @@ export class SimpleCardComponent implements OnInit, OnChanges {
         const log = `ORDER SENT ${sellOrder.side} ${sellOrder.holding.symbol} ${sellOrder.quantity} ${sellOrder.price}`;
 
         const resolve = () => {
-          this.holdingCount -= this.firstFormGroup.value.quantity;
+          this.holdingCount -= this.holdingCount >= this.firstFormGroup.value.quantity ? this.firstFormGroup.value.quantity : 0;
           console.log(`${moment().format('hh:mm')} ${log}`);
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
         };

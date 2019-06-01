@@ -236,6 +236,8 @@ export class ShoppingListComponent implements OnInit {
             lastIndex = 0;
           }
           if (moment().isAfter(moment(this.globalSettingsService.stopTime))) {
+            const log = `Profit ${this.scoreKeeperService.total}`;
+            this.reportingService.addAuditLog(null, log);
             this.reportingService.exportAuditHistory();
             this.stop();
           }
