@@ -803,6 +803,24 @@ class BacktestService {
         console.log('Error: ', error);
       });
   }
+
+  getRNN(symbol, endDate, startDate) {
+    const to = moment(endDate).format('YYYY-MM-DD');
+    const from = moment(startDate).format('YYYY-MM-DD');
+
+    const URI = `${mlServiceUrl}api?` +
+      `symbol=${symbol}&to=${to}&from=${from}`;
+
+    const options = {
+      method: 'GET',
+      uri: URI
+    };
+
+    return RequestPromise(options)
+      .catch((error) => {
+        console.log('Error: ', error);
+      });
+  }
 }
 
 export default new BacktestService();
