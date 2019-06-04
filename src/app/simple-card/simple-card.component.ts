@@ -130,7 +130,7 @@ export class SimpleCardComponent implements OnInit, OnChanges {
             this.stop();
           }
         };
-        this.daytradeService.sendBuy(buyOrder, 'market', resolve, reject);
+        this.daytradeService.sendBuy(buyOrder, 'limit', resolve, reject);
       });
   }
 

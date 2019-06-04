@@ -121,7 +121,8 @@ class PortfolioService {
       .catch((e) => (reply.status(500).send(e)));
   }
 
-  sell(account, token, instrumentUrl, symbol, quantity, price, type = 'limit', reply) {
+  sell(account, token, instrumentUrl, symbol, quantity, price, type = 'limit', 
+    extendedHours = false) {
     let headers = {
       'Accept': '*/*',
       'Accept-Encoding': 'gzip, deflate',
@@ -141,7 +142,8 @@ class PortfolioService {
       symbol: symbol,
       time_in_force: 'gfd',
       trigger: 'immediate',
-      type: type
+      type: type,
+      extended_hours: extendedHours
     });
 
     return request.post({
@@ -159,12 +161,20 @@ class PortfolioService {
         symbol: symbol,
         time_in_force: 'gfd',
         trigger: 'immediate',
-        type: type
+        type: type,
+        extended_hours: extendedHours
       }
     });
   }
 
-  buy(account, token, instrumentUrl, symbol, quantity, price, type = 'limit', reply) {
+  buy(account, 
+    token, 
+    instrumentUrl, 
+    symbol, 
+    quantity, 
+    price, 
+    type = 'limit', 
+    extendedHours = false) {
     let headers = {
       'Accept': '*/*',
       'Accept-Encoding': 'gzip, deflate',
@@ -184,7 +194,8 @@ class PortfolioService {
       symbol: symbol,
       time_in_force: 'gfd',
       trigger: 'immediate',
-      type: type
+      type: type,
+      extended_hours: extendedHours
     });
 
     return request.post({
@@ -202,7 +213,8 @@ class PortfolioService {
         symbol: symbol,
         time_in_force: 'gfd',
         trigger: 'immediate',
-        type: type
+        type: type,
+        extended_hours: extendedHours
       }
     });
   }

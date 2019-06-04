@@ -182,6 +182,16 @@ export class BacktestService {
 
     getRnn(symbol: string, to: string = null, from: string = null): Observable<any> {
 
+        const query = {
+            symbol,
+            to
+        };
+
+        return this.http.get(`${BASE_URL}api/backtest/rnn`, {params: query}, {});
+    }
+
+    runRnn(symbol: string, to: string = null, from: string = null): Observable<any> {
+
         const data = {
             symbol,
             to,

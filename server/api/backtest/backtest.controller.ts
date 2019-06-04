@@ -155,11 +155,18 @@ class BacktestController extends BaseController {
     .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
-  getRNNPrediction(request, response) {
-    BacktestService.getRNN(request.body.symbol, request.body.to, request.body.from)
+  runRNN(request, response) {
+    BacktestService.runRNN(request.body.symbol, request.body.to, request.body.from)
     .then((data) => BaseController.requestGetSuccessHandler(response, data))
     .catch((err) => BaseController.requestErrorHandler(response, err));
   }
+
+  getRNNPrediction(request, response) {
+    BacktestService.checkRNNStatus(request.query.symbol, request.query.to)
+    .then((data) => BaseController.requestGetSuccessHandler(response, data))
+    .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
 }
 
 export default new BacktestController();
