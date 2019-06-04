@@ -8,7 +8,6 @@ import { ChartModule } from 'angular-highcharts';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Routes, RouterModule } from '@angular/router';
 import { TimelineViewComponent } from './timeline-view/timeline-view.component';
-import { MlCardComponent } from './ml-card/ml-card.component';
 
 const routes: Routes =
   [
@@ -35,12 +34,10 @@ const routes: Routes =
   declarations: [
     TimelineViewComponent,
     PrecogComponent,
-    MachineLearningPageComponent,
-    MlCardComponent
+    MachineLearningPageComponent
   ],
   exports: [
-    MachineLearningPageComponent,
-    MlCardComponent
+    MachineLearningPageComponent
   ],
   providers: [
     BacktestService

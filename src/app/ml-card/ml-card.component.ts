@@ -1,14 +1,14 @@
 import { Component, OnInit, ViewChild, Input } from '@angular/core';
-import { SmartOrder } from '../../shared/models/smart-order';
+import { SmartOrder } from '../shared/models/smart-order';
 import { Subscription } from 'rxjs';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 
 import * as moment from 'moment-timezone';
 import * as _ from 'lodash';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
-import { ConfirmDialogComponent } from '../../confirm-dialog/confirm-dialog.component';
+import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { MatDialog } from '@angular/material';
-import { PortfolioService, DaytradeService, ReportingService, BacktestService } from '../../shared';
+import { PortfolioService, DaytradeService, ReportingService, BacktestService } from '../shared';
 
 @Component({
   selector: 'app-ml-card',
@@ -56,7 +56,9 @@ export class MlCardComponent implements OnInit {
 
     this.holdingCount = 0;
     this.interval = 300000;
-    this.reportWaitInterval = 3600000;
+    // this.reportWaitInterval = 3600000;
+    this.reportWaitInterval = 50000;
+
     this.live = false;
     this.alive = true;
 

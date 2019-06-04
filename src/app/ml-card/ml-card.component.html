@@ -13,7 +13,7 @@
     <mat-step [stepControl]="firstFormGroup">
       <form [formGroup]="firstFormGroup">
         <ng-template matStepLabel>Edit Order</ng-template>
-        <mat-chip>{{order.holding.symbol}}</mat-chip>
+        <mat-chip>{{bearishOrder.holding.symbol}} - {{bullishOrder.holding.symbol}}</mat-chip>
         <h5>ML Algo</h5>
         <p>Request to RNN model to determine whether to tomorrow will open down or up.</p>
         <mat-form-field hintLabel="Quantity">
@@ -44,9 +44,8 @@
           fxLayoutGap.xs="0">
           <div fxFlex="5%">
             <mat-card-header>
-              <mat-card-title>{{order.holding.symbol}}</mat-card-title>
+              <mat-card-title>RNN Algo</mat-card-title>
               <mat-card-subtitle>
-                <h5>ML Algo</h5>
                 <p>Request to RNN model to determine whether to tomorrow will open down or up.</p>
               </mat-card-subtitle>
             </mat-card-header>
