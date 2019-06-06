@@ -13,7 +13,7 @@
     <mat-step [stepControl]="firstFormGroup">
       <form [formGroup]="firstFormGroup">
         <ng-template matStepLabel>Edit Order</ng-template>
-        <mat-chip>{{bearishOrder.holding.symbol}} - {{bullishOrder.holding.symbol}}</mat-chip>
+        <!-- <mat-chip>{{bearishOrder.holding.symbol}} - {{bullishOrder.holding.symbol}}</mat-chip> -->
         <h5>ML Algo</h5>
         <p>Request to RNN model to determine whether to tomorrow will open down or up.</p>
         <mat-form-field hintLabel="Quantity">
@@ -56,11 +56,11 @@
                 <mat-grid-tile *ngFor="let tile of tiles" [colspan]="tile.cols" [rowspan]="tile.rows">
                   <table>
                     <tr *ngFor="let order of tile.orders">
-                      <td>{{order.signalTime}}</td>
+                      <!-- <td>{{order.signalTime}}</td>
                       <td>{{order.action}}</td>
                       <td>{{order.quantity}}@</td>
                       <td>${{order.price}}</td>
-                      <td> on {{order.timeSubmitted}}</td>
+                      <td> on {{order.timeSubmitted}}</td> -->
                     </tr>
                   </table>
                 </mat-grid-tile>

@@ -51,8 +51,8 @@ export class MlCardComponent implements OnInit {
     public dialog: MatDialog) { }
 
   ngOnInit() {
-    this.startTime = moment.tz('1:03pm', 'h:mma', 'America/New_York');
-    this.stopTime = moment.tz('2:10pm', 'h:mma', 'America/New_York');
+    this.startTime = moment.tz('12:00am', 'h:mma', 'America/New_York');
+    this.stopTime = moment.tz('11:55pm', 'h:mma', 'America/New_York');
 
     this.holdingCount = 0;
     this.interval = 300000;
@@ -81,11 +81,11 @@ export class MlCardComponent implements OnInit {
       .subscribe(() => {
         this.live = true;
         const momentInst = moment();
-        if (momentInst.isAfter(this.startTime) &&
+        if (true || momentInst.isAfter(this.startTime) &&
           momentInst.isBefore(this.stopTime)) {
           this.alive = false;
           // moment().format('YYYY-MM-DD')
-          this.backtestService.runRnn('SPY', '2019-05-31', '2010-01-01')
+          this.backtestService.runRnn('SPY', '2019-06-04', '2010-01-01')
             .subscribe(() => {
               this.pendingResults = true;
               this.checkReportSub = TimerObservable.create(0, this.reportWaitInterval)
@@ -94,6 +94,7 @@ export class MlCardComponent implements OnInit {
                   this.backtestService.getRnn('SPY', '2019-05-31')
                     .subscribe((data: any) => {
                       console.log('rnn data: ', data);
+                      this.pendingResults = false;
                     }, error => { });
                 });
             }, error => {
@@ -103,6 +104,38 @@ export class MlCardComponent implements OnInit {
             });
         }
       });
+  }
+
+  determineBet(predictionResults) {
+    const predictions = predictionResults[0].results;
+    const bet = {
+      total: 0,
+      bearishOpen: 0,
+      bullishOpen: 0,
+      summary: 'neutral'
+    };
+
+    _.forEach(predictions, (prediction) => {
+      if (prediction.nextOutput) {
+        bet.bullishOpen++;
+      } else {
+        bet.bearishOpen++;
+      }
+      bet.total++;
+    });
+
+    const bullishRatio = _.round(_.divide(bet.bullishOpen, bet.total), 2);
+    const bearishRatio = _.round(_.divide(bet.bearishOpen, bet.total), 2);
+
+    if (bullishRatio > 0.6 || bearishRatio > 0.6) {
+      if (bullishRatio > bearishRatio) {
+        bet.summary = 'buy';
+      } else {
+        bet.summary = 'sell';
+      }
+    }
+
+    return bet;
   }
 
   buy(order: SmartOrder) {

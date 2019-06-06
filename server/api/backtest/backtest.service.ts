@@ -804,7 +804,7 @@ class BacktestService {
       });
   }
 
-  runRNN(symbol, endDate, startDate) {
+  runRNN(symbol, endDate, startDate, response) {
     const to = moment(endDate).format('YYYY-MM-DD');
     const from = moment(startDate).format('YYYY-MM-DD');
 
@@ -816,21 +816,24 @@ class BacktestService {
       uri: URI
     };
 
-    return RequestPromise(options)
+    RequestPromise(options)
       .catch((error) => {
         console.log('Error: ', error);
       });
+
+    response.status(200).send();
   }
 
   checkRNNStatus(symbol, endDate) {
     const to = moment(endDate).format('YYYY-MM-DD');
 
-    const URI = `${dataServiceUrl}api?` +
+    const URI = `${dataServiceUrl}precog/prediction?` +
       `symbol=${symbol}&date=${to}`;
 
     const options = {
       method: 'GET',
-      uri: URI
+      uri: URI,
+      json: true
     };
 
     return RequestPromise(options)
