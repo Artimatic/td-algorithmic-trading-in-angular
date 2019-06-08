@@ -7,8 +7,22 @@ import * as moment from 'moment-timezone';
 import * as _ from 'lodash';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
-import { MatDialog } from '@angular/material';
+import { MatDialog, MatSnackBar } from '@angular/material';
 import { PortfolioService, DaytradeService, ReportingService, BacktestService } from '../shared';
+import { Holding } from '../shared/models';
+
+interface Bet {
+  total: number;
+  bearishOpen: number;
+  bullishOpen: number;
+  summary: String;
+}
+
+enum Sentiment {
+  Bullish = 'Bullish',
+  Bearish = 'Bearish',
+  Neutral = 'Neutral'
+}
 
 @Component({
   selector: 'app-ml-card',
@@ -48,11 +62,12 @@ export class MlCardComponent implements OnInit {
     private daytradeService: DaytradeService,
     private reportingService: ReportingService,
     private backtestService: BacktestService,
+    public snackBar: MatSnackBar,
     public dialog: MatDialog) { }
 
   ngOnInit() {
-    this.startTime = moment.tz('12:00am', 'h:mma', 'America/New_York');
-    this.stopTime = moment.tz('11:55pm', 'h:mma', 'America/New_York');
+    this.startTime = moment.tz('4:00am', 'h:mma', 'America/New_York');
+    this.stopTime = moment.tz('4:10pm', 'h:mma', 'America/New_York');
 
     this.holdingCount = 0;
     this.interval = 300000;
@@ -81,19 +96,20 @@ export class MlCardComponent implements OnInit {
       .subscribe(() => {
         this.live = true;
         const momentInst = moment();
-        if (true || momentInst.isAfter(this.startTime) &&
+        if (momentInst.isAfter(this.startTime) &&
           momentInst.isBefore(this.stopTime)) {
           this.alive = false;
-          // moment().format('YYYY-MM-DD')
-          this.backtestService.runRnn('SPY', '2019-06-04', '2010-01-01')
+          this.backtestService.runRnn('SPY', moment().format('YYYY-MM-DD'), '2010-01-01')
             .subscribe(() => {
               this.pendingResults = true;
               this.checkReportSub = TimerObservable.create(0, this.reportWaitInterval)
                 .takeWhile(() => this.pendingResults)
                 .subscribe(() => {
-                  this.backtestService.getRnn('SPY', '2019-05-31')
+                  this.backtestService.getRnn('SPY', moment().format('YYYY-MM-DD'))
                     .subscribe((data: any) => {
                       console.log('rnn data: ', data);
+                      const bet = this.determineBet(data);
+                      this.placeBet(bet);
                       this.pendingResults = false;
                     }, error => { });
                 });
@@ -108,11 +124,11 @@ export class MlCardComponent implements OnInit {
 
   determineBet(predictionResults) {
     const predictions = predictionResults[0].results;
-    const bet = {
+    const bet: Bet = {
       total: 0,
       bearishOpen: 0,
       bullishOpen: 0,
-      summary: 'neutral'
+      summary: Sentiment.Neutral
     };
 
     _.forEach(predictions, (prediction) => {
@@ -129,13 +145,69 @@ export class MlCardComponent implements OnInit {
 
     if (bullishRatio > 0.6 || bearishRatio > 0.6) {
       if (bullishRatio > bearishRatio) {
-        bet.summary = 'buy';
+        bet.summary = Sentiment.Bullish;
       } else {
-        bet.summary = 'sell';
+        bet.summary = Sentiment.Bearish;
       }
     }
 
     return bet;
+  }
+
+  placeBet(bet: Bet) {
+
+    switch (bet.summary) {
+      case Sentiment.Bullish:
+          this.portfolioService.getInstruments('SPXU').subscribe((response) => {
+            const instruments = response.results[0];
+            const newHolding: Holding = {
+              instrument: instruments.url,
+              symbol: instruments.symbol,
+              name: instruments.name
+            };
+
+            const order: SmartOrder = {
+              holding: newHolding,
+              quantity: _.round(_.divide(bet.bullishOpen, bet.total) * this.firstFormGroup.value.quantity),
+              price: 0,
+              submitted: false,
+              pending: false,
+              side: 'DayTrade',
+            };
+            this.buy(order);
+          },
+          (error) => {
+            this.snackBar.open('Error getting instruments for SPXU', 'Dismiss', {
+              duration: 2000,
+            });
+          });
+      break;
+      case Sentiment.Bearish:
+          this.portfolioService.getInstruments('SPXL').subscribe((response) => {
+            const instruments = response.results[0];
+            const newHolding: Holding = {
+              instrument: instruments.url,
+              symbol: instruments.symbol,
+              name: instruments.name
+            };
+
+            const order: SmartOrder = {
+              holding: newHolding,
+              quantity: _.round(_.divide(bet.bearishOpen, bet.total) * this.firstFormGroup.value.quantity),
+              price: 0,
+              submitted: false,
+              pending: false,
+              side: 'DayTrade',
+            };
+            this.buy(order);
+          },
+          (error) => {
+            this.snackBar.open('Error getting instruments for SPXL', 'Dismiss', {
+              duration: 2000,
+            });
+          });
+      break;
+    }
   }
 
   buy(order: SmartOrder) {
@@ -143,7 +215,7 @@ export class MlCardComponent implements OnInit {
       .toPromise()
       .then((quote) => {
         const lastPrice: number = 1 * quote.last_trade_price;
-        const buyOrder = this.daytradeService.createOrder(order.holding, 'Buy', this.firstFormGroup.value.quantity, lastPrice, moment().unix());
+        const buyOrder = this.daytradeService.createOrder(order.holding, 'Buy', order.quantity, lastPrice, moment().unix());
         const log = `ORDER SENT ${moment(buyOrder.signalTime).format('hh:mm')} ${buyOrder.side} ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
 
         const resolve = () => {
@@ -158,7 +230,13 @@ export class MlCardComponent implements OnInit {
             this.stop();
           }
         };
-        this.daytradeService.sendBuy(buyOrder, 'limit', resolve, reject);
+        this.portfolioService.extendedHoursBuy(buyOrder.holding, buyOrder.quantity, buyOrder.price).subscribe(
+          response => {
+            resolve();
+          },
+          error => {
+            reject(error);
+          });
       });
   }
 
