@@ -66,13 +66,17 @@ export class MlCardComponent implements OnInit {
     public dialog: MatDialog) { }
 
   ngOnInit() {
-    this.startTime = moment.tz('4:00am', 'h:mma', 'America/New_York');
-    this.stopTime = moment.tz('4:10pm', 'h:mma', 'America/New_York');
+    this.startTime = moment.tz('4:03pm', 'h:mma', 'America/New_York');
+    this.stopTime = moment.tz('6:00pm', 'h:mma', 'America/New_York');
+
+    // this.startTime = moment.tz('2:15am', 'h:mma', 'America/New_York');
+    // this.stopTime = moment.tz('2:20am', 'h:mma', 'America/New_York');
 
     this.holdingCount = 0;
-    this.interval = 300000;
-    // this.reportWaitInterval = 3600000;
-    this.reportWaitInterval = 50000;
+    this.interval = 600000;
+    this.reportWaitInterval = 600000;
+
+    // this.reportWaitInterval = 50000;
 
     this.live = false;
     this.alive = true;
@@ -108,9 +112,11 @@ export class MlCardComponent implements OnInit {
                   this.backtestService.getRnn('SPY', moment().format('YYYY-MM-DD'))
                     .subscribe((data: any) => {
                       console.log('rnn data: ', data);
-                      const bet = this.determineBet(data);
-                      this.placeBet(bet);
-                      this.pendingResults = false;
+                      if (data) {
+                        const bet = this.determineBet(data);
+                        this.placeBet(bet);
+                        this.pendingResults = false;
+                      }
                     }, error => { });
                 });
             }, error => {
@@ -158,7 +164,7 @@ export class MlCardComponent implements OnInit {
 
     switch (bet.summary) {
       case Sentiment.Bullish:
-          this.portfolioService.getInstruments('SPXU').subscribe((response) => {
+          this.portfolioService.getInstruments('SPXL').subscribe((response) => {
             const instruments = response.results[0];
             const newHolding: Holding = {
               instrument: instruments.url,
@@ -183,7 +189,7 @@ export class MlCardComponent implements OnInit {
           });
       break;
       case Sentiment.Bearish:
-          this.portfolioService.getInstruments('SPXL').subscribe((response) => {
+          this.portfolioService.getInstruments('SPXU').subscribe((response) => {
             const instruments = response.results[0];
             const newHolding: Holding = {
               instrument: instruments.url,

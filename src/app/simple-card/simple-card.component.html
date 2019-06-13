@@ -26,7 +26,7 @@
           <input matInput type="number" placeholder="Quantity" formControlName="quantity" required>
         </mat-form-field>
         <mat-form-field>
-          <mat-select placeholder="Preferences" [formControl]="preferences" name="preferences" multiple>
+          <mat-select placeholder="Preferences" [formControl]="preferences" name="preferences">
             <mat-option *ngFor="let pref of preferenceList" [value]="pref">
               {{ pref }}
             </mat-option>

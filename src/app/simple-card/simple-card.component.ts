@@ -61,7 +61,10 @@ export class SimpleCardComponent implements OnInit, OnChanges {
     this.stopTime = moment.tz('3:50pm', 'h:mma', 'America/New_York');
     this.marketCloseTime = moment.tz('4:00pm', 'h:mma', 'America/New_York');
 
-    this.preferenceList = [OrderPref.BuyCloseSellOpen];
+    this.preferenceList = [
+      OrderPref.BuyCloseSellOpen,
+      OrderPref.SellAtOpen
+    ];
 
     this.holdingCount = 0;
     this.interval = 300000;
@@ -77,8 +80,7 @@ export class SimpleCardComponent implements OnInit, OnChanges {
     });
 
     this.preferences = new FormControl();
-    this.preferences.setValue([OrderPref.BuyCloseSellOpen]);
-
+    this.preferences.setValue(OrderPref.BuyCloseSellOpen);
     this.setup();
   }
 
@@ -91,6 +93,7 @@ export class SimpleCardComponent implements OnInit, OnChanges {
   }
 
   goLive() {
+    console.log('pref: ', this.preferences.value, OrderPref.SellAtOpen, this.preferences.value === OrderPref.SellAtOpen);
     this.setup();
     this.alive = true;
     this.sub = TimerObservable.create(0, this.interval)
@@ -99,13 +102,18 @@ export class SimpleCardComponent implements OnInit, OnChanges {
         this.live = true;
         const momentInst = moment();
         if (momentInst.isAfter(this.stopTime) &&
-            momentInst.isBefore(this.marketCloseTime)) {
-          if (this.holdingCount <  this.order.quantity) {
-            this.buy();
+          momentInst.isBefore(this.marketCloseTime)) {
+          if (this.holdingCount < this.order.quantity) {
+            if (this.preferences.value === OrderPref.BuyCloseSellOpen) {
+              this.buy();
+            }
           }
         } else if (momentInst.isAfter(this.marketOpenTime) &&
           momentInst.isBefore(this.startTime)) {
-          this.sell();
+          if (this.preferences.value === OrderPref.BuyCloseSellOpen ||
+              this.preferences.value === OrderPref.SellAtOpen) {
+            this.sell();
+          }
         }
       });
   }

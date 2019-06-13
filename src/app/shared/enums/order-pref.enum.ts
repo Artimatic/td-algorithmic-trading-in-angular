@@ -7,5 +7,6 @@ export enum OrderPref {
     SellAtClose = 'Sell positions at close',
     useYahooData = 'Use Yahoo data',
     TrailingStopLoss = 'Trailing Stop Loss',
-    BuyCloseSellOpen = 'Buy at Close, Sell at Open'
+    BuyCloseSellOpen = 'Buy at Close, Sell at Open',
+    SellAtOpen = 'Sell positions at Open'
 }
