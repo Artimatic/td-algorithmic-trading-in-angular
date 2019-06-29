@@ -74,6 +74,9 @@ import { BacktestViewComponent } from './backtest-view/backtest-view.component';
 import { TerminalViewComponent } from './terminal-view/terminal-view.component';
 import { SimpleCardComponent } from './simple-card/simple-card.component';
 import { OverviewModule } from './overview/overview.module';
+import { SettingsModule } from './settings/settings.module';
+import { MachineLearningModule } from './machine-learning/machine-learning.module';
+import { MlCardComponent } from './ml-card/ml-card.component';
 
 @NgModule({
   declarations: [
@@ -101,12 +104,13 @@ import { OverviewModule } from './overview/overview.module';
     BacktestViewComponent,
     TerminalViewComponent,
     SimpleCardComponent,
+    MlCardComponent
   ],
   entryComponents: [
     LoginDialogComponent,
     OrderDialogComponent,
     ConfirmDialogComponent,
-    ReportDialogComponent
+    ReportDialogComponent,
   ],
   imports: [
     BrowserModule,
@@ -142,6 +146,8 @@ import { OverviewModule } from './overview/overview.module';
     MatTooltipModule,
     FlexLayoutModule,
     OverviewModule,
+    SettingsModule,
+    MachineLearningModule,
   ],
   providers: [
     BacktestService,

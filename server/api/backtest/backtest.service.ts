@@ -803,6 +803,44 @@ class BacktestService {
         console.log('Error: ', error);
       });
   }
+
+  runRNN(symbol, endDate, startDate, response) {
+    const to = moment(endDate).format('YYYY-MM-DD');
+    const from = moment(startDate).format('YYYY-MM-DD');
+
+    const URI = `${mlServiceUrl}api?` +
+      `symbol=${symbol}&to=${to}&from=${from}`;
+
+    const options = {
+      method: 'GET',
+      uri: URI
+    };
+
+    RequestPromise(options)
+      .catch((error) => {
+        console.log('Error: ', error);
+      });
+
+    response.status(200).send();
+  }
+
+  checkRNNStatus(symbol, endDate) {
+    const to = moment(endDate).format('YYYY-MM-DD');
+
+    const URI = `${dataServiceUrl}precog/prediction?` +
+      `symbol=${symbol}&date=${to}`;
+
+    const options = {
+      method: 'GET',
+      uri: URI,
+      json: true
+    };
+
+    return RequestPromise(options)
+      .catch((error) => {
+        console.log('Error: ', error.message);
+      });
+  }
 }
 
 export default new BacktestService();

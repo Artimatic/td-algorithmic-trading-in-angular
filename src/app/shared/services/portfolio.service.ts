@@ -74,6 +74,28 @@ export class PortfolioService {
       });
   }
 
+  extendedHoursBuy(holding: Holding, quantity: number, price: number): Observable<any> {
+    if (quantity === 0) {
+      throw new Error('Order Quantity is 0');
+    }
+    const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.token });
+    const options = new RequestOptions({ headers: headers });
+    const body = {
+      'account': this.authenticationService.myAccount.account,
+      'url': holding.instrument,
+      'symbol': holding.symbol,
+      'quantity': quantity,
+      'price': price,
+      'type': 'limit',
+      'extendedHour': true
+    };
+
+    return this.http.post('/api/portfolio/buy', body, options)
+      .map((response: Response) => {
+        return response.json();
+      });
+  }
+
   getInstruments(symbol: string): Observable<any> {
     const body = { symbol: symbol };
     return this.http.post('/api/portfolio/instruments', body)

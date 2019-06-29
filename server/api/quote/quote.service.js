@@ -6,6 +6,7 @@ import * as algotrader from 'algotrader';
 
 import configurations from '../../config/environment';
 
+const iexKey = configurations.iex.key;
 const yahoo = {
   key: configurations.yahoo.key,
   secret: configurations.yahoo.secret
@@ -16,7 +17,7 @@ const appUrl = configurations.apps.goliath;
 const api = new YahooFinanceAPI(yahoo);
 const AlphaVantage = algotrader.Data.AlphaVantage;
 const av = new AlphaVantage(configurations.alpha.key);
-const IEX = 'https://api.iextrading.com/1.0/';
+const IEX = 'https://cloud.iexapis.com/stable/';
 
 class QuoteService {
   /*
@@ -48,7 +49,8 @@ class QuoteService {
   }
 
   getRawData(symbol, interval = '1d', range = '1d') {
-    return this.getIEXIntraday(symbol)
+    if(interval === '1m') {
+      return this.getIEXIntraday(symbol)
       .then(quotes => {
         const quoteHash = {};
         _.forEach(quotes, (quote) => {
@@ -89,12 +91,14 @@ class QuoteService {
 
             return data;
           });
-      })
-
+      });
+    } else {
+      return api.getHistoricalData(symbol, interval, range);
+    }
   }
 
   getIEXIntraday(symbol) {
-    const query = `${IEX}stock/${symbol}/chart/1d`;
+    const query = `${IEX}stock/${symbol}/intraday-prices?token=${iexKey}`;
     const options = {
       method: 'GET',
       json: true,

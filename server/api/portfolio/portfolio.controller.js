@@ -72,7 +72,7 @@ class PortfolioController extends BaseController {
         request.body.quantity,
         request.body.price,
         request.body.type,
-        response)
+        request.body.extendedHour)
         .then((data) => BaseController.requestGetSuccessHandler(response, data))
         .catch((err) => BaseController.requestErrorHandler(response, err));
     }
@@ -89,7 +89,7 @@ class PortfolioController extends BaseController {
         request.body.quantity,
         request.body.price,
         request.body.type,
-        response)
+        request.body.extendedHour)
         .then((data) => BaseController.requestGetSuccessHandler(response, data))
         .catch((err) => BaseController.requestErrorHandler(response, err));
     }

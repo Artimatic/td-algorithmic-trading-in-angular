@@ -9,7 +9,7 @@ if(!credentials) {
 
 // All configurations will extend these options
 // ============================================
-const defaultPort = _.get(credentials, 'default.port', _.get(credentials, 'port', null)) || 9000; 
+const defaultPort = _.get(credentials, 'default.port', _.get(credentials, 'port', null)) || 9000;
 export default {
   env: process.env.NODE_ENV,
 
@@ -27,6 +27,12 @@ export default {
   },
   tiingo: {
     key: _.get(credentials, 'default.tiingo.key', _.get(credentials, 'tiingo.key', null)),
+  },
+  robinhood: {
+    deviceId: _.get(credentials, 'default.robinhood.deviceId', _.get(credentials, 'robinhood.deviceId', null)),
+  },
+  iex: {
+    key: _.get(credentials, 'default.iex.key', _.get(credentials, 'iex.key', null)),
   },
   apps: {
     goliath: _.get(credentials, 'default.goliathUrl', _.get(credentials, 'goliathUrl', null)),

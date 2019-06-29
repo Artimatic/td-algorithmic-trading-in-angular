@@ -1,4 +1,8 @@
 .todo-card {
   margin: 10px;
-  max-width: 155px;
+  max-width: 125px;
+}
+
+.checkbox-label {
+  word-wrap: break-word;
 }

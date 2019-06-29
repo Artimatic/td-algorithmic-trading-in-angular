@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms'
 import { MatDialog } from '@angular/material';
 import 'rxjs/add/operator/takeWhile';
 
-import { Chart, StockChart } from 'angular-highcharts';
+import { Chart } from 'angular-highcharts';
 
 import * as Highcharts from 'highcharts';
 import * as moment from 'moment-timezone';
@@ -27,6 +27,7 @@ import { CartService } from '../shared/services/cart.service';
 import { Indicators } from '../shared/models/indicators';
 import { CardOptions } from '../shared/models/card-options';
 import { Point } from 'angular-highcharts/lib/chart';
+import { GlobalSettingsService } from '../settings/global-settings.service';
 
 @Component({
   selector: 'app-bb-card',
@@ -65,9 +66,6 @@ export class BbCardComponent implements OnInit, OnChanges {
   tiles;
   bbandPeriod: number;
   dataInterval: string;
-  startTime;
-  endTime;
-  sellTime;
   backtestQuotes: JSON[];
   stopped: boolean;
   isBacktest: boolean;
@@ -84,6 +82,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     private algoService: AlgoService,
     private indicatorsService: IndicatorsService,
     public cartService: CartService,
+    private globalSettingsService: GlobalSettingsService,
     public dialog: MatDialog) { }
 
   ngOnInit() {
@@ -107,9 +106,6 @@ export class BbCardComponent implements OnInit, OnChanges {
         useUTC: false
       }
     });
-    this.startTime = moment.tz('10:00am', 'h:mma', 'America/New_York');
-    this.endTime = moment.tz('3:45pm', 'h:mma', 'America/New_York');
-    this.sellTime = moment.tz('3:30pm', 'h:mma', 'America/New_York');
     this.showGraph = false;
     this.bbandPeriod = 80;
     this.dataInterval = '1min';
@@ -369,11 +365,12 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
 
       this.tiles = this.daytradeService.buildTileList(this.orders);
-      // this.volumeChart = this.initVolumeChart(volume);
     }
 
-    if (moment().isAfter(this.endTime)) {
-      this.stop();
+    if (this.config.SellAtClose) {
+      if (moment().isAfter(moment(this.globalSettingsService.sellAtCloseTime)) && this.positionCount <= 0) {
+        this.stop();
+      }
     }
   }
 
@@ -502,27 +499,6 @@ export class BbCardComponent implements OnInit, OnChanges {
         name: title,
         id: title,
         data: []
-      }]
-    });
-  }
-
-  initPriceChartv2(): StockChart {
-    return new StockChart({
-      rangeSelector: {
-        selected: 1
-      },
-      title: {
-        text: 'AAPL Stock Price'
-      },
-      series: [{
-        tooltip: {
-          valueDecimals: 2
-        },
-        name: 'AAPL',
-        data: [
-          [1293580800000, 46.47],
-          [1293667200000, 46.24]
-        ]
       }]
     });
   }
@@ -818,6 +794,10 @@ export class BbCardComponent implements OnInit, OnChanges {
       return null;
     }
 
+    if (this.scoringService.total < 0 && this.scoringService.total < this.globalSettingsService.maxLoss * -1) {
+      return null;
+    }
+
     if (this.config.Mfi) {
       if (this.algoService.isOversoldBullish(roc, this.indicators.momentum, this.indicators.mfi)) {
         const log = `${this.order.holding.symbol} mfi oversold Event - time: ${moment.unix(signalTime).format()}, short rate of change: ${roc}, long rate of change: ${this.indicators.momentum}, mfi: ${this.indicators.mfi}`;
@@ -867,7 +847,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
 
     if (this.config.SellAtClose) {
-      if (moment.unix(signalTime).isAfter(this.sellTime)) {
+      if (moment.unix(signalTime).isAfter(moment(this.globalSettingsService.sellAtCloseTime))) {
         return this.closeAllPositions(price, signalTime);
       }
     }

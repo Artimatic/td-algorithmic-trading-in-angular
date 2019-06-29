@@ -179,4 +179,23 @@ export class BacktestService {
     pingArmidillo() {
         return this.http.get(`${BASE_URL}api/backtest/analysis-status`);
     }
+
+    getRnn(symbol: string, to: string = null, from: string = null): Observable<any> {
+        const body = {
+            symbol,
+            to
+        };
+
+        return this.http.post(`${BASE_URL}api/backtest/rnn-status`, body, {});
+    }
+
+    runRnn(symbol: string, to: string = null, from: string = null): Observable<any> {
+        const data = {
+            symbol,
+            to,
+            from
+        };
+
+        return this.http.post(`${BASE_URL}api/backtest/rnn`, data, {});
+    }
 }

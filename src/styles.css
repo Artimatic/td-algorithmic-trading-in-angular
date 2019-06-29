@@ -7,6 +7,10 @@ body {
 }
 
 button.nav-item {
-  width:200px;
+  width:160px;
   text-align: left;
+}
+
+.mat-checkbox-layout {
+  white-space: pre-wrap !important;
 }

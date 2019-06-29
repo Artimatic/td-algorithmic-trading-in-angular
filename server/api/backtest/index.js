@@ -17,5 +17,7 @@ router.post('/mfi', handler.mfi);
 router.post('/vwma', handler.vwma);
 router.get('/data-status', BacktestController.getDataStatus);
 router.get('/analysis-status', BacktestController.getAnalysisStatus);
+router.post('/rnn', BacktestController.runRNN);
+router.post('/rnn-status', BacktestController.getRNNPrediction);
 
 module.exports = router;
