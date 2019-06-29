@@ -10,15 +10,22 @@ Run `ng generate component component-name` to generate a new component. You can 
 * Get AlphaVantage credentials: https://www.alphavantage.co/support/
 * Add Yahoo Finance app and AlphaVantage api credentials to credentials.js: 
 ```
-module.exports = {
-  yahoo: {
-    key: 'SOMEYAHOOKEY',
-    secret: 'SOMESECRET'
-  },
-  alpha: {
-    key: "SOMEALPHAVANTAGEKEY"
-  }
+export default {
+    port: 9000,
+    yahoo: { // Necessary for historical backtesting
+      key: 'SOMEYAHOOKEY',
+      secret: 'SOMESECRET'
+    },
+    alpha: {
+        key: 'SOMEALPHAVANTAGEKEY' // Necessary for daytrading
+    },
+    robinhood: {
+        deviceId: 'device_token' // Your Robinhood device token. Grab it from your Robinhood login
+    },
+    goliathUrl: 'http://localhost:8100/', // Data service  https://github.com/Artimatic/station-data-service
+    armadilloUrl: 'http://localhost:3000/' // Machine Learning service https://github.com/Artimatic/robinhood-algorithmic-trading-in-angular
 };
+
 ```
 
 Run `npm install`
