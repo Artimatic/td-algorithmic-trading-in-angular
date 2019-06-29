@@ -22,8 +22,8 @@ export default {
     robinhood: {
         deviceId: 'device_token' // Your Robinhood device token. Grab it from your Robinhood login
     },
-    goliathUrl: 'http://localhost:8100/', // Data service  https://github.com/Artimatic/station-data-service
-    armadilloUrl: 'http://localhost:3000/' // Machine Learning service https://github.com/Artimatic/robinhood-algorithmic-trading-in-angular
+    goliathUrl: 'http://localhost:8100/', // Data service local address https://github.com/Artimatic/station-data-service
+    armadilloUrl: 'http://localhost:3000/' // Machine Learning service local address https://github.com/Artimatic/robinhood-algorithmic-trading-in-angular
 };
 
 ```
