@@ -49,7 +49,8 @@ class QuoteService {
   }
 
   getRawData(symbol, interval = '1d', range = '1d') {
-    return this.getIEXIntraday(symbol)
+    if(interval === '1m') {
+      return this.getIEXIntraday(symbol)
       .then(quotes => {
         const quoteHash = {};
         _.forEach(quotes, (quote) => {
@@ -90,8 +91,10 @@ class QuoteService {
 
             return data;
           });
-      })
-
+      });
+    } else {
+      return api.getHistoricalData(symbol, interval, range);
+    }
   }
 
   getIEXIntraday(symbol) {
