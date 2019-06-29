@@ -156,7 +156,11 @@ class BacktestController extends BaseController {
   }
 
   runRNN(request, response) {
-    BacktestService.runRNN(request.body.symbol, request.body.to, request.body.from, response);
+    if (_.isEmpty(request.body) || !request.body.symbol || !request.body.to || !request.body.from) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    } else {
+      BacktestService.runRNN(request.body.symbol, request.body.to, request.body.from, response);
+    }
   }
 
   getRNNPrediction(request, response) {

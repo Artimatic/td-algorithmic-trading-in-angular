@@ -838,7 +838,7 @@ class BacktestService {
 
     return RequestPromise(options)
       .catch((error) => {
-        console.log('Error: ', error);
+        console.log('Error: ', error.message);
       });
   }
 }
