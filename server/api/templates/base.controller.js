@@ -16,7 +16,7 @@ export default class BaseController {
   }
 
   static requestErrorHandler(reply, error) {
-    console.log('Error: ', error);
+    console.log('Error: ', error.error);
     if (error && error.error && error.statusCode) {
       reply.status(error.statusCode).send(error.error);
     } else {

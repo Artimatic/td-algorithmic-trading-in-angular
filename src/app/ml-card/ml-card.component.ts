@@ -220,7 +220,7 @@ export class MlCardComponent implements OnInit {
     return this.portfolioService.getQuote(order.holding.symbol)
       .toPromise()
       .then((quote) => {
-        const lastPrice: number = 1 * quote;
+        const lastPrice: number = quote;
         const buyOrder = this.daytradeService.createOrder(order.holding, 'Buy', order.quantity, lastPrice, moment().unix());
         const log = `ORDER SENT ${moment(buyOrder.signalTime).format('hh:mm')} ${buyOrder.side} ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
 

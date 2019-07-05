@@ -122,7 +122,7 @@ export class SimpleCardComponent implements OnInit, OnChanges {
     return this.portfolioService.getQuote(this.order.holding.symbol)
       .toPromise()
       .then((quote) => {
-        const lastPrice: number = 1 * quote;
+        const lastPrice: number = quote;
         const buyOrder = this.daytradeService.createOrder(this.order.holding, 'Buy', this.firstFormGroup.value.quantity, lastPrice, moment().unix());
         const log = `ORDER SENT ${moment(buyOrder.signalTime).format('hh:mm')} ${buyOrder.side} ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
 
@@ -146,7 +146,7 @@ export class SimpleCardComponent implements OnInit, OnChanges {
     return this.portfolioService.getQuote(this.order.holding.symbol)
       .toPromise()
       .then((quote) => {
-        const lastPrice: number = 1 * quote;
+        const lastPrice: number = quote;
 
         const sellOrder = this.daytradeService.createOrder(this.order.holding, 'Buy', this.firstFormGroup.value.quantity, lastPrice, moment().unix());
         const log = `ORDER SENT ${sellOrder.side} ${sellOrder.holding.symbol} ${sellOrder.quantity} ${sellOrder.price}`;

@@ -1,6 +1,6 @@
 import * as request from 'request-promise';
 import * as Robinhood from 'robinhood';
-
+import * as _ from 'lodash';
 const RobinHoodApi = require('robinhood-api');
 const robinhood = new RobinHoodApi();
 
