@@ -5,6 +5,7 @@ import 'rxjs/add/operator/map';
 
 import { AuthenticationService } from './authentication.service';
 import { Holding } from '../models';
+import * as _ from 'lodash';
 
 @Injectable()
 export class PortfolioService {
@@ -103,9 +104,11 @@ export class PortfolioService {
   }
 
   getQuote(symbol: string): Observable<any> {
-    const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.token });
-    const options = new RequestOptions({ headers: headers });
+    const options = new RequestOptions();
     return this.http.get(`/api/portfolio/quote?symbol=${symbol}`, options)
-      .map((response: Response) => response.json());
+      .map((response: Response) => {
+        const price = parseInt(response.text());
+        return _.round(price, 2)
+      });
   }
 }

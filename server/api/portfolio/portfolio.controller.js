@@ -105,11 +105,9 @@ class PortfolioController extends BaseController {
   }
 
   getQuote(request, response) {
-    if (_.isEmpty(request.headers.authorization) || !(/^([a-zA-Z]{1,5})$/.test(request.query.symbol))) {
-      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
-    } else {
-      PortfolioService.getQuote(request.query.symbol, request.headers.authorization.replace('Bearer ', ''), response);
-    }
+    PortfolioService.getQuote(request.query.symbol)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 }
 

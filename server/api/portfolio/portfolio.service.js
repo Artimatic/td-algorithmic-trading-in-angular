@@ -11,6 +11,8 @@ const robinhood = {
 };
 
 const apiUrl = 'https://api.robinhood.com/';
+const IEX = 'https://cloud.iexapis.com/stable/';
+const iexKey = configurations.iex.key;
 
 class PortfolioService {
   login(username, password, reply) {
@@ -108,20 +110,16 @@ class PortfolioService {
     })();
   }
 
-  getQuote(symbol, token, reply) {
+  getQuote(symbol) {
+    const query = `${IEX}stock/${symbol}/price?token=${iexKey}`;
     const options = {
-      uri: apiUrl + `/quotes/${symbol}/`,
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      uri: query
     };
 
-    return request.get(options)
-      .then((response) => reply.status(200).send(response))
-      .catch((e) => (reply.status(500).send(e)));
+    return request.get(options);
   }
 
-  sell(account, token, instrumentUrl, symbol, quantity, price, type = 'limit', 
+  sell(account, token, instrumentUrl, symbol, quantity, price, type = 'limit',
     extendedHours = false) {
     let headers = {
       'Accept': '*/*',
@@ -167,13 +165,13 @@ class PortfolioService {
     });
   }
 
-  buy(account, 
-    token, 
-    instrumentUrl, 
-    symbol, 
-    quantity, 
-    price, 
-    type = 'limit', 
+  buy(account,
+    token,
+    instrumentUrl,
+    symbol,
+    quantity,
+    price,
+    type = 'limit',
     extendedHours = false) {
     let headers = {
       'Accept': '*/*',

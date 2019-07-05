@@ -29,7 +29,7 @@ export class DaytradeService {
       this.portfolioService.getQuote(order.holding.symbol)
         .toPromise()
         .then((quote) => {
-          const sellOrder = this.createOrder(order.holding, 'Sell', order.positionCount, 1 * quote.last_trade_price, moment().unix());
+          const sellOrder = this.createOrder(order.holding, 'Sell', order.positionCount, 1 * quote, moment().unix());
 
           this.sendSell(sellOrder, 'market', resolve, reject, handleNotFound);
         });
@@ -270,7 +270,7 @@ export class DaytradeService {
 
   addQuote(data, newQuote) {
     const quotes = data.chart.result[0].indicators.quote[0];
-    quotes.close[quotes.close.length - 1] = 1 * newQuote.last_trade_price;
+    quotes.close[quotes.close.length - 1] = 1 * newQuote;
     return data;
   }
 
