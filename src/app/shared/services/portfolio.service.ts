@@ -107,8 +107,8 @@ export class PortfolioService {
     const options = new RequestOptions();
     return this.http.get(`/api/portfolio/quote?symbol=${symbol}`, options)
       .map((response: Response) => {
-        const price = parseInt(response.json().price);
-        return _.round(price, 2)
+        const price = parseInt(response.json().price, 10);
+        return _.round(price, 2);
       });
   }
 }
