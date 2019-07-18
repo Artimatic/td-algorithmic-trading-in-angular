@@ -6,7 +6,6 @@ import * as algotrader from 'algotrader';
 
 import configurations from '../../config/environment';
 
-const iexKey = configurations.iex.key;
 const yahoo = {
   key: configurations.yahoo.key,
   secret: configurations.yahoo.secret
@@ -17,7 +16,6 @@ const appUrl = configurations.apps.goliath;
 const api = new YahooFinanceAPI(yahoo);
 const AlphaVantage = algotrader.Data.AlphaVantage;
 const av = new AlphaVantage(configurations.alpha.key);
-const IEX = 'https://cloud.iexapis.com/stable/';
 
 class QuoteService {
   /*
@@ -49,85 +47,31 @@ class QuoteService {
   }
 
   getRawData(symbol, interval = '1d', range = '1d') {
-    if(interval === '1m') {
-      return this.getIEXIntraday(symbol)
-      .then(quotes => {
-        const quoteHash = {};
-        _.forEach(quotes, (quote) => {
-          const date = quote.date;
-          const minute = quote.minute;
-          const timestamp = moment(minute + date, 'hh:mmYYYYMMDD').unix()
-          quoteHash[timestamp] = quote;
-        });
+    if (interval === '1m') {
+      return api.getHistoricalData(symbol, interval, range)
+        .then((data) => {
+          const close = _.get(data, 'chart.result[0].indicators.quote[0].close', []);
 
-        return api.getHistoricalData(symbol, interval, range)
-          .then((data) => {
-            const close = _.get(data, 'chart.result[0].indicators.quote[0].close', []);
+          const quote = _.get(data, 'chart.result[0].indicators.quote[0]', []);
 
-            const quote = _.get(data, 'chart.result[0].indicators.quote[0]', []);
+          const timestamps = _.get(data, 'chart.result[0].timestamp', []);
 
-            const timestamps = _.get(data, 'chart.result[0].timestamp', []);
-
-            close.forEach((val, idx) => {
-              if (!val) {
-                const yahooTime = timestamps[idx];
-                const iexQuote = quoteHash[yahooTime];
-                if (iexQuote && iexQuote.marketClose) {
-                  quote.close[idx] = iexQuote.marketClose;
-                  quote.low[idx] = iexQuote.marketLow;
-                  quote.volume[idx] = iexQuote.marketVolume;
-                  quote.open[idx] = iexQuote.marketOpen;
-                  quote.high[idx] = iexQuote.marketHigh;
-                } else {
-                  quote.close.splice(idx, 1);
-                  quote.open.splice(idx, 1);
-                  quote.high.splice(idx, 1);
-                  quote.low.splice(idx, 1);
-                  quote.volume.splice(idx, 1);
-                  timestamps.splice(idx, 1);
-                }
-              }
-            });
-
-            return data;
+          close.forEach((val, idx) => {
+            if (!val) {
+              quote.close.splice(idx, 1);
+              quote.open.splice(idx, 1);
+              quote.high.splice(idx, 1);
+              quote.low.splice(idx, 1);
+              quote.volume.splice(idx, 1);
+              timestamps.splice(idx, 1);
+            }
           });
-      });
+
+          return data;
+        });
     } else {
       return api.getHistoricalData(symbol, interval, range);
     }
-  }
-
-  getIEXIntraday(symbol) {
-    const query = `${IEX}stock/${symbol}/intraday-prices?token=${iexKey}`;
-    const options = {
-      method: 'GET',
-      json: true,
-      uri: query
-    };
-
-    return RequestPromise(options)
-  }
-
-  getPrice(symbol) {
-    return this.getIEXIntraday(symbol)
-      .then(quotes => {
-        const data = this.createIntradayData();
-
-        _.forEach(quotes, (quote) => {
-          if (quote.marketClose > 0) {
-            const date = quote.date;
-            const minute = quote.minute;
-            data.chart.result[0].timestamp.push(moment(minute + date, 'hh:mmYYYYMMDD').unix());
-            data.chart.result[0].indicators.quote[0].close.push(quote.marketClose);
-            data.chart.result[0].indicators.quote[0].low.push(quote.marketLow);
-            data.chart.result[0].indicators.quote[0].volume.push(quote.marketVolume);
-            data.chart.result[0].indicators.quote[0].open.push(quote.marketOpen);
-            data.chart.result[0].indicators.quote[0].high.push(quote.marketHigh);
-          }
-        });
-
-        return data;
-      });
   }
 
   getDailyQuotes(symbol, toDate, fromDate) {
@@ -184,10 +128,6 @@ class QuoteService {
     };
 
     return RequestPromise(options);
-  }
-
-  getIEXIntradayPrices(symbol) {
-    return IEX.getQuote(symbol);
   }
 
   getIntradayData(symbol, interval) {

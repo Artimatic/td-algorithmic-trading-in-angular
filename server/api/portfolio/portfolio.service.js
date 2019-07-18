@@ -11,8 +11,8 @@ const robinhood = {
 };
 
 const apiUrl = 'https://api.robinhood.com/';
-const IEX = 'https://cloud.iexapis.com/stable/';
-const iexKey = configurations.iex.key;
+const tda = 'https://api.tdameritrade.com/v1/';
+const tdaKey = configurations.tdameritrade.key;
 
 class PortfolioService {
   login(username, password, reply) {
@@ -111,7 +111,7 @@ class PortfolioService {
   }
 
   getQuote(symbol) {
-    const query = `${IEX}stock/${symbol}/price?token=${iexKey}`;
+    const query = `${tda}marketdata/${symbol}/quotes?apikey=${tdaKey}`;
     const options = {
       uri: query
     };
