@@ -34,6 +34,9 @@ export default {
   iex: {
     key: _.get(credentials, 'default.iex.key', _.get(credentials, 'iex.key', null)),
   },
+  tdameritrade: {
+    key: _.get(credentials, 'default.tdameritrade.key', _.get(credentials, 'tdameritrade.key', null)),
+  },
   apps: {
     goliath: _.get(credentials, 'default.goliathUrl', _.get(credentials, 'goliathUrl', null)),
     armadillo: _.get(credentials, 'default.armadilloUrl', _.get(credentials, 'armadilloUrl', null)),
