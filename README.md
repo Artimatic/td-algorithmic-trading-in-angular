@@ -22,8 +22,8 @@ export default {
     robinhood: {
         deviceId: 'device_token' // Your Robinhood device token. Grab it from your Robinhood login. NOTE: Keep this safe.
     },
-    iex: {
-      key: 'IEX CLOUD PUBLISHABLE KEY' // Sign up for IEX cloud and get api key
+    tdameritrade: {
+      key: 'TD AMERITRADE API KEY' // Sign up for TD Ameritrade api
     },
     goliathUrl: 'http://localhost:8100/', // Data service local address https://github.com/Artimatic/station-data-service
     armadilloUrl: 'http://localhost:3000/' // Machine Learning service local address https://github.com/Artimatic/robinhood-algorithmic-trading-in-angular
