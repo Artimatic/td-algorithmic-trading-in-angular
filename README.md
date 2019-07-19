@@ -8,16 +8,18 @@ Run `ng generate component component-name` to generate a new component. You can 
 * Create file 'credentials.js' in '\server\config\environment\credentials.js'
 * Get Yahoo developer credentials: https://developer.yahoo.com/apps/create/
 * Get AlphaVantage credentials: https://www.alphavantage.co/support/
-* Add Yahoo Finance app and AlphaVantage api credentials to credentials.js: 
+* Get Access to TD Ameritrade. Both a trading account and Developer account are necessary 
+*  for API access: https://developer.tdameritrade.com/apis
+* Add Yahoo Finance app and AlphaVantage api and TD Ameritrade credentials to credentials.js: 
 ```
 export default {
     port: 9000,
-    yahoo: { // Necessary for historical backtesting
-      key: 'SOMEYAHOOKEY',
+    yahoo: { 
+      key: 'SOMEYAHOOKEY', // Necessary for historical backtesting
       secret: 'SOMESECRET'
     },
     alpha: {
-        key: 'SOMEALPHAVANTAGEKEY' // Necessary for daytrading
+        key: 'SOMEALPHAVANTAGEKEY' // Necessary for daytrading. Provides intraday historical quotes
     },
     robinhood: {
         deviceId: 'device_token' // Your Robinhood device token. Grab it from your Robinhood login. NOTE: Keep this safe.
@@ -32,7 +34,7 @@ export default {
     * The advantage here is more reliable and robust real time quote data.
     */
     tdameritrade: {
-        consumer_key: 'TD AMERITRADE API CONSUMER KEY', 
+        consumer_key: 'TD AMERITRADE API CONSUMER KEY', // Necessary for daytrading. Provides realtime quotes
         refresh_token: 'REFRESH_TOKEN'
     },
     goliathUrl: 'http://localhost:8100/', // Data service local address https://github.com/Artimatic/station-data-service
@@ -51,7 +53,7 @@ Run `npm run build `.
 
 Run `npm run start`
 
-## Go
+## Host
 
 http://localhost:9000/
 
