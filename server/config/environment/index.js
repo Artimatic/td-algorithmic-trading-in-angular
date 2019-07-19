@@ -35,7 +35,8 @@ export default {
     key: _.get(credentials, 'default.iex.key', _.get(credentials, 'iex.key', null)),
   },
   tdameritrade: {
-    key: _.get(credentials, 'default.tdameritrade.key', _.get(credentials, 'tdameritrade.key', null)),
+    consumer_key: _.get(credentials, 'default.tdameritrade.consumer_key', _.get(credentials, 'tdameritrade.consumer_key', null)),
+    refresh_token: _.get(credentials, 'default.tdameritrade.refresh_token', _.get(credentials, 'tdameritrade.refresh_token', null))
   },
   apps: {
     goliath: _.get(credentials, 'default.goliathUrl', _.get(credentials, 'goliathUrl', null)),

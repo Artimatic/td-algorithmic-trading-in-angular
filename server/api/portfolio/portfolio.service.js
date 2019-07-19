@@ -12,9 +12,13 @@ const robinhood = {
 
 const apiUrl = 'https://api.robinhood.com/';
 const tda = 'https://api.tdameritrade.com/v1/';
-const tdaKey = configurations.tdameritrade.key;
+const tdaKey = configurations.tdameritrade.consumer_key;
+const tdaRefreshToken = configurations.tdameritrade.refresh_token;
 
 class PortfolioService {
+
+  access_token = '';
+
   login(username, password, reply) {
     let options = {
       uri: apiUrl + 'oauth2/token/',
@@ -111,12 +115,59 @@ class PortfolioService {
   }
 
   getQuote(symbol) {
+    if (!this.access_token) {
+      return this.renewExpiredTDAccessTokenAndGetQuote(symbol);
+    } else {
+      return this.getTDMarketData(symbol)
+        .then(this.processTDData)
+        .then((quote) => {
+          if (quote[symbol].delayed) {
+            return this.renewExpiredTDAccessTokenAndGetQuote(symbol);
+          } else {
+            return quote;
+          }
+        });
+    }
+  }
+
+  getTDMarketData(symbol) {
     const query = `${tda}marketdata/${symbol}/quotes?apikey=${tdaKey}`;
     const options = {
-      uri: query
+      uri: query,
+      headers: {
+        Authorization: `Bearer ${this.access_token}`
+      }
     };
-
     return request.get(options);
+  }
+
+  processTDData(data) {
+    return JSON.parse(data);
+  }
+
+  getTDAccessToken() {
+    return request.post({
+      uri: tda + 'oauth2/token',
+      form: {
+        grant_type: 'refresh_token',
+        refresh_token: tdaRefreshToken,
+        client_id: `${tdaKey}@AMER.OAUTHAP`
+      }
+    })
+      .then(this.processTDData)
+      .then((EASObject) => {
+        this.access_token = EASObject.access_token;
+        return this.access_token;
+      });
+  }
+
+  renewExpiredTDAccessTokenAndGetQuote(symbol) {
+    return this.getTDAccessToken()
+      .then((token) => {
+        return this.getTDMarketData(symbol)
+          .then(this.processTDData);
+
+      });
   }
 
   sell(account, token, instrumentUrl, symbol, quantity, price, type = 'limit',
