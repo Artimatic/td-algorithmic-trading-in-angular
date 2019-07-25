@@ -20,7 +20,7 @@ import { GlobalSettingsService } from '../settings/global-settings.service';
 export class ShoppingListComponent implements OnInit {
   mu: SmartOrder;
   vti: SmartOrder;
-  spxl: SmartOrder;
+  upro: SmartOrder;
   vxx: SmartOrder;
   uvxy: SmartOrder;
   sh: SmartOrder;
@@ -46,20 +46,35 @@ export class ShoppingListComponent implements OnInit {
     this.interval = 70800;
 
     this.ordersStarted = 0;
-    this.spxl = {
-      holding:
-      {
-        instrument: 'https://api.robinhood.com/instruments/496d6d63-a93d-4693-a5b5-d1e0a72d854f/',
-        symbol: 'SPXL',
-        name: 'Direxion Daily S&P 500  Bull 3x Shares',
-        realtime_price: 49.52
-      },
-      quantity: 10, price: 49.52,
-      submitted: false, pending: false,
-      side: 'DayTrade',
-      useTakeProfit: true,
-      useStopLoss: true
-    };
+    this.portfolioService.getInstruments('UPRO').subscribe((response) => {
+      const instruments = response.results[0];
+      const newHolding: Holding = {
+        instrument: instruments.url,
+        symbol: instruments.symbol,
+        name: instruments.name
+      };
+
+      const order: SmartOrder = {
+        holding: newHolding,
+        quantity: 10,
+        price: 28.24,
+        submitted: false,
+        pending: false,
+        side: 'DayTrade',
+        useTakeProfit: true,
+        useStopLoss: true,
+        lossThreshold: -0.002,
+        profitTarget: 0.004,
+        spyMomentum: true,
+        sellAtClose: true
+      };
+      this.upro = order;
+    },
+    (error) => {
+      this.snackBar.open('Error getting instruments for UPRO', 'Dismiss', {
+        duration: 2000,
+      });
+    });
 
     this.vti = {
       holding:

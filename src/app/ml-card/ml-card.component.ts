@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, Input } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { SmartOrder } from '../shared/models/smart-order';
 import { Subscription } from 'rxjs';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
@@ -31,8 +31,6 @@ enum Sentiment {
 })
 export class MlCardComponent implements OnInit {
   @ViewChild('stepper') stepper;
-  @Input() bearishOrder: SmartOrder;
-  @Input() bullishOrder: SmartOrder;
 
   sub: Subscription;
   checkReportSub: Subscription;
@@ -164,7 +162,7 @@ export class MlCardComponent implements OnInit {
 
     switch (bet.summary) {
       case Sentiment.Bullish:
-          this.portfolioService.getInstruments('SPXL').subscribe((response) => {
+          this.portfolioService.getInstruments('UPRO').subscribe((response) => {
             const instruments = response.results[0];
             const newHolding: Holding = {
               instrument: instruments.url,
@@ -183,7 +181,7 @@ export class MlCardComponent implements OnInit {
             this.buy(order);
           },
           (error) => {
-            this.snackBar.open('Error getting instruments for SPXU', 'Dismiss', {
+            this.snackBar.open('Error getting instruments for UPRO', 'Dismiss', {
               duration: 2000,
             });
           });
@@ -208,7 +206,7 @@ export class MlCardComponent implements OnInit {
             this.buy(order);
           },
           (error) => {
-            this.snackBar.open('Error getting instruments for SPXL', 'Dismiss', {
+            this.snackBar.open('Error getting instruments for SPXU', 'Dismiss', {
               duration: 2000,
             });
           });

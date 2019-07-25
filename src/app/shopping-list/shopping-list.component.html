@@ -32,11 +32,13 @@
   </div>
   <hr>
   <h3 matTooltip="Disregards global settings.">Default Orders</h3>
-  <app-simple-card [order]="spxl">
-  </app-simple-card>
+  <span *ngIf="upro">  
+    <app-simple-card [order]="upro">
+    </app-simple-card>
+  </span>
   <span *ngIf="spxu">  
     <app-simple-card [order]="spxu">
     </app-simple-card>
   </span>
-  <app-ml-card [bearishOrder]="spxu" [bullishOrder]="spxl"></app-ml-card>
+  <app-ml-card></app-ml-card>
 </div>
