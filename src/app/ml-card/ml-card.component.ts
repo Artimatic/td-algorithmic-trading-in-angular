@@ -159,7 +159,6 @@ export class MlCardComponent implements OnInit {
   }
 
   placeBet(bet: Bet) {
-
     switch (bet.summary) {
       case Sentiment.Bullish:
           this.portfolioService.getInstruments('UPRO').subscribe((response) => {

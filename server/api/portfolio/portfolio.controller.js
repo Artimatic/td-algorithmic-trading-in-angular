@@ -107,7 +107,7 @@ class PortfolioController extends BaseController {
   getQuote(request, response) {
     PortfolioService.getQuote(request.query.symbol)
       .then((priceData) => {
-        response.status(200).send({price: 1 * priceData[request.query.symbol].bidPrice});
+        response.status(200).send({price: 1 * priceData[request.query.symbol].askPrice});
       })
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }

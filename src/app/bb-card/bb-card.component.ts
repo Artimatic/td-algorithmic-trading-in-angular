@@ -744,10 +744,10 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
 
       if (!sell) {
-        const buyQuantity: number = this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
+        const buyQuantity: number = this.scoringService.determineBetSize(this.order.holding.symbol, this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
           this.firstFormGroup.value.orderSize,
           this.buyCount,
-          this.positionCount);
+          this.positionCount), this.positionCount, this.order.quantity);
 
         const buy: SmartOrder = buyQuantity <= 0 ? null :
           await this.buildBuyOrder(buyQuantity, quotes.close[idx], timestamps[idx],
@@ -901,7 +901,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     const score = this.scoringService.getScore(this.order.holding.symbol);
     if (score && score.total > 3) {
       const scorePct = _.round(_.divide(score.wins, score.total), 2);
-      if (scorePct < 0.39) {
+      if (scorePct < 0.10) {
         if (this.isBacktest) {
           console.log('Trading not halted in backtest mode.');
         } else {
