@@ -83,33 +83,27 @@ export class ScoreKeeperService {
     }
   }
 
-  determineBetSize(stock: string, requestedQuantity: number,
-    existingPositionSize: number, sizeLimit: number) {
+  determineBetSize(stock: string, requestedQuantity: number, existingPositionSize: number,
+    sizeLimit: number) {
     const modifier = _.add(this.determineLossTallyModifier(stock),
       this.determineExistingPositionModifier(existingPositionSize, sizeLimit));
     return _.round(_.multiply(modifier, requestedQuantity), 0);
   }
 
   determineLossTallyModifier(stock: string) {
-    const lossTally = this.lossTally[stock];
-
-    if (lossTally === 0) {
-      return 0.05;
-    } else {
-      switch (lossTally) {
-        case 1:
-          return 0.1;
-        case 2:
-          return 0.2;
-        case 3:
-          return 0.4;
-        case 4:
-          return 0.8;
-        case 5:
-          return 0.9;
-        default:
-          return 1;
-      }
+    switch (this.lossTally[stock]) {
+      case 1:
+        return 0.1;
+      case 2:
+        return 0.2;
+      case 3:
+        return 0.4;
+      case 4:
+        return 0.8;
+      case 5:
+        return 0.9;
+      default:
+        return 0.05;
     }
   }
 

@@ -120,13 +120,14 @@ class PortfolioService {
     } else {
       return this.getTDMarketData(symbol)
         .then(this.processTDData)
-        .then((quote) => {
+        .then(quote => {
           if (quote[symbol].delayed) {
             return this.renewExpiredTDAccessTokenAndGetQuote(symbol);
           } else {
             return quote;
           }
-        });
+        })
+        .catch(error => this.renewExpiredTDAccessTokenAndGetQuote(symbol));
     }
   }
 
@@ -155,7 +156,7 @@ class PortfolioService {
       }
     })
       .then(this.processTDData)
-      .then((EASObject) => {
+      .then(EASObject => {
         this.access_token = EASObject.access_token;
         return this.access_token;
       });
