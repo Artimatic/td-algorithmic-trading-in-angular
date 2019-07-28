@@ -28,6 +28,7 @@ import { Indicators } from '../shared/models/indicators';
 import { CardOptions } from '../shared/models/card-options';
 import { Point } from 'angular-highcharts/lib/chart';
 import { GlobalSettingsService } from '../settings/global-settings.service';
+import { TradeService } from '../shared/services/trade.service';
 
 @Component({
   selector: 'app-bb-card',
@@ -40,7 +41,6 @@ export class BbCardComponent implements OnInit, OnChanges {
   @Input() triggeredBacktest: boolean;
   @Input() init: boolean;
   @Input() tearDown: boolean;
-  @Input() stepForward: number;
   @Input() backtestData: number;
   chart: Chart;
   volumeChart: Chart;
@@ -83,6 +83,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     private indicatorsService: IndicatorsService,
     public cartService: CartService,
     private globalSettingsService: GlobalSettingsService,
+    private tradeService: TradeService,
     public dialog: MatDialog) { }
 
   ngOnInit() {
@@ -135,6 +136,12 @@ export class BbCardComponent implements OnInit, OnChanges {
     });
 
     this.setup();
+
+    this.tradeService.algoQueue.subscribe((symbol) => {
+      if (this.order.holding.symbol === symbol) {
+        this.step();
+      }
+    });
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -147,10 +154,6 @@ export class BbCardComponent implements OnInit, OnChanges {
     } else {
       if (_.get(changes, 'init.currentValue')) {
         this.initRun();
-      }
-
-      if (_.get(changes, 'stepForward.currentValue')) {
-        this.step();
       }
     }
   }
@@ -224,9 +227,6 @@ export class BbCardComponent implements OnInit, OnChanges {
   step() {
     if (this.alive) {
       this.play(true, this.backtestLive);
-      if (this.stepper) {
-        this.stepper.selectedIndex = 1;
-      }
     }
   }
 

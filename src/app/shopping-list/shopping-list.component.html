@@ -16,27 +16,24 @@
   </div>
   <app-score-board [title]="'Total'" [score]="scoreKeeperService.total"></app-score-board>
   <div *ngFor="let sell of cartService.sellOrders">
-    <app-bb-card [order]="sell" [triggeredBacktest]="sell.triggeredBacktest" [init]="sell.init"
-      [stepForward]="sell.stepForward" [tearDown]="sell.stopped">
+    <app-bb-card [order]="sell" [triggeredBacktest]="sell.triggeredBacktest" [init]="sell.init" [tearDown]="sell.stopped">
     </app-bb-card>
   </div>
   <div *ngFor="let buy of cartService.buyOrders">
-    <app-bb-card [order]="buy" [triggeredBacktest]="buy.triggeredBacktest" [init]="buy.init"
-      [stepForward]="buy.stepForward" [tearDown]="buy.stopped">
+    <app-bb-card [order]="buy" [triggeredBacktest]="buy.triggeredBacktest" [init]="buy.init" [tearDown]="buy.stopped">
     </app-bb-card>
   </div>
   <div *ngFor="let other of cartService.otherOrders">
-    <app-bb-card [order]="other" [triggeredBacktest]="other.triggeredBacktest" [init]="other.init"
-      [stepForward]="other.stepForward" [tearDown]="other.stopped">
+    <app-bb-card [order]="other" [triggeredBacktest]="other.triggeredBacktest" [init]="other.init" [tearDown]="other.stopped">
     </app-bb-card>
   </div>
   <hr>
   <h3 matTooltip="Disregards global settings.">Default Orders</h3>
-  <span *ngIf="upro">  
+  <span *ngIf="upro">
     <app-simple-card [order]="upro">
     </app-simple-card>
   </span>
-  <span *ngIf="spxu">  
+  <span *ngIf="spxu">
     <app-simple-card [order]="spxu">
     </app-simple-card>
   </span>

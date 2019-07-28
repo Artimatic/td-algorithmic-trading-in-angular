@@ -77,6 +77,7 @@ import { OverviewModule } from './overview/overview.module';
 import { SettingsModule } from './settings/settings.module';
 import { MachineLearningModule } from './machine-learning/machine-learning.module';
 import { MlCardComponent } from './ml-card/ml-card.component';
+import { TestResultsTableComponent } from './test-results-table/test-results-table.component';
 
 @NgModule({
   declarations: [
@@ -104,7 +105,8 @@ import { MlCardComponent } from './ml-card/ml-card.component';
     BacktestViewComponent,
     TerminalViewComponent,
     SimpleCardComponent,
-    MlCardComponent
+    MlCardComponent,
+    TestResultsTableComponent,
   ],
   entryComponents: [
     LoginDialogComponent,

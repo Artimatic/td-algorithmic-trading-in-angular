@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CartService } from '../shared/services/cart.service';
 import { SmartOrder } from '../shared/models/smart-order';
 import { ScoreKeeperService, ReportingService, DaytradeService, PortfolioService } from '../shared';
@@ -11,13 +11,14 @@ import * as moment from 'moment-timezone';
 import * as _ from 'lodash';
 import { Holding } from '../shared/models';
 import { GlobalSettingsService } from '../settings/global-settings.service';
+import { TradeService } from '../shared/services/trade.service';
 
 @Component({
   selector: 'app-shopping-list',
   templateUrl: './shopping-list.component.html',
   styleUrls: ['./shopping-list.component.css']
 })
-export class ShoppingListComponent implements OnInit {
+export class ShoppingListComponent implements OnInit, OnDestroy {
   mu: SmartOrder;
   vti: SmartOrder;
   upro: SmartOrder;
@@ -40,7 +41,8 @@ export class ShoppingListComponent implements OnInit {
     private daytradeService: DaytradeService,
     public snackBar: MatSnackBar,
     private portfolioService: PortfolioService,
-    private globalSettingsService: GlobalSettingsService) { }
+    private globalSettingsService: GlobalSettingsService,
+    private tradeService: TradeService) { }
 
   ngOnInit() {
     this.interval = 70800;
@@ -202,6 +204,10 @@ export class ShoppingListComponent implements OnInit {
     });
   }
 
+  ngOnDestroy() {
+    this.sub.unsubscribe();
+  }
+
   deleteSellOrder(deleteOrder: SmartOrder) {
     this.cartService.deleteSell(deleteOrder);
   }
@@ -227,7 +233,6 @@ export class ShoppingListComponent implements OnInit {
 
   queueAlgos(orders: SmartOrder[]) {
     this.alive = true;
-    let counter = 1;
     let lastIndex = 0;
     const limit = 5;
 
@@ -242,9 +247,8 @@ export class ShoppingListComponent implements OnInit {
         if (moment().isAfter(moment(this.globalSettingsService.startTime))) {
           let executed = 0;
           while (executed < limit && lastIndex < orders.length) {
-            orders[lastIndex].stepForward = counter;
+            this.tradeService.algoQueue.next(orders[lastIndex].holding.symbol);
             lastIndex++;
-            counter++;
             executed++;
           }
           if (lastIndex >= orders.length) {
