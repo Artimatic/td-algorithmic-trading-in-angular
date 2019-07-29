@@ -4,13 +4,21 @@ import { Winloss } from '../models/winloss';
 import * as _ from 'lodash';
 import { ReportingService } from './reporting.service';
 
+interface ScoringIndex<TValue> {
+  [id: string]: TValue;
+}
+
+interface WinLossIndex {
+  [id: string]: Winloss;
+}
+
 @Injectable()
 export class ScoreKeeperService {
-  public profitLossHash = {};
-  winlossHash = {};
-  costEstimates = {};
+  public profitLossHash: ScoringIndex<number> = {};
+  winlossHash: WinLossIndex = {};
+  costEstimates: ScoringIndex<number> = {};
   total = 0;
-  lossTally = {};
+  lossTally: ScoringIndex<number> = {};
 
   constructor(private reportingService: ReportingService) { }
 
@@ -72,7 +80,7 @@ export class ScoreKeeperService {
   }
 
   resetLossTally(stock: string) {
-    this.lossTally = 0;
+    this.lossTally[stock] = 0;
   }
 
   incrementLossTally(stock: string) {
@@ -101,9 +109,9 @@ export class ScoreKeeperService {
       case 4:
         return 0.8;
       case 5:
-        return 0.9;
+        return 0.85;
       default:
-        return 0.05;
+        return 0;
     }
   }
 
@@ -111,10 +119,14 @@ export class ScoreKeeperService {
     const ratio = _.divide(existingPositionSize, sizeLimit);
     if (ratio === 0) {
       return 0.15;
-    } else if (ratio > 0 && ratio < 0.3) {
+    } else if (ratio > 0 && ratio < 0.2) {
       return 0.1;
-    } else if (ratio >= 0.3 && ratio < 0.6) {
+    } else if (ratio >= 0.2 && ratio < 0.4) {
+      return 0.08;
+    } else if (ratio >= 0.4 && ratio < 0.6) {
       return 0.05;
+    } else if (ratio >= 0.6 && ratio < 0.8) {
+      return 0.03;
     } else {
       return 0;
     }
