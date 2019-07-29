@@ -8,6 +8,7 @@ export {
     ScoreKeeperService,
     IndicatorsService,
     AlgoService,
+    TradeService
 } from './services';
 export { AlgoParam } from './algo-param.interface';
 export { Row } from './row.interface';

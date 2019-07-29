@@ -50,6 +50,7 @@ import {
   ScoreKeeperService,
   IndicatorsService,
   AlgoService,
+  TradeService
 } from './shared';
 
 import { RhInputComponent } from './rh-input/rh-input.component';
@@ -162,6 +163,7 @@ import { TestResultsTableComponent } from './test-results-table/test-results-tab
     ScoreKeeperService,
     IndicatorsService,
     AlgoService,
+    TradeService,
   ],
   bootstrap: [AppComponent]
 })
