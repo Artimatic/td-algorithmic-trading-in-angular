@@ -3,7 +3,7 @@ import { TradeViewComponent } from './trade-view/trade-view.component';
 import { Routes } from '@angular/router';
 import { ResearchViewComponent } from './research-view/research-view.component';
 import { OptionsViewComponent } from './options-view/options-view.component';
-import { BacktestViewComponent } from './backtest-view/backtest-view.component';
+import { IntradayBacktestViewComponent } from './intraday-backtest-view/intraday-backtest-view.component';
 import { OverviewComponent } from './overview/overview.component';
 
 export const routes: Routes = [
@@ -29,7 +29,7 @@ export const routes: Routes = [
   },
   {
     path: 'backtest',
-    component: BacktestViewComponent
+    component: IntradayBacktestViewComponent
   },
   {
     path: '**',

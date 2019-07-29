@@ -10,11 +10,11 @@ import { MatSnackBar } from '@angular/material';
 import { TodoService } from '../overview/todo-list/todo.service';
 
 @Component({
-  selector: 'app-backtest-view',
-  templateUrl: './backtest-view.component.html',
-  styleUrls: ['./backtest-view.component.css']
+  selector: 'app-intraday-backtest-view',
+  templateUrl: './intraday-backtest-view.component.html',
+  styleUrls: ['./intraday-backtest-view.component.css']
 })
-export class BacktestViewComponent implements OnInit {
+export class IntradayBacktestViewComponent implements OnInit {
 
   backtestData: any;
 

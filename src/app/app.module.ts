@@ -71,7 +71,7 @@ import { ReportingComponent, ReportDialogComponent } from './reporting/reporting
 import { ResearchViewComponent } from './research-view/research-view.component';
 import { OptionsViewComponent } from './options-view/options-view.component';
 import { ScoreBoardComponent } from './score-board/score-board.component';
-import { BacktestViewComponent } from './backtest-view/backtest-view.component';
+import { IntradayBacktestViewComponent } from './intraday-backtest-view/intraday-backtest-view.component';
 import { TerminalViewComponent } from './terminal-view/terminal-view.component';
 import { SimpleCardComponent } from './simple-card/simple-card.component';
 import { OverviewModule } from './overview/overview.module';
@@ -103,7 +103,7 @@ import { TestResultsTableComponent } from './test-results-table/test-results-tab
     ResearchViewComponent,
     OptionsViewComponent,
     ScoreBoardComponent,
-    BacktestViewComponent,
+    IntradayBacktestViewComponent,
     TerminalViewComponent,
     SimpleCardComponent,
     MlCardComponent,
