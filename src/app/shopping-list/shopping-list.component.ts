@@ -205,7 +205,14 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.sub.unsubscribe();
+    this.cleanUp();
+  }
+
+  cleanUp() {
+    if (this.sub) {
+      this.sub.unsubscribe();
+      this.sub = undefined;
+    }
   }
 
   deleteSellOrder(deleteOrder: SmartOrder) {
@@ -292,10 +299,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
 
   stopAndDeleteOrders() {
     this.stop();
-    if (this.sub) {
-      this.sub.unsubscribe();
-      this.sub = undefined;
-    }
+    this.cleanUp();
     const buySells = this.cartService.sellOrders.concat(this.cartService.buyOrders);
 
     _.forEach(buySells.concat(this.cartService.otherOrders), (order: SmartOrder) => {
