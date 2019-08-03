@@ -80,7 +80,7 @@ export class MlCardComponent implements OnInit {
     this.alive = true;
 
     this.firstFormGroup = this._formBuilder.group({
-      quantity: [1, Validators.required]
+      amount: [500, Validators.required]
     });
 
     this.secondFormGroup = this._formBuilder.group({
@@ -171,13 +171,13 @@ export class MlCardComponent implements OnInit {
 
             const order: SmartOrder = {
               holding: newHolding,
-              quantity: _.round(_.divide(bet.bullishOpen, bet.total) * this.firstFormGroup.value.quantity),
+              quantity: 0,
               price: 0,
               submitted: false,
               pending: false,
               side: 'DayTrade',
             };
-            this.buy(order);
+            this.buy(order, _.divide(bet.bullishOpen, bet.total));
           },
           (error) => {
             this.snackBar.open('Error getting instruments for UPRO', 'Dismiss', {
@@ -196,13 +196,13 @@ export class MlCardComponent implements OnInit {
 
             const order: SmartOrder = {
               holding: newHolding,
-              quantity: _.round(_.divide(bet.bearishOpen, bet.total) * this.firstFormGroup.value.quantity),
+              quantity: 0,
               price: 0,
               submitted: false,
               pending: false,
               side: 'DayTrade',
             };
-            this.buy(order);
+            this.buy(order, _.divide(bet.bearishOpen, bet.total));
           },
           (error) => {
             this.snackBar.open('Error getting instruments for SPXU', 'Dismiss', {
@@ -213,16 +213,17 @@ export class MlCardComponent implements OnInit {
     }
   }
 
-  buy(order: SmartOrder) {
+  buy(order: SmartOrder, modifier: number) {
     return this.portfolioService.getQuote(order.holding.symbol)
       .toPromise()
       .then((quote) => {
         const lastPrice: number = quote;
-        const buyOrder = this.daytradeService.createOrder(order.holding, 'Buy', order.quantity, lastPrice, moment().unix());
+        const quantity = _.round(modifier * this.calculateQuantity(this.firstFormGroup.value.amount, lastPrice));
+        const buyOrder = this.daytradeService.createOrder(order.holding, 'Buy', quantity, lastPrice, moment().unix());
         const log = `ORDER SENT ${moment(buyOrder.signalTime).format('hh:mm')} ${buyOrder.side} ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
 
         const resolve = () => {
-          this.holdingCount += this.firstFormGroup.value.quantity;
+          this.holdingCount += quantity;
           console.log(`${moment().format('hh:mm')} ${log}`);
           this.reportingService.addAuditLog(order.holding.symbol, log);
         };
@@ -243,6 +244,10 @@ export class MlCardComponent implements OnInit {
       });
   }
 
+  calculateQuantity(betSize: number, price: number) {
+    return Math.ceil(_.divide(betSize, price));
+  }
+
   openDialog(): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '250px',
@@ -259,10 +264,6 @@ export class MlCardComponent implements OnInit {
   setWarning(message) {
     this.warning = message;
     this.reportingService.addAuditLog('', `ML Card - ${message}`);
-  }
-
-  progress() {
-    return Number((100 * (this.holdingCount / this.firstFormGroup.value.quantity)).toFixed(2));
   }
 
   stop() {

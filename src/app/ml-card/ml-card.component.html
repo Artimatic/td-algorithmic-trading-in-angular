@@ -16,8 +16,10 @@
         <!-- <mat-chip>{{bearishOrder.holding.symbol}} - {{bullishOrder.holding.symbol}}</mat-chip> -->
         <h5>ML Algo</h5>
         <p>Request to RNN model to determine whether to tomorrow will open down or up.</p>
-        <mat-form-field hintLabel="Quantity">
-          <input matInput type="number" placeholder="Quantity" formControlName="quantity" required>
+        <mat-form-field>
+          <input matInput placeholder="Amount (rounded up)" type="number" formControlName="amount" required>
+          <span matPrefix>$&nbsp;</span>
+          <span matSuffix>.00</span>
         </mat-form-field>
         <div>
           <button mat-button matStepperNext>Next</button>
@@ -34,11 +36,7 @@
           <button mat-raised-button disabled>STALLED</button>
         </div>
         <div>
-          <section class="example-section">
-            <mat-progress-bar class="progress-bar" [mode]="'determinate'" [color]="'primary'" [value]="progress()">
-            </mat-progress-bar>
-          </section>
-          Orders Submitted: {{ holdingCount}}/{{firstFormGroup.value.quantity || 0}} shares
+          Orders Submitted: {{ holdingCount}} shares
         </div>
         <div class="toolbar-content" fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px"
           fxLayoutGap.xs="0">

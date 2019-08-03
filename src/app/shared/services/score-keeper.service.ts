@@ -107,9 +107,7 @@ export class ScoreKeeperService {
       case 3:
         return 0.4;
       case 4:
-        return 0.8;
-      case 5:
-        return 0.85;
+        return 0.9;
       default:
         return 0;
     }
@@ -118,11 +116,11 @@ export class ScoreKeeperService {
   determineExistingPositionModifier(existingPositionSize: number, sizeLimit: number): number {
     const ratio = _.divide(existingPositionSize, sizeLimit);
     if (ratio === 0) {
-      return 0.15;
-    } else if (ratio > 0 && ratio < 0.2) {
       return 0.1;
+    } else if (ratio > 0 && ratio < 0.2) {
+      return 0.09;
     } else if (ratio >= 0.2 && ratio < 0.4) {
-      return 0.08;
+      return 0.07;
     } else if (ratio >= 0.4 && ratio < 0.6) {
       return 0.05;
     } else if (ratio >= 0.6 && ratio < 0.8) {
