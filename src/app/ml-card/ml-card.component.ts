@@ -55,6 +55,8 @@ export class MlCardComponent implements OnInit {
 
   tiles;
 
+  testing = false;
+
   constructor(private _formBuilder: FormBuilder,
     private portfolioService: PortfolioService,
     private daytradeService: DaytradeService,
@@ -67,14 +69,14 @@ export class MlCardComponent implements OnInit {
     this.startTime = moment.tz('4:03pm', 'h:mma', 'America/New_York');
     this.stopTime = moment.tz('6:00pm', 'h:mma', 'America/New_York');
 
-    // this.startTime = moment.tz('2:15am', 'h:mma', 'America/New_York');
-    // this.stopTime = moment.tz('2:20am', 'h:mma', 'America/New_York');
-
     this.holdingCount = 0;
-    this.interval = 600000;
-    this.reportWaitInterval = 600000;
-
-    // this.reportWaitInterval = 50000;
+    if (this.testing) {
+      this.interval = 1000;
+      this.reportWaitInterval = 50000;
+    } else {
+      this.interval = 600000;
+      this.reportWaitInterval = 600000;
+    }
 
     this.live = false;
     this.alive = true;
@@ -99,7 +101,7 @@ export class MlCardComponent implements OnInit {
         this.live = true;
         const momentInst = moment();
         if (momentInst.isAfter(this.startTime) &&
-          momentInst.isBefore(this.stopTime)) {
+          momentInst.isBefore(this.stopTime) || this.testing) {
           this.alive = false;
           this.backtestService.runRnn('SPY', moment().format('YYYY-MM-DD'), '2010-01-01')
             .subscribe(() => {
