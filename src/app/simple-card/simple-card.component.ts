@@ -67,7 +67,7 @@ export class SimpleCardComponent implements OnInit, OnChanges {
     ];
 
     this.holdingCount = 0;
-    this.interval = 300000;
+    this.interval = 60000;
     this.live = false;
     this.alive = true;
 
@@ -119,7 +119,7 @@ export class SimpleCardComponent implements OnInit, OnChanges {
   }
 
   buy() {
-    return this.portfolioService.getQuote(this.order.holding.symbol)
+    return this.portfolioService.getPrice(this.order.holding.symbol)
       .toPromise()
       .then((quote) => {
         const lastPrice: number = quote;
@@ -143,7 +143,7 @@ export class SimpleCardComponent implements OnInit, OnChanges {
   }
 
   sell() {
-    return this.portfolioService.getQuote(this.order.holding.symbol)
+    return this.portfolioService.getPrice(this.order.holding.symbol)
       .toPromise()
       .then((quote) => {
         const lastPrice: number = quote;

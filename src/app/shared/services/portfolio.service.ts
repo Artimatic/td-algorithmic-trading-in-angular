@@ -106,8 +106,14 @@ export class PortfolioService {
   getQuote(symbol: string): Observable<any> {
     const options = new RequestOptions();
     return this.http.get(`/api/portfolio/quote?symbol=${symbol}`, options)
+      .map((response: Response) => response.json());
+  }
+
+  getPrice(symbol: string): Observable<any> {
+    const options = new RequestOptions();
+    return this.http.get(`/api/portfolio/quote?symbol=${symbol}`, options)
       .map((response: Response) => {
-        return _.round(response.json().price, 2);
+        return _.round(response.json().askPrice, 2);
       });
   }
 }

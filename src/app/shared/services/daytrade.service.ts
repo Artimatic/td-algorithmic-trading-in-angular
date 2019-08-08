@@ -26,7 +26,7 @@ export class DaytradeService {
 
   closeTrades(resolve: Function, reject: Function, handleNotFound: Function): void {
     _.forEach(this.cartService.otherOrders, (order: SmartOrder) => {
-      this.portfolioService.getQuote(order.holding.symbol)
+      this.portfolioService.getPrice(order.holding.symbol)
         .toPromise()
         .then((quote) => {
           const sellOrder = this.createOrder(order.holding, 'Sell', order.positionCount, quote, moment().unix());
@@ -477,7 +477,7 @@ export class DaytradeService {
       .then((quotes) => {
         quotes.chart.result[0].indicators.quote[0].close =
           this.indicatorsService.fillInMissingReals(_.get(quotes, 'chart.result[0].indicators.quote[0].close'));
-        return this.portfolioService.getQuote(symbol)
+        return this.portfolioService.getPrice(symbol)
           .toPromise()
           .then((quote) => {
             return this.addQuote(quotes, quote);

@@ -104,10 +104,18 @@ class PortfolioController extends BaseController {
     }
   }
 
+  midPrice(ask, bid) {
+    return _.round(_.multiply(_.add(_.divide(_.subtract(_.divide(ask, bid), 1), 2), 1), bid), 2);
+  }
+  
   getQuote(request, response) {
     PortfolioService.getQuote(request.query.symbol)
       .then((priceData) => {
-        response.status(200).send({price: 1 * priceData[request.query.symbol].askPrice});
+        response.status(200).send({
+          price: 1 * this.midPrice(priceData[request.query.symbol].askPrice, priceData[request.query.symbol].bidPrice), 
+          bidPrice: 1 * priceData[request.query.symbol].bidPrice,
+          askPrice: 1 * priceData[request.query.symbol].askPrice
+        });
       })
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }

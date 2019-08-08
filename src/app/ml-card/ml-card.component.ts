@@ -103,7 +103,7 @@ export class MlCardComponent implements OnInit {
         if (momentInst.isAfter(this.startTime) &&
           momentInst.isBefore(this.stopTime) || this.testing) {
           this.alive = false;
-          this.backtestService.runRnn('SPY', moment().format('YYYY-MM-DD'), '2010-01-01')
+          this.backtestService.runRnn('SPY', moment().format('YYYY-MM-DD'), '1990-01-01')
             .subscribe(() => {
               this.pendingResults = true;
               this.checkReportSub = TimerObservable.create(0, this.reportWaitInterval)
@@ -219,9 +219,9 @@ export class MlCardComponent implements OnInit {
     return this.portfolioService.getQuote(order.holding.symbol)
       .toPromise()
       .then((quote) => {
-        const lastPrice: number = quote;
-        const quantity = _.round(modifier * this.calculateQuantity(this.firstFormGroup.value.amount, lastPrice));
-        const buyOrder = this.daytradeService.createOrder(order.holding, 'Buy', quantity, lastPrice, moment().unix());
+        const bid: number = quote.bidPrice;
+        const quantity = _.round(modifier * this.calculateQuantity(this.firstFormGroup.value.amount, bid));
+        const buyOrder = this.daytradeService.createOrder(order.holding, 'Buy', quantity, bid, moment().unix());
         const log = `ORDER SENT ${moment(buyOrder.signalTime).format('hh:mm')} ${buyOrder.side} ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
 
         const resolve = () => {

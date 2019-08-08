@@ -259,7 +259,7 @@ export class BbCardComponent implements OnInit, OnChanges {
           .then((intraday) => {
             const timestamps = intraday.chart.result[0].timestamp;
             if (timestamps.length > 0) {
-              return this.portfolioService.getQuote(this.order.holding.symbol)
+              return this.portfolioService.getPrice(this.order.holding.symbol)
                 .toPromise()
                 .then((quote) => {
                   return this.daytradeService.addQuote(intraday, quote);
