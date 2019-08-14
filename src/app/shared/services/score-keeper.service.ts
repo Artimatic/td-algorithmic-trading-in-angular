@@ -107,7 +107,9 @@ export class ScoreKeeperService {
       case 3:
         return 0.4;
       case 4:
-        return 0.9;
+        return 0.8;
+      case 5:
+        return 1.0;
       default:
         return 0;
     }
@@ -118,15 +120,15 @@ export class ScoreKeeperService {
     if (ratio === 0) {
       return 0.1;
     } else if (ratio > 0 && ratio < 0.2) {
-      return 0.09;
+      return -0.05;
     } else if (ratio >= 0.2 && ratio < 0.4) {
-      return 0.07;
+      return -0.08;
     } else if (ratio >= 0.4 && ratio < 0.6) {
-      return 0.05;
+      return -0.1;
     } else if (ratio >= 0.6 && ratio < 0.8) {
-      return 0.03;
-    } else {
-      return 0;
+      return -0.2;
+    } else if (ratio >= 0.8) {
+      return -0.5;
     }
   }
 }

@@ -13,6 +13,6 @@ export class GlobalSettingsService {
     this.startTime = moment.tz('10:00am', 'h:mma', 'America/New_York').toDate();
     this.sellAtCloseTime = moment.tz('3:40pm', 'h:mma', 'America/New_York').toDate();
     this.stopTime = moment.tz('3:50pm', 'h:mma', 'America/New_York').toDate();
-    this.maxLoss = 75;
+    this.maxLoss = 50;
   }
 }
