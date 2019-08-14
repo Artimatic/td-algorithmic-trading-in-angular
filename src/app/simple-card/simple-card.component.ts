@@ -80,7 +80,7 @@ export class SimpleCardComponent implements OnInit, OnChanges {
     });
 
     this.preferences = new FormControl();
-    this.preferences.setValue(OrderPref.BuyCloseSellOpen);
+    this.preferences.setValue(OrderPref.SellAtOpen);
     this.setup();
   }
 
@@ -166,6 +166,7 @@ export class SimpleCardComponent implements OnInit, OnChanges {
 
         const handleNotFound = () => {
           this.setWarning(`Trying to sell ${sellOrder.holding.symbol} position that doesn\'t exists`);
+          this.stop();
         };
         this.daytradeService.sendSell(sellOrder, 'market', resolve, reject, handleNotFound);
       });
