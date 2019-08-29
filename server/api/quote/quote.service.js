@@ -212,6 +212,21 @@ class QuoteService {
       });
   }
 
+  convertTdIntraday(quotes) {
+    const data = this.createIntradayData();
+
+    _.forEach(quotes, (quote) => {
+      data.chart.result[0].timestamp.push(moment(quote.datetime).unix());
+      data.chart.result[0].indicators.quote[0].close.push(quote.close);
+      data.chart.result[0].indicators.quote[0].low.push(quote.low);
+      data.chart.result[0].indicators.quote[0].volume.push(quote.volume);
+      data.chart.result[0].indicators.quote[0].open.push(quote.open);
+      data.chart.result[0].indicators.quote[0].high.push(quote.high);
+    });
+
+    return data;
+  }
+
   getOptionChain(symbol) {
     return api.optionChain(symbol);
   }

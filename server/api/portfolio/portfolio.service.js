@@ -4,6 +4,7 @@ import * as _ from 'lodash';
 const RobinHoodApi = require('robinhood-api');
 const robinhood = new RobinHoodApi();
 
+import QuoteService from '../quote/quote.service';
 import configurations from '../../config/environment';
 
 const robinhood = {
@@ -131,10 +132,57 @@ class PortfolioService {
     }
   }
 
-  getTDMarketData(symbol) {
-    const query = `${tda}marketdata/${symbol}/quotes?apikey=${tdaKey}`;
+  renewTDAuth() {
+    return this.getTDAccessToken();
+  }
+
+  getIntraday(symbol) {
+    if (!this.access_token) {
+      return this.renewTDAuth()
+        .then(() => this.getTDIntraday(symbol))
+    } else {
+      console.log('token ', this.access_token);
+
+      return this.getTDIntraday(symbol)
+        .catch(() => {
+          return this.renewTDAuth()
+            .then(() => this.getTDIntraday(symbol));
+        });
+    }
+  }
+
+  getTDIntraday(symbol) {
+    const query = `${tda}marketdata/${symbol}/pricehistory`;
     const options = {
       uri: query,
+      qs: {
+        apikey: tdaKey,
+        periodType: 'day',
+        period: 2,
+        frequencyType: 'minute',
+        frequency: 1,
+        endDate: Date.now(),
+        needExtendedHoursData: false
+      },
+      headers: {
+        Authorization: `Bearer ${this.access_token}`
+      }
+    };
+
+    return request.get(options)
+      .then((data) => {
+        const response = this.processTDData(data);
+        return QuoteService.convertTdIntraday(response.candles);
+      })
+  }
+
+  getTDMarketData(symbol) {
+    const query = `${tda}marketdata/${symbol}/quotes`;
+    const options = {
+      uri: query,
+      qs: {
+        apikey: tdaKey
+      },
       headers: {
         Authorization: `Bearer ${this.access_token}`
       }

@@ -39,3 +39,7 @@ export let instruments = (request, response) => {
 export let quote = (request, response) => {
   PortfolioController.getQuote(request, response);
 };
+
+export const intraday = (request, response) => {
+  PortfolioController.getIntraday(request, response);
+}
