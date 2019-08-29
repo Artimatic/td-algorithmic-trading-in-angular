@@ -241,7 +241,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
   queueAlgos(orders: SmartOrder[]) {
     this.alive = true;
     let lastIndex = 0;
-    const limit = 5;
+    const limit = 10;
 
     _.forEach(orders, (order: SmartOrder) => {
       order.init = true;

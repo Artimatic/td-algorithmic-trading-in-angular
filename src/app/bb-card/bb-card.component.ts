@@ -255,7 +255,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         interval: this.dataInterval
       };
 
-      data = this.config.useYahooData ? await this.backtestService.getTdIntraday(this.order.holding.symbol) :
+      data = this.config.useYahooData ? await this.backtestService.getTdIntraday(this.order.holding.symbol).toPromise() :
         await this.backtestService.getIntraday2(requestBody)
           .toPromise()
           .then((intraday) => {
@@ -267,11 +267,11 @@ export class BbCardComponent implements OnInit, OnChanges {
                   return this.daytradeService.addQuote(intraday, quote);
                 });
             } else {
-              return this.backtestService.getTdIntraday(this.order.holding.symbol);
+              return this.backtestService.getTdIntraday(this.order.holding.symbol).toPromise();
             }
           })
           .catch(() => {
-            return this.backtestService.getTdIntraday(this.order.holding.symbol);
+            return this.backtestService.getTdIntraday(this.order.holding.symbol).toPromise();
           });
 
     } else if (this.backtestQuotes.length) {
