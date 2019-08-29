@@ -236,7 +236,8 @@ export class BbCardComponent implements OnInit, OnChanges {
   }
 
   requestQuotes() {
-    return this.backtestService.getYahooIntraday(this.order.holding.symbol).toPromise()
+    return this.backtestService.getTdIntraday(this.order.holding.symbol)
+      .toPromise()
       .then((result) => {
         this.backtestQuotes = result;
       });
@@ -254,8 +255,9 @@ export class BbCardComponent implements OnInit, OnChanges {
         interval: this.dataInterval
       };
 
-      data = this.config.useYahooData ? await this.daytradeService.getIntradayYahoo(this.order.holding.symbol) :
-        await this.backtestService.getIntraday2(requestBody).toPromise()
+      data = this.config.useYahooData ? await this.backtestService.getTdIntraday(this.order.holding.symbol) :
+        await this.backtestService.getIntraday2(requestBody)
+          .toPromise()
           .then((intraday) => {
             const timestamps = intraday.chart.result[0].timestamp;
             if (timestamps.length > 0) {
@@ -265,11 +267,11 @@ export class BbCardComponent implements OnInit, OnChanges {
                   return this.daytradeService.addQuote(intraday, quote);
                 });
             } else {
-              return this.daytradeService.getIntradayYahoo(this.order.holding.symbol);
+              return this.backtestService.getTdIntraday(this.order.holding.symbol);
             }
           })
           .catch(() => {
-            return this.daytradeService.getIntradayYahoo(this.order.holding.symbol);
+            return this.backtestService.getTdIntraday(this.order.holding.symbol);
           });
 
     } else if (this.backtestQuotes.length) {
