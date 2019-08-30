@@ -100,8 +100,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     OrderPref.Mfi,
     OrderPref.SpyMomentum,
     OrderPref.BuyCloseSellOpen,
-    OrderPref.SellAtClose,
-    OrderPref.useYahooData];
+    OrderPref.SellAtClose];
     Highcharts.setOptions({
       global: {
         useUTC: false
@@ -255,24 +254,19 @@ export class BbCardComponent implements OnInit, OnChanges {
         interval: this.dataInterval
       };
 
-      data = this.config.useYahooData ? await this.backtestService.getTdIntraday(this.order.holding.symbol).toPromise() :
-        await this.backtestService.getIntraday2(requestBody)
-          .toPromise()
-          .then((intraday) => {
-            const timestamps = intraday.chart.result[0].timestamp;
-            if (timestamps.length > 0) {
+      data = await this.backtestService.getTdIntraday(this.order.holding.symbol)
+        .toPromise()
+        .catch(() => {
+          return this.backtestService.getIntraday2(requestBody)
+            .toPromise()
+            .then((intraday) => {
               return this.portfolioService.getPrice(this.order.holding.symbol)
                 .toPromise()
                 .then((quote) => {
                   return this.daytradeService.addQuote(intraday, quote);
                 });
-            } else {
-              return this.backtestService.getTdIntraday(this.order.holding.symbol).toPromise();
-            }
-          })
-          .catch(() => {
-            return this.backtestService.getTdIntraday(this.order.holding.symbol).toPromise();
-          });
+            });
+        });
 
     } else if (this.backtestQuotes.length) {
       data = this.daytradeService.createNewChart();
@@ -1075,9 +1069,6 @@ export class BbCardComponent implements OnInit, OnChanges {
       pref.push(OrderPref.SellAtClose);
     }
 
-    if (this.order.yahooData) {
-      pref.push(OrderPref.useYahooData);
-    }
     return pref;
   }
 
