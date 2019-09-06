@@ -221,6 +221,16 @@ export class RhTableComponent implements OnInit, OnChanges {
       this.currentList = _.clone(this.stockList);
     } else {
       this.currentList = _.filter(this.stockList, (stock) => {
+        switch (this.recommendation) {
+          case 'strongbuy':
+            return stock.strongbuySignals.length > 0;
+          case 'buy':
+            return stock.buySignals.length > 0;
+          case 'strongsell':
+            return stock.strongsellSignals.length > 0;
+          case 'sell':
+            return stock.sellSignals.length > 0;
+        }
         return stock.recommendation.toLowerCase() === this.recommendation;
       });
     }
