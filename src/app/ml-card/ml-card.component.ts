@@ -92,6 +92,10 @@ export class MlCardComponent implements OnInit {
     this.setup();
   }
 
+  trainModel() {
+    this.backtestService.runRnn('SPY', moment().format('YYYY-MM-DD'), '1990-01-01').subscribe();
+  }
+
   goLive() {
     this.setup();
     this.alive = true;
@@ -103,7 +107,7 @@ export class MlCardComponent implements OnInit {
         if (momentInst.isAfter(this.startTime) &&
           momentInst.isBefore(this.stopTime) || this.testing) {
           this.alive = false;
-          this.backtestService.runRnn('SPY', moment().format('YYYY-MM-DD'), '1990-01-01')
+          this.backtestService.activateRnn('SPY', moment().format('YYYY-MM-DD'))
             .subscribe(() => {
               this.pendingResults = true;
               this.checkReportSub = TimerObservable.create(0, this.reportWaitInterval)

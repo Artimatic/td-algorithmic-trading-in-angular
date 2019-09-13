@@ -169,6 +169,10 @@ class BacktestController extends BaseController {
     .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
+  activateRNN(request, response) {
+    BacktestService.activateRNN(request.body.symbol, request.body.to, response);
+  }
+
 }
 
 export default new BacktestController();

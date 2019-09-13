@@ -19,5 +19,6 @@ router.get('/data-status', BacktestController.getDataStatus);
 router.get('/analysis-status', BacktestController.getAnalysisStatus);
 router.post('/rnn', BacktestController.runRNN);
 router.post('/rnn-status', BacktestController.getRNNPrediction);
+router.post('/rnn-activate', BacktestController.activateRNN);
 
 module.exports = router;
