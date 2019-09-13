@@ -133,6 +133,7 @@ export class RhTableComponent implements OnInit, OnChanges {
               this.updateAlgoReport(result);
             }, error => {
               this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
+              console.log(`Error on ${param.ticker}`, error);
               this.incrementProgress();
             });
           }
@@ -194,6 +195,7 @@ export class RhTableComponent implements OnInit, OnChanges {
             }, error => {
               this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
               this.incrementProgress();
+              console.log(`Error on ${param.ticker} ${algo}`, error);
             });
         });
         break;

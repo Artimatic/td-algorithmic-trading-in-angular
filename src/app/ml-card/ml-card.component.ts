@@ -66,7 +66,7 @@ export class MlCardComponent implements OnInit {
     public dialog: MatDialog) { }
 
   ngOnInit() {
-    this.startTime = moment.tz('4:03pm', 'h:mma', 'America/New_York');
+    this.startTime = moment.tz('4:15pm', 'h:mma', 'America/New_York');
     this.stopTime = moment.tz('6:00pm', 'h:mma', 'America/New_York');
 
     this.holdingCount = 0;
@@ -75,7 +75,7 @@ export class MlCardComponent implements OnInit {
       this.reportWaitInterval = 50000;
     } else {
       this.interval = 600000;
-      this.reportWaitInterval = 600000;
+      this.reportWaitInterval = 180000;
     }
 
     this.live = false;
