@@ -14,5 +14,6 @@ router.post('/resources', handler.getResources);
 router.post('/sell', handler.sell);
 router.post('/buy', handler.buy);
 router.post('/instruments', handler.instruments);
+router.post('/v2/buy', handler.tdBuy);
 
 module.exports = router;

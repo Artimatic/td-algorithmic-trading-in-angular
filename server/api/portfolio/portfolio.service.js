@@ -15,6 +15,7 @@ const apiUrl = 'https://api.robinhood.com/';
 const tda = 'https://api.tdameritrade.com/v1/';
 const tdaKey = configurations.tdameritrade.consumer_key;
 const tdaRefreshToken = configurations.tdameritrade.refresh_token;
+const tdAccountId = configurations.tdameritrade.accountId;
 
 class PortfolioService {
 
@@ -132,93 +133,6 @@ class PortfolioService {
     }
   }
 
-  renewTDAuth() {
-    return this.getTDAccessToken();
-  }
-
-  getIntraday(symbol) {
-    if (!this.access_token) {
-      return this.renewTDAuth()
-        .then(() => this.getTDIntraday(symbol))
-    } else {
-      console.log('token ', this.access_token);
-
-      return this.getTDIntraday(symbol)
-        .catch(() => {
-          return this.renewTDAuth()
-            .then(() => this.getTDIntraday(symbol));
-        });
-    }
-  }
-
-  getTDIntraday(symbol) {
-    const query = `${tda}marketdata/${symbol}/pricehistory`;
-    const options = {
-      uri: query,
-      qs: {
-        apikey: tdaKey,
-        periodType: 'day',
-        period: 2,
-        frequencyType: 'minute',
-        frequency: 1,
-        endDate: Date.now(),
-        needExtendedHoursData: false
-      },
-      headers: {
-        Authorization: `Bearer ${this.access_token}`
-      }
-    };
-
-    return request.get(options)
-      .then((data) => {
-        const response = this.processTDData(data);
-        return QuoteService.convertTdIntraday(response.candles);
-      })
-  }
-
-  getTDMarketData(symbol) {
-    const query = `${tda}marketdata/${symbol}/quotes`;
-    const options = {
-      uri: query,
-      qs: {
-        apikey: tdaKey
-      },
-      headers: {
-        Authorization: `Bearer ${this.access_token}`
-      }
-    };
-    return request.get(options);
-  }
-
-  processTDData(data) {
-    return JSON.parse(data);
-  }
-
-  getTDAccessToken() {
-    return request.post({
-      uri: tda + 'oauth2/token',
-      form: {
-        grant_type: 'refresh_token',
-        refresh_token: tdaRefreshToken,
-        client_id: `${tdaKey}@AMER.OAUTHAP`
-      }
-    })
-      .then(this.processTDData)
-      .then(EASObject => {
-        this.access_token = EASObject.access_token;
-        return this.access_token;
-      });
-  }
-
-  renewExpiredTDAccessTokenAndGetQuote(symbol) {
-    return this.getTDAccessToken()
-      .then((token) => {
-        return this.getTDMarketData(symbol)
-          .then(this.processTDData);
-
-      });
-  }
-
   sell(account, token, instrumentUrl, symbol, quantity, price, type = 'limit',
     extendedHours = false) {
     let headers = {
@@ -326,6 +240,176 @@ class PortfolioService {
         reply.status(200).send(body);
       }
     });
+  }
+
+  renewTDAuth() {
+    return this.getTDAccessToken();
+  }
+
+  getIntraday(symbol) {
+    if (!this.access_token) {
+      return this.renewTDAuth()
+        .then(() => this.getTDIntraday(symbol))
+    } else {
+
+      return this.getTDIntraday(symbol)
+        .catch(() => {
+          return this.renewTDAuth()
+            .then(() => this.getTDIntraday(symbol));
+        });
+    }
+  }
+
+  getTDIntraday(symbol) {
+    const query = `${tda}marketdata/${symbol}/pricehistory`;
+    const options = {
+      uri: query,
+      qs: {
+        apikey: tdaKey,
+        periodType: 'day',
+        period: 2,
+        frequencyType: 'minute',
+        frequency: 1,
+        endDate: Date.now(),
+        needExtendedHoursData: false
+      },
+      headers: {
+        Authorization: `Bearer ${this.access_token}`
+      }
+    };
+
+    return request.get(options)
+      .then((data) => {
+        const response = this.processTDData(data);
+        return QuoteService.convertTdIntraday(response.candles);
+      })
+  }
+
+  getTDMarketData(symbol) {
+    const query = `${tda}marketdata/${symbol}/quotes`;
+    const options = {
+      uri: query,
+      qs: {
+        apikey: tdaKey
+      },
+      headers: {
+        Authorization: `Bearer ${this.access_token}`
+      }
+    };
+    return request.get(options);
+  }
+
+  processTDData(data) {
+    return JSON.parse(data);
+  }
+
+  getTDAccessToken() {
+    return request.post({
+      uri: tda + 'oauth2/token',
+      form: {
+        grant_type: 'refresh_token',
+        refresh_token: tdaRefreshToken,
+        client_id: `${tdaKey}@AMER.OAUTHAP`
+      }
+    })
+      .then(this.processTDData)
+      .then(EASObject => {
+        this.access_token = EASObject.access_token;
+        return this.access_token;
+      });
+  }
+
+  renewExpiredTDAccessTokenAndGetQuote(symbol) {
+    return this.getTDAccessToken()
+      .then((token) => {
+        return this.getTDMarketData(symbol)
+          .then(this.processTDData);
+
+      });
+  }
+
+  checkTdAccess() {
+    if (!this.access_token) {
+      return this.renewTDAuth()
+        .then(() => this.getTDIntraday(symbol))
+    } else {
+      return this.getTDIntraday(symbol)
+        .catch(() => {
+          return this.renewTDAuth()
+            .then(() => this.getTDIntraday(symbol));
+        });
+    }
+  }
+
+  checkTdAccess(fn) {
+    if (!this.access_token) {
+      return this.renewTDAuth();
+    } else {
+      return this.getTDIntraday(symbol)
+        .catch(() => {
+          return this.renewTDAuth();
+        });
+    }
+  }
+
+  sendTdBuyOrder(symbol,
+    quantity,
+    price,
+    type = 'LIMIT',
+    extendedHours = false) {
+    return this.renewTDAuth()
+      .then(() => {
+        return this.tdBuy(symbol,
+          quantity,
+          price,
+          type,
+          extendedHours);
+      });
+  }
+
+  tdBuy(symbol,
+    quantity,
+    price,
+    type = 'LIMIT',
+    extendedHours = false) {
+    let headers = {
+      'Accept': '*/*',
+      'Accept-Encoding': 'gzip',
+      'Accept-Language': 'en-US',
+      'Authorization': `Bearer ${this.access_token}`,
+      'Content-Type': 'application/json',
+    };
+
+    const options = {
+      uri: tda + `accounts/${tdAccountId}/orders`,
+      headers: headers,
+      json: true,
+      gzip: true,
+      body: {
+        orderType: type,
+        session: extendedHours? 'SEAMLESS' : 'NORMAL',
+        duration: 'DAY',
+        orderStrategyType: 'SINGLE',
+        price: price,
+        taxLotMethod: 'FIFO',
+        orderLegCollection: [
+          {
+            instruction: 'Buy',
+            quantity: quantity,
+            instrument: {
+              symbol: symbol,
+              assetType: 'EQUITY'
+            }
+          }
+        ]
+      }
+    };
+
+    return request.post(options);
+  }
+
+  tdSell() {
+
   }
 }
 

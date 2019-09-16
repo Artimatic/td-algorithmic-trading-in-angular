@@ -35,6 +35,7 @@ export default {
     key: _.get(credentials, 'default.iex.key', _.get(credentials, 'iex.key', null)),
   },
   tdameritrade: {
+    accountId: _.get(credentials, 'default.tdameritrade.accountId', _.get(credentials, 'tdameritrade.accountId', null)),
     consumer_key: _.get(credentials, 'default.tdameritrade.consumer_key', _.get(credentials, 'tdameritrade.consumer_key', null)),
     refresh_token: _.get(credentials, 'default.tdameritrade.refresh_token', _.get(credentials, 'tdameritrade.refresh_token', null))
   },

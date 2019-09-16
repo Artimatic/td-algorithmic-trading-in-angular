@@ -125,6 +125,16 @@ class PortfolioController extends BaseController {
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
+
+  tdBuy(request, response) {
+    PortfolioService.sendTdBuyOrder(request.body.symbol,
+      request.body.quantity,
+      request.body.price,
+      request.body.type,
+      request.body.extendedHours)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
 }
 
 export default new PortfolioController();
