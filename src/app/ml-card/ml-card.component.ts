@@ -66,7 +66,7 @@ export class MlCardComponent implements OnInit {
     public dialog: MatDialog) { }
 
   ngOnInit() {
-    this.startTime = moment.tz('4:03pm', 'h:mma', 'America/New_York');
+    this.startTime = moment.tz('4:15pm', 'h:mma', 'America/New_York');
     this.stopTime = moment.tz('6:00pm', 'h:mma', 'America/New_York');
 
     this.holdingCount = 0;
@@ -75,7 +75,7 @@ export class MlCardComponent implements OnInit {
       this.reportWaitInterval = 50000;
     } else {
       this.interval = 600000;
-      this.reportWaitInterval = 600000;
+      this.reportWaitInterval = 180000;
     }
 
     this.live = false;
@@ -92,6 +92,10 @@ export class MlCardComponent implements OnInit {
     this.setup();
   }
 
+  trainModel() {
+    this.backtestService.runRnn('SPY', moment().format('YYYY-MM-DD'), '1990-01-01').subscribe();
+  }
+
   goLive() {
     this.setup();
     this.alive = true;
@@ -103,7 +107,7 @@ export class MlCardComponent implements OnInit {
         if (momentInst.isAfter(this.startTime) &&
           momentInst.isBefore(this.stopTime) || this.testing) {
           this.alive = false;
-          this.backtestService.runRnn('SPY', moment().format('YYYY-MM-DD'), '1990-01-01')
+          this.backtestService.activateRnn('SPY', moment().format('YYYY-MM-DD'))
             .subscribe(() => {
               this.pendingResults = true;
               this.checkReportSub = TimerObservable.create(0, this.reportWaitInterval)

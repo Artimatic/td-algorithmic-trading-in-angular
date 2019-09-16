@@ -804,6 +804,27 @@ class BacktestService {
       });
   }
 
+  getTrainingData(symbol, endDate, startDate) {
+    const to = moment(endDate).format('YYYY-MM-DD');
+    const from = moment(startDate).format('YYYY-MM-DD');
+
+    console.log('to: ', to, ' from:', from);
+    const url = `${configurations.apps.goliath}backtest/train`;
+
+    const options = {
+      method: 'GET',
+      uri: url,
+      qs: {
+        ticker: symbol,
+        to,
+        from,
+        save: false
+      },
+    };
+
+    return RequestPromise(options);
+  }
+
   runRNN(symbol, endDate, startDate, response) {
     const to = moment(endDate).format('YYYY-MM-DD');
     const from = moment(startDate).format('YYYY-MM-DD');
@@ -821,6 +842,35 @@ class BacktestService {
         console.log('Error: ', error);
       });
 
+    response.status(200).send();
+  }
+
+  activateRNN(symbol, startDate, response) {
+    const today = moment(startDate).format('YYYY-MM-DD');
+    const yesterday = moment(startDate).add(-1, 'days').format('YYYY-MM-DD');
+
+    this.getTrainingData(symbol, today, yesterday)
+      .then((trainingData) => {
+        trainingData = JSON.parse(trainingData);
+        const URI = `${mlServiceUrl}api/activate`;
+
+        const options = {
+          method: 'POST',
+          uri: URI,
+          body: {
+            symbol: 'SPY',
+            input: trainingData[0].input,
+            round: true,
+            to: today
+          },
+          json: true
+        };
+
+        RequestPromise(options)
+          .catch((error) => {
+            console.log('Error: ', error);
+          });
+      });
     response.status(200).send();
   }
 

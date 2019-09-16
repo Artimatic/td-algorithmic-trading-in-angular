@@ -211,4 +211,13 @@ export class BacktestService {
 
         return this.http.post(`${BASE_URL}api/backtest/rnn`, data, {});
     }
+
+    activateRnn(symbol: string, to: string = null): Observable<any> {
+        const data = {
+            symbol,
+            to
+        };
+
+        return this.http.post(`${BASE_URL}api/backtest/rnn-activate`, data, {});
+    }
 }
