@@ -256,6 +256,13 @@ export class BbCardComponent implements OnInit, OnChanges {
 
       data = await this.backtestService.getTdIntraday(this.order.holding.symbol)
         .toPromise()
+        .then((intraday) => {
+          return this.portfolioService.getPrice(this.order.holding.symbol)
+            .toPromise()
+            .then((quote) => {
+              return this.daytradeService.addQuote(intraday, quote);
+            });
+        })
         .catch(() => {
           return this.backtestService.getIntraday2(requestBody)
             .toPromise()
@@ -559,7 +566,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
         const reject = (error) => {
           this.error = error._body;
-          if (error.status !== 400) {
+          if (error.status !== 400 || error.status !== 500) {
             this.stop();
           }
         };
@@ -591,7 +598,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
         const reject = (error) => {
           this.error = error._body;
-          if (error.status !== 400) {
+          if (error.status !== 400 || error.status !== 500) {
             this.stop();
           }
         };

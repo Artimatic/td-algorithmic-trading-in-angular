@@ -66,7 +66,7 @@ export class MlCardComponent implements OnInit {
     public dialog: MatDialog) { }
 
   ngOnInit() {
-    this.startTime = moment.tz('4:15pm', 'h:mma', 'America/New_York');
+    this.startTime = moment.tz('5:05pm', 'h:mma', 'America/New_York');
     this.stopTime = moment.tz('6:00pm', 'h:mma', 'America/New_York');
 
     this.holdingCount = 0;
@@ -223,7 +223,7 @@ export class MlCardComponent implements OnInit {
     return this.portfolioService.getQuote(order.holding.symbol)
       .toPromise()
       .then((quote) => {
-        const bid: number = quote.bidPrice;
+        const bid: number = quote.price;
         const quantity = _.round(modifier * this.calculateQuantity(this.firstFormGroup.value.amount, bid));
         const buyOrder = this.daytradeService.createOrder(order.holding, 'Buy', quantity, bid, moment().unix());
         const log = `ORDER SENT ${moment(buyOrder.signalTime).format('hh:mm')} ${buyOrder.side} ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
