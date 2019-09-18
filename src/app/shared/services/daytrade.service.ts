@@ -21,7 +21,7 @@ export class DaytradeService {
     private cartService: CartService) { }
 
   getDefaultOrderSize(quantity) {
-    return Math.ceil(quantity / 3);
+    return Math.ceil(quantity / 10);
   }
 
   closeTrades(resolve: Function, reject: Function, handleNotFound: Function): void {

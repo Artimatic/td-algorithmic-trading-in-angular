@@ -66,7 +66,7 @@ export class MlCardComponent implements OnInit {
     public dialog: MatDialog) { }
 
   ngOnInit() {
-    this.startTime = moment.tz('5:05pm', 'h:mma', 'America/New_York');
+    this.startTime = moment.tz('5:30pm', 'h:mma', 'America/New_York');
     this.stopTime = moment.tz('6:00pm', 'h:mma', 'America/New_York');
 
     this.holdingCount = 0;
@@ -93,7 +93,7 @@ export class MlCardComponent implements OnInit {
   }
 
   trainModel() {
-    this.backtestService.runRnn('SPY', moment().format('YYYY-MM-DD'), '1990-01-01').subscribe();
+    this.backtestService.runRnn('SPY', moment().subtract({day: 1 }).format('YYYY-MM-DD'), '1990-01-01').subscribe();
   }
 
   goLive() {
