@@ -285,6 +285,44 @@ class PortfolioService {
       })
   }
 
+  getDailyQuotes(symbol, startDate, endDate) {
+    if (!this.access_token) {
+      return this.renewTDAuth()
+        .then(() => this.getTDDailyQuotes(symbol, startDate, endDate))
+    } else {
+      return this.getTDDailyQuotes(symbol, startDate, endDate)
+        .catch(() => {
+          return this.renewTDAuth()
+            .then(() => this.getTDDailyQuotes(symbol, startDate, endDate));
+        });
+    }
+  }
+
+  getTDDailyQuotes(symbol, startDate, endDate) {
+    const query = `${tda}marketdata/${symbol}/pricehistory`;
+    const options = {
+      uri: query,
+      qs: {
+        apikey: tdaKey,
+        periodType: 'month',
+        frequencyType: 'daily',
+        frequency: 1,
+        startDate: startDate,
+        endDate: endDate,
+        needExtendedHoursData: false
+      },
+      headers: {
+        Authorization: `Bearer ${this.access_token}`
+      }
+    };
+
+    return request.get(options)
+      .then((data) => {
+        const response = this.processTDData(data);
+        return QuoteService.convertTdIntraday(response.candles);
+      })
+  }
+
   getTDMarketData(symbol) {
     const query = `${tda}marketdata/${symbol}/quotes`;
     const options = {

@@ -55,7 +55,7 @@ export class MlCardComponent implements OnInit {
 
   tiles;
 
-  testing = false;
+  testing = true;
 
   constructor(private _formBuilder: FormBuilder,
     private portfolioService: PortfolioService,
@@ -66,7 +66,7 @@ export class MlCardComponent implements OnInit {
     public dialog: MatDialog) { }
 
   ngOnInit() {
-    this.startTime = moment.tz('5:30pm', 'h:mma', 'America/New_York');
+    this.startTime = moment.tz('5:45pm', 'h:mma', 'America/New_York');
     this.stopTime = moment.tz('6:00pm', 'h:mma', 'America/New_York');
 
     this.holdingCount = 0;

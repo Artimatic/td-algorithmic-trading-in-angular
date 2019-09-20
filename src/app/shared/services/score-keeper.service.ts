@@ -101,17 +101,17 @@ export class ScoreKeeperService {
   determineLossTallyModifier(stock: string) {
     switch (this.lossTally[stock]) {
       case 1:
-        return 0.1;
+        return 0.50;
       case 2:
-        return 0.2;
+        return 0.75;
       case 3:
         return 0.4;
       case 4:
-        return 0.8;
+        return 0.3;
       case 5:
         return 1.0;
       default:
-        return 0;
+        return 0.25;
     }
   }
 
@@ -120,13 +120,13 @@ export class ScoreKeeperService {
     if (ratio === 0) {
       return 0.1;
     } else if (ratio > 0 && ratio < 0.2) {
-      return -0.05;
-    } else if (ratio >= 0.2 && ratio < 0.4) {
-      return -0.08;
-    } else if (ratio >= 0.4 && ratio < 0.6) {
       return -0.1;
-    } else if (ratio >= 0.6 && ratio < 0.8) {
+    } else if (ratio >= 0.2 && ratio < 0.4) {
       return -0.2;
+    } else if (ratio >= 0.4 && ratio < 0.6) {
+      return -0.3;
+    } else if (ratio >= 0.6 && ratio < 0.8) {
+      return -0.4;
     } else if (ratio >= 0.8) {
       return -0.5;
     }

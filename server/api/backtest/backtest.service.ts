@@ -859,7 +859,7 @@ class BacktestService {
           uri: URI,
           body: {
             symbol: 'SPY',
-            input: trainingData[0].input,
+            input: trainingData[trainingData.length - 1].input,
             round: true,
             to: today
           },

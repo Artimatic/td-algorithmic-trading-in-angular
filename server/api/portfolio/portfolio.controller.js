@@ -126,6 +126,12 @@ class PortfolioController extends BaseController {
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
+  getDailyQuotes(request, response) {
+    PortfolioService.getDailyQuotes(request.query.symbol, request.query.datetime)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
   tdBuy(request, response) {
     PortfolioService.sendTdBuyOrder(request.body.symbol,
       request.body.quantity,
