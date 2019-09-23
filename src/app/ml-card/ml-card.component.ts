@@ -56,7 +56,7 @@ export class MlCardComponent implements OnInit {
 
   tiles;
 
-  testing = true;
+  testing = false;
 
   constructor(private _formBuilder: FormBuilder,
     private portfolioService: PortfolioService,
