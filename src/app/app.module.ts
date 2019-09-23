@@ -32,6 +32,7 @@ import {
   MatStepperModule,
   MatSelectModule,
   MatTooltipModule,
+  MatSlideToggleModule,
 } from '@angular/material';
 
 import { FlexLayoutModule } from '@angular/flex-layout';
@@ -151,6 +152,7 @@ import { TestResultsTableComponent } from './test-results-table/test-results-tab
     OverviewModule,
     SettingsModule,
     MachineLearningModule,
+    MatSlideToggleModule,
   ],
   providers: [
     BacktestService,

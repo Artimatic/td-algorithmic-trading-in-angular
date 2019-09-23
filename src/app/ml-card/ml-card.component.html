@@ -21,8 +21,15 @@
           <span matPrefix>$&nbsp;</span>
           <span matSuffix>.00</span>
         </mat-form-field>
+        <section>
+          <mat-slide-toggle [formControl]="longOnly">
+            Long only
+          </mat-slide-toggle>
+        </section>
         <div>
-          <button mat-button matStepperNext>Next</button>
+          <button mat-button matStepperNext>
+            Next
+          </button>
         </div>
       </form>
     </mat-step>

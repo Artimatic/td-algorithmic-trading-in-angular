@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { SmartOrder } from '../shared/models/smart-order';
 import { Subscription } from 'rxjs';
-import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { FormGroup, FormBuilder, Validators, FormControl } from '@angular/forms';
 
 import * as moment from 'moment-timezone';
 import * as _ from 'lodash';
@@ -49,6 +49,7 @@ export class MlCardComponent implements OnInit {
 
   firstFormGroup: FormGroup;
   secondFormGroup: FormGroup;
+  longOnly = new FormControl();
 
   startTime: moment.Moment;
   stopTime: moment.Moment;
@@ -80,6 +81,7 @@ export class MlCardComponent implements OnInit {
 
     this.live = false;
     this.alive = true;
+    this.longOnly.setValue(false);
 
     this.firstFormGroup = this._formBuilder.group({
       amount: [500, Validators.required]
@@ -93,7 +95,7 @@ export class MlCardComponent implements OnInit {
   }
 
   trainModel() {
-    this.backtestService.runRnn('SPY', moment().subtract({day: 1 }).format('YYYY-MM-DD'), '1990-01-01').subscribe();
+    this.backtestService.runRnn('SPY', moment().subtract({ day: 1 }).format('YYYY-MM-DD'), '1990-01-01').subscribe();
   }
 
   goLive() {
@@ -167,31 +169,32 @@ export class MlCardComponent implements OnInit {
   placeBet(bet: Bet) {
     switch (bet.summary) {
       case Sentiment.Bullish:
-          this.portfolioService.getInstruments('UPRO').subscribe((response) => {
-            const instruments = response.results[0];
-            const newHolding: Holding = {
-              instrument: instruments.url,
-              symbol: instruments.symbol,
-              name: instruments.name
-            };
+        this.portfolioService.getInstruments('UPRO').subscribe((response) => {
+          const instruments = response.results[0];
+          const newHolding: Holding = {
+            instrument: instruments.url,
+            symbol: instruments.symbol,
+            name: instruments.name
+          };
 
-            const order: SmartOrder = {
-              holding: newHolding,
-              quantity: 0,
-              price: 0,
-              submitted: false,
-              pending: false,
-              side: 'DayTrade',
-            };
-            this.buy(order, _.divide(bet.bullishOpen, bet.total));
-          },
+          const order: SmartOrder = {
+            holding: newHolding,
+            quantity: 0,
+            price: 0,
+            submitted: false,
+            pending: false,
+            side: 'DayTrade',
+          };
+          this.buy(order, _.divide(bet.bullishOpen, bet.total));
+        },
           (error) => {
             this.snackBar.open('Error getting instruments for UPRO', 'Dismiss', {
               duration: 2000,
             });
           });
-      break;
+        break;
       case Sentiment.Bearish:
+        if (!this.longOnly.value) {
           this.portfolioService.getInstruments('SPXU').subscribe((response) => {
             const instruments = response.results[0];
             const newHolding: Holding = {
@@ -210,12 +213,13 @@ export class MlCardComponent implements OnInit {
             };
             this.buy(order, _.divide(bet.bearishOpen, bet.total));
           },
-          (error) => {
-            this.snackBar.open('Error getting instruments for SPXU', 'Dismiss', {
-              duration: 2000,
+            (error) => {
+              this.snackBar.open('Error getting instruments for SPXU', 'Dismiss', {
+                duration: 2000,
+              });
             });
-          });
-      break;
+        }
+        break;
     }
   }
 
