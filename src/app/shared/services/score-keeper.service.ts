@@ -103,11 +103,11 @@ export class ScoreKeeperService {
       case 1:
         return 0.50;
       case 2:
-        return 0.75;
+        return 0.25;
       case 3:
-        return 0.4;
+        return 0.75;
       case 4:
-        return 0.3;
+        return 0.5;
       case 5:
         return 1.0;
       default:
