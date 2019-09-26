@@ -119,16 +119,16 @@ export class ScoreKeeperService {
     const ratio = _.divide(existingPositionSize, sizeLimit);
     if (ratio === 0) {
       return 0.1;
-    } else if (ratio > 0 && ratio < 0.2) {
-      return -0.1;
-    } else if (ratio >= 0.2 && ratio < 0.4) {
-      return -0.2;
-    } else if (ratio >= 0.4 && ratio < 0.6) {
-      return -0.3;
-    } else if (ratio >= 0.6 && ratio < 0.8) {
+    } else if (ratio > 0 && ratio < 0.1) {
+      return -0.25;
+    } else if (ratio >= 0.1 && ratio < 0.4) {
       return -0.4;
+    } else if (ratio >= 0.4 && ratio < 0.6) {
+      return -0.7;
+    } else if (ratio >= 0.6 && ratio < 0.8) {
+      return -0.8;
     } else if (ratio >= 0.8) {
-      return -0.5;
+      return -0.9;
     }
   }
 }
