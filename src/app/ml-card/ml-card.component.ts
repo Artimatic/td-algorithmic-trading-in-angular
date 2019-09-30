@@ -67,7 +67,7 @@ export class MlCardComponent implements OnInit {
     public dialog: MatDialog) { }
 
   ngOnInit() {
-    this.startTime = moment.tz('5:45pm', 'h:mma', 'America/New_York');
+    this.startTime = moment.tz('5:33pm', 'h:mma', 'America/New_York');
     this.stopTime = moment.tz('6:00pm', 'h:mma', 'America/New_York');
 
     this.holdingCount = 0;

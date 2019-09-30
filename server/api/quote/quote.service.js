@@ -3,6 +3,7 @@ import * as _ from 'lodash';
 import * as RequestPromise from 'request-promise';
 const YahooFinanceAPI = require('yahoo-finance-data');
 import * as algotrader from 'algotrader';
+import PortfolioService from '../portfolio/portfolio.service';
 
 import configurations from '../../config/environment';
 
@@ -19,7 +20,7 @@ const av = new AlphaVantage(configurations.alpha.key);
 
 class QuoteService {
   /*
-  * Interval: ["2m", "1d"]
+  * Interval: ["1m", "1d"]
   * Range: ["1d","5d","1mo","3mo","6mo","1y","2y","5y","10y","ytd","max"]
   */
   getData(symbol, interval = '1d', range = '1d') {
@@ -70,7 +71,24 @@ class QuoteService {
           return data;
         });
     } else {
-      return api.getHistoricalData(symbol, interval, range);
+      let endDate = moment().valueOf();
+      let startDate = moment(endDate).subtract(30, 'years').valueOf();
+
+      if (range <= 5) {
+        startDate = moment(endDate).subtract(5, 'days').valueOf();
+      } else if (range <= 30) {
+        startDate = moment(endDate).subtract(1, 'months').valueOf();
+      } else if (range <= 90) {
+        startDate = moment(endDate).subtract(3, 'months').valueOf();
+      } else if (range <= 365) {
+        startDate = moment(endDate).subtract(1, 'years').valueOf();
+      } else if (range <= 730) {
+        startDate = moment(endDate).subtract(2, 'years').valueOf();
+      } else if (range <= 1825) {
+        startDate = moment(endDate).subtract(5, 'years').valueOf();
+      }
+
+      return PortfolioService.getDailyQuotes(symbol, startDate, endDate);
     }
   }
 

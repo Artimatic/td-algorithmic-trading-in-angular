@@ -446,8 +446,60 @@ class PortfolioService {
     return request.post(options);
   }
 
-  tdSell() {
+  sendTdSellOrder(symbol,
+    quantity,
+    price,
+    type = 'LIMIT',
+    extendedHours = false) {
+    return this.renewTDAuth()
+      .then(() => {
+        return this.tdSell(symbol,
+          quantity,
+          price,
+          type,
+          extendedHours);
+      });
+  }
 
+  tdSell(symbol,
+    quantity,
+    price,
+    type = 'LIMIT',
+    extendedHours = false) {
+    let headers = {
+      'Accept': '*/*',
+      'Accept-Encoding': 'gzip',
+      'Accept-Language': 'en-US',
+      'Authorization': `Bearer ${this.access_token}`,
+      'Content-Type': 'application/json',
+    };
+
+    const options = {
+      uri: tda + `accounts/${tdAccountId}/orders`,
+      headers: headers,
+      json: true,
+      gzip: true,
+      body: {
+        orderType: type,
+        session: extendedHours? 'SEAMLESS' : 'NORMAL',
+        duration: 'DAY',
+        orderStrategyType: 'SINGLE',
+        price: price,
+        taxLotMethod: 'FIFO',
+        orderLegCollection: [
+          {
+            instruction: 'Sell',
+            quantity: quantity,
+            instrument: {
+              symbol: symbol,
+              assetType: 'EQUITY'
+            }
+          }
+        ]
+      }
+    };
+
+    return request.post(options);
   }
 }
 
