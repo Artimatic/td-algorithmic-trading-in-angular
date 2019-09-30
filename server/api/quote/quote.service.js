@@ -74,17 +74,17 @@ class QuoteService {
       let endDate = moment().valueOf();
       let startDate = moment(endDate).subtract(30, 'years').valueOf();
 
-      if (range <= 5) {
+      if (range === '5d') {
         startDate = moment(endDate).subtract(5, 'days').valueOf();
-      } else if (range <= 30) {
+      } else if (range === '1mo') {
         startDate = moment(endDate).subtract(1, 'months').valueOf();
-      } else if (range <= 90) {
+      } else if (range === '3mo') {
         startDate = moment(endDate).subtract(3, 'months').valueOf();
-      } else if (range <= 365) {
+      } else if (range === '1y') {
         startDate = moment(endDate).subtract(1, 'years').valueOf();
-      } else if (range <= 730) {
+      } else if (range === '2y') {
         startDate = moment(endDate).subtract(2, 'years').valueOf();
-      } else if (range <= 1825) {
+      } else if (range === '5y') {
         startDate = moment(endDate).subtract(5, 'years').valueOf();
       }
 
