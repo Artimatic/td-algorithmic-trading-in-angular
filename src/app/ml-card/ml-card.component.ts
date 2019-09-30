@@ -229,7 +229,7 @@ export class MlCardComponent implements OnInit {
       .then((quote) => {
         let bid: number = quote.price;
 
-        if(_.round(_.divide(quote.askPrice, quote.bidPrice), 3) < 1.005) {
+        if (_.round(_.divide(quote.askPrice, quote.bidPrice), 3) < 1.005) {
           bid = quote.askPrice;
         } else {
           bid = quote.price;
