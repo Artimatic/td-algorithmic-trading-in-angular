@@ -883,7 +883,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
     }
 
-    if (this.indicators.mfi > 73) {
+    if (this.indicators.mfi > 75) {
       const log = `mfi Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}`;
 
       this.reportingService.addAuditLog(this.order.holding.symbol, log);
