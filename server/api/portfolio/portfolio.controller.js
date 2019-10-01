@@ -142,7 +142,7 @@ class PortfolioController extends BaseController {
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
-  tdBuy(request, response) {
+  tdSell(request, response) {
     PortfolioService.sendTdSellOrder(request.body.symbol,
       request.body.quantity,
       request.body.price,
