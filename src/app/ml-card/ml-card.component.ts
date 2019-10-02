@@ -67,7 +67,7 @@ export class MlCardComponent implements OnInit {
     public dialog: MatDialog) { }
 
   ngOnInit() {
-    this.startTime = moment.tz('5:33pm', 'h:mma', 'America/New_York');
+    this.startTime = moment.tz('5:01pm', 'h:mma', 'America/New_York');
     this.stopTime = moment.tz('6:00pm', 'h:mma', 'America/New_York');
 
     this.holdingCount = 0;
@@ -252,6 +252,14 @@ export class MlCardComponent implements OnInit {
           }
         };
         this.portfolioService.extendedHoursBuy(buyOrder.holding, buyOrder.quantity, buyOrder.price).subscribe(
+          response => {
+            resolve();
+          },
+          error => {
+            reject(error);
+          });
+
+        this.portfolioService.sendTdBuy(buyOrder.holding, buyOrder.quantity, buyOrder.price, true).subscribe(
           response => {
             resolve();
           },

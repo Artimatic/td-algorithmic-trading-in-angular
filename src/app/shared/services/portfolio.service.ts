@@ -116,4 +116,32 @@ export class PortfolioService {
         return _.round(response.json().askPrice, 2);
       });
   }
+
+  sendTdBuy(holding: Holding, quantity: number, price: number, extended: boolean): Observable<any> {
+    const body = {
+      symbol: holding.symbol,
+      quantity: quantity,
+      price: price,
+      type: 'LIMIT',
+      extendedHours: extended
+    };
+    return this.http.post('/api/portfolio/v2/buy', body)
+      .map((response: Response) => {
+        return response.json();
+      });
+  }
+
+  sendTdSell(holding: Holding, quantity: number, price: number, extended: boolean): Observable<any> {
+    const body = {
+      symbol: holding.symbol,
+      quantity: quantity,
+      price: price,
+      type: 'LIMIT',
+      extendedHours: extended
+    };
+    return this.http.post('/api/portfolio/v2/sell', body)
+      .map((response: Response) => {
+        return response.json();
+      });
+  }
 }
