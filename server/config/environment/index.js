@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 
 import * as credentials from './credentials';
 
-if(!credentials) {
+if (!credentials) {
     console.log('Credentials are missing. Continuing without credentials.');
 }
 

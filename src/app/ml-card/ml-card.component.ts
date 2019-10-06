@@ -237,7 +237,7 @@ export class MlCardComponent implements OnInit {
 
         const quantity = _.round(modifier * this.calculateQuantity(this.firstFormGroup.value.amount, bid));
         const buyOrder = this.daytradeService.createOrder(order.holding, 'Buy', quantity, bid, moment().unix());
-        const log = `ORDER SENT ${moment(buyOrder.signalTime).format('hh:mm')} ${buyOrder.side} ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
+        const log = `ORDER SENT ${buyOrder.side} ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
 
         const resolve = () => {
           this.holdingCount += quantity;

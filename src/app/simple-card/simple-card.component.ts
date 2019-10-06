@@ -124,7 +124,7 @@ export class SimpleCardComponent implements OnInit, OnChanges {
       .then((quote) => {
         const lastPrice: number = quote;
         const buyOrder = this.daytradeService.createOrder(this.order.holding, 'Buy', this.firstFormGroup.value.quantity, lastPrice, moment().unix());
-        const log = `ORDER SENT ${moment(buyOrder.signalTime).format('hh:mm')} ${buyOrder.side} ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
+        const log = `ORDER SENT ${buyOrder.side} ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
 
         const resolve = () => {
           this.holdingCount += this.firstFormGroup.value.quantity;
@@ -165,7 +165,7 @@ export class SimpleCardComponent implements OnInit, OnChanges {
         };
 
         const handleNotFound = () => {
-          this.setWarning(`Trying to sell ${sellOrder.holding.symbol} position that doesn\'t exists`);
+          this.setWarning(`Trying to sell position that doesn\'t exists`);
           this.stop();
         };
         this.daytradeService.sendSell(sellOrder, 'market', resolve, reject, handleNotFound);

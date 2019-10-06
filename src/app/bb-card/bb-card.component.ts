@@ -554,7 +554,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
   sendBuy(buyOrder: SmartOrder) {
     if (buyOrder) {
-      const log = `ORDER SENT ${moment(buyOrder.signalTime).format('hh:mm')} ${buyOrder.side} ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
+      const log = `ORDER SENT ${buyOrder.side} ${buyOrder.quantity} ${buyOrder.holding.symbol}@${buyOrder.price}`;
 
       if (this.backtestLive || this.live) {
         const resolve = (response) => {
@@ -573,7 +573,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         this.daytradeService.sendBuy(buyOrder, 'limit', resolve, reject);
       } else {
         this.incrementBuy(buyOrder);
-        console.log(`${moment().format('hh:mm')} ${log}`);
+        console.log(`${moment(buyOrder.signalTime).format('hh:mm')} ${log}`);
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
       }
     }
@@ -582,7 +582,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
   sendSell(sellOrder: SmartOrder) {
     if (sellOrder) {
-      const log = `ORDER SENT ${sellOrder.side} ${sellOrder.holding.symbol} ${sellOrder.quantity} ${sellOrder.price}`;
+      const log = `ORDER SENT ${sellOrder.side} ${sellOrder.quantity} ${sellOrder.holding.symbol}@${sellOrder.price}`;
       if (this.backtestLive || this.live) {
         const resolve = (response) => {
           this.incrementSell(sellOrder);
@@ -605,7 +605,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
         const handleNotFound = () => {
           this.removeOrder(sellOrder);
-          this.setWarning(`Trying to sell ${sellOrder.holding.symbol} position that doesn\'t exists`);
+          this.setWarning(`Trying to sell position that doesn\'t exists`);
         };
 
         this.daytradeService.sendSell(sellOrder, 'limit', resolve, reject, handleNotFound);
@@ -617,7 +617,7 @@ export class BbCardComponent implements OnInit, OnChanges {
           this.scoringService.addProfitLoss(this.order.holding.symbol, pl);
         }
 
-        console.log(`${moment().format('hh:mm')} ${log}`);
+        console.log(`${moment(sellOrder.signalTime).format('hh:mm')} ${log}`);
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
       }
     }
@@ -626,7 +626,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
   sendStopLoss(order: SmartOrder) {
     if (order) {
-      const log = `MARKET ORDER SENT ${order.side} ${order.holding.symbol} ${order.quantity} ${order.price}`;
+      const log = `MARKET ORDER SENT ${order.side} ${order.quantity} ${order.holding.symbol}@${order.price}`;
       if (this.backtestLive || this.live) {
 
         const resolve = (response) => {
@@ -648,7 +648,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
         const handleNotFound = () => {
           this.removeOrder(order);
-          this.setWarning(`Trying to sell ${order.holding.symbol} position that doesn\'t exists`);
+          this.setWarning(`Trying to sell position that doesn\'t exists`);
         };
 
 
@@ -660,7 +660,7 @@ export class BbCardComponent implements OnInit, OnChanges {
           const pl = this.daytradeService.estimateSellProfitLoss(this.orders);
           this.scoringService.addProfitLoss(this.order.holding.symbol, pl);
         }
-        console.log(`${moment().format('hh:mm')} ${log}`);
+        console.log(`${moment(order.signalTime).format('hh:mm')} ${log}`);
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
       }
     }
@@ -803,7 +803,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
     if (this.config.Mfi) {
       if (this.algoService.isOversoldBullish(roc, this.indicators.momentum, this.indicators.mfi)) {
-        const log = `${this.order.holding.symbol} mfi oversold Event - time: ${moment.unix(signalTime).format()}, short rate of change: ${roc}, long rate of change: ${this.indicators.momentum}, mfi: ${this.indicators.mfi}`;
+        const log = `mfi oversold Event - time: ${moment.unix(signalTime).format()}, short rate of change: ${roc}, long rate of change: ${this.indicators.momentum}, mfi: ${this.indicators.mfi}`;
 
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
         console.log(log);
@@ -812,7 +812,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
     if (this.config.SpyMomentum) {
       if (this.algoService.isMomentumBullish(signalPrice, mid[0], this.indicators.mfi, roc, this.indicators.momentum)) {
-        const log = `${this.order.holding.symbol} bb momentum Event -` +
+        const log = `bb momentum Event -` +
           `time: ${moment.unix(signalTime).format()}, bband mid: ${mid[0]}, mfi: ${this.indicators.mfi}` +
           `roc: ${roc}, long roc: ${this.indicators.momentum}`;
 
@@ -824,7 +824,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
     if (this.config.MeanReversion1) {
       if (this.algoService.isBBandMeanReversionBullish(signalPrice, low[0], this.indicators.mfi, roc, this.indicators.momentum)) {
-        const log = `${this.order.holding.symbol} bb mean reversion Event -` +
+        const log = `bb mean reversion Event -` +
           `time: ${moment.unix(signalTime).format()}, bband low: ${low[0]}, mfi: ${this.indicators.mfi},` +
           `roc: ${roc}, long roc: ${this.indicators.momentum}`;
 
@@ -928,7 +928,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         if (this.firstFormGroup.value.lossThreshold > gains) {
           this.setWarning('Loss threshold met. Sending stop loss order. Estimated loss: ' +
             `${this.daytradeService.convertToFixedNumber(gains, 4) * 100}%`);
-          const log = `${this.order.holding.symbol} Stop Loss triggered: ${closePrice}/${estimatedPrice}`;
+          const log = `Stop Loss triggered: ${closePrice}/${estimatedPrice}`;
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
           console.log(log);
           const stopLossOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
@@ -946,7 +946,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         if (trailingChange && -0.002 > trailingChange) {
           this.setWarning('Trailing Stop Loss triggered. Sending sell order. Estimated gain: ' +
             `${this.daytradeService.convertToFixedNumber(trailingChange, 4) * 100}`);
-          const log = `${this.order.holding.symbol} Trailing Stop Loss triggered: ${closePrice}/${estimatedPrice}`;
+          const log = `Trailing Stop Loss triggered: ${closePrice}/${estimatedPrice}`;
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
           console.log(log);
           const sellOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
