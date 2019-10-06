@@ -429,7 +429,7 @@ class PortfolioService {
         duration: 'DAY',
         orderStrategyType: 'SINGLE',
         price: price,
-        taxLotMethod: 'FIFO',
+        taxLotMethod: 'LIFO',
         orderLegCollection: [
           {
             instruction: 'Buy',
@@ -485,7 +485,7 @@ class PortfolioService {
         duration: 'DAY',
         orderStrategyType: 'SINGLE',
         price: price,
-        taxLotMethod: 'FIFO',
+        taxLotMethod: 'LIFO',
         orderLegCollection: [
           {
             instruction: 'Sell',
