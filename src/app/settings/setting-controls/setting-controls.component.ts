@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { GlobalSettingsService } from '../global-settings.service';
+import { GlobalSettingsService, Brokerage } from '../global-settings.service';
 
 @Component({
   selector: 'app-setting-controls',
@@ -13,5 +13,13 @@ export class SettingControlsComponent {
 
   toggleMode(): void {
     this.ismeridian = !this.ismeridian;
+  }
+
+  toggleBrokerage(): void {
+    if (this.globalSettingsService.brokerage === Brokerage.Robinhood) {
+      this.globalSettingsService.brokerage = Brokerage.Td;
+    } else if (this.globalSettingsService.brokerage === Brokerage.Td) {
+      this.globalSettingsService.brokerage = Brokerage.Robinhood;
+    }
   }
 }

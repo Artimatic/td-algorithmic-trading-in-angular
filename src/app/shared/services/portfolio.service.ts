@@ -6,12 +6,14 @@ import 'rxjs/add/operator/map';
 import { AuthenticationService } from './authentication.service';
 import { Holding } from '../models';
 import * as _ from 'lodash';
+import { GlobalSettingsService, Brokerage } from '../../settings/global-settings.service';
 
 @Injectable()
 export class PortfolioService {
   constructor(
     private http: Http,
-    private authenticationService: AuthenticationService) {
+    private authenticationService: AuthenticationService,
+    private globalSettingsService: GlobalSettingsService) {
   }
 
   getPortfolio(): Observable<Holding[]> {
@@ -31,6 +33,22 @@ export class PortfolioService {
   }
 
   sell(holding: Holding, quantity: number, price: number, type: string): Observable<any> {
+    if (this.globalSettingsService.brokerage === Brokerage.Robinhood) {
+      return this.sellRh(holding, quantity, price, type);
+    } else if (this.globalSettingsService.brokerage === Brokerage.Td) {
+      return this.sendTdSell(holding, quantity, price, false);
+    }
+  }
+
+  buy(holding: Holding, quantity: number, price: number, type: string): Observable<any> {
+    if (this.globalSettingsService.brokerage === Brokerage.Robinhood) {
+      return this.buyRh(holding, quantity, price, type);
+    } else if (this.globalSettingsService.brokerage === Brokerage.Td) {
+      return this.sendTdBuy(holding, quantity, price, false);
+    }
+  }
+
+  sellRh(holding: Holding, quantity: number, price: number, type: string): Observable<any> {
     if (quantity === 0) {
       throw new Error('Order Quantity is 0');
     }
@@ -54,7 +72,7 @@ export class PortfolioService {
       });
   }
 
-  buy(holding: Holding, quantity: number, price: number, type: string): Observable<any> {
+  buyRh(holding: Holding, quantity: number, price: number, type: string): Observable<any> {
     if (quantity === 0) {
       throw new Error('Order Quantity is 0');
     }
@@ -76,6 +94,14 @@ export class PortfolioService {
   }
 
   extendedHoursBuy(holding: Holding, quantity: number, price: number): Observable<any> {
+    if (this.globalSettingsService.brokerage === Brokerage.Robinhood) {
+      return this.extendedHoursRhBuy(holding, quantity, price);
+    } else if (this.globalSettingsService.brokerage === Brokerage.Td) {
+      return this.sendTdBuy(holding, quantity, price, true);
+    }
+  }
+
+  extendedHoursRhBuy(holding: Holding, quantity: number, price: number): Observable<any> {
     if (quantity === 0) {
       throw new Error('Order Quantity is 0');
     }

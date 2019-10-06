@@ -28,5 +28,13 @@
             <span>$&nbsp;</span>
             <input [(ngModel)]="globalSettingsService.maxLoss">
         </mat-grid-tile>
+        <mat-grid-tile>
+            <label matTooltip="Select brokerage">
+                Select brokerage:
+            </label>
+            <mat-slide-toggle (change)="toggleBrokerage()">
+              {{ globalSettingsService.brokerage }}
+            </mat-slide-toggle>
+        </mat-grid-tile>
     </mat-grid-list>
 </div>
