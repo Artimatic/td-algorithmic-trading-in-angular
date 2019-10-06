@@ -169,7 +169,7 @@ export class SimpleCardComponent implements OnInit, OnChanges {
           this.stop();
         };
         this.daytradeService.sendSell(sellOrder, 'market', resolve, reject, handleNotFound);
-        this.portfolioService.sendTdBuy(sellOrder.holding, sellOrder.quantity, sellOrder.price, true).subscribe(
+        this.portfolioService.sendTdSell(sellOrder.holding, sellOrder.quantity, sellOrder.price, true).subscribe(
           response => {
             resolve();
           },
