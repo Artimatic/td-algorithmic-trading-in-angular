@@ -151,10 +151,7 @@ export class PortfolioService {
       type: 'LIMIT',
       extendedHours: extended
     };
-    return this.http.post('/api/portfolio/v2/buy', body)
-      .map((response: Response) => {
-        return response.json();
-      });
+    return this.http.post('/api/portfolio/v2/buy', body);
   }
 
   sendTdSell(holding: Holding, quantity: number, price: number, extended: boolean): Observable<any> {
@@ -165,9 +162,6 @@ export class PortfolioService {
       type: 'LIMIT',
       extendedHours: extended
     };
-    return this.http.post('/api/portfolio/v2/sell', body)
-      .map((response: Response) => {
-        return response.json();
-      });
+    return this.http.post('/api/portfolio/v2/sell', body);
   }
 }

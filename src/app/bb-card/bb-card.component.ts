@@ -187,7 +187,10 @@ export class BbCardComponent implements OnInit, OnChanges {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.newRun(false, true);
+        this.requestQuotes()
+        .then(() => {
+          this.newRun(false, true);
+        });
       }
     });
   }
@@ -275,12 +278,8 @@ export class BbCardComponent implements OnInit, OnChanges {
             });
         });
 
-    } else if (this.backtestQuotes.length) {
-      data = this.daytradeService.createNewChart();
-
-      _.forEach(this.backtestQuotes, (historicalData) => {
-        data = this.daytradeService.addChartData(data, historicalData);
-      });
+    } else if (this.backtestQuotes) {
+      data = this.backtestQuotes;
     }
 
     const dataFound: boolean = _.has(data, 'chart.result[0].timestamp');
