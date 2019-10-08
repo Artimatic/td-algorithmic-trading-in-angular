@@ -258,14 +258,6 @@ export class MlCardComponent implements OnInit {
           error => {
             reject(error);
           });
-
-        this.portfolioService.sendTdBuy(buyOrder.holding, buyOrder.quantity, buyOrder.price, true).subscribe(
-          response => {
-            resolve();
-          },
-          error => {
-            reject(error);
-          });
       });
   }
 
