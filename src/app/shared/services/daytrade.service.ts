@@ -147,15 +147,13 @@ export class DaytradeService {
   }
 
   sendBuy(buyOrder: SmartOrder, type: string, resolve, reject) {
-    this.authenticationService.getPortfolioAccount().subscribe(account => {
-      this.portfolioService.buy(buyOrder.holding, buyOrder.quantity, buyOrder.price, type).subscribe(
-        response => {
-          resolve(response);
-        },
-        error => {
-          reject(error);
-        });
-    });
+    this.portfolioService.buy(buyOrder.holding, buyOrder.quantity, buyOrder.price, type).subscribe(
+      response => {
+        resolve(response);
+      },
+      error => {
+        reject(error);
+      });
     return buyOrder;
   }
 
