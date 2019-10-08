@@ -10,6 +10,7 @@ import * as _ from 'lodash';
 import { IndicatorsService } from './indicators.service';
 import { CartService } from './cart.service';
 import { CardOptions } from '../models/card-options';
+import { GlobalSettingsService, Brokerage } from '../../settings/global-settings.service';
 
 @Injectable()
 export class DaytradeService {
@@ -18,7 +19,8 @@ export class DaytradeService {
     private authenticationService: AuthenticationService,
     private portfolioService: PortfolioService,
     private indicatorsService: IndicatorsService,
-    private cartService: CartService) { }
+    private cartService: CartService,
+    private globalSettingsService: GlobalSettingsService) { }
 
   getDefaultOrderSize(quantity) {
     return Math.ceil(quantity / 10);
@@ -158,6 +160,45 @@ export class DaytradeService {
   }
 
   sendSell(sellOrder: SmartOrder, type: string, resolve: Function, reject: Function, handleNotFound: Function): SmartOrder {
+    if (this.globalSettingsService.brokerage === Brokerage.Robinhood) {
+      return this.sendRhSell(sellOrder, type, resolve, reject, handleNotFound);
+    } else if (this.globalSettingsService.brokerage === Brokerage.Td) {
+      return this.sendTdSell(sellOrder, type, resolve, reject, handleNotFound);
+    }
+  }
+
+  sendTdSell(sellOrder: SmartOrder, type: string, resolve: Function, reject: Function, handleNotFound: Function): SmartOrder {
+    this.portfolioService.getTdPortfolio()
+      .subscribe(result => {
+        const foundPosition = result.find((pos) => {
+          return pos.instrument.symbol === sellOrder.holding.symbol;
+        });
+
+        if (foundPosition) {
+          const positionCount = Number(foundPosition.longQuantity);
+          if (positionCount === 0) {
+            handleNotFound();
+          } else {
+            sellOrder.quantity = sellOrder.quantity < positionCount ? sellOrder.quantity : positionCount;
+
+            const price = sellOrder.price;
+
+            this.portfolioService.sell(sellOrder.holding, sellOrder.quantity, price, type).subscribe(
+              response => {
+                resolve(response);
+              },
+              error => {
+                reject(error);
+              });
+          }
+        } else {
+          handleNotFound();
+        }
+      });
+    return sellOrder;
+  }
+
+  sendRhSell(sellOrder: SmartOrder, type: string, resolve: Function, reject: Function, handleNotFound: Function): SmartOrder {
     this.authenticationService.getPortfolioAccount().subscribe(account => {
       this.portfolioService.getPortfolio()
         .subscribe(result => {

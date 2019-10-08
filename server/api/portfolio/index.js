@@ -8,6 +8,7 @@ router.get('/positions', handler.positions);
 router.get('/intraday', handler.intraday);
 router.get('/quote', handler.quote);
 router.get('/daily-quote', handler.dailyQuote);
+router.get('/v2/positions', handler.tdPosition);
 router.post('/login', handler.login);
 router.post('/mfa', handler.mfaLogin);
 router.post('/logout', handler.logout);

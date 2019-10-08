@@ -26,6 +26,10 @@ export class PortfolioService {
       });
   }
 
+  getTdPortfolio(): Observable<any> {
+    return this.http.get('/api/portfolio/v2/positions/');
+  }
+
   getResource(url: string): Observable<any> {
     const body = { instrument: url };
     return this.http.post('/api/portfolio/resources', body)

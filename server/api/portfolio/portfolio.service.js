@@ -501,6 +501,44 @@ class PortfolioService {
 
     return request.post(options);
   }
+
+  getTdPositions() {
+    return this.renewTDAuth()
+      .then(() => {
+        return this.sendTdPositionRequest()
+          .then((pos) => {
+            return pos.securitiesAccount.positions
+          });
+      });
+  }
+
+  getTdBalance() {
+    return this.renewTDAuth()
+      .then(() => {
+        return this.sendTdPositionRequest()
+          .then((pos) => {
+            return pos.securitiesAccount.currentBalances.buyingPower;
+          });
+      });
+  }
+
+  sendTdPositionRequest() {
+    const query = `${tda}accounts/${tdAccountId}`;
+    const options = {
+      uri: query,
+      qs: {
+        fields: 'positions'
+      },
+      headers: {
+        Authorization: `Bearer ${this.access_token}`
+      }
+    };
+
+    return request.get(options)
+      .then((data) => {
+        return this.processTDData(data);
+      })
+  }
 }
 
 export default new PortfolioService();
