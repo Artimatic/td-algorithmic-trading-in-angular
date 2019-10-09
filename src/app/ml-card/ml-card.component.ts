@@ -247,9 +247,6 @@ export class MlCardComponent implements OnInit {
 
         const reject = (error) => {
           this.error = error._body;
-          if (error.status !== 400) {
-            this.stop();
-          }
         };
         this.portfolioService.extendedHoursBuy(buyOrder.holding, buyOrder.quantity, buyOrder.price).subscribe(
           response => {
@@ -258,6 +255,7 @@ export class MlCardComponent implements OnInit {
           error => {
             reject(error);
           });
+        this.stop();
       });
   }
 
