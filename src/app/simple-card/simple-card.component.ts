@@ -93,7 +93,6 @@ export class SimpleCardComponent implements OnInit, OnChanges {
   }
 
   goLive() {
-    console.log('pref: ', this.preferences.value, OrderPref.SellAtOpen, this.preferences.value === OrderPref.SellAtOpen);
     this.setup();
     this.alive = true;
     this.sub = TimerObservable.create(0, this.interval)
@@ -124,7 +123,7 @@ export class SimpleCardComponent implements OnInit, OnChanges {
       .then((quote) => {
         const lastPrice: number = quote;
         const buyOrder = this.daytradeService.createOrder(this.order.holding, 'Buy', this.firstFormGroup.value.quantity, lastPrice, moment().unix());
-        const log = `ORDER SENT ${buyOrder.side} ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
+        const log = `ORDER SENT Buy ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
 
         const resolve = () => {
           this.holdingCount += this.firstFormGroup.value.quantity;
@@ -149,7 +148,7 @@ export class SimpleCardComponent implements OnInit, OnChanges {
         const lastPrice: number = quote;
 
         const sellOrder = this.daytradeService.createOrder(this.order.holding, 'Buy', this.firstFormGroup.value.quantity, lastPrice, moment().unix());
-        const log = `ORDER SENT ${sellOrder.side} ${sellOrder.holding.symbol} ${sellOrder.quantity} ${sellOrder.price}`;
+        const log = `ORDER SENT Sell ${sellOrder.holding.symbol} ${sellOrder.quantity} ${sellOrder.price}`;
 
         const resolve = () => {
           this.holdingCount -= this.holdingCount >= this.firstFormGroup.value.quantity ? this.firstFormGroup.value.quantity : 0;

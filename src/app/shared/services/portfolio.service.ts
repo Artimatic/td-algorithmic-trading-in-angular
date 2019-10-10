@@ -27,7 +27,8 @@ export class PortfolioService {
   }
 
   getTdPortfolio(): Observable<any> {
-    return this.http.get('/api/portfolio/v2/positions/');
+    return this.http.get('/api/portfolio/v2/positions/')
+      .map((response: Response) => response.json());
   }
 
   getResource(url: string): Observable<any> {
