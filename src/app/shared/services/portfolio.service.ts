@@ -169,4 +169,9 @@ export class PortfolioService {
     };
     return this.http.post('/api/portfolio/v2/sell', body);
   }
+
+  getTdBalance(): Observable<any> {
+    return this.http.get('/api/portfolio/balance')
+      .map((response: Response) => response.json());
+  }
 }

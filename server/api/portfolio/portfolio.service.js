@@ -517,7 +517,7 @@ class PortfolioService {
       .then(() => {
         return this.sendTdPositionRequest()
           .then((pos) => {
-            return pos.securitiesAccount.currentBalances.buyingPower;
+            return pos.securitiesAccount.currentBalances;
           });
       });
   }

@@ -10,6 +10,7 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
 import { MatDialog, MatSnackBar } from '@angular/material';
 import { PortfolioService, DaytradeService, ReportingService, BacktestService } from '../shared';
 import { Holding } from '../shared/models';
+import { GlobalSettingsService, Brokerage } from '../settings/global-settings.service';
 
 interface Bet {
   total: number;
@@ -50,6 +51,7 @@ export class MlCardComponent implements OnInit {
   firstFormGroup: FormGroup;
   secondFormGroup: FormGroup;
   longOnly = new FormControl();
+  allIn = new FormControl();
 
   startTime: moment.Moment;
   stopTime: moment.Moment;
@@ -63,6 +65,7 @@ export class MlCardComponent implements OnInit {
     private daytradeService: DaytradeService,
     private reportingService: ReportingService,
     private backtestService: BacktestService,
+    public globalSettingsService: GlobalSettingsService,
     public snackBar: MatSnackBar,
     public dialog: MatDialog) { }
 
@@ -82,6 +85,7 @@ export class MlCardComponent implements OnInit {
     this.live = false;
     this.alive = true;
     this.longOnly.setValue(false);
+    this.allIn.setValue(false);
 
     this.firstFormGroup = this._formBuilder.group({
       amount: [500, Validators.required]
@@ -235,28 +239,50 @@ export class MlCardComponent implements OnInit {
           bid = quote.price;
         }
 
-        const quantity = _.round(modifier * this.calculateQuantity(this.firstFormGroup.value.amount, bid));
-        const buyOrder = this.daytradeService.createOrder(order.holding, 'Buy', quantity, bid, moment().unix());
-        const log = `ORDER SENT ${buyOrder.side} ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
+        if (this.globalSettingsService.brokerage === Brokerage.Td) {
+          this.portfolioService.getTdBalance()
+          .subscribe(balance => {
+            const totalBalance = _.add(balance.cashBalance, balance.moneyMarketFund);
+            let totalBuyAmount = this.firstFormGroup.value.amount;
 
-        const resolve = () => {
-          this.holdingCount += quantity;
-          console.log(`${moment().format('hh:mm')} ${log}`);
-          this.reportingService.addAuditLog(order.holding.symbol, log);
-        };
+            if (this.allIn || this.firstFormGroup.value.amount > totalBalance) {
+              totalBuyAmount = totalBalance;
+            }
 
-        const reject = (error) => {
-          this.error = error._body;
-        };
-        this.portfolioService.extendedHoursBuy(buyOrder.holding, buyOrder.quantity, buyOrder.price).subscribe(
-          response => {
-            resolve();
-          },
-          error => {
-            reject(error);
+            this.initiateBuy(modifier, totalBuyAmount, bid, order);
           });
-        this.stop();
+        } else if (this.globalSettingsService.brokerage === Brokerage.Robinhood) {
+          this.initiateBuy(modifier, this.firstFormGroup.value.amount, bid, order);
+        }
       });
+  }
+
+  initiateBuy(modifier: number, totalBuyAmount: number, bid: number, order: SmartOrder) {
+    const quantity = _.round(modifier * this.calculateQuantity(totalBuyAmount, bid));
+    const buyOrder = this.daytradeService.createOrder(order.holding, 'Buy', quantity, bid, moment().unix());
+    const log = `ORDER SENT ${buyOrder.side} ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
+
+    const resolve = () => {
+      this.holdingCount += quantity;
+      console.log(`${moment().format('hh:mm')} ${log}`);
+      this.reportingService.addAuditLog(order.holding.symbol, log);
+    };
+
+    const reject = (error) => {
+      this.error = error._body;
+    };
+    this.portfolioService.extendedHoursBuy(buyOrder.holding, buyOrder.quantity, buyOrder.price).subscribe(
+      response => {
+        resolve();
+      },
+      error => {
+        reject(error);
+      });
+    this.stop();
+  }
+
+  test() {
+    this.portfolioService.getTdBalance().toPromise().then(data => { console.log(data); });
   }
 
   calculateQuantity(betSize: number, price: number) {

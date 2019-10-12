@@ -17,7 +17,7 @@
         <h5>Machine Learning Algo</h5>
         <p>Request to RNN model to determine whether to tomorrow will open down or up.</p>
         <mat-form-field>
-          <input matInput placeholder="Amount (rounded up)" type="number" formControlName="amount" required>
+          <input matInput placeholder="Amount (rounded up)" type="number" formControlName="amount" [readOnly]="allIn" required>
           <span matPrefix>$&nbsp;</span>
           <span matSuffix>.00</span>
         </mat-form-field>
@@ -29,7 +29,7 @@
               </mat-slide-toggle>
             </mat-grid-tile>
             <mat-grid-tile [colspan]="1" [rowspan]="1">
-              <mat-slide-toggle [formControl]="allIn">
+              <mat-slide-toggle [formControl]="allIn" [disabled]="globalSettingsService.brokerage === 'Robinhood'">
                 <a matTooltip="Buy with all available balance">
                     All In
                 </a>

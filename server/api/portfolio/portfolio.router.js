@@ -59,3 +59,7 @@ export const tdSell = (request, response) => {
 export const tdPosition = (request, response) => {
   PortfolioController.tdPosition(request, response);
 }
+
+export const tdBalance = (request, response) => {
+  PortfolioController.tdBalance(request, response);
+}
