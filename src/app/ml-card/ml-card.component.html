@@ -13,10 +13,10 @@
     <mat-step [stepControl]="firstFormGroup">
       <form [formGroup]="firstFormGroup">
         <ng-template matStepLabel>Edit Order</ng-template>
-        <mat-chip color="primary" selected>{{bullishPlay}}</mat-chip>
-        <mat-chip color="warn" selected>{{bearishPlay}}</mat-chip>
+        <mat-chip color="primary" selected>{{ bullishPlay.value }}</mat-chip>
+        <mat-chip color="warn" selected>{{ bearishPlay.value }}</mat-chip>
         <h5>Machine Learning Algo</h5>
-        <p>Use RNN model to RNN model to determine whether to tomorrow will open down or up.</p>
+        <p>Use RNN model to determine whether to SPY will open up or down tomorrow.</p>
         <mat-form-field>
           <input matInput placeholder="Amount (rounded up)" type="number" formControlName="amount" [readOnly]="allIn"
             required>
@@ -85,9 +85,6 @@
           <div fxFlex="5%">
             <mat-card-header>
               <mat-card-title>RNN Algo</mat-card-title>
-              <mat-card-subtitle>
-                <p>Use RNN model to determine whether to tomorrow will open down or up.</p>
-              </mat-card-subtitle>
             </mat-card-header>
           </div>
           <div fxFlex="95%">
