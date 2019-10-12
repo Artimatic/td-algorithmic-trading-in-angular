@@ -41,6 +41,9 @@ export class MlCardComponent implements OnInit {
 
   pendingResults: boolean;
 
+  bullishPlay: FormControl;
+  bearishPlay: FormControl;
+
   error: string;
   warning: string;
 
@@ -94,6 +97,14 @@ export class MlCardComponent implements OnInit {
     this.secondFormGroup = this._formBuilder.group({
       secondCtrl: ['', Validators.required]
     });
+
+    this.bullishPlay = new FormControl('UPRO', [
+      Validators.required
+    ]);
+
+    this.bearishPlay = new FormControl('SPXU', [
+      Validators.required
+    ]);
 
     this.setup();
   }
@@ -173,7 +184,7 @@ export class MlCardComponent implements OnInit {
   placeBet(bet: Bet) {
     switch (bet.summary) {
       case Sentiment.Bullish:
-        this.portfolioService.getInstruments('UPRO').subscribe((response) => {
+        this.portfolioService.getInstruments(this.bullishPlay.value).subscribe((response) => {
           const instruments = response.results[0];
           const newHolding: Holding = {
             instrument: instruments.url,
@@ -192,14 +203,14 @@ export class MlCardComponent implements OnInit {
           this.buy(order, _.divide(bet.bullishOpen, bet.total));
         },
           (error) => {
-            this.snackBar.open('Error getting instruments for UPRO', 'Dismiss', {
+            this.snackBar.open(`Error getting instruments for ${this.bullishPlay}`, 'Dismiss', {
               duration: 2000,
             });
           });
         break;
       case Sentiment.Bearish:
         if (!this.longOnly.value) {
-          this.portfolioService.getInstruments('SPXU').subscribe((response) => {
+          this.portfolioService.getInstruments(this.bearishPlay.value).subscribe((response) => {
             const instruments = response.results[0];
             const newHolding: Holding = {
               instrument: instruments.url,
@@ -218,7 +229,7 @@ export class MlCardComponent implements OnInit {
             this.buy(order, _.divide(bet.bearishOpen, bet.total));
           },
             (error) => {
-              this.snackBar.open('Error getting instruments for SPXU', 'Dismiss', {
+              this.snackBar.open(`Error getting instruments for ${this.bearishPlay}`, 'Dismiss', {
                 duration: 2000,
               });
             });
@@ -241,16 +252,16 @@ export class MlCardComponent implements OnInit {
 
         if (this.globalSettingsService.brokerage === Brokerage.Td) {
           this.portfolioService.getTdBalance()
-          .subscribe(balance => {
-            const totalBalance = _.add(balance.cashBalance, balance.moneyMarketFund);
-            let totalBuyAmount = this.firstFormGroup.value.amount;
+            .subscribe(balance => {
+              const totalBalance = _.add(balance.cashBalance, balance.moneyMarketFund);
+              let totalBuyAmount = this.firstFormGroup.value.amount;
 
-            if (this.allIn || this.firstFormGroup.value.amount > totalBalance) {
-              totalBuyAmount = totalBalance;
-            }
+              if (this.allIn || this.firstFormGroup.value.amount > totalBalance) {
+                totalBuyAmount = totalBalance;
+              }
 
-            this.initiateBuy(modifier, totalBuyAmount, bid, order);
-          });
+              this.initiateBuy(modifier, totalBuyAmount, bid, order);
+            });
         } else if (this.globalSettingsService.brokerage === Brokerage.Robinhood) {
           this.initiateBuy(modifier, this.firstFormGroup.value.amount, bid, order);
         }

@@ -13,16 +13,40 @@
     <mat-step [stepControl]="firstFormGroup">
       <form [formGroup]="firstFormGroup">
         <ng-template matStepLabel>Edit Order</ng-template>
-        <!-- <mat-chip>{{bearishOrder.holding.symbol}} - {{bullishOrder.holding.symbol}}</mat-chip> -->
+        <mat-chip color="primary" selected>{{bullishPlay}}</mat-chip>
+        <mat-chip color="warn" selected>{{bearishPlay}}</mat-chip>
         <h5>Machine Learning Algo</h5>
-        <p>Request to RNN model to determine whether to tomorrow will open down or up.</p>
+        <p>Use RNN model to RNN model to determine whether to tomorrow will open down or up.</p>
         <mat-form-field>
-          <input matInput placeholder="Amount (rounded up)" type="number" formControlName="amount" [readOnly]="allIn" required>
+          <input matInput placeholder="Amount (rounded up)" type="number" formControlName="amount" [readOnly]="allIn"
+            required>
           <span matPrefix>$&nbsp;</span>
           <span matSuffix>.00</span>
         </mat-form-field>
         <section>
-          <mat-grid-list cols="10" rowHeight="100px">
+          <mat-grid-list cols="5" rowHeight="100px">
+            <mat-grid-tile [colspan]="1" [rowspan]="1">
+              <mat-form-field>
+                <mat-label>Bull</mat-label>
+                <mat-select [formControl]="bullishPlay">
+                  <mat-option value="UPRO">UPRO</mat-option>
+                  <mat-option value="SPY">SPY</mat-option>
+                  <mat-option value="QQQ">QQQ</mat-option>
+                  <mat-option value="TQQQ">TQQQ</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </mat-grid-tile>
+            <mat-grid-tile [colspan]="1" [rowspan]="1">
+              <mat-form-field>
+                <mat-label>Bear</mat-label>
+                <mat-select [formControl]="bearishPlay">
+                  <mat-option value="SPXU">SPXU</mat-option>
+                  <mat-option value="SH">SH</mat-option>
+                  <mat-option value="TLT">TLT</mat-option>
+                  <mat-option value="SHY">SHY</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </mat-grid-tile>
             <mat-grid-tile [colspan]="1" [rowspan]="1">
               <mat-slide-toggle [formControl]="longOnly">
                 Long only
@@ -31,7 +55,7 @@
             <mat-grid-tile [colspan]="1" [rowspan]="1">
               <mat-slide-toggle [formControl]="allIn" [disabled]="globalSettingsService.brokerage === 'Robinhood'">
                 <a matTooltip="Buy with all available balance">
-                    All In
+                  All In
                 </a>
               </mat-slide-toggle>
             </mat-grid-tile>
@@ -62,7 +86,7 @@
             <mat-card-header>
               <mat-card-title>RNN Algo</mat-card-title>
               <mat-card-subtitle>
-                <p>Request to RNN model to determine whether to tomorrow will open down or up.</p>
+                <p>Use RNN model to determine whether to tomorrow will open down or up.</p>
               </mat-card-subtitle>
             </mat-card-header>
           </div>
