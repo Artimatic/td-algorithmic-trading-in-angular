@@ -215,7 +215,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.sub = TimerObservable.create(0, this.interval)
       .takeWhile(() => this.alive)
       .subscribe(() => {
-        this.live = true;
+        this.setLive();
         this.play(true, this.backtestLive);
       });
   }
@@ -223,7 +223,7 @@ export class BbCardComponent implements OnInit, OnChanges {
   initRun() {
     this.setup();
     this.alive = true;
-    this.live = true;
+    this.setLive();
   }
 
   step() {
@@ -1082,5 +1082,10 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.order.stopped = true;
     this.alive = false;
     this.cartService.deleteOrder(this.order);
+  }
+
+  setLive() {
+    this.live = true;
+    this.stepper.next();
   }
 }
