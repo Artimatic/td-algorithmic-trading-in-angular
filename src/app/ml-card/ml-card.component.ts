@@ -167,8 +167,8 @@ export class MlCardComponent implements OnInit {
       bet.total++;
     });
 
-    const bullishRatio = _.round(_.divide(bet.bullishOpen, bet.total), 2);
-    const bearishRatio = _.round(_.divide(bet.bearishOpen, bet.total), 2);
+    const bullishRatio = _.floor(_.divide(bet.bullishOpen, bet.total), 2);
+    const bearishRatio = _.floor(_.divide(bet.bearishOpen, bet.total), 2);
 
     if (bullishRatio > 0.6 || bearishRatio > 0.6) {
       if (bullishRatio > bearishRatio) {
@@ -269,7 +269,7 @@ export class MlCardComponent implements OnInit {
   }
 
   initiateBuy(modifier: number, totalBuyAmount: number, bid: number, order: SmartOrder) {
-    const quantity = _.round(modifier * this.calculateQuantity(totalBuyAmount, bid));
+    const quantity = _.floor(modifier * this.calculateQuantity(totalBuyAmount, bid));
     const buyOrder = this.daytradeService.createOrder(order.holding, 'Buy', quantity, bid, moment().unix());
     const log = `ORDER SENT ${buyOrder.side} ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
 
@@ -297,7 +297,7 @@ export class MlCardComponent implements OnInit {
   }
 
   calculateQuantity(betSize: number, price: number) {
-    return Math.ceil(_.divide(betSize, price));
+    return _.floor(_.divide(betSize, price));
   }
 
   openDialog(): void {
