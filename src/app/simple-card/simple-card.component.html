@@ -22,6 +22,19 @@
         <ng-template matStepLabel>Edit Order</ng-template>
         <mat-chip>{{order.holding.symbol}}</mat-chip>
         <p>{{order.holding.name}}</p>
+        <mat-form-field>
+          <mat-label>Bull</mat-label>
+          <mat-select formControlName="selectedOrder" (selectionChange)=selectStock($event)>
+            <mat-option value="UPRO">UPRO</mat-option>
+            <mat-option value="SPY">SPY</mat-option>
+            <mat-option value="QQQ">QQQ</mat-option>
+            <mat-option value="TQQQ">TQQQ</mat-option>
+            <mat-option value="SPXU">SPXU</mat-option>
+            <mat-option value="SH">SH</mat-option>
+            <mat-option value="TLT">TLT</mat-option>
+            <mat-option value="SHY">SHY</mat-option>
+          </mat-select>
+        </mat-form-field>
         <mat-form-field hintLabel="Quantity">
           <input matInput type="number" placeholder="Quantity" formControlName="quantity" required>
         </mat-form-field>

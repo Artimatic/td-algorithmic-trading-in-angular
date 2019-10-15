@@ -4,13 +4,14 @@ import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import { SmartOrder } from '../shared/models/smart-order';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { CartService } from '../shared/services/cart.service';
-import { MatDialog } from '@angular/material';
+import { MatDialog, MatSnackBar } from '@angular/material';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import * as moment from 'moment-timezone';
 import { DaytradeService, PortfolioService, ReportingService } from '../shared';
 import { OrderPref } from '../shared/enums/order-pref.enum';
 
 import * as _ from 'lodash';
+import { Holding } from '../shared/models';
 
 @Component({
   selector: 'app-simple-card',
@@ -20,6 +21,8 @@ import * as _ from 'lodash';
 export class SimpleCardComponent implements OnInit, OnChanges {
   @ViewChild('stepper') stepper;
   @Input() order: SmartOrder;
+
+  selectedOrder: FormControl;
 
   sub: Subscription;
 
@@ -52,6 +55,7 @@ export class SimpleCardComponent implements OnInit, OnChanges {
     private reportingService: ReportingService,
     public cartService: CartService,
     private portfolioService: PortfolioService,
+    public snackBar: MatSnackBar,
     public dialog: MatDialog) { }
 
   ngOnInit() {
@@ -72,7 +76,8 @@ export class SimpleCardComponent implements OnInit, OnChanges {
     this.alive = true;
 
     this.firstFormGroup = this._formBuilder.group({
-      quantity: [_.get(this.order, 'quantity', 10), Validators.required]
+      quantity: [_.get(this.order, 'quantity', 10), Validators.required],
+      selectedOrder: [this.order.holding.symbol]
     });
 
     this.secondFormGroup = this._formBuilder.group({
@@ -81,6 +86,7 @@ export class SimpleCardComponent implements OnInit, OnChanges {
 
     this.preferences = new FormControl();
     this.preferences.setValue(OrderPref.SellAtOpen);
+
     this.setup();
   }
 
@@ -215,5 +221,31 @@ export class SimpleCardComponent implements OnInit, OnChanges {
   setup() {
     this.holdingCount = 0;
     this.warning = '';
+  }
+
+  selectStock(event) {
+    this.portfolioService.getInstruments(event.value).subscribe((response) => {
+      const instruments = response.results[0];
+      const newHolding: Holding = {
+        instrument: instruments.url,
+        symbol: instruments.symbol,
+        name: instruments.name
+      };
+
+      const order: SmartOrder = {
+        holding: newHolding,
+        quantity: 0,
+        price: 0,
+        submitted: false,
+        pending: false,
+        side: 'DayTrade',
+      };
+      this.order = order;
+    },
+      (error) => {
+        this.snackBar.open(`Error getting instruments for ${event.value}`, 'Dismiss', {
+          duration: 2000,
+        });
+      });
   }
 }
