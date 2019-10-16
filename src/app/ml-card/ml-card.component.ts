@@ -256,7 +256,7 @@ export class MlCardComponent implements OnInit {
               const totalBalance = _.add(balance.cashBalance, balance.moneyMarketFund);
               let totalBuyAmount = this.firstFormGroup.value.amount;
 
-              if (this.allIn || this.firstFormGroup.value.amount > totalBalance) {
+              if (this.allIn.value === true || totalBuyAmount > totalBalance) {
                 totalBuyAmount = totalBalance;
               }
 
@@ -298,7 +298,7 @@ export class MlCardComponent implements OnInit {
 
   calculateQuantity(betSize: number, price: number) {
     return _.floor(_.divide(betSize, price));
-  }
+ }
 
   openDialog(): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {

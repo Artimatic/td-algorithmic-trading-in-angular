@@ -25,7 +25,7 @@ export class AlgoService {
 
     if (momentumDiff > rocDiffRange[1]) {
       if (price >= mid) {
-        if (mfi > 55 && mfi < 80) {
+        if (mfi < 15) {
           return true;
         }
       }
