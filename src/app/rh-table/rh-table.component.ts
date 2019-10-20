@@ -10,7 +10,7 @@ import { BacktestService, Stock, AlgoParam, PortfolioService } from '../shared';
 import { OrderDialogComponent } from '../order-dialog/order-dialog.component';
 import { Holding } from '../shared/models';
 import { FormControl } from '@angular/forms';
-import stocks from './backtest-stocks.constant';
+import Stocks from './backtest-stocks.constant';
 export interface Algo {
   value: string;
   viewValue: string;
@@ -327,12 +327,12 @@ export class RhTableComponent implements OnInit, OnChanges {
     const currentSelected = this.selectedAlgo;
 
     this.selectedAlgo = 'v2'
-    this.getData(stocks);
+    this.getData(Stocks);
 
     this.selectedAlgo = 'v5'
-    this.getData(stocks);
+    this.getData(Stocks);
 
-    this.progress = stocks.length * 2;
+    this.progress = Stocks.length * 2;
     this.selectedAlgo = currentSelected;
   }
 }

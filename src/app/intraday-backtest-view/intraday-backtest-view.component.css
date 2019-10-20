@@ -1,3 +1,7 @@
 .card-container {
     min-height: 800px;
 }
+
+.backtest-progress {
+  margin-bottom:10px;
+}

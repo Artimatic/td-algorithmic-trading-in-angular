@@ -5,9 +5,10 @@ import { ScoreKeeperService, BacktestService, PortfolioService } from '../shared
 import { Holding } from '../shared/models';
 
 import * as _ from 'lodash';
-import { OrderRow } from '../shared/models/order-row';
 import { MatSnackBar } from '@angular/material';
 import { TodoService } from '../overview/todo-list/todo.service';
+import IntradayStocks from './intraday-backtest-stocks.constant';
+import { OrderRow } from '../shared/models/order-row';
 
 @Component({
   selector: 'app-intraday-backtest-view',
@@ -17,6 +18,8 @@ import { TodoService } from '../overview/todo-list/todo.service';
 export class IntradayBacktestViewComponent implements OnInit {
 
   backtestData: any;
+  progressPct = 0;
+  progress = 0;
 
   constructor(
     private portfolioService: PortfolioService,
@@ -25,52 +28,63 @@ export class IntradayBacktestViewComponent implements OnInit {
     private backtestService: BacktestService,
     public snackBar: MatSnackBar,
     private todoService: TodoService
-    ) { }
+  ) { }
 
   ngOnInit() {
     this.backtestData = {};
     this.todoService.setIntradayBacktest();
   }
 
-  import(file) {
-    file.forEach((row: OrderRow) => {
-      this.portfolioService.getInstruments(row.symbol).subscribe((response) => {
-        const instruments = response.results[0];
-        const newHolding: Holding = {
-          instrument: instruments.url,
-          symbol: instruments.symbol,
-          name: instruments.name
-        };
+  getInstrument(symbol: string) {
+    return this.portfolioService.getInstruments(symbol).toPromise();
+  }
 
-        const order: SmartOrder = {
-          holding: newHolding,
-          quantity: row.quantity * 1,
-          price: row.price,
-          submitted: false,
-          pending: false,
-          side: row.side,
-          lossThreshold: row.Stop * 1 || null,
-          trailingStop: row.TrailingStop || null,
-          profitTarget: row.Target * 1 || null,
-          useStopLoss: row.StopLoss || null,
-          useTrailingStopLoss: row.TrailingStopLoss || null,
-          useTakeProfit: row.TakeProfit || null,
-          meanReversion1: row.MeanReversion1 || null,
-          useMfi: row.Mfi || null,
-          spyMomentum: row.SpyMomentum || null,
-          buyCloseSellOpen: row.BuyCloseSellOpen || null,
-          yahooData: row.YahooData || null,
-          sellAtClose: row.SellAtClose || null,
-          orderSize: row.OrderSize * 1 || null,
-        };
-        this.cartService.addToCart(order);
-      },
-      (error) => {
+  async import(file) {
+    let row: OrderRow;
+    for (row of file) {
+      try {
+        const instrument = await this.getInstrument(row.symbol);
+
+        setTimeout(() => {
+          const instruments = instrument.results[0];
+          const newHolding: Holding = {
+            instrument: instruments.url,
+            symbol: instruments.symbol,
+            name: instruments.name
+          };
+
+          const order: SmartOrder = {
+            holding: newHolding,
+            quantity: row.quantity * 1,
+            price: row.price,
+            submitted: false,
+            pending: false,
+            side: row.side,
+            lossThreshold: row.Stop * 1 || null,
+            trailingStop: row.TrailingStop || null,
+            profitTarget: row.Target * 1 || null,
+            useStopLoss: row.StopLoss || null,
+            useTrailingStopLoss: row.TrailingStopLoss || null,
+            useTakeProfit: row.TakeProfit || null,
+            meanReversion1: row.MeanReversion1 || null,
+            useMfi: row.Mfi || null,
+            spyMomentum: row.SpyMomentum || null,
+            buyCloseSellOpen: row.BuyCloseSellOpen || null,
+            yahooData: row.YahooData || null,
+            sellAtClose: row.SellAtClose || null,
+            orderSize: row.OrderSize * 1 || null,
+          };
+          this.cartService.addToCart(order);
+          this.progress++;
+          this.progressPct = _.ceil((this.progress / file.length) * 100);
+          console.log('load ', this.progress, file.length, this.progressPct);
+        }, 5000);
+      } catch (err) {
         this.snackBar.open('Error getting instruments', 'Dismiss', {
           duration: 2000,
         });
-      });
-    });
+      }
+    }
   }
 
   confirmBacktest(): void {
@@ -94,5 +108,9 @@ export class IntradayBacktestViewComponent implements OnInit {
       .then((result) => {
         return result;
       });
+  }
+
+  loadDefaults() {
+    this.import(IntradayStocks);
   }
 }

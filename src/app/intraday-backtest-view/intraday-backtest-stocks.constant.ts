@@ -1,14 +1,24 @@
-import { AlgoParam } from '../shared';
-import * as moment from 'moment';
+import { OrderRow } from '../shared/models/order-row';
 
-const start = moment().format('YYYY-MM-DD');
-const end = moment().subtract(700, 'days').format('YYYY-MM-DD');
-
-function createParam(ticker: string): AlgoParam {
+function createRow(ticker: string): OrderRow {
   return {
-    ticker,
-    start,
-    end
+    symbol: ticker,
+    price: 10,
+    quantity: 100,
+    side: 'DayTrade',
+    Stop: 0.003,
+    TrailingStop: 0.001,
+    Target: 0.007,
+    StopLoss: true,
+    TrailingStopLoss: true,
+    TakeProfit: true,
+    MeanReversion1: true,
+    Mfi: true,
+    SpyMomentum: true,
+    BuyCloseSellOpen: false,
+    YahooData: false,
+    SellAtClose: true,
+    OrderSize: 10
   };
 }
 
@@ -475,10 +485,10 @@ const stockList = [
   'PINS'
 ];
 
-const Stocks: AlgoParam[] = [];
+const IntradayStocks: OrderRow[] = [];
 
 for (const s of stockList) {
-  Stocks.push(createParam(s));
+  IntradayStocks.push(createRow(s));
 }
 
-export default Stocks;
+export default IntradayStocks;
