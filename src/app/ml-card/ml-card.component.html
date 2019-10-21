@@ -15,17 +15,19 @@
         <ng-template matStepLabel>Edit Order</ng-template>
         <mat-chip color="primary" selected>{{ bullishPlay.value }}</mat-chip>
         <mat-chip color="warn" selected>{{ bearishPlay.value }}</mat-chip>
-        <h5>Machine Learning Algo</h5>
+        <h2>Machine Learning Algo</h2>
         <p>Use RNN model to determine whether to SPY will open up or down tomorrow.</p>
-        <mat-form-field>
-          <input matInput placeholder="Amount (rounded up)" type="number" formControlName="amount" [readOnly]="allIn"
-            required>
-          <span matPrefix>$&nbsp;</span>
-          <span matSuffix>.00</span>
-        </mat-form-field>
+        <h3>Current Brokerage: {{globalSettingsService.brokerage}}</h3>
         <section>
-          <mat-grid-list cols="5" rowHeight="100px">
-            <mat-grid-tile [colspan]="1" [rowspan]="1">
+          <mat-grid-list cols="6" rowHeight="25px">
+            <mat-grid-tile [colspan]="2" [rowspan]="1">
+              <mat-form-field>
+                <input matInput placeholder="Amount (rounded up)" type="number" formControlName="amount" required>
+                <span matPrefix>$&nbsp;</span>
+                <span matSuffix>.00</span>
+              </mat-form-field>
+            </mat-grid-tile>
+            <mat-grid-tile [colspan]="2" [rowspan]="1">
               <mat-form-field>
                 <mat-label>Bull</mat-label>
                 <mat-select [formControl]="bullishPlay">
@@ -36,7 +38,7 @@
                 </mat-select>
               </mat-form-field>
             </mat-grid-tile>
-            <mat-grid-tile [colspan]="1" [rowspan]="1">
+            <mat-grid-tile [colspan]="2" [rowspan]="1">
               <mat-form-field>
                 <mat-label>Bear</mat-label>
                 <mat-select [formControl]="bearishPlay">
@@ -48,13 +50,18 @@
                 </mat-select>
               </mat-form-field>
             </mat-grid-tile>
-            <mat-grid-tile [colspan]="1" [rowspan]="1">
+            <mat-grid-tile [colspan]="2" [rowspan]="2">
+              <mat-slide-toggle [formControl]="testing" (change)="setTest()">
+                Test Mode
+              </mat-slide-toggle>
+            </mat-grid-tile>
+            <mat-grid-tile [colspan]="2" [rowspan]="2">
               <mat-slide-toggle [formControl]="longOnly">
                 Long only
               </mat-slide-toggle>
             </mat-grid-tile>
-            <mat-grid-tile [colspan]="1" [rowspan]="1">
-              <mat-slide-toggle [formControl]="allIn" [disabled]="globalSettingsService.brokerage === 'Robinhood'">
+            <mat-grid-tile [colspan]="2" [rowspan]="2">
+              <mat-slide-toggle [formControl]="allIn" [disabled]="globalSettingsService.brokerage==='Robinhood'" (change)="activateAllIn()">
                 <a matTooltip="Buy with all available balance">
                   All In
                 </a>

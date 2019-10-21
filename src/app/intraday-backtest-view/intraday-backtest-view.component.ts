@@ -77,7 +77,6 @@ export class IntradayBacktestViewComponent implements OnInit {
           this.cartService.addToCart(order);
           this.progress++;
           this.progressPct = _.ceil((this.progress / file.length) * 100);
-          console.log('load ', this.progress, file.length, this.progressPct);
         }, 5000);
       } catch (err) {
         this.snackBar.open('Error getting instruments', 'Dismiss', {

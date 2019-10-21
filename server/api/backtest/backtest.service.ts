@@ -860,7 +860,7 @@ class BacktestService {
           body: {
             symbol: 'SPY',
             input: trainingData[trainingData.length - 1].input,
-            round: true,
+            round: false,
             to: today
           },
           json: true

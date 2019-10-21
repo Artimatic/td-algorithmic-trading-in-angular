@@ -99,7 +99,6 @@ export class BbCardComponent implements OnInit, OnChanges {
     OrderPref.MeanReversion1,
     OrderPref.Mfi,
     OrderPref.SpyMomentum,
-    OrderPref.BuyCloseSellOpen,
     OrderPref.SellAtClose];
     Highcharts.setOptions({
       global: {
@@ -1065,10 +1064,6 @@ export class BbCardComponent implements OnInit, OnChanges {
 
     if (this.order.spyMomentum) {
       pref.push(OrderPref.SpyMomentum);
-    }
-
-    if (this.order.buyCloseSellOpen) {
-      pref.push(OrderPref.BuyCloseSellOpen);
     }
 
     if (this.order.sellAtClose) {

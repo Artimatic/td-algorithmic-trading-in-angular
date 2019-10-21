@@ -61,7 +61,7 @@ export class MlCardComponent implements OnInit {
 
   tiles;
 
-  testing = false;
+  testing = new FormControl();
 
   constructor(private _formBuilder: FormBuilder,
     private portfolioService: PortfolioService,
@@ -77,18 +77,15 @@ export class MlCardComponent implements OnInit {
     this.stopTime = moment.tz('6:00pm', 'h:mma', 'America/New_York');
 
     this.holdingCount = 0;
-    if (this.testing) {
-      this.interval = 1000;
-      this.reportWaitInterval = 50000;
-    } else {
-      this.interval = 600000;
-      this.reportWaitInterval = 180000;
-    }
+
+    this.interval = 600000;
+    this.reportWaitInterval = 180000;
 
     this.live = false;
     this.alive = true;
     this.longOnly.setValue(false);
     this.allIn.setValue(false);
+    this.testing.setValue(false);
 
     this.firstFormGroup = this._formBuilder.group({
       amount: [500, Validators.required]
@@ -113,7 +110,17 @@ export class MlCardComponent implements OnInit {
     this.backtestService.runRnn('SPY', moment().subtract({ day: 1 }).format('YYYY-MM-DD'), '1990-01-01').subscribe();
   }
 
+  getTradeDay() {
+    if (moment().day() === 6) {
+      return moment().subtract({ day: 1 }).format('YYYY-MM-DD');
+    } else if (moment().day() === 0) {
+      return moment().subtract({ day: 2 }).format('YYYY-MM-DD');
+    }
+    return moment().format('YYYY-MM-DD');
+  }
+
   goLive() {
+    const currentTradeDay = this.getTradeDay();
     this.setup();
     this.alive = true;
     this.sub = TimerObservable.create(0, this.interval)
@@ -122,15 +129,15 @@ export class MlCardComponent implements OnInit {
         this.live = true;
         const momentInst = moment();
         if (momentInst.isAfter(this.startTime) &&
-          momentInst.isBefore(this.stopTime) || this.testing) {
+          momentInst.isBefore(this.stopTime) || this.testing.value) {
           this.alive = false;
-          this.backtestService.activateRnn('SPY', moment().format('YYYY-MM-DD'))
+          this.backtestService.activateRnn('SPY', currentTradeDay)
             .subscribe(() => {
               this.pendingResults = true;
               this.checkReportSub = TimerObservable.create(0, this.reportWaitInterval)
                 .takeWhile(() => this.pendingResults)
                 .subscribe(() => {
-                  this.backtestService.getRnn('SPY', moment().format('YYYY-MM-DD'))
+                  this.backtestService.getRnn('SPY', currentTradeDay)
                     .subscribe((data: any) => {
                       console.log('rnn data: ', data);
                       if (data) {
@@ -159,9 +166,9 @@ export class MlCardComponent implements OnInit {
     };
 
     _.forEach(predictions, (prediction) => {
-      if (prediction.nextOutput) {
+      if (prediction.nextOutput > 0.6) {
         bet.bullishOpen++;
-      } else {
+      } else if (prediction.nextOutput < 0.4) {
         bet.bearishOpen++;
       }
       bet.total++;
@@ -173,10 +180,14 @@ export class MlCardComponent implements OnInit {
     if (bullishRatio > 0.6 || bearishRatio > 0.6) {
       if (bullishRatio > bearishRatio) {
         bet.summary = Sentiment.Bullish;
-      } else {
+      } else if (bearishRatio > bullishRatio) {
         bet.summary = Sentiment.Bearish;
+      } else {
+        bet.summary = Sentiment.Neutral;
       }
     }
+
+    this.reportingService.addAuditLog(null, bet);
 
     return bet;
   }
@@ -234,6 +245,12 @@ export class MlCardComponent implements OnInit {
               });
             });
         }
+        break;
+      default:
+        const log = 'Neutral position. No orders made.';
+        this.reportingService.addAuditLog(null, log);
+        this.setWarning(log);
+        this.snackBar.open(log, 'Dismiss');
         break;
     }
   }
@@ -298,7 +315,7 @@ export class MlCardComponent implements OnInit {
 
   calculateQuantity(betSize: number, price: number) {
     return _.floor(_.divide(betSize, price));
- }
+  }
 
   openDialog(): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
@@ -334,5 +351,20 @@ export class MlCardComponent implements OnInit {
   setup() {
     this.holdingCount = 0;
     this.warning = '';
+  }
+
+  setTest() {
+    if (this.testing.value) {
+      this.interval = 1000;
+      this.reportWaitInterval = 50000;
+    }
+  }
+
+  activateAllIn() {
+    if (this.allIn.value === true) {
+      this.firstFormGroup.disable();
+    } else {
+      this.firstFormGroup.enable();
+    }
   }
 }
