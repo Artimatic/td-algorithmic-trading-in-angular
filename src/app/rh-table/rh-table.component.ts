@@ -326,10 +326,10 @@ export class RhTableComponent implements OnInit, OnChanges {
   runDefaultBacktest() {
     const currentSelected = this.selectedAlgo;
 
-    this.selectedAlgo = 'v2'
+    this.selectedAlgo = 'v2';
     this.getData(Stocks);
 
-    this.selectedAlgo = 'v5'
+    this.selectedAlgo = 'v5';
     this.getData(Stocks);
 
     this.progress = Stocks.length * 2;
