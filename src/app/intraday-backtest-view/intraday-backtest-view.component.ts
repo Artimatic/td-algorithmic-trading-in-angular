@@ -77,7 +77,7 @@ export class IntradayBacktestViewComponent implements OnInit {
           this.cartService.addToCart(order);
           this.progress++;
           this.progressPct = _.ceil((this.progress / file.length) * 100);
-        }, 5000);
+        }, 1000);
       } catch (err) {
         this.snackBar.open('Error getting instruments', 'Dismiss', {
           duration: 2000,
@@ -93,17 +93,19 @@ export class IntradayBacktestViewComponent implements OnInit {
   }
 
   triggerBacktest(orders: SmartOrder[]) {
-    _.forEach(orders, (order: SmartOrder) => {
-      this.requestQuotes(order.holding.symbol)
-        .then((data: any) => {
-          this.backtestData[order.holding.symbol] = data;
-          order.triggeredBacktest = true;
-        });
+    _.forEach(orders, (order: SmartOrder, index: number) => {
+      setTimeout(() => {
+        this.requestQuotes(order.holding.symbol)
+          .then((data: any) => {
+            this.backtestData[order.holding.symbol] = data;
+            order.triggeredBacktest = true;
+          });
+      }, index * 30000);
     });
   }
 
   requestQuotes(symbol: string) {
-    return this.backtestService.getYahooIntraday(symbol).toPromise()
+    return this.backtestService.getTdIntraday(symbol).toPromise()
       .then((result) => {
         return result;
       });
