@@ -100,8 +100,8 @@ export class IntradayBacktestViewComponent implements OnInit {
             this.backtestData[order.holding.symbol] = data;
             order.triggeredBacktest = true;
           });
-        console.log('request quote ', order.holding.symbol, new Date().getMinutes(), ':',new Date().getSeconds());
-      }, index * 60000);
+        console.log('request quote ', order.holding.symbol, new Date().getMinutes(), ':', new Date().getSeconds());
+      }, index * 120000);
     });
   }
 
