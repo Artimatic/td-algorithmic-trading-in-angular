@@ -9,6 +9,7 @@ import { MatSnackBar } from '@angular/material';
 import { TodoService } from '../overview/todo-list/todo.service';
 import IntradayStocks from './intraday-backtest-stocks.constant';
 import { OrderRow } from '../shared/models/order-row';
+import { GlobalSettingsService } from '../settings/global-settings.service';
 
 @Component({
   selector: 'app-intraday-backtest-view',
@@ -27,7 +28,8 @@ export class IntradayBacktestViewComponent implements OnInit {
     public scoreKeeperService: ScoreKeeperService,
     private backtestService: BacktestService,
     public snackBar: MatSnackBar,
-    private todoService: TodoService
+    private todoService: TodoService,
+    private globalSettingsService: GlobalSettingsService
   ) { }
 
   ngOnInit() {
@@ -93,6 +95,7 @@ export class IntradayBacktestViewComponent implements OnInit {
   }
 
   triggerBacktest(orders: SmartOrder[]) {
+    this.globalSettingsService.backtesting = true;
     _.forEach(orders, (order: SmartOrder, index: number) => {
       setTimeout(() => {
         this.requestQuotes(order.holding.symbol)
@@ -101,7 +104,7 @@ export class IntradayBacktestViewComponent implements OnInit {
             order.triggeredBacktest = true;
           });
         console.log('request quote ', order.holding.symbol, new Date().getMinutes(), ':', new Date().getSeconds());
-      }, index * 120000);
+      }, index * 180000);
     });
   }
 

@@ -6,7 +6,7 @@
     <button mat-button color="warn" (click)="stopAndDeleteOrders()">Delete Orders</button>
     <button mat-raised-button color="warn" (click)="closeAllTrades()">Close Opened DayTrades</button>
     <button mat-button color="primary" (click)="loadExamples()">Load Example Orders</button>
-    <button mat-raised-button color="primary" (click)="confirmStart()">Start</button>
+    <button mat-raised-button color="primary" (click)="confirmStart()" [disabled]="globalSettingsService.backtesting">Start</button>
   </div>
   <div *ngFor="let buys of cartService.buyOrders">
     <app-score-board [title]="buys.holding.symbol" [score]="scoreKeeperService.profitLossHash[buys.holding.symbol]"></app-score-board>

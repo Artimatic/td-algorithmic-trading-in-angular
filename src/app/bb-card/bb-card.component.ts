@@ -818,7 +818,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       return null;
     }
 
-    if (this.scoringService.total < 0 && this.scoringService.total < this.globalSettingsService.maxLoss * -1) {
+    if (!this.globalSettingsService.backtesting && this.scoringService.total < 0 && this.scoringService.total < this.globalSettingsService.maxLoss * -1) {
       return null;
     }
 

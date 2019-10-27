@@ -15,6 +15,7 @@ export class GlobalSettingsService {
   stopTime: Date;
   maxLoss: number;
   brokerage: Brokerage;
+  backtesting: boolean;
   constructor() {
     this.startTime = moment.tz('10:00am', 'h:mma', 'America/New_York').toDate();
     this.sellAtCloseTime = moment.tz('3:40pm', 'h:mma', 'America/New_York').toDate();

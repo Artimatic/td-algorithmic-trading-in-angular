@@ -22,4 +22,8 @@ export class SettingControlsComponent {
       this.globalSettingsService.brokerage = Brokerage.Robinhood;
     }
   }
+
+  toggleBacktesting(): void {
+    this.globalSettingsService.backtesting = !this.globalSettingsService.backtesting;
+  }
 }
