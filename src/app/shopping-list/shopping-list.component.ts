@@ -41,7 +41,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
     private daytradeService: DaytradeService,
     public snackBar: MatSnackBar,
     private portfolioService: PortfolioService,
-    private globalSettingsService: GlobalSettingsService,
+    public globalSettingsService: GlobalSettingsService,
     private tradeService: TradeService) { }
 
   ngOnInit() {
