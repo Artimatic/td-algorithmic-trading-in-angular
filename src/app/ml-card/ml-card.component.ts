@@ -111,12 +111,18 @@ export class MlCardComponent implements OnInit {
   }
 
   getTradeDay() {
-    if (moment().day() === 6) {
+    const date = new Date();
+    const momentObj = moment(date);
+    if (momentObj.day() !== date.getDay()) {
+      console.log('Dates do not match ', moment().day(), date.getDay());
+      return null;
+    }
+    if (momentObj.day() === 6) {
       return moment().subtract({ day: 1 }).format('YYYY-MM-DD');
-    } else if (moment().day() === 0) {
+    } else if (momentObj.day() === 0) {
       return moment().subtract({ day: 2 }).format('YYYY-MM-DD');
     }
-    return moment().format('YYYY-MM-DD');
+    return momentObj.format('YYYY-MM-DD');
   }
 
   goLive() {
@@ -139,7 +145,8 @@ export class MlCardComponent implements OnInit {
                 .subscribe(() => {
                   this.backtestService.getRnn('SPY', currentTradeDay)
                     .subscribe((data: any) => {
-                      console.log('rnn data: ', data);
+                      console.log('rnn data: ', currentTradeDay, data);
+
                       if (data) {
                         const bet = this.determineBet(data);
                         this.placeBet(bet);
