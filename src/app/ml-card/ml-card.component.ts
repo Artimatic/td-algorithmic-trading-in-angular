@@ -111,22 +111,19 @@ export class MlCardComponent implements OnInit {
   }
 
   getTradeDay() {
-    const date = new Date();
-    const momentObj = moment(date);
-    if (momentObj.day() !== date.getDay()) {
-      console.log('Dates do not match ', moment().day(), date.getDay());
-      return null;
-    }
+    const momentObj = moment.tz('America/New_York');
+
     if (momentObj.day() === 6) {
-      return moment().subtract({ day: 1 }).format('YYYY-MM-DD');
+      return momentObj.subtract({ day: 1 }).format('YYYY-MM-DD');
     } else if (momentObj.day() === 0) {
-      return moment().subtract({ day: 2 }).format('YYYY-MM-DD');
+      return momentObj.subtract({ day: 2 }).format('YYYY-MM-DD');
     }
+    console.log('Date:', momentObj, moment(), new Date());
+
     return momentObj.format('YYYY-MM-DD');
   }
 
   goLive() {
-    const currentTradeDay = this.getTradeDay();
     this.setup();
     this.alive = true;
     this.sub = TimerObservable.create(0, this.interval)
@@ -137,15 +134,15 @@ export class MlCardComponent implements OnInit {
         if (momentInst.isAfter(this.startTime) &&
           momentInst.isBefore(this.stopTime) || this.testing.value) {
           this.alive = false;
-          this.backtestService.activateRnn('SPY', currentTradeDay)
+          this.backtestService.activateRnn('SPY', this.getTradeDay())
             .subscribe(() => {
               this.pendingResults = true;
               this.checkReportSub = TimerObservable.create(0, this.reportWaitInterval)
                 .takeWhile(() => this.pendingResults)
                 .subscribe(() => {
-                  this.backtestService.getRnn('SPY', currentTradeDay)
+                  this.backtestService.getRnn('SPY', this.getTradeDay())
                     .subscribe((data: any) => {
-                      console.log('rnn data: ', currentTradeDay, data);
+                      console.log('rnn data: ', this.getTradeDay(), data);
 
                       if (data) {
                         const bet = this.determineBet(data);
