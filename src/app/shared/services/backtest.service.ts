@@ -3,17 +3,26 @@ import {
   HttpHeaders
 } from '@angular/common/http';
 
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { Injectable } from '@angular/core';
 
 import { environment } from '../../../environments/environment';
 
 const BASE_URL = environment.appUrl;
 
+export interface ChartParam {
+    algorithm: string;
+    symbol: string;
+    date: string;
+}
+
 @Injectable()
 export class BacktestService {
+    currentChart: Subject<ChartParam>;
 
-    constructor(private http: HttpClient) { }
+    constructor(private http: HttpClient) {
+        this.currentChart = new Subject();
+    }
 
     getInfo(data: any): Observable<any> {
       return this.http.post(`${BASE_URL}api/mean-reversion/info`, data, {});

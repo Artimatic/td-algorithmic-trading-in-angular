@@ -79,16 +79,9 @@
             <td>
               <span>
                 {{element.recommendation}}
-                <span *ngIf="selectedAlgo==='v1'">
-                  <button mat-icon-button (click)="product.load(element, endDate)">
-                    <mat-icon>show_chart</mat-icon>
-                  </button>
-                </span>
-                <span *ngIf="selectedAlgo==='v2'">
-                  <button mat-icon-button (click)="product.loadV2Chart(element, endDate)">
-                    <mat-icon>show_chart</mat-icon>
-                  </button>
-                </span>
+                <button mat-icon-button (click)="openChartDialog(element, endDate)">
+                  <mat-icon>show_chart</mat-icon>
+                </button>
               </span>
             </td>
             <td>

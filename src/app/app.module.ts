@@ -80,6 +80,7 @@ import { SettingsModule } from './settings/settings.module';
 import { MachineLearningModule } from './machine-learning/machine-learning.module';
 import { MlCardComponent } from './ml-card/ml-card.component';
 import { TestResultsTableComponent } from './test-results-table/test-results-table.component';
+import { ChartDialogComponent } from './chart-dialog/chart-dialog.component';
 
 @NgModule({
   declarations: [
@@ -109,12 +110,14 @@ import { TestResultsTableComponent } from './test-results-table/test-results-tab
     SimpleCardComponent,
     MlCardComponent,
     TestResultsTableComponent,
+    ChartDialogComponent,
   ],
   entryComponents: [
     LoginDialogComponent,
     OrderDialogComponent,
     ConfirmDialogComponent,
     ReportDialogComponent,
+    ChartDialogComponent,
   ],
   imports: [
     BrowserModule,

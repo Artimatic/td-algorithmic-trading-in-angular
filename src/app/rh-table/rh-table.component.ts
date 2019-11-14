@@ -11,6 +11,8 @@ import { OrderDialogComponent } from '../order-dialog/order-dialog.component';
 import { Holding } from '../shared/models';
 import { FormControl } from '@angular/forms';
 import Stocks from './backtest-stocks.constant';
+import { ChartDialogComponent } from '../chart-dialog/chart-dialog.component';
+import { ChartParam } from '../shared/services/backtest.service';
 export interface Algo {
   value: string;
   viewValue: string;
@@ -334,5 +336,40 @@ export class RhTableComponent implements OnInit, OnChanges {
 
     this.progress = Stocks.length * 2;
     this.selectedAlgo = currentSelected;
+  }
+
+  openChartDialog(symbol, endDate) {
+    const dialogRef = this.dialog.open(ChartDialogComponent, {
+      width: '500px',
+      height: '500px'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('Closed dialog', result);
+
+      let algo = '';
+
+      switch (result) {
+        case 'mfi': {
+          algo = 'mfi';
+          break;
+        }
+        case 'sma': {
+          algo = 'sma';
+          break;
+        }
+        case 'bollingerband': {
+          algo = 'bollingerband';
+          break;
+        }
+      }
+
+      const params: ChartParam = {
+        algorithm: algo,
+        symbol,
+        date: endDate
+      };
+      this.algo.currentChart.next(params);
+    });
   }
 }

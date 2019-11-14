@@ -5,6 +5,7 @@ import * as moment from 'moment';
 import { MatSnackBar } from '@angular/material';
 
 import { BacktestService } from '../shared';
+import { ChartParam } from '../shared/services/backtest.service';
 
 @Component({
   selector: 'app-product-view',
@@ -21,6 +22,21 @@ export class ProductViewComponent implements OnInit {
     private algo: BacktestService) { }
 
   ngOnInit() {
+    this.algo.currentChart.subscribe((chart: ChartParam) => {
+      switch (chart.algorithm) {
+        case 'mfi': {
+          break;
+        }
+        case 'sma': {
+          this.loadSma(chart.symbol, chart.date);
+          break;
+        }
+        case 'bollingerband': {
+          this.loadBBChart(chart.symbol, chart.date);
+          break;
+        }
+      }
+    });
   }
 
   triggerCondition(lastPrice, thirtyDay, ninetyDay, deviation) {
@@ -38,7 +54,7 @@ export class ProductViewComponent implements OnInit {
     this.chart.addPoint(y);
   }
 
-  load(data, endDate): void {
+  loadSma(data, endDate): void {
     this.resolving = true;
 
     const currentDate = moment(endDate).format('YYYY-MM-DD');
@@ -114,7 +130,7 @@ export class ProductViewComponent implements OnInit {
       );
   }
 
-  loadV2Chart(data, endDate): void {
+  loadBBChart(data, endDate): void {
     this.resolving = true;
 
     const currentDate = moment(endDate).format('YYYY-MM-DD');
