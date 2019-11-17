@@ -173,6 +173,11 @@ class BacktestController extends BaseController {
     BacktestService.activateRNN(request.body.symbol, request.body.to, response);
   }
 
+  bbandMfi(request, response) {
+    BacktestService.bbandMfiInfo(request.body.symbol, request.body.to, request.body.from)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
 }
 
 export default new BacktestController();

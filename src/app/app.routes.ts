@@ -33,7 +33,7 @@ export const routes: Routes = [
   },
   {
     path: '**',
-    redirectTo: '/overview',
+    redirectTo: '/trade-view',
     pathMatch: 'full'
   }
 ];

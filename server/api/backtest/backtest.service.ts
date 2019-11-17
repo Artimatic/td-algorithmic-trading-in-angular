@@ -891,6 +891,39 @@ class BacktestService {
         console.log('Error: ', error.message);
       });
   }
+
+  /*
+  * {"symbol": "SHAK",
+  * "to": "2019-11-01",
+  * "from":"2018-09-24",
+  * "settings": [0.03, 30, 90, 80],
+  * "strategy": "MoneyFlowIndex"
+  * }
+  */
+  bbandMfiInfo(symbol, endDate, startDate) {
+    const to = moment(endDate).format('YYYY-MM-DD');
+    const from = moment(startDate).format('YYYY-MM-DD');
+
+
+    const query = `${dataServiceUrl}backtest/strategy`;
+
+    const options = {
+      method: 'POST',
+      uri: query,
+      body: {
+        symbol,
+        to,
+        from,
+        strategy: 'bbmfi'
+      },
+      json: true
+    };
+
+    return RequestPromise(options)
+      .catch((error) => {
+        console.log('Error: ', error);
+      });
+  }
 }
 
 export default new BacktestService();

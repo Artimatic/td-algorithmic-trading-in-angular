@@ -60,7 +60,7 @@ export class ProductViewComponent implements OnInit {
     const currentDate = moment(endDate).format('YYYY-MM-DD');
     const pastDate = moment().subtract(700, 'days').format('YYYY-MM-DD');
 
-    this.algo.getBacktestChart(data.stock, pastDate, currentDate, data.deviation, data.shortTerm, data.longTerm)
+    this.algo.getBacktestChart(data.stock, pastDate, currentDate, data.deviation || 0.003, data.shortTerm || 30, data.longTerm || 90)
       .map(result => {
         const time = [],
           seriesData = [];
