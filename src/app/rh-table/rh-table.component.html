@@ -20,14 +20,17 @@
       <mat-grid-tile>
         <mat-form-field>
           <mat-select placeholder="Algorithm" [(ngModel)]="selectedAlgo">
-            <mat-optgroup *ngFor="let group of algoGroups" [label]="group.name"
-                          [disabled]="group.disabled">
+            <mat-optgroup *ngFor="let group of algoGroups" [label]="group.name" [disabled]="group.disabled">
               <mat-option *ngFor="let algo of group.algorithm" [value]="algo.value">
                 {{algo.viewValue}}
               </mat-option>
             </mat-optgroup>
           </mat-select>
         </mat-form-field>
+      </mat-grid-tile>
+      <mat-grid-tile>
+          <button mat-button color="primary" (click)=runDefaultBacktest() *ngIf="progress>=totalStocks">Run Default Backtest</button>
+          <mat-spinner *ngIf="progress<totalStocks"></mat-spinner>
       </mat-grid-tile>
     </mat-grid-list>
     <div id="tableContainer" class="tableContainer">
@@ -50,8 +53,8 @@
           <tr *ngFor="let element of currentList">
             <td>
               <span> {{element.stock}}
-                  <button mat-button color="primary" (click)="buy(element)">BUY</button>
-                  <button mat-button color="warn" (click)="sell(element)">SELL</button>
+                <button mat-button color="primary" (click)="buy(element)">BUY</button>
+                <button mat-button color="warn" (click)="sell(element)">SELL</button>
               </span>
             </td>
             <td>
@@ -76,16 +79,9 @@
             <td>
               <span>
                 {{element.recommendation}}
-                <span *ngIf="selectedAlgo==='v1'">
-                  <button mat-icon-button (click)="product.load(element, endDate)">
-                    <mat-icon>show_chart</mat-icon>
-                  </button>
-                </span>
-                <span *ngIf="selectedAlgo==='v2'">
-                  <button mat-icon-button (click)="product.loadV2Chart(element, endDate)">
-                    <mat-icon>show_chart</mat-icon>
-                  </button>
-                </span>
+                <button mat-icon-button (click)="openChartDialog(element, endDate)">
+                  <mat-icon>show_chart</mat-icon>
+                </button>
               </span>
             </td>
             <td>

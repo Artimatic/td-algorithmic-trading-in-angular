@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CartService } from '../shared/services/cart.service';
 import { SmartOrder } from '../shared/models/smart-order';
 import { ScoreKeeperService, ReportingService, DaytradeService, PortfolioService } from '../shared';
@@ -11,16 +11,17 @@ import * as moment from 'moment-timezone';
 import * as _ from 'lodash';
 import { Holding } from '../shared/models';
 import { GlobalSettingsService } from '../settings/global-settings.service';
+import { TradeService } from '../shared/services/trade.service';
 
 @Component({
   selector: 'app-shopping-list',
   templateUrl: './shopping-list.component.html',
   styleUrls: ['./shopping-list.component.css']
 })
-export class ShoppingListComponent implements OnInit {
+export class ShoppingListComponent implements OnInit, OnDestroy {
   mu: SmartOrder;
   vti: SmartOrder;
-  spxl: SmartOrder;
+  upro: SmartOrder;
   vxx: SmartOrder;
   uvxy: SmartOrder;
   sh: SmartOrder;
@@ -40,26 +41,42 @@ export class ShoppingListComponent implements OnInit {
     private daytradeService: DaytradeService,
     public snackBar: MatSnackBar,
     private portfolioService: PortfolioService,
-    private globalSettingsService: GlobalSettingsService) { }
+    public globalSettingsService: GlobalSettingsService,
+    private tradeService: TradeService) { }
 
   ngOnInit() {
     this.interval = 70800;
 
     this.ordersStarted = 0;
-    this.spxl = {
-      holding:
-      {
-        instrument: 'https://api.robinhood.com/instruments/496d6d63-a93d-4693-a5b5-d1e0a72d854f/',
-        symbol: 'SPXL',
-        name: 'Direxion Daily S&P 500  Bull 3x Shares',
-        realtime_price: 49.52
-      },
-      quantity: 10, price: 49.52,
-      submitted: false, pending: false,
-      side: 'DayTrade',
-      useTakeProfit: true,
-      useStopLoss: true
-    };
+    this.portfolioService.getInstruments('UPRO').subscribe((response) => {
+      const instruments = response.results[0];
+      const newHolding: Holding = {
+        instrument: instruments.url,
+        symbol: instruments.symbol,
+        name: instruments.name
+      };
+
+      const order: SmartOrder = {
+        holding: newHolding,
+        quantity: 10,
+        price: 28.24,
+        submitted: false,
+        pending: false,
+        side: 'DayTrade',
+        useTakeProfit: true,
+        useStopLoss: true,
+        lossThreshold: -0.002,
+        profitTarget: 0.004,
+        spyMomentum: true,
+        sellAtClose: true
+      };
+      this.upro = order;
+    },
+    (error) => {
+      this.snackBar.open('Error getting instruments for UPRO', 'Dismiss', {
+        duration: 2000,
+      });
+    });
 
     this.vti = {
       holding:
@@ -187,6 +204,17 @@ export class ShoppingListComponent implements OnInit {
     });
   }
 
+  ngOnDestroy() {
+    this.cleanUp();
+  }
+
+  cleanUp() {
+    if (this.sub) {
+      this.sub.unsubscribe();
+      this.sub = undefined;
+    }
+  }
+
   deleteSellOrder(deleteOrder: SmartOrder) {
     this.cartService.deleteSell(deleteOrder);
   }
@@ -212,9 +240,8 @@ export class ShoppingListComponent implements OnInit {
 
   queueAlgos(orders: SmartOrder[]) {
     this.alive = true;
-    let counter = 1;
     let lastIndex = 0;
-    const limit = 5;
+    const limit = 10;
 
     _.forEach(orders, (order: SmartOrder) => {
       order.init = true;
@@ -227,9 +254,8 @@ export class ShoppingListComponent implements OnInit {
         if (moment().isAfter(moment(this.globalSettingsService.startTime))) {
           let executed = 0;
           while (executed < limit && lastIndex < orders.length) {
-            orders[lastIndex].stepForward = counter;
+            this.tradeService.algoQueue.next(orders[lastIndex].holding.symbol);
             lastIndex++;
-            counter++;
             executed++;
           }
           if (lastIndex >= orders.length) {
@@ -273,10 +299,7 @@ export class ShoppingListComponent implements OnInit {
 
   stopAndDeleteOrders() {
     this.stop();
-    if (this.sub) {
-      this.sub.unsubscribe();
-      this.sub = undefined;
-    }
+    this.cleanUp();
     const buySells = this.cartService.sellOrders.concat(this.cartService.buyOrders);
 
     _.forEach(buySells.concat(this.cartService.otherOrders), (order: SmartOrder) => {

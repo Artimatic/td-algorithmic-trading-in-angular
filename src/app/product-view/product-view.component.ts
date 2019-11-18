@@ -5,6 +5,7 @@ import * as moment from 'moment';
 import { MatSnackBar } from '@angular/material';
 
 import { BacktestService } from '../shared';
+import { ChartParam } from '../shared/services/backtest.service';
 
 @Component({
   selector: 'app-product-view',
@@ -21,6 +22,25 @@ export class ProductViewComponent implements OnInit {
     private algo: BacktestService) { }
 
   ngOnInit() {
+    this.algo.currentChart.subscribe((chart: ChartParam) => {
+      switch (chart.algorithm) {
+        case 'mfi': {
+          break;
+        }
+        case 'sma': {
+          this.loadSma(chart, chart.date);
+          break;
+        }
+        case 'bollingerband': {
+          this.loadBBChart(chart.symbol, chart.date);
+          break;
+        }
+        case 'bollingerbandmfi': {
+          this.loadBBMfiChart(chart);
+          break;
+        }
+      }
+    });
   }
 
   triggerCondition(lastPrice, thirtyDay, ninetyDay, deviation) {
@@ -38,13 +58,44 @@ export class ProductViewComponent implements OnInit {
     this.chart.addPoint(y);
   }
 
-  load(data, endDate): void {
+  loadBBMfiChart(params: ChartParam) {
+    this.resolving = true;
+    const currentDate = moment(params.date).format('YYYY-MM-DD');
+    const pastDate = moment(params.date).subtract(800, 'days').format('YYYY-MM-DD');
+    this.algo.getBBMfiBacktestChart(params.symbol, currentDate, pastDate)
+      .map(result => {
+        const time = [];
+        const seriesData = [];
+
+        result.signals.forEach(day => {
+          time.push(day.date);
+          const signal = this.buildSignal(day.action, day.close, day.volume);
+          seriesData.push(signal);
+
+          this.initChart(params.symbol, time, seriesData);
+        });
+      })
+      .subscribe(
+        response => {
+          this.stock = params.symbol;
+          this.resolving = false;
+        },
+        err => {
+          this.resolving = false;
+          this.snackBar.open(`Error: ${err}`, 'Dismiss', {
+            duration: 20000,
+          });
+        }
+      );
+  }
+
+  loadSma(data, endDate): void {
     this.resolving = true;
 
     const currentDate = moment(endDate).format('YYYY-MM-DD');
-    const pastDate = moment().subtract(700, 'days').format('YYYY-MM-DD');
+    const pastDate = moment(endDate).subtract(700, 'days').format('YYYY-MM-DD');
 
-    this.algo.getBacktestChart(data.stock, pastDate, currentDate, data.deviation, data.shortTerm, data.longTerm)
+    this.algo.getBacktestChart(data.symbol, pastDate, currentDate, data.deviation || 0.003, data.shortTerm || 30, data.longTerm || 90)
       .map(result => {
         const time = [],
           seriesData = [];
@@ -52,7 +103,7 @@ export class ProductViewComponent implements OnInit {
 
         result.forEach(day => {
           time.push(day.date);
-          if (this.triggerCondition(day.close, day.shortTermAvg, day.longTermAvg, data.deviation)) {
+          if (this.triggerCondition(day.close, day.shortTermAvg, day.longTermAvg, data.deviation || 0.003)) {
             if (day.trending === 'Sell') {
               signal = {
                 y: day.close,
@@ -96,7 +147,7 @@ export class ProductViewComponent implements OnInit {
           seriesData.push(signal);
         });
 
-        this.initChart (data.stock, time, seriesData);
+        this.initChart(data.stock, time, seriesData);
 
         return result;
       })
@@ -114,82 +165,77 @@ export class ProductViewComponent implements OnInit {
       );
   }
 
-  loadV2Chart(data, endDate): void {
+  buildSignal(action: string, close: number, volume: number) {
+    switch (action) {
+      case 'SELL':
+        return {
+          y: close,
+          marker: {
+            symbol: 'triangle-down',
+            fillColor: 'pink',
+            radius: 3
+          },
+          name: '<br><b>Volume:</b> ' + volume
+        };
+      case 'STRONGSELL':
+        return {
+          y: close,
+          marker: {
+            symbol: 'triangle-down',
+            fillColor: 'red',
+            radius: 6
+          },
+          name: '<br><b>Volume:</b> ' + volume
+        };
+      case 'BUY':
+        return {
+          y: close,
+          marker: {
+            symbol: 'triangle',
+            fillColor: 'green',
+            radius: 3
+          },
+          name: '<br><b>Volume:</b> ' + volume
+        };
+      case 'STRONGBUY':
+        return {
+          y: close,
+          marker: {
+            symbol: 'triangle',
+            fillColor: 'green',
+            radius: 6
+          },
+          name: '<br><b>Volume:</b> ' + volume
+        };
+      default:
+        return {
+          y: close,
+          name: '<br><b>Volume:</b> ' + volume
+        };
+    }
+  }
+  loadBBChart(stock: string, endDate): void {
     this.resolving = true;
 
     const currentDate = moment(endDate).format('YYYY-MM-DD');
     const startDate = moment(endDate).subtract(700, 'days').format('YYYY-MM-DD');
 
-    this.algo.getInfoV2Chart(data.stock, currentDate, startDate)
+    this.algo.getInfoV2Chart(stock, currentDate, startDate)
       .map(result => {
-        const time = [],
-          seriesData = [];
-        let signal;
+        const time = [];
+        const seriesData = [];
+
         result.forEach(day => {
           time.push(day.date);
-          switch (day.action) {
-            case 'SELL':
-              signal = {
-                y: day.close,
-                marker: {
-                  symbol: 'triangle-down',
-                  fillColor: 'pink',
-                  radius: 3
-                },
-                name: '<br><b>Volume:</b> ' + day.volume
-              };
-              break;
-            case 'STRONGSELL':
-              signal = {
-                y: day.close,
-                marker: {
-                  symbol: 'triangle-down',
-                  fillColor: 'red',
-                  radius: 6
-                },
-                name: '<br><b>Volume:</b> ' + day.volume
-              };
-              break;
-            case 'BUY':
-              signal = {
-                y: day.close,
-                marker: {
-                  symbol: 'triangle',
-                  fillColor: 'green',
-                  radius: 3
-                },
-                name: '<br><b>Volume:</b> ' + day.volume
-              };
-              break;
-            case 'STRONGBUY':
-              signal = {
-                y: day.close,
-                marker: {
-                  symbol: 'triangle',
-                  fillColor: 'green',
-                  radius: 6
-                },
-                name: '<br><b>Volume:</b> ' + day.volume
-              };
-              break;
-            case 'INDETERMINANT':
-              signal = {
-                y: day.close,
-                name: '<br><b>Volume:</b> ' + day.volume
-              };
-              break;
-            default:
-              throw new Error(`Unknown signal: ${day.action}`);
-          }
-
+          const signal = this.buildSignal(day.action, day.close, day.volume);
           seriesData.push(signal);
 
-          this.initChart (data.stock, time, seriesData);
+          this.initChart(stock, time, seriesData);
         });
       })
       .subscribe(
         response => {
-          this.stock = data.stock;
+          this.stock = stock;
           this.resolving = false;
         },
         err => {
@@ -201,7 +247,7 @@ export class ProductViewComponent implements OnInit {
       );
   }
 
-  initChart (title, timeArr, seriesData) {
+  initChart(title, timeArr, seriesData) {
     this.chart = new Chart({
       chart: {
         type: 'spline',

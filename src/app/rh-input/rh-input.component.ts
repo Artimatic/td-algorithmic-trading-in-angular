@@ -16,7 +16,7 @@ export class RhInputComponent implements OnInit {
       deviation: null,
       short: 30,
       long: 90
-    }, { updateOn: 'blur' });
+    }, {});
   }
 
   ngOnInit() {

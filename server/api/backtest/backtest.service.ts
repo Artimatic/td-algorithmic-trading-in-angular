@@ -16,8 +16,8 @@ const dataServiceUrl = configurations.apps.goliath;
 const mlServiceUrl = configurations.apps.armadillo;
 
 const config = {
-  shortTerm: [3, 103],
-  longTerm: [5, 286]
+  shortTerm: [30, 110],
+  longTerm: [90, 290]
 };
 
 let startTime;
@@ -52,7 +52,7 @@ class BacktestService {
   evaluateStrategyAll(ticker, end, start) {
     console.log('Executing: ', ticker, new Date());
     startTime = moment();
-    return this.runTest(ticker, end, start);
+    this.runTest(ticker, end, start);
   }
 
   evaluateIntradayAlgo(ticker, end, start) {
@@ -118,14 +118,14 @@ class BacktestService {
 
               snapshots.push({ ...averagesRange, ...returns, recommendedDifference });
 
-              if (i % 3 === 0 && j === longTerm[longTerm.length - 1] - 1) {
-                fs.writeFile(`${ticker}_analysis_${startDate}-
-                  ${currentDate}_${i}.csv`, json2csv({ data: snapshots, fields: fields }), function (err) {
-                    if (err) { throw err; }
-                    console.log('file saved');
-                  });
-                snapshots.length = 0;
-              }
+              // if (i % 3 === 0 && j === longTerm[longTerm.length - 1] - 1) {
+              //   fs.writeFile(`${ticker}_analysis_${startDate}-
+              //     ${currentDate}_${i}.csv`, json2csv({ data: snapshots, fields: fields }), function (err) {
+              //       if (err) { throw err; }
+              //       console.log('file saved');
+              //     });
+              //   snapshots.length = 0;
+              // }
             }
           }
         }
@@ -136,7 +136,7 @@ class BacktestService {
 
         console.log('Duration: ', duration);
 
-        fs.writeFile(`${ticker}_analysis_${currentDate}-${startDate}.csv`,
+        fs.writeFile(`${ticker}_analysis_${startDate}-${currentDate}.csv`,
           json2csv({ data: snapshots, fields: fields }), function (err) {
             if (err) { throw err; }
             console.log('file saved');
@@ -804,6 +804,27 @@ class BacktestService {
       });
   }
 
+  getTrainingData(symbol, endDate, startDate) {
+    const to = moment(endDate).format('YYYY-MM-DD');
+    const from = moment(startDate).format('YYYY-MM-DD');
+
+    console.log('to: ', to, ' from:', from);
+    const url = `${configurations.apps.goliath}backtest/train`;
+
+    const options = {
+      method: 'GET',
+      uri: url,
+      qs: {
+        ticker: symbol,
+        to,
+        from,
+        save: false
+      },
+    };
+
+    return RequestPromise(options);
+  }
+
   runRNN(symbol, endDate, startDate, response) {
     const to = moment(endDate).format('YYYY-MM-DD');
     const from = moment(startDate).format('YYYY-MM-DD');
@@ -824,6 +845,35 @@ class BacktestService {
     response.status(200).send();
   }
 
+  activateRNN(symbol, startDate, response) {
+    const today = moment(startDate).format('YYYY-MM-DD');
+    const yesterday = moment(startDate).add(-1, 'days').format('YYYY-MM-DD');
+
+    this.getTrainingData(symbol, today, yesterday)
+      .then((trainingData) => {
+        trainingData = JSON.parse(trainingData);
+        const URI = `${mlServiceUrl}api/activate`;
+
+        const options = {
+          method: 'POST',
+          uri: URI,
+          body: {
+            symbol: 'SPY',
+            input: trainingData[trainingData.length - 1].input,
+            round: false,
+            to: today
+          },
+          json: true
+        };
+
+        RequestPromise(options)
+          .catch((error) => {
+            console.log('Error: ', error);
+          });
+      });
+    response.status(200).send();
+  }
+
   checkRNNStatus(symbol, endDate) {
     const to = moment(endDate).format('YYYY-MM-DD');
 
@@ -839,6 +889,39 @@ class BacktestService {
     return RequestPromise(options)
       .catch((error) => {
         console.log('Error: ', error.message);
+      });
+  }
+
+  /*
+  * {"symbol": "SHAK",
+  * "to": "2019-11-01",
+  * "from":"2018-09-24",
+  * "settings": [0.03, 30, 90, 80],
+  * "strategy": "MoneyFlowIndex"
+  * }
+  */
+  bbandMfiInfo(symbol, endDate, startDate) {
+    const to = moment(endDate).format('YYYY-MM-DD');
+    const from = moment(startDate).format('YYYY-MM-DD');
+
+
+    const query = `${dataServiceUrl}backtest/strategy`;
+
+    const options = {
+      method: 'POST',
+      uri: query,
+      body: {
+        symbol,
+        to,
+        from,
+        strategy: 'bbmfi'
+      },
+      json: true
+    };
+
+    return RequestPromise(options)
+      .catch((error) => {
+        console.log('Error: ', error);
       });
   }
 }

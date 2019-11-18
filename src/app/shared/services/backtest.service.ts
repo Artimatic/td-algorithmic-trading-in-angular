@@ -3,17 +3,26 @@ import {
   HttpHeaders
 } from '@angular/common/http';
 
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { Injectable } from '@angular/core';
 
 import { environment } from '../../../environments/environment';
 
 const BASE_URL = environment.appUrl;
 
+export interface ChartParam {
+    algorithm: string;
+    symbol: string;
+    date: string;
+}
+
 @Injectable()
 export class BacktestService {
+    currentChart: Subject<ChartParam>;
 
-    constructor(private http: HttpClient) { }
+    constructor(private http: HttpClient) {
+        this.currentChart = new Subject();
+    }
 
     getInfo(data: any): Observable<any> {
       return this.http.post(`${BASE_URL}api/mean-reversion/info`, data, {});
@@ -74,6 +83,15 @@ export class BacktestService {
         return this.http.post(`${BASE_URL}api/backtest/chart`, data, {});
     }
 
+    getBBMfiBacktestChart(symbol: string, to: string, from: string): Observable<any> {
+      const data = {
+        symbol,
+        to,
+        from
+      };
+      return this.http.post(`${BASE_URL}api/backtest/bb-mfi`, data, {});
+    }
+
     getBacktestEvaluation(ticker: string,
         start: string,
         end: string,
@@ -129,6 +147,19 @@ export class BacktestService {
     postIntraday(data: JSON): Observable<any> {
         return this.http.post(`${BASE_URL}api/quote/historical-intraday`, data, {});
     }
+
+    getTdIntraday(symbol: string): Observable<any> {
+      const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+      const options = {
+          headers: headers,
+          params: {
+            symbol
+          }
+      };
+
+      return this.http.get(`${BASE_URL}api/portfolio/intraday`, options);
+  }
+
 
     findIntraday(data: JSON): Observable<any> {
         const body = JSON.stringify(data);
@@ -197,5 +228,14 @@ export class BacktestService {
         };
 
         return this.http.post(`${BASE_URL}api/backtest/rnn`, data, {});
+    }
+
+    activateRnn(symbol: string, to: string = null): Observable<any> {
+        const data = {
+            symbol,
+            to
+        };
+
+        return this.http.post(`${BASE_URL}api/backtest/rnn-activate`, data, {});
     }
 }

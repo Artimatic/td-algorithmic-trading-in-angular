@@ -25,7 +25,6 @@ export class AppComponent implements OnInit {
   checkStatus() {
     this.backtestService.pingGoliath().subscribe(
       (data: ServiceStatus) => {
-        console.log('data service:', data);
         if (data) {
           switch (data.status) {
             case 'UP':

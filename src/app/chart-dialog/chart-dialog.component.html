@@ -1,0 +1,15 @@
+<h2 mat-dialog-title>Load Chart</h2>
+<mat-dialog-content class="mat-typography">
+  <mat-form-field>
+    <mat-label>Select a chart</mat-label>
+    <mat-select [(ngModel)]="selectedAlgo">
+      <mat-option *ngFor="let algo of algorithms" [value]="algo.value">
+        {{algo.viewValue}}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cancel</button>
+  <button mat-button [mat-dialog-close]="useSelected()" cdkFocusInitial>Load</button>
+</mat-dialog-actions>

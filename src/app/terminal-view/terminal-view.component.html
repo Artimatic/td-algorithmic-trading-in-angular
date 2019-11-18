@@ -41,8 +41,8 @@
     </table>
   </div>
   <ul class="shell-body">
-    <li *ngFor="let log of reportingService.logs; let i=index">
-      <div *ngIf="i>(reportingService.logs.length - 10)">
+    <li *ngFor="let log of reportingService.logs">
+      <div>
         {{log.time}} {{log.symbol}} {{log.message}}
     </div>
     </li>

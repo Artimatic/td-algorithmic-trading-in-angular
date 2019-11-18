@@ -10,6 +10,7 @@ import * as _ from 'lodash';
 import { IndicatorsService } from './indicators.service';
 import { CartService } from './cart.service';
 import { CardOptions } from '../models/card-options';
+import { GlobalSettingsService, Brokerage } from '../../settings/global-settings.service';
 
 @Injectable()
 export class DaytradeService {
@@ -18,15 +19,16 @@ export class DaytradeService {
     private authenticationService: AuthenticationService,
     private portfolioService: PortfolioService,
     private indicatorsService: IndicatorsService,
-    private cartService: CartService) { }
+    private cartService: CartService,
+    private globalSettingsService: GlobalSettingsService) { }
 
   getDefaultOrderSize(quantity) {
-    return Math.ceil(quantity / 3);
+    return Math.ceil(quantity / 10);
   }
 
   closeTrades(resolve: Function, reject: Function, handleNotFound: Function): void {
     _.forEach(this.cartService.otherOrders, (order: SmartOrder) => {
-      this.portfolioService.getQuote(order.holding.symbol)
+      this.portfolioService.getPrice(order.holding.symbol)
         .toPromise()
         .then((quote) => {
           const sellOrder = this.createOrder(order.holding, 'Sell', order.positionCount, quote, moment().unix());
@@ -145,19 +147,56 @@ export class DaytradeService {
   }
 
   sendBuy(buyOrder: SmartOrder, type: string, resolve, reject) {
-    this.authenticationService.getPortfolioAccount().subscribe(account => {
-      this.portfolioService.buy(buyOrder.holding, buyOrder.quantity, buyOrder.price, type).subscribe(
-        response => {
-          resolve(response);
-        },
-        error => {
-          reject(error);
-        });
-    });
+    this.portfolioService.buy(buyOrder.holding, buyOrder.quantity, buyOrder.price, type).subscribe(
+      response => {
+        resolve(response);
+      },
+      error => {
+        reject(error);
+      });
     return buyOrder;
   }
 
   sendSell(sellOrder: SmartOrder, type: string, resolve: Function, reject: Function, handleNotFound: Function): SmartOrder {
+    if (this.globalSettingsService.brokerage === Brokerage.Robinhood) {
+      return this.sendRhSell(sellOrder, type, resolve, reject, handleNotFound);
+    } else if (this.globalSettingsService.brokerage === Brokerage.Td) {
+      return this.sendTdSell(sellOrder, type, resolve, reject, handleNotFound);
+    }
+  }
+
+  sendTdSell(sellOrder: SmartOrder, type: string, resolve: Function, reject: Function, handleNotFound: Function): SmartOrder {
+    this.portfolioService.getTdPortfolio()
+      .subscribe(result => {
+        const foundPosition = result.find((pos) => {
+          return pos.instrument.symbol === sellOrder.holding.symbol;
+        });
+
+        if (foundPosition) {
+          const positionCount = Number(foundPosition.longQuantity);
+          if (positionCount === 0) {
+            handleNotFound();
+          } else {
+            sellOrder.quantity = sellOrder.quantity < positionCount ? sellOrder.quantity : positionCount;
+
+            const price = sellOrder.price;
+
+            this.portfolioService.sell(sellOrder.holding, sellOrder.quantity, price, type).subscribe(
+              response => {
+                resolve(response);
+              },
+              error => {
+                reject(error);
+              });
+          }
+        } else {
+          handleNotFound();
+        }
+      });
+    return sellOrder;
+  }
+
+  sendRhSell(sellOrder: SmartOrder, type: string, resolve: Function, reject: Function, handleNotFound: Function): SmartOrder {
     this.authenticationService.getPortfolioAccount().subscribe(account => {
       this.portfolioService.getPortfolio()
         .subscribe(result => {
@@ -252,20 +291,6 @@ export class DaytradeService {
 
   calculatePercentDifference(v1, v2) {
     return Math.abs(Math.abs(v1 - v2) / ((v1 + v2) / 2));
-  }
-
-  addChartData(data, newData) {
-    const date = moment(newData.date);
-    const lastPrice = newData.price ? newData.price.last : null;
-    const lastVolume = newData.price ? newData.price.volume : null;
-
-    data.chart.result[0].timestamp.push(date.unix());
-    data.chart.result[0].indicators.quote[0].close.push(lastPrice || newData.close);
-    data.chart.result[0].indicators.quote[0].low.push(lastPrice || newData.low);
-    data.chart.result[0].indicators.quote[0].volume.push(lastVolume || newData.volume);
-    data.chart.result[0].indicators.quote[0].open.push(lastPrice || newData.open);
-    data.chart.result[0].indicators.quote[0].high.push(lastPrice || newData.high);
-    return data;
   }
 
   addQuote(data, newQuote) {
@@ -477,7 +502,7 @@ export class DaytradeService {
       .then((quotes) => {
         quotes.chart.result[0].indicators.quote[0].close =
           this.indicatorsService.fillInMissingReals(_.get(quotes, 'chart.result[0].indicators.quote[0].close'));
-        return this.portfolioService.getQuote(symbol)
+        return this.portfolioService.getPrice(symbol)
           .toPromise()
           .then((quote) => {
             return this.addQuote(quotes, quote);

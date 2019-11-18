@@ -32,6 +32,7 @@ import {
   MatStepperModule,
   MatSelectModule,
   MatTooltipModule,
+  MatSlideToggleModule,
 } from '@angular/material';
 
 import { FlexLayoutModule } from '@angular/flex-layout';
@@ -50,6 +51,7 @@ import {
   ScoreKeeperService,
   IndicatorsService,
   AlgoService,
+  TradeService
 } from './shared';
 
 import { RhInputComponent } from './rh-input/rh-input.component';
@@ -70,13 +72,15 @@ import { ReportingComponent, ReportDialogComponent } from './reporting/reporting
 import { ResearchViewComponent } from './research-view/research-view.component';
 import { OptionsViewComponent } from './options-view/options-view.component';
 import { ScoreBoardComponent } from './score-board/score-board.component';
-import { BacktestViewComponent } from './backtest-view/backtest-view.component';
+import { IntradayBacktestViewComponent } from './intraday-backtest-view/intraday-backtest-view.component';
 import { TerminalViewComponent } from './terminal-view/terminal-view.component';
 import { SimpleCardComponent } from './simple-card/simple-card.component';
 import { OverviewModule } from './overview/overview.module';
 import { SettingsModule } from './settings/settings.module';
 import { MachineLearningModule } from './machine-learning/machine-learning.module';
 import { MlCardComponent } from './ml-card/ml-card.component';
+import { TestResultsTableComponent } from './test-results-table/test-results-table.component';
+import { ChartDialogComponent } from './chart-dialog/chart-dialog.component';
 
 @NgModule({
   declarations: [
@@ -101,16 +105,19 @@ import { MlCardComponent } from './ml-card/ml-card.component';
     ResearchViewComponent,
     OptionsViewComponent,
     ScoreBoardComponent,
-    BacktestViewComponent,
+    IntradayBacktestViewComponent,
     TerminalViewComponent,
     SimpleCardComponent,
-    MlCardComponent
+    MlCardComponent,
+    TestResultsTableComponent,
+    ChartDialogComponent,
   ],
   entryComponents: [
     LoginDialogComponent,
     OrderDialogComponent,
     ConfirmDialogComponent,
     ReportDialogComponent,
+    ChartDialogComponent,
   ],
   imports: [
     BrowserModule,
@@ -148,6 +155,7 @@ import { MlCardComponent } from './ml-card/ml-card.component';
     OverviewModule,
     SettingsModule,
     MachineLearningModule,
+    MatSlideToggleModule,
   ],
   providers: [
     BacktestService,
@@ -160,6 +168,7 @@ import { MlCardComponent } from './ml-card/ml-card.component';
     ScoreKeeperService,
     IndicatorsService,
     AlgoService,
+    TradeService,
   ],
   bootstrap: [AppComponent]
 })

@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { BacktestViewComponent } from './backtest-view.component';
+import { ChartDialogComponent } from './chart-dialog.component';
 
-describe('BacktestViewComponent', () => {
-  let component: BacktestViewComponent;
-  let fixture: ComponentFixture<BacktestViewComponent>;
+describe('ChartDialogComponent', () => {
+  let component: ChartDialogComponent;
+  let fixture: ComponentFixture<ChartDialogComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ BacktestViewComponent ]
+      declarations: [ ChartDialogComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(BacktestViewComponent);
+    fixture = TestBed.createComponent(ChartDialogComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

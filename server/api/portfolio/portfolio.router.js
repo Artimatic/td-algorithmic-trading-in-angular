@@ -39,3 +39,27 @@ export let instruments = (request, response) => {
 export let quote = (request, response) => {
   PortfolioController.getQuote(request, response);
 };
+
+export const intraday = (request, response) => {
+  PortfolioController.getIntraday(request, response);
+}
+
+export const dailyQuote = (request, response) => {
+  PortfolioController.getDailyQuotes(request, response);
+}
+
+export const tdBuy = (request, response) => {
+  PortfolioController.tdBuy(request, response);
+}
+
+export const tdSell = (request, response) => {
+  PortfolioController.tdSell(request, response);
+}
+
+export const tdPosition = (request, response) => {
+  PortfolioController.tdPosition(request, response);
+}
+
+export const tdBalance = (request, response) => {
+  PortfolioController.tdBalance(request, response);
+}

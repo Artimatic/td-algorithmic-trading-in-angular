@@ -23,9 +23,8 @@ class BacktestController extends BaseController {
               .catch((err) => BaseController.requestErrorHandler(response, err));
             break;
           case 'v1':
-            BacktestService.evaluateStrategyAll(request.body.ticker, request.body.end, request.body.start)
-              .then((data) => BaseController.requestGetSuccessHandler(response, data))
-              .catch((err) => BaseController.requestErrorHandler(response, err));
+            BacktestService.evaluateStrategyAll(request.body.ticker, request.body.end, request.body.start);
+            response.status(200).send({});
             break;
           case 'daily-bband':
             BacktestService.evaluateBband(request.body.ticker, request.body.end, request.body.start)
@@ -169,6 +168,15 @@ class BacktestController extends BaseController {
     .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
+  activateRNN(request, response) {
+    BacktestService.activateRNN(request.body.symbol, request.body.to, response);
+  }
+
+  bbandMfi(request, response) {
+    BacktestService.bbandMfiInfo(request.body.symbol, request.body.to, request.body.from)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
 }
 
 export default new BacktestController();

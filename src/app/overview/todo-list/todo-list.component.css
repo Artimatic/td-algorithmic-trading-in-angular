@@ -6,3 +6,7 @@
 .checkbox-label {
   word-wrap: break-word;
 }
+
+.todo-item {
+  margin-bottom: 10px;
+}

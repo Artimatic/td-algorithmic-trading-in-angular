@@ -4,6 +4,7 @@ import * as _ from 'lodash';
 const RobinHoodApi = require('robinhood-api');
 const robinhood = new RobinHoodApi();
 
+import QuoteService from '../quote/quote.service';
 import configurations from '../../config/environment';
 
 const robinhood = {
@@ -14,6 +15,7 @@ const apiUrl = 'https://api.robinhood.com/';
 const tda = 'https://api.tdameritrade.com/v1/';
 const tdaKey = configurations.tdameritrade.consumer_key;
 const tdaRefreshToken = configurations.tdameritrade.refresh_token;
+const tdAccountId = configurations.tdameritrade.accountId;
 
 class PortfolioService {
 
@@ -120,54 +122,15 @@ class PortfolioService {
     } else {
       return this.getTDMarketData(symbol)
         .then(this.processTDData)
-        .then((quote) => {
+        .then(quote => {
           if (quote[symbol].delayed) {
             return this.renewExpiredTDAccessTokenAndGetQuote(symbol);
           } else {
             return quote;
           }
-        });
+        })
+        .catch(error => this.renewExpiredTDAccessTokenAndGetQuote(symbol));
     }
-  }
-
-  getTDMarketData(symbol) {
-    const query = `${tda}marketdata/${symbol}/quotes?apikey=${tdaKey}`;
-    const options = {
-      uri: query,
-      headers: {
-        Authorization: `Bearer ${this.access_token}`
-      }
-    };
-    return request.get(options);
-  }
-
-  processTDData(data) {
-    return JSON.parse(data);
-  }
-
-  getTDAccessToken() {
-    return request.post({
-      uri: tda + 'oauth2/token',
-      form: {
-        grant_type: 'refresh_token',
-        refresh_token: tdaRefreshToken,
-        client_id: `${tdaKey}@AMER.OAUTHAP`
-      }
-    })
-      .then(this.processTDData)
-      .then((EASObject) => {
-        this.access_token = EASObject.access_token;
-        return this.access_token;
-      });
-  }
-
-  renewExpiredTDAccessTokenAndGetQuote(symbol) {
-    return this.getTDAccessToken()
-      .then((token) => {
-        return this.getTDMarketData(symbol)
-          .then(this.processTDData);
-
-      });
   }
 
   sell(account, token, instrumentUrl, symbol, quantity, price, type = 'limit',
@@ -277,6 +240,304 @@ class PortfolioService {
         reply.status(200).send(body);
       }
     });
+  }
+
+  renewTDAuth() {
+    return this.getTDAccessToken();
+  }
+
+  getIntraday(symbol) {
+    if (!this.access_token) {
+      return this.renewTDAuth()
+        .then(() => this.getTDIntraday(symbol))
+    } else {
+
+      return this.getTDIntraday(symbol)
+        .catch(() => {
+          return this.renewTDAuth()
+            .then(() => this.getTDIntraday(symbol));
+        });
+    }
+  }
+
+  getTDIntraday(symbol) {
+    const query = `${tda}marketdata/${symbol}/pricehistory`;
+    const options = {
+      uri: query,
+      qs: {
+        apikey: tdaKey,
+        periodType: 'day',
+        period: 2,
+        frequencyType: 'minute',
+        frequency: 1,
+        endDate: Date.now(),
+        needExtendedHoursData: false
+      },
+      headers: {
+        Authorization: `Bearer ${this.access_token}`
+      }
+    };
+
+    return request.get(options)
+      .then((data) => {
+        const response = this.processTDData(data);
+        return QuoteService.convertTdIntraday(response.candles);
+      })
+  }
+
+  getDailyQuotes(symbol, startDate, endDate) {
+    if (!this.access_token) {
+      return this.renewTDAuth()
+        .then(() => this.getTDDailyQuotes(symbol, startDate, endDate))
+    } else {
+      return this.getTDDailyQuotes(symbol, startDate, endDate)
+        .catch(() => {
+          return this.renewTDAuth()
+            .then(() => this.getTDDailyQuotes(symbol, startDate, endDate));
+        });
+    }
+  }
+
+  getTDDailyQuotes(symbol, startDate, endDate) {
+    const query = `${tda}marketdata/${symbol}/pricehistory`;
+    const options = {
+      uri: query,
+      qs: {
+        apikey: tdaKey,
+        periodType: 'month',
+        frequencyType: 'daily',
+        frequency: 1,
+        startDate: startDate,
+        endDate: endDate,
+        needExtendedHoursData: false
+      },
+      headers: {
+        Authorization: `Bearer ${this.access_token}`
+      }
+    };
+
+    return request.get(options)
+      .then((data) => {
+        const response = this.processTDData(data);
+        return QuoteService.convertTdIntraday(response.candles);
+      })
+  }
+
+  getTDMarketData(symbol) {
+    const query = `${tda}marketdata/${symbol}/quotes`;
+    const options = {
+      uri: query,
+      qs: {
+        apikey: tdaKey
+      },
+      headers: {
+        Authorization: `Bearer ${this.access_token}`
+      }
+    };
+    return request.get(options);
+  }
+
+  processTDData(data) {
+    return JSON.parse(data);
+  }
+
+  getTDAccessToken() {
+    return request.post({
+      uri: tda + 'oauth2/token',
+      form: {
+        grant_type: 'refresh_token',
+        refresh_token: tdaRefreshToken,
+        client_id: `${tdaKey}@AMER.OAUTHAP`
+      }
+    })
+      .then(this.processTDData)
+      .then(EASObject => {
+        this.access_token = EASObject.access_token;
+        return this.access_token;
+      });
+  }
+
+  renewExpiredTDAccessTokenAndGetQuote(symbol) {
+    return this.getTDAccessToken()
+      .then((token) => {
+        return this.getTDMarketData(symbol)
+          .then(this.processTDData);
+
+      });
+  }
+
+  checkTdAccess() {
+    if (!this.access_token) {
+      return this.renewTDAuth()
+        .then(() => this.getTDIntraday(symbol))
+    } else {
+      return this.getTDIntraday(symbol)
+        .catch(() => {
+          return this.renewTDAuth()
+            .then(() => this.getTDIntraday(symbol));
+        });
+    }
+  }
+
+  checkTdAccess(fn) {
+    if (!this.access_token) {
+      return this.renewTDAuth();
+    } else {
+      return this.getTDIntraday(symbol)
+        .catch(() => {
+          return this.renewTDAuth();
+        });
+    }
+  }
+
+  sendTdBuyOrder(symbol,
+    quantity,
+    price,
+    type = 'LIMIT',
+    extendedHours = false) {
+    return this.renewTDAuth()
+      .then(() => {
+        return this.tdBuy(symbol,
+          quantity,
+          price,
+          type,
+          extendedHours);
+      });
+  }
+
+  tdBuy(symbol,
+    quantity,
+    price,
+    type = 'LIMIT',
+    extendedHours = false) {
+    let headers = {
+      'Accept': '*/*',
+      'Accept-Encoding': 'gzip',
+      'Accept-Language': 'en-US',
+      'Authorization': `Bearer ${this.access_token}`,
+      'Content-Type': 'application/json',
+    };
+
+    const options = {
+      uri: tda + `accounts/${tdAccountId}/orders`,
+      headers: headers,
+      json: true,
+      gzip: true,
+      body: {
+        orderType: type,
+        session: extendedHours? 'SEAMLESS' : 'NORMAL',
+        duration: 'DAY',
+        orderStrategyType: 'SINGLE',
+        price: price,
+        taxLotMethod: 'LIFO',
+        orderLegCollection: [
+          {
+            instruction: 'Buy',
+            quantity: quantity,
+            instrument: {
+              symbol: symbol,
+              assetType: 'EQUITY'
+            }
+          }
+        ]
+      }
+    };
+
+    return request.post(options);
+  }
+
+  sendTdSellOrder(symbol,
+    quantity,
+    price,
+    type = 'LIMIT',
+    extendedHours = false) {
+    return this.renewTDAuth()
+      .then(() => {
+        return this.tdSell(symbol,
+          quantity,
+          price,
+          type,
+          extendedHours);
+      });
+  }
+
+  tdSell(symbol,
+    quantity,
+    price,
+    type = 'LIMIT',
+    extendedHours = false) {
+    let headers = {
+      'Accept': '*/*',
+      'Accept-Encoding': 'gzip',
+      'Accept-Language': 'en-US',
+      'Authorization': `Bearer ${this.access_token}`,
+      'Content-Type': 'application/json',
+    };
+
+    const options = {
+      uri: tda + `accounts/${tdAccountId}/orders`,
+      headers: headers,
+      json: true,
+      gzip: true,
+      body: {
+        orderType: type,
+        session: extendedHours? 'SEAMLESS' : 'NORMAL',
+        duration: 'DAY',
+        orderStrategyType: 'SINGLE',
+        price: price,
+        taxLotMethod: 'LIFO',
+        orderLegCollection: [
+          {
+            instruction: 'Sell',
+            quantity: quantity,
+            instrument: {
+              symbol: symbol,
+              assetType: 'EQUITY'
+            }
+          }
+        ]
+      }
+    };
+
+    return request.post(options);
+  }
+
+  getTdPositions() {
+    return this.renewTDAuth()
+      .then(() => {
+        return this.sendTdPositionRequest()
+          .then((pos) => {
+            return pos.securitiesAccount.positions
+          });
+      });
+  }
+
+  getTdBalance() {
+    return this.renewTDAuth()
+      .then(() => {
+        return this.sendTdPositionRequest()
+          .then((pos) => {
+            return pos.securitiesAccount.currentBalances;
+          });
+      });
+  }
+
+  sendTdPositionRequest() {
+    const query = `${tda}accounts/${tdAccountId}`;
+    const options = {
+      uri: query,
+      qs: {
+        fields: 'positions'
+      },
+      headers: {
+        Authorization: `Bearer ${this.access_token}`
+      }
+    };
+
+    return request.get(options)
+      .then((data) => {
+        return this.processTDData(data);
+      })
   }
 }
 

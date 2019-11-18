@@ -11,7 +11,7 @@ export class AlgoService {
     const rocDiffRange = [-0.5, 0.6];
 
     if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
-      if (mfi < 10) {
+      if (mfi < 9) {
         return true;
       }
     }
@@ -25,7 +25,7 @@ export class AlgoService {
 
     if (momentumDiff > rocDiffRange[1]) {
       if (price >= mid) {
-        if (mfi > 55 && mfi < 80) {
+        if (mfi < 15) {
           return true;
         }
       }
@@ -39,7 +39,7 @@ export class AlgoService {
 
     if (momentumDiff < rocDiffRange[0] || momentumDiff > rocDiffRange[1]) {
       if (price <= low) {
-        if (mfi > 0 && mfi < 38) {
+        if (mfi < 15) {
           return true;
         }
       }

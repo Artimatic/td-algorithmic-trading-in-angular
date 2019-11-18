@@ -1,3 +1,7 @@
 <div class="overview-container">
-  <app-todo-list></app-todo-list>
+    <mat-grid-list cols="8" rowHeight="100px">
+        <mat-grid-tile [colspan]="2" [rowspan]="4">
+          <app-todo-list></app-todo-list>
+        </mat-grid-tile>
+      </mat-grid-list>
 </div>

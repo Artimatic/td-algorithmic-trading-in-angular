@@ -10,7 +10,9 @@ import { BacktestService, Stock, AlgoParam, PortfolioService } from '../shared';
 import { OrderDialogComponent } from '../order-dialog/order-dialog.component';
 import { Holding } from '../shared/models';
 import { FormControl } from '@angular/forms';
-
+import Stocks from './backtest-stocks.constant';
+import { ChartDialogComponent } from '../chart-dialog/chart-dialog.component';
+import { ChartParam } from '../shared/services/backtest.service';
 export interface Algo {
   value: string;
   viewValue: string;
@@ -51,17 +53,17 @@ export class RhTableComponent implements OnInit, OnChanges {
     {
       name: 'Update Database',
       algorithm: [
-        {value: 'intraday', viewValue: 'Intraday Quotes'}
+        { value: 'intraday', viewValue: 'Intraday Quotes' }
       ]
     },
     {
       name: 'Mean Reversion',
       algorithm: [
-        {value: 'v2', viewValue: 'Daily - Bollinger Band'},
-        {value: 'v5', viewValue: 'Daily - Money Flow Index'},
-        {value: 'v1', viewValue: 'Daily - Moving Average Crossover'},
-        {value: 'v3', viewValue: 'Intraday - MFI'},
-        {value: 'v4', viewValue: 'Intraday - Bollinger Band'},
+        { value: 'v2', viewValue: 'Daily - Bollinger Band' },
+        { value: 'v5', viewValue: 'Daily - Money Flow Index' },
+        { value: 'v1', viewValue: 'Daily - Moving Average Crossover' },
+        { value: 'v3', viewValue: 'Intraday - MFI' },
+        { value: 'v4', viewValue: 'Intraday - Bollinger Band' },
       ]
     }
   ];
@@ -133,9 +135,10 @@ export class RhTableComponent implements OnInit, OnChanges {
               this.updateAlgoReport(result);
             }, error => {
               this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
+              console.log(`Error on ${param.ticker}`, error);
               this.incrementProgress();
             });
-          }
+        }
         break;
       case 'v3':
         algo = 'intraday';
@@ -164,18 +167,18 @@ export class RhTableComponent implements OnInit, OnChanges {
       case 'intraday':
         algoParams.forEach((param) => {
           this.algo.getYahooIntraday(param.ticker)
-          .subscribe(
-            result => {
-              this.algo.postIntraday(result).subscribe(
-                status => {
-                }, error => {
-                  this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
-                  this.incrementProgress();
-                });
-            }, error => {
-              this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
-              this.incrementProgress();
-            });
+            .subscribe(
+              result => {
+                this.algo.postIntraday(result).subscribe(
+                  status => {
+                  }, error => {
+                    this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
+                    this.incrementProgress();
+                  });
+              }, error => {
+                this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
+                this.incrementProgress();
+              });
         });
         break;
       case 'v5':
@@ -194,6 +197,7 @@ export class RhTableComponent implements OnInit, OnChanges {
             }, error => {
               this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
               this.incrementProgress();
+              console.log(`Error on ${param.ticker} ${algo}`, error);
             });
         });
         break;
@@ -220,7 +224,17 @@ export class RhTableComponent implements OnInit, OnChanges {
     if (this.recommendation === '') {
       this.currentList = _.clone(this.stockList);
     } else {
-      this.currentList = _.filter(this.stockList, (stock) => {
+      this.currentList = _.filter(this.stockList, (stock: Stock) => {
+        switch (this.recommendation) {
+          case 'strongbuy':
+            return stock.strongbuySignals.length > 0;
+          case 'buy':
+            return stock.buySignals.length > 0;
+          case 'strongsell':
+            return stock.strongsellSignals.length > 0;
+          case 'sell':
+            return stock.sellSignals.length > 0;
+        }
         return stock.recommendation.toLowerCase() === this.recommendation;
       });
     }
@@ -308,6 +322,37 @@ export class RhTableComponent implements OnInit, OnChanges {
       dialogRef.afterClosed().subscribe(result => {
         console.log('Closed dialog', result);
       });
+    });
+  }
+
+  runDefaultBacktest() {
+    const currentSelected = this.selectedAlgo;
+
+    this.selectedAlgo = 'v2';
+    this.getData(Stocks);
+
+    this.selectedAlgo = 'v5';
+    this.getData(Stocks);
+
+    this.progress = Stocks.length * 2;
+    this.selectedAlgo = currentSelected;
+  }
+
+  openChartDialog(element: Stock, endDate) {
+    const dialogRef = this.dialog.open(ChartDialogComponent, {
+      width: '500px',
+      height: '500px'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('Closed dialog', result);
+
+      const params: ChartParam = {
+        algorithm: result,
+        symbol: element.stock,
+        date: endDate
+      };
+      this.algo.currentChart.next(params);
     });
   }
 }

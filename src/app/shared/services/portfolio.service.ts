@@ -6,12 +6,14 @@ import 'rxjs/add/operator/map';
 import { AuthenticationService } from './authentication.service';
 import { Holding } from '../models';
 import * as _ from 'lodash';
+import { GlobalSettingsService, Brokerage } from '../../settings/global-settings.service';
 
 @Injectable()
 export class PortfolioService {
   constructor(
     private http: Http,
-    private authenticationService: AuthenticationService) {
+    private authenticationService: AuthenticationService,
+    private globalSettingsService: GlobalSettingsService) {
   }
 
   getPortfolio(): Observable<Holding[]> {
@@ -24,6 +26,11 @@ export class PortfolioService {
       });
   }
 
+  getTdPortfolio(): Observable<any> {
+    return this.http.get('/api/portfolio/v2/positions/')
+      .map((response: Response) => response.json());
+  }
+
   getResource(url: string): Observable<any> {
     const body = { instrument: url };
     return this.http.post('/api/portfolio/resources', body)
@@ -31,6 +38,22 @@ export class PortfolioService {
   }
 
   sell(holding: Holding, quantity: number, price: number, type: string): Observable<any> {
+    if (this.globalSettingsService.brokerage === Brokerage.Robinhood) {
+      return this.sellRh(holding, quantity, price, type);
+    } else if (this.globalSettingsService.brokerage === Brokerage.Td) {
+      return this.sendTdSell(holding, quantity, price, false);
+    }
+  }
+
+  buy(holding: Holding, quantity: number, price: number, type: string): Observable<any> {
+    if (this.globalSettingsService.brokerage === Brokerage.Robinhood) {
+      return this.buyRh(holding, quantity, price, type);
+    } else if (this.globalSettingsService.brokerage === Brokerage.Td) {
+      return this.sendTdBuy(holding, quantity, price, false);
+    }
+  }
+
+  sellRh(holding: Holding, quantity: number, price: number, type: string): Observable<any> {
     if (quantity === 0) {
       throw new Error('Order Quantity is 0');
     }
@@ -54,7 +77,7 @@ export class PortfolioService {
       });
   }
 
-  buy(holding: Holding, quantity: number, price: number, type: string): Observable<any> {
+  buyRh(holding: Holding, quantity: number, price: number, type: string): Observable<any> {
     if (quantity === 0) {
       throw new Error('Order Quantity is 0');
     }
@@ -76,6 +99,14 @@ export class PortfolioService {
   }
 
   extendedHoursBuy(holding: Holding, quantity: number, price: number): Observable<any> {
+    if (this.globalSettingsService.brokerage === Brokerage.Robinhood) {
+      return this.extendedHoursRhBuy(holding, quantity, price);
+    } else if (this.globalSettingsService.brokerage === Brokerage.Td) {
+      return this.sendTdBuy(holding, quantity, price, true);
+    }
+  }
+
+  extendedHoursRhBuy(holding: Holding, quantity: number, price: number): Observable<any> {
     if (quantity === 0) {
       throw new Error('Order Quantity is 0');
     }
@@ -106,8 +137,41 @@ export class PortfolioService {
   getQuote(symbol: string): Observable<any> {
     const options = new RequestOptions();
     return this.http.get(`/api/portfolio/quote?symbol=${symbol}`, options)
+      .map((response: Response) => response.json());
+  }
+
+  getPrice(symbol: string): Observable<any> {
+    const options = new RequestOptions();
+    return this.http.get(`/api/portfolio/quote?symbol=${symbol}`, options)
       .map((response: Response) => {
-        return _.round(response.json().price, 2);
+        return _.round(response.json().askPrice, 2);
       });
+  }
+
+  sendTdBuy(holding: Holding, quantity: number, price: number, extended: boolean): Observable<any> {
+    const body = {
+      symbol: holding.symbol,
+      quantity: quantity,
+      price: price,
+      type: 'LIMIT',
+      extendedHours: extended
+    };
+    return this.http.post('/api/portfolio/v2/buy', body);
+  }
+
+  sendTdSell(holding: Holding, quantity: number, price: number, extended: boolean): Observable<any> {
+    const body = {
+      symbol: holding.symbol,
+      quantity: quantity,
+      price: price,
+      type: 'LIMIT',
+      extendedHours: extended
+    };
+    return this.http.post('/api/portfolio/v2/sell', body);
+  }
+
+  getTdBalance(): Observable<any> {
+    return this.http.get('/api/portfolio/balance')
+      .map((response: Response) => response.json());
   }
 }

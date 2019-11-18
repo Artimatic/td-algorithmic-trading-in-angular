@@ -104,11 +104,63 @@ class PortfolioController extends BaseController {
     }
   }
 
+  midPrice(ask, bid) {
+    return _.round(_.multiply(_.add(_.divide(_.subtract(_.divide(ask, bid), 1), 2), 1), bid), 2);
+  }
+
   getQuote(request, response) {
     PortfolioService.getQuote(request.query.symbol)
       .then((priceData) => {
-        response.status(200).send({price: 1 * priceData[request.query.symbol].bidPrice});
+        response.status(200).send({
+          price: 1 * this.midPrice(priceData[request.query.symbol].askPrice, priceData[request.query.symbol].bidPrice),
+          bidPrice: 1 * priceData[request.query.symbol].bidPrice,
+          askPrice: 1 * priceData[request.query.symbol].askPrice
+        });
       })
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+  getIntraday(request, response) {
+    PortfolioService.getIntraday(request.query.symbol)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+  getDailyQuotes(request, response) {
+    PortfolioService.getDailyQuotes(request.query.symbol, request.query.datetime)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+  tdBuy(request, response) {
+    PortfolioService.sendTdBuyOrder(request.body.symbol,
+      request.body.quantity,
+      request.body.price,
+      request.body.type,
+      request.body.extendedHours)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+  tdSell(request, response) {
+    PortfolioService.sendTdSellOrder(request.body.symbol,
+      request.body.quantity,
+      request.body.price,
+      request.body.type,
+      request.body.extendedHours)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+  tdPosition(request, response) {
+    PortfolioService.getTdPositions()
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+  tdBalance(request, response) {
+    PortfolioService.getTdBalance()
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 }

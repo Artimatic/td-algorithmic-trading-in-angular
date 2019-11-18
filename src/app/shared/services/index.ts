@@ -6,3 +6,4 @@ export { ReportingService } from './reporting.service';
 export { ScoreKeeperService } from './score-keeper.service';
 export { IndicatorsService } from './indicators.service';
 export { AlgoService } from './algo.service';
+export { TradeService } from './trade.service';

@@ -1,5 +1,5 @@
-<mat-tab-group>
-  <mat-tab label="Portfolio" *ngIf="isAuthenticated()">
+<mat-tab-group [ngClass]="{'robinhood': globalSettingsService.brokerage==='Robinhood', 'td': globalSettingsService.brokerage==='TD Ameritrade'}">
+  <mat-tab label="Portfolio">
     <app-portfolio-view></app-portfolio-view>
   </mat-tab>
   <mat-tab label="Ordering">
