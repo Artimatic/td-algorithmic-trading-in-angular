@@ -83,6 +83,15 @@ export class BacktestService {
         return this.http.post(`${BASE_URL}api/backtest/chart`, data, {});
     }
 
+    getBBMfiBacktestChart(symbol: string, to: string, from: string): Observable<any> {
+      const data = {
+        symbol,
+        to,
+        from
+      };
+      return this.http.post(`${BASE_URL}api/backtest/bb-mfi`, data, {});
+    }
+
     getBacktestEvaluation(ticker: string,
         start: string,
         end: string,

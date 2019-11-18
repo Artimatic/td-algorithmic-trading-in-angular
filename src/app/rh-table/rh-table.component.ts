@@ -224,7 +224,7 @@ export class RhTableComponent implements OnInit, OnChanges {
     if (this.recommendation === '') {
       this.currentList = _.clone(this.stockList);
     } else {
-      this.currentList = _.filter(this.stockList, (stock) => {
+      this.currentList = _.filter(this.stockList, (stock: Stock) => {
         switch (this.recommendation) {
           case 'strongbuy':
             return stock.strongbuySignals.length > 0;
@@ -338,7 +338,7 @@ export class RhTableComponent implements OnInit, OnChanges {
     this.selectedAlgo = currentSelected;
   }
 
-  openChartDialog(symbol, endDate) {
+  openChartDialog(element: Stock, endDate) {
     const dialogRef = this.dialog.open(ChartDialogComponent, {
       width: '500px',
       height: '500px'
@@ -347,26 +347,10 @@ export class RhTableComponent implements OnInit, OnChanges {
     dialogRef.afterClosed().subscribe(result => {
       console.log('Closed dialog', result);
 
-      let algo = '';
-
-      switch (result) {
-        case 'mfi': {
-          algo = 'mfi';
-          break;
-        }
-        case 'sma': {
-          algo = 'sma';
-          break;
-        }
-        case 'bollingerband': {
-          algo = 'bollingerband';
-          break;
-        }
-      }
-
+      let algo = result;
       const params: ChartParam = {
         algorithm: algo,
-        symbol,
+        symbol: element.stock,
         date: endDate
       };
       this.algo.currentChart.next(params);

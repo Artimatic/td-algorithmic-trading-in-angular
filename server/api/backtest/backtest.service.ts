@@ -16,8 +16,8 @@ const dataServiceUrl = configurations.apps.goliath;
 const mlServiceUrl = configurations.apps.armadillo;
 
 const config = {
-  shortTerm: [3, 103],
-  longTerm: [5, 286]
+  shortTerm: [30, 35],
+  longTerm: [90, 100]
 };
 
 let startTime;
@@ -52,7 +52,7 @@ class BacktestService {
   evaluateStrategyAll(ticker, end, start) {
     console.log('Executing: ', ticker, new Date());
     startTime = moment();
-    return this.runTest(ticker, end, start);
+    this.runTest(ticker, end, start);
   }
 
   evaluateIntradayAlgo(ticker, end, start) {

@@ -15,10 +15,11 @@ export class ChartDialogComponent implements OnInit {
   algorithms: AlgorithmSelection[] = [
     {value: 'mfi', viewValue: 'Money Flow Index'},
     {value: 'sma', viewValue: 'Moving Average'},
-    {value: 'bollingerband', viewValue: 'Bollinger Band'}
+    {value: 'bollingerband', viewValue: 'Bollinger Band'},
+    {value: 'bollingerbandmfi', viewValue: 'Bollinger Band and MFI'}
   ];
 
-  selectedAlgo = 'bollingerband';
+  selectedAlgo = 'bollingerbandmfi';
   constructor() { }
 
   ngOnInit() {
