@@ -347,9 +347,8 @@ export class RhTableComponent implements OnInit, OnChanges {
     dialogRef.afterClosed().subscribe(result => {
       console.log('Closed dialog', result);
 
-      let algo = result;
       const params: ChartParam = {
-        algorithm: algo,
+        algorithm: result,
         symbol: element.stock,
         date: endDate
       };

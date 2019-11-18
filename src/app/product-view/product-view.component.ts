@@ -69,7 +69,7 @@ export class ProductViewComponent implements OnInit {
 
         result.signals.forEach(day => {
           time.push(day.date);
-          let signal = this.buildSignal(day.action, day.close, day.volume);
+          const signal = this.buildSignal(day.action, day.close, day.volume);
           seriesData.push(signal);
 
           this.initChart(params.symbol, time, seriesData);
@@ -227,7 +227,7 @@ export class ProductViewComponent implements OnInit {
 
         result.forEach(day => {
           time.push(day.date);
-          let signal = this.buildSignal(day.action, day.close, day.volume);
+          const signal = this.buildSignal(day.action, day.close, day.volume);
           seriesData.push(signal);
 
           this.initChart(stock, time, seriesData);
