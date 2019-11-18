@@ -16,8 +16,8 @@ const dataServiceUrl = configurations.apps.goliath;
 const mlServiceUrl = configurations.apps.armadillo;
 
 const config = {
-  shortTerm: [30, 35],
-  longTerm: [90, 100]
+  shortTerm: [30, 110],
+  longTerm: [90, 290]
 };
 
 let startTime;
@@ -118,14 +118,14 @@ class BacktestService {
 
               snapshots.push({ ...averagesRange, ...returns, recommendedDifference });
 
-              if (i % 3 === 0 && j === longTerm[longTerm.length - 1] - 1) {
-                fs.writeFile(`${ticker}_analysis_${startDate}-
-                  ${currentDate}_${i}.csv`, json2csv({ data: snapshots, fields: fields }), function (err) {
-                    if (err) { throw err; }
-                    console.log('file saved');
-                  });
-                snapshots.length = 0;
-              }
+              // if (i % 3 === 0 && j === longTerm[longTerm.length - 1] - 1) {
+              //   fs.writeFile(`${ticker}_analysis_${startDate}-
+              //     ${currentDate}_${i}.csv`, json2csv({ data: snapshots, fields: fields }), function (err) {
+              //       if (err) { throw err; }
+              //       console.log('file saved');
+              //     });
+              //   snapshots.length = 0;
+              // }
             }
           }
         }
@@ -136,7 +136,7 @@ class BacktestService {
 
         console.log('Duration: ', duration);
 
-        fs.writeFile(`${ticker}_analysis_${currentDate}-${startDate}.csv`,
+        fs.writeFile(`${ticker}_analysis_${startDate}-${currentDate}.csv`,
           json2csv({ data: snapshots, fields: fields }), function (err) {
             if (err) { throw err; }
             console.log('file saved');
