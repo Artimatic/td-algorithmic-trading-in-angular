@@ -16,8 +16,8 @@ const dataServiceUrl = configurations.apps.goliath;
 const mlServiceUrl = configurations.apps.armadillo;
 
 const config = {
-  shortTerm: [30, 110],
-  longTerm: [90, 290]
+  shortTerm: [5, 110],
+  longTerm: [10, 290]
 };
 
 let startTime;
@@ -105,7 +105,7 @@ class BacktestService {
         const fields = ['shortTerm', 'longTerm', 'totalReturns', 'totalTrades', 'recommendedDifference'];
         for (let i = shortTerm[0]; i < shortTerm[1]; i++) {
           for (let j = longTerm[0]; j < longTerm[1]; j++) {
-            if (i < j) {
+            if (i + 3 < j) {
               const MAs = ReversionService.executeMeanReversion(ReversionService.calcMA, quotes, i, j);
               const recommendedDifference = 0.003;
 
