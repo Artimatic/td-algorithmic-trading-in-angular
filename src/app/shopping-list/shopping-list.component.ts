@@ -251,7 +251,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
     this.sub = TimerObservable.create(0, this.interval)
       .takeWhile(() => this.alive)
       .subscribe(() => {
-        if (moment().isAfter(moment(this.globalSettingsService.startTime))) {
+        if (moment().isAfter(moment(this.globalSettingsService.startTime)) && moment().isBefore(moment(this.globalSettingsService.stopTime))) {
           let executed = 0;
           while (executed < limit && lastIndex < orders.length) {
             this.tradeService.algoQueue.next(orders[lastIndex].holding.symbol);
@@ -261,11 +261,10 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
           if (lastIndex >= orders.length) {
             lastIndex = 0;
           }
-          if (moment().isAfter(moment(this.globalSettingsService.stopTime))) {
+          if (moment().isAfter(moment(this.globalSettingsService.stopTime)) && moment().isBefore(moment(this.globalSettingsService.stopTime).add(2, 'minutes'))) {
             const log = `Profit ${this.scoreKeeperService.total}`;
             this.reportingService.addAuditLog(null, log);
             this.reportingService.exportAuditHistory();
-            this.stop();
           }
         }
       });

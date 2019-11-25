@@ -20,5 +20,10 @@ export class ReportingService {
     const today = moment().format('MM-DD-YY');
     console.log('printing logs: ', this.logs);
     this.excelService.exportAsExcelFile(this.logs, `logs_${today}`);
+    this.clearLogs();
+  }
+
+  clearLogs() {
+    this.logs = [];
   }
 }
