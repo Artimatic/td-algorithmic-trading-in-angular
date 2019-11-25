@@ -89,13 +89,18 @@ export class ProductViewComponent implements OnInit {
       );
   }
 
-  loadSma(data, endDate): void {
+  loadSma(data: ChartParam, endDate): void {
     this.resolving = true;
 
     const currentDate = moment(endDate).format('YYYY-MM-DD');
     const pastDate = moment(endDate).subtract(700, 'days').format('YYYY-MM-DD');
 
-    this.algo.getBacktestChart(data.symbol, pastDate, currentDate, data.deviation || 0.003, data.shortTerm || 30, data.longTerm || 90)
+    this.algo.getBacktestChart(data.symbol,
+      pastDate,
+      currentDate,
+      data.params.deviation || 0.003,
+      data.params.fastAvg || 30,
+      data.params.slowAvg || 90)
       .map(result => {
         const time = [],
           seriesData = [];
@@ -103,7 +108,10 @@ export class ProductViewComponent implements OnInit {
 
         result.forEach(day => {
           time.push(day.date);
-          if (this.triggerCondition(day.close, day.shortTermAvg, day.longTermAvg, data.deviation || 0.003)) {
+          if (this.triggerCondition(day.close,
+            day.shortTermAvg,
+            day.longTermAvg,
+            data.params.deviation || 0.003)) {
             if (day.trending === 'Sell') {
               signal = {
                 y: day.close,
@@ -147,13 +155,13 @@ export class ProductViewComponent implements OnInit {
           seriesData.push(signal);
         });
 
-        this.initChart(data.stock, time, seriesData);
+        this.initChart(data.symbol, time, seriesData);
 
         return result;
       })
       .subscribe(
         response => {
-          this.stock = data.stock;
+          this.stock = data.symbol;
           this.resolving = false;
         },
         err => {

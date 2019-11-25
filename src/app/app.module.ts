@@ -81,6 +81,7 @@ import { MachineLearningModule } from './machine-learning/machine-learning.modul
 import { MlCardComponent } from './ml-card/ml-card.component';
 import { TestResultsTableComponent } from './test-results-table/test-results-table.component';
 import { ChartDialogComponent } from './chart-dialog/chart-dialog.component';
+import { TableModule } from 'primeng/table';
 
 @NgModule({
   declarations: [
@@ -156,6 +157,7 @@ import { ChartDialogComponent } from './chart-dialog/chart-dialog.component';
     SettingsModule,
     MachineLearningModule,
     MatSlideToggleModule,
+    TableModule,
   ],
   providers: [
     BacktestService,

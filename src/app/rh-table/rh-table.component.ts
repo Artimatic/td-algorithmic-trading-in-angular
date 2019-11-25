@@ -13,6 +13,7 @@ import { FormControl } from '@angular/forms';
 import Stocks from './backtest-stocks.constant';
 import { ChartDialogComponent } from '../chart-dialog/chart-dialog.component';
 import { ChartParam } from '../shared/services/backtest.service';
+import { GlobalSettingsService } from '../settings/global-settings.service';
 export interface Algo {
   value: string;
   viewValue: string;
@@ -72,7 +73,8 @@ export class RhTableComponent implements OnInit, OnChanges {
     public snackBar: MatSnackBar,
     private algo: BacktestService,
     public dialog: MatDialog,
-    private portfolioService: PortfolioService) { }
+    private portfolioService: PortfolioService,
+    private globalSettingsService: GlobalSettingsService) { }
 
   ngOnInit() {
     this.filterRecommendation();
@@ -339,20 +341,31 @@ export class RhTableComponent implements OnInit, OnChanges {
   }
 
   openChartDialog(element: Stock, endDate) {
+    const params: ChartParam = {
+      algorithm: 'bollingerbandmfi',
+      symbol: element.stock,
+      date: endDate,
+      params: {
+        deviation: this.globalSettingsService.deviation,
+        fastAvg: this.globalSettingsService.fastAvg,
+        slowAvg: this.globalSettingsService.slowAvg
+      }
+    };
+
     const dialogRef = this.dialog.open(ChartDialogComponent, {
       width: '500px',
-      height: '500px'
+      height: '500px',
+      data: { chartData: params }
     });
 
     dialogRef.afterClosed().subscribe(result => {
       console.log('Closed dialog', result);
-
-      const params: ChartParam = {
-        algorithm: result,
-        symbol: element.stock,
-        date: endDate
-      };
-      this.algo.currentChart.next(params);
+      if (result.algorithm === 'sma') {
+        this.globalSettingsService.deviation = result.params.deviation;
+        this.globalSettingsService.fastAvg = result.params.fastAvg;
+        this.globalSettingsService.slowAvg = result.params.slowAvg;
+      }
+      this.algo.currentChart.next(result);
     });
   }
 }

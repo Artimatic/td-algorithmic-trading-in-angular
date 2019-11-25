@@ -14,6 +14,7 @@ export interface ChartParam {
     algorithm: string;
     symbol: string;
     date: string;
+    params?: any;
 }
 
 @Injectable()
