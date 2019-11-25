@@ -342,7 +342,7 @@ export class RhTableComponent implements OnInit, OnChanges {
 
   openChartDialog(element: Stock, endDate) {
     const params: ChartParam = {
-      algorithm: 'bollingerbandmfi',
+      algorithm: this.globalSettingsService.selectedAlgo,
       symbol: element.stock,
       date: endDate,
       params: {
@@ -365,6 +365,8 @@ export class RhTableComponent implements OnInit, OnChanges {
         this.globalSettingsService.fastAvg = result.params.fastAvg;
         this.globalSettingsService.slowAvg = result.params.slowAvg;
       }
+      this.globalSettingsService.selectedAlgo = result.algorithm;
+
       this.algo.currentChart.next(result);
     });
   }

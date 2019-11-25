@@ -19,6 +19,7 @@ export class GlobalSettingsService {
   deviation: number;
   fastAvg: number;
   slowAvg: number;
+  selectedAlgo: string;
   constructor() {
     this.startTime = moment.tz('10:00am', 'h:mma', 'America/New_York').toDate();
     this.sellAtCloseTime = moment.tz('3:40pm', 'h:mma', 'America/New_York').toDate();

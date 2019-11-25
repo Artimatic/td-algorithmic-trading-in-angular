@@ -32,6 +32,7 @@ export class ChartDialogComponent implements OnInit {
   constructor(@Inject(MAT_DIALOG_DATA) public data: { chartData: any }, private _formBuilder: FormBuilder) { }
 
   ngOnInit() {
+    this.selectedAlgo = this.data.chartData.algorithm;
     this.smaForm = this._formBuilder.group({
       deviation: new FormControl(this.data.chartData.params.deviation, Validators.required),
       fastAvg: new FormControl(this.data.chartData.params.fastAvg, Validators.required),
