@@ -261,7 +261,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
           if (lastIndex >= orders.length) {
             lastIndex = 0;
           }
-          if (moment().isAfter(moment(this.globalSettingsService.stopTime)) && moment().isBefore(moment(this.globalSettingsService.stopTime).add(2, 'minutes'))) {
+          if (moment().isAfter(moment(this.globalSettingsService.stopTime)) && moment().isBefore(moment(this.globalSettingsService.stopTime).add(3, 'minutes'))) {
             const log = `Profit ${this.scoreKeeperService.total}`;
             this.reportingService.addAuditLog(null, log);
             this.reportingService.exportAuditHistory();

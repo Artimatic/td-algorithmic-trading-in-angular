@@ -12,10 +12,7 @@ export class RhInputComponent implements OnInit {
 
   constructor(fb: FormBuilder) {
     this.form = fb.group({
-      query: new FormControl(''),
-      deviation: null,
-      short: 30,
-      long: 90
+      query: new FormControl('')
     }, {});
   }
 

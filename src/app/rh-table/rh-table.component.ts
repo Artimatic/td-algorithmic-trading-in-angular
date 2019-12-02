@@ -28,13 +28,13 @@ export interface AlgoGroup {
 @Component({
   selector: 'app-rh-table',
   templateUrl: './rh-table.component.html',
-  styleUrls: ['./rh-table.component.css']
+  styleUrls: ['./rh-table.component.scss']
 })
 export class RhTableComponent implements OnInit, OnChanges {
   @Input() data: AlgoParam[];
   @Input() displayedColumns: string[];
 
-  recommendation = 'strongbuy';
+  selectedRecommendation: string[];
   stockList: Stock[] = [];
   currentList: Stock[] = [];
   algoReport = {
@@ -68,6 +68,10 @@ export class RhTableComponent implements OnInit, OnChanges {
       ]
     }
   ];
+  recommendations: any[];
+  cols: any[];
+  selectedColumns: any[];
+  selectedStock: any;
 
   constructor(
     public snackBar: MatSnackBar,
@@ -77,8 +81,36 @@ export class RhTableComponent implements OnInit, OnChanges {
     private globalSettingsService: GlobalSettingsService) { }
 
   ngOnInit() {
-    this.filterRecommendation();
+    this.recommendations = [
+      { value: 'strongbuy', label: 'Strong Buy' },
+      { value: 'buy', label: 'Buy' },
+      { value: 'sell', label: 'Sell' },
+      { value: 'strongsell', label: 'Strong Sell' }
+    ];
     this.endDate = moment(this.endDate).format('YYYY-MM-DD');
+    this.cols = [
+      { field: 'stock', header: 'Stock' },
+      { field: 'returns', header: 'Returns' },
+      { field: 'lastVolume', header: 'Last Volume' },
+      { field: 'lastPrice', header: 'Last Price' },
+      { field: 'totalTrades', header: 'Trades' },
+      { field: 'strongbuySignals', header: 'Strong Buy' },
+      { field: 'buySignals', header: 'Buy' },
+      { field: 'sellSignals', header: 'Sell' },
+      { field: 'strongsellSignals', header: 'Strong Sell' }    ];
+
+    this.selectedColumns = [
+      { field: 'stock', header: 'Stock' },
+      { field: 'returns', header: 'Returns' },
+      { field: 'totalTrades', header: 'Trades' },
+      { field: 'strongbuySignals', header: 'Strong Buy' },
+      { field: 'buySignals', header: 'Buy' },
+      { field: 'sellSignals', header: 'Sell' },
+      { field: 'strongsellSignals', header: 'Strong Sell' }
+    ];
+
+    this.selectedRecommendation = ['strongbuy', 'buy', 'sell', 'strongsell'];
+    this.filter();
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -92,7 +124,7 @@ export class RhTableComponent implements OnInit, OnChanges {
     const startDate = moment(this.endDate).subtract(700, 'days').format('YYYY-MM-DD');
 
     this.progress = 0;
-    this.totalStocks = algoParams.length;
+    this.totalStocks += algoParams.length;
     this.algoReport = {
       totalReturns: 0,
       totalTrades: 0,
@@ -222,42 +254,54 @@ export class RhTableComponent implements OnInit, OnChanges {
     this.algoReport.averageTrades = +((this.algoReport.totalTrades / this.totalStocks).toFixed(5));
   }
 
+  filter() {
+    this.filterRecommendation();
+  }
+
   filterRecommendation() {
-    if (this.recommendation === '') {
+    if (this.selectedRecommendation.length === this.recommendations.length) {
       this.currentList = _.clone(this.stockList);
     } else {
       this.currentList = _.filter(this.stockList, (stock: Stock) => {
-        switch (this.recommendation) {
-          case 'strongbuy':
-            return stock.strongbuySignals.length > 0;
-          case 'buy':
-            return stock.buySignals.length > 0;
-          case 'strongsell':
-            return stock.strongsellSignals.length > 0;
-          case 'sell':
-            return stock.sellSignals.length > 0;
+        for (const recommendation of this.selectedRecommendation) {
+          if (this.hasRecommendation(stock, recommendation)) {
+            return true;
+          }
         }
-        return stock.recommendation.toLowerCase() === this.recommendation;
       });
+    }
+  }
+
+  hasRecommendation(stock: Stock, recommendation) {
+    switch (recommendation) {
+      case 'strongbuy':
+        return stock.strongbuySignals.length > 0;
+      case 'buy':
+        return stock.buySignals.length > 0;
+      case 'strongsell':
+        return stock.strongsellSignals.length > 0;
+      case 'sell':
+        return stock.sellSignals.length > 0;
     }
   }
 
   addToList(stock: Stock) {
     stock = this.findAndUpdate(stock, this.stockList);
-    if (this.recommendation === '' || stock.recommendation.toLowerCase() === this.recommendation) {
-      this.findAndUpdate(stock, this.currentList);
-    }
+    this.filter();
   }
 
-  findAndUpdate(stock: Stock, list: any[]): Stock {
-    const idx = _.findIndex(list, (s) => s.stock === stock.stock);
+  /*
+  * Find matching stock in current list and update with new data
+  */
+  findAndUpdate(stock: Stock, tableList: any[]): Stock {
+    const idx = _.findIndex(tableList, (s) => s.stock === stock.stock);
     let updateStock;
     if (idx > -1) {
-      updateStock = this.updateRecommendationCount(list[idx], stock);
-      list[idx] = updateStock;
+      updateStock = this.updateRecommendationCount(tableList[idx], stock);
+      tableList[idx] = updateStock;
     } else {
       updateStock = this.updateRecommendationCount(null, stock);
-      list.push(updateStock);
+      tableList.push(updateStock);
     }
     return updateStock;
   }
@@ -336,7 +380,7 @@ export class RhTableComponent implements OnInit, OnChanges {
     this.selectedAlgo = 'v5';
     this.getData(Stocks);
 
-    this.progress = Stocks.length * 2;
+    this.progress = 0;
     this.selectedAlgo = currentSelected;
   }
 

@@ -1,116 +1,87 @@
 <app-product-view #product></app-product-view>
-<mat-card>
-  <div class="table-container mat-elevation-z8">
-    <mat-grid-list cols="3" rowHeight="76px">
-      <mat-grid-tile>
-        <div class="date-picker">
-          End Date
-          <input name="endDate" type="date" [ngModel]="endDate" (ngModelChange)="endDate = $event">
+
+<h3>Recommendations</h3>
+<p-table #dt [columns]="selectedColumns" [value]="currentList" [paginator]="true" [rows]="100" selectionMode="single"
+  [(selection)]="selectedStock" dataKey="stock">
+  <ng-template pTemplate="caption">
+    <div class="ui-g">
+      <div class="ui-g-4">
+        <div class="table-commands">
+          <button mat-button color="primary" (click)="buy(selectedStock)" [disabled]="!selectedStock">BUY</button>
+          <button mat-button color="warn" (click)="sell(selectedStock)" [disabled]="!selectedStock">SELL</button>
+          <button mat-button (click)="openChartDialog(selectedStock, endDate)" [disabled]="!selectedStock">
+            Chart
+          </button>
+          <button mat-button color="primary" (click)=runDefaultBacktest() *ngIf="progress>=totalStocks">Run Default
+            Backtest
+          </button>
         </div>
-      </mat-grid-tile>
-      <mat-grid-tile>
-        <mat-radio-group [(ngModel)]="recommendation" (change)="filterRecommendation()">
-          <mat-radio-button value="strongbuy">Strong Buy</mat-radio-button>
-          <mat-radio-button value="buy">Buy</mat-radio-button>
-          <mat-radio-button value="">Any</mat-radio-button>
-          <mat-radio-button value="sell">Sell</mat-radio-button>
-          <mat-radio-button value="strongsell">Strong Sell</mat-radio-button>
-        </mat-radio-group>
-      </mat-grid-tile>
-      <mat-grid-tile>
-        <mat-form-field>
-          <mat-select placeholder="Algorithm" [(ngModel)]="selectedAlgo">
-            <mat-optgroup *ngFor="let group of algoGroups" [label]="group.name" [disabled]="group.disabled">
-              <mat-option *ngFor="let algo of group.algorithm" [value]="algo.value">
-                {{algo.viewValue}}
-              </mat-option>
-            </mat-optgroup>
-          </mat-select>
-        </mat-form-field>
-      </mat-grid-tile>
-      <mat-grid-tile>
-          <button mat-button color="primary" (click)=runDefaultBacktest() *ngIf="progress>=totalStocks">Run Default Backtest</button>
-          <mat-spinner *ngIf="progress<totalStocks"></mat-spinner>
-      </mat-grid-tile>
-    </mat-grid-list>
-    <div id="tableContainer" class="tableContainer">
-      <table border="0" cellpadding="0" cellspacing="0" width="100%" class="scrollTable">
-        <thead class="fixedHeader">
-          <tr>
-            <th>Stock</th>
-            <th>Returns</th>
-            <th>Last Volume</th>
-            <th>Last Price</th>
-            <th>Trades</th>
-            <th>Recommendation</th>
-            <th>Strong Buy</th>
-            <th>Buy</th>
-            <th>Sell</th>
-            <th>Strong Sell</th>
-          </tr>
-        </thead>
-        <tbody class="scrollContent">
-          <tr *ngFor="let element of currentList">
-            <td>
-              <span> {{element.stock}}
-                <button mat-button color="primary" (click)="buy(element)">BUY</button>
-                <button mat-button color="warn" (click)="sell(element)">SELL</button>
-              </span>
-            </td>
-            <td>
-              <span>
-                {{element.returns}}%
-              </span>
-            </td>
-            <td>
-              <span> {{element.lastVolume | number}}
-              </span>
-            </td>
-            <td>
-              <span>
-                {{element.lastPrice | currency}}
-              </span>
-            </td>
-            <td>
-              <span>
-                {{element.totalTrades}}
-              </span>
-            </td>
-            <td>
-              <span>
-                {{element.recommendation}}
-                <button mat-icon-button (click)="openChartDialog(element, endDate)">
-                  <mat-icon>show_chart</mat-icon>
-                </button>
-              </span>
-            </td>
-            <td>
-              <span *ngIf="element.strongbuySignals">
-                {{element.strongbuySignals}}
-              </span>
-            </td>
-            <td>
-              <span *ngIf="element.buySignals">
-                {{element.buySignals}}
-              </span>
-            </td>
-            <td>
-              <span *ngIf="element.sellSignals">
-                {{element.sellSignals}}
-              </span>
-            </td>
-            <td>
-              <span *ngIf="element.strongsellSignals">
-                {{element.strongsellSignals}}
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      </div>
+      <div class="ui-g-4">
+        <div class="table-settings">
+          <div class="date-picker">
+            End Date
+            <input name="endDate" type="date" [ngModel]="endDate" (ngModelChange)="endDate = $event">
+          </div>
+          <mat-form-field>
+            <mat-select placeholder="Algorithm" [(ngModel)]="selectedAlgo">
+              <mat-optgroup *ngFor="let group of algoGroups" [label]="group.name" [disabled]="group.disabled">
+                <mat-option *ngFor="let algo of group.algorithm" [value]="algo.value">
+                  {{algo.viewValue}}
+                </mat-option>
+              </mat-optgroup>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+      <div class="ui-g-4">
+        <div class="table-filters">
+          <p-multiSelect class="filter" [options]="recommendations" [(ngModel)]="selectedRecommendation"
+            defaultLabel="All Recommendations" (onChange)="filterRecommendation()"></p-multiSelect>
+          <p-multiSelect class="filter" [options]="cols" [(ngModel)]="selectedColumns" optionLabel="header"
+            selectedItemsLabel="{0} columns selected" [style]="{minWidth: '200px'}" defaultLabel="Choose Columns">
+          </p-multiSelect>
+        </div>
+      </div>
     </div>
+  </ng-template>
+  <ng-template pTemplate="header" let-columns>
+    <tr>
+      <th *ngFor="let col of columns" [pSortableColumn]="col.field" pResizableColumn pReorderableColumn>
+        {{col.header}}
+        <p-sortIcon [field]="col.field"></p-sortIcon>
+      </th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-element let-columns="columns">
+    <tr [pSelectableRow]="element">
+      <td *ngFor="let col of selectedColumns" [ngSwitch]="col.field">
+        <span *ngSwitchCase="'returns'">
+          {{element[col.field]}}%
+        </span>
+        <span *ngSwitchCase="'lastVolume'">
+          {{element.lastVolume | number}}
+        </span>
+        <span *ngSwitchCase="'lastPrice'">
+          {{element.lastVolume | currency}}
+        </span>
+        <span *ngSwitchDefault>
+          {{element[col.field]}}
+        </span>
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="emptymessage" let-columns>
+    <tr class="empty-table">
+      <td [attr.colspan]="columns.length">
+        No stocks found
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="summary">
     Progress: {{progress}}/{{totalStocks}}
     <mat-progress-bar mode="determinate" value="{{progressPct}}"></mat-progress-bar>
     Average Trades: {{algoReport.averageTrades}}
     Average Returns: {{algoReport.averageReturns}}%
-  </div>
-</mat-card>
+  </ng-template>
+</p-table>
