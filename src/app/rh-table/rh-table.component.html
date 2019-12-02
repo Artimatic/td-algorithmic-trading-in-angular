@@ -37,7 +37,7 @@
       <div class="ui-g-4">
         <div class="table-filters">
           <p-multiSelect class="filter" [options]="recommendations" [(ngModel)]="selectedRecommendation"
-            defaultLabel="All Recommendations" (onChange)="filterRecommendation()"></p-multiSelect>
+            defaultLabel="All Recommendations" (onChange)="filter()"></p-multiSelect>
           <p-multiSelect class="filter" [options]="cols" [(ngModel)]="selectedColumns" optionLabel="header"
             selectedItemsLabel="{0} columns selected" [style]="{minWidth: '200px'}" defaultLabel="Choose Columns">
           </p-multiSelect>
