@@ -41,6 +41,9 @@
           <p-multiSelect class="filter" [options]="cols" [(ngModel)]="selectedColumns" optionLabel="header"
             selectedItemsLabel="{0} columns selected" [style]="{minWidth: '200px'}" defaultLabel="Choose Columns">
           </p-multiSelect>
+          <mat-checkbox class="filter" [(ngModel)]="twoOrMoreSignalsOnly" (change)="filter()">
+            Only show if two or more signals
+          </mat-checkbox>
         </div>
       </div>
     </div>

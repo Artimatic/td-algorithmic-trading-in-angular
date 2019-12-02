@@ -72,6 +72,7 @@ export class RhTableComponent implements OnInit, OnChanges {
   cols: any[];
   selectedColumns: any[];
   selectedStock: any;
+  twoOrMoreSignalsOnly: boolean;
 
   constructor(
     public snackBar: MatSnackBar,
@@ -256,9 +257,35 @@ export class RhTableComponent implements OnInit, OnChanges {
 
   filter() {
     this.filterRecommendation();
+    if (this.twoOrMoreSignalsOnly) {
+      this.filterTwoOrMoreSignalsOnly();
+    }
+  }
+
+  filterTwoOrMoreSignalsOnly() {
+    this.currentList = _.filter(this.currentList, (stock: Stock) => {
+      let isTwoOrMore = false;
+      for (const recommendation of this.selectedRecommendation) {
+        switch (recommendation) {
+          case 'strongbuy':
+            isTwoOrMore = stock.strongbuySignals.length > 1;
+          case 'buy':
+            isTwoOrMore =  stock.buySignals.length > 1;
+          case 'strongsell':
+            isTwoOrMore =  stock.strongsellSignals.length > 1;
+          case 'sell':
+            isTwoOrMore =  stock.sellSignals.length > 1;
+        }
+        if (isTwoOrMore) {
+          return true;
+        }
+      }
+
+    });
   }
 
   filterRecommendation() {
+    this.currentList = [];
     if (this.selectedRecommendation.length === this.recommendations.length) {
       this.currentList = _.clone(this.stockList);
     } else {
@@ -286,14 +313,14 @@ export class RhTableComponent implements OnInit, OnChanges {
   }
 
   addToList(stock: Stock) {
-    stock = this.findAndUpdate(stock, this.stockList);
+    this.stockList = this.findAndUpdate(stock, this.stockList);
     this.filter();
   }
 
   /*
   * Find matching stock in current list and update with new data
   */
-  findAndUpdate(stock: Stock, tableList: any[]): Stock {
+  findAndUpdate(stock: Stock, tableList: any[]): Stock[] {
     const idx = _.findIndex(tableList, (s) => s.stock === stock.stock);
     let updateStock;
     if (idx > -1) {
@@ -303,7 +330,7 @@ export class RhTableComponent implements OnInit, OnChanges {
       updateStock = this.updateRecommendationCount(null, stock);
       tableList.push(updateStock);
     }
-    return updateStock;
+    return tableList;
   }
 
   updateRecommendationCount(current: Stock, incomingStock: Stock): Stock {
@@ -326,15 +353,19 @@ export class RhTableComponent implements OnInit, OnChanges {
     switch (incomingStock.recommendation.toLowerCase()) {
       case 'strongbuy':
         current.strongbuySignals.push(incomingStock.algo);
+        current.strongbuySignals = current.strongbuySignals.slice();
         break;
       case 'buy':
         current.buySignals.push(incomingStock.algo);
+        current.buySignals = current.buySignals.slice();
         break;
       case 'strongsell':
         current.strongsellSignals.push(incomingStock.algo);
+        current.strongsellSignals = current.strongsellSignals.slice();
         break;
       case 'sell':
         current.sellSignals.push(incomingStock.algo);
+        current.sellSignals = current.sellSignals.slice();
         break;
     }
 
