@@ -19,6 +19,7 @@ import { TradeService } from '../shared/services/trade.service';
   styleUrls: ['./shopping-list.component.css']
 })
 export class ShoppingListComponent implements OnInit, OnDestroy {
+  defaultInterval = 70800;
   mu: SmartOrder;
   vti: SmartOrder;
   upro: SmartOrder;
@@ -45,7 +46,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
     private tradeService: TradeService) { }
 
   ngOnInit() {
-    this.interval = 70800;
+    this.interval = this.defaultInterval;
 
     this.ordersStarted = 0;
     this.portfolioService.getInstruments('UPRO').subscribe((response) => {
@@ -72,11 +73,11 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
       };
       this.upro = order;
     },
-    (error) => {
-      this.snackBar.open('Error getting instruments for UPRO', 'Dismiss', {
-        duration: 2000,
+      (error) => {
+        this.snackBar.open('Error getting instruments for UPRO', 'Dismiss', {
+          duration: 2000,
+        });
       });
-    });
 
     this.vti = {
       holding:
@@ -197,11 +198,11 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
       };
       this.spxu = order;
     },
-    (error) => {
-      this.snackBar.open('Error getting instruments', 'Dismiss', {
-        duration: 2000,
+      (error) => {
+        this.snackBar.open('Error getting instruments', 'Dismiss', {
+          duration: 2000,
+        });
       });
-    });
   }
 
   ngOnDestroy() {
@@ -251,7 +252,12 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
     this.sub = TimerObservable.create(0, this.interval)
       .takeWhile(() => this.alive)
       .subscribe(() => {
-        if (moment().isAfter(moment(this.globalSettingsService.startTime)) && moment().isBefore(moment(this.globalSettingsService.stopTime))) {
+        if (this.interval !== this.defaultInterval) {
+          this.interval = this.defaultInterval;
+        }
+
+        if (moment().isAfter(moment(this.globalSettingsService.startTime)) &&
+          moment().isBefore(moment(this.globalSettingsService.stopTime))) {
           let executed = 0;
           while (executed < limit && lastIndex < orders.length) {
             this.tradeService.algoQueue.next(orders[lastIndex].holding.symbol);
@@ -261,11 +267,14 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
           if (lastIndex >= orders.length) {
             lastIndex = 0;
           }
-          if (moment().isAfter(moment(this.globalSettingsService.stopTime)) && moment().isBefore(moment(this.globalSettingsService.stopTime).add(3, 'minutes'))) {
-            const log = `Profit ${this.scoreKeeperService.total}`;
-            this.reportingService.addAuditLog(null, log);
-            this.reportingService.exportAuditHistory();
-          }
+        }
+        if (moment().isAfter(moment(this.globalSettingsService.stopTime)) &&
+          moment().isBefore(moment(this.globalSettingsService.stopTime).add(5, 'minutes'))) {
+          const log = `Profit ${this.scoreKeeperService.total}`;
+          this.reportingService.addAuditLog(null, log);
+          this.reportingService.exportAuditHistory();
+          // this.interval = 50400000;
+          this.interval = 300000;
         }
       });
   }
@@ -285,11 +294,11 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
         const resolve = (data) => {
           console.log('close all resolved: ', data);
           this.snackBar.open('Open positions closed', 'Dismiss');
-         };
+        };
         const reject = (error) => {
           console.log('close all error: ', error);
           this.snackBar.open('Unable to close all positions', 'Dismiss');
-         };
+        };
         const handleNotFound = () => { };
         this.daytradeService.closeTrades(resolve, reject, handleNotFound);
       }
