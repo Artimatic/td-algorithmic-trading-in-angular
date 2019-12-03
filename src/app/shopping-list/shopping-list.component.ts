@@ -273,8 +273,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
           const log = `Profit ${this.scoreKeeperService.total}`;
           this.reportingService.addAuditLog(null, log);
           this.reportingService.exportAuditHistory();
-          // this.interval = 50400000;
-          this.interval = 300000;
+          this.interval = moment(this.globalSettingsService.startTime).diff(moment().subtract(5, 'minutes'), 'milliseconds');
         }
       });
   }
