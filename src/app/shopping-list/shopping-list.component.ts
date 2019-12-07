@@ -269,7 +269,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
           }
         }
         if (moment().isAfter(moment(this.globalSettingsService.stopTime)) &&
-          moment().isBefore(moment(this.globalSettingsService.stopTime).add(5, 'minutes'))) {
+          moment().isBefore(moment(this.globalSettingsService.stopTime).add(this.interval * 2, 'minutes'))) {
           const log = `Profit ${this.scoreKeeperService.total}`;
           this.reportingService.addAuditLog(null, log);
           this.reportingService.exportAuditHistory();
