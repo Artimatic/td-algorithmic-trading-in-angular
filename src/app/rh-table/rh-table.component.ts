@@ -265,7 +265,7 @@ export class RhTableComponent implements OnInit, OnChanges {
   filterTwoOrMoreSignalsOnly() {
     this.currentList = _.filter(this.currentList, (stock: Stock) => {
       return (stock.strongbuySignals.length + stock.buySignals.length +
-        stock.strongsellSignals.length + stock.sellSignals.length) > 1
+        stock.strongsellSignals.length + stock.sellSignals.length) > 1;
     });
   }
 
