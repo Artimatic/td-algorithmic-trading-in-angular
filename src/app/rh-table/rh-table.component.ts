@@ -264,33 +264,14 @@ export class RhTableComponent implements OnInit, OnChanges {
 
   filterTwoOrMoreSignalsOnly() {
     this.currentList = _.filter(this.currentList, (stock: Stock) => {
-      let isTwoOrMore = false;
-      for (const recommendation of this.selectedRecommendation) {
-        switch (recommendation) {
-          case 'strongbuy':
-            isTwoOrMore = stock.strongbuySignals.length > 1;
-            break;
-          case 'buy':
-            isTwoOrMore =  stock.buySignals.length > 1;
-            break;
-          case 'strongsell':
-            isTwoOrMore =  stock.strongsellSignals.length > 1;
-            break;
-          case 'sell':
-            isTwoOrMore =  stock.sellSignals.length > 1;
-            break;
-        }
-        if (isTwoOrMore) {
-          return true;
-        }
-      }
-
+      return (stock.strongbuySignals.length + stock.buySignals.length +
+        stock.strongsellSignals.length + stock.sellSignals.length) > 1
     });
   }
 
   filterRecommendation() {
     this.currentList = [];
-    if (this.selectedRecommendation.length === this.recommendations.length) {
+    if (this.selectedRecommendation.length === 0) {
       this.currentList = _.clone(this.stockList);
     } else {
       this.currentList = _.filter(this.stockList, (stock: Stock) => {
