@@ -420,7 +420,7 @@ export class RhTableComponent implements OnInit, OnChanges {
 
     dialogRef.afterClosed().subscribe(result => {
       console.log('Closed dialog', result);
-      if (result.algorithm === 'sma') {
+      if (result.algorithm === 'sma' || result.algorithm === 'macrossover') {
         this.globalSettingsService.deviation = result.params.deviation;
         this.globalSettingsService.fastAvg = result.params.fastAvg;
         this.globalSettingsService.slowAvg = result.params.slowAvg;

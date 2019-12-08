@@ -177,6 +177,12 @@ class BacktestController extends BaseController {
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
+
+  getMaCrossOver(request, response) {
+    BacktestService.getMovingAverageCrossOverInfo(request.body.symbol, request.body.to, request.body.from, request.body.settings)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
 }
 
 export default new BacktestController();

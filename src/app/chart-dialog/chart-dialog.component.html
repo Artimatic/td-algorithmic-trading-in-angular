@@ -8,7 +8,7 @@
       </mat-option>
     </mat-select>
   </mat-form-field>
-  <form *ngIf="selectedAlgo==='sma'" [formGroup]="smaForm">
+  <form *ngIf="selectedAlgo==='sma' || selectedAlgo==='macrossover'" [formGroup]="smaForm">
     <mat-form-field hintLabel="Deviation">
       <input matInput placeholder="0.003" formControlName="deviation">
     </mat-form-field>

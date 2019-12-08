@@ -39,6 +39,10 @@ export class ProductViewComponent implements OnInit {
           this.loadBBMfiChart(chart);
           break;
         }
+        case 'macrossover': {
+          this.loadMaCrossOverChart(chart);
+          break;
+        }
       }
     });
   }
@@ -78,6 +82,40 @@ export class ProductViewComponent implements OnInit {
       .subscribe(
         response => {
           this.stock = params.symbol;
+          this.resolving = false;
+        },
+        err => {
+          this.resolving = false;
+          this.snackBar.open(`Error: ${err}`, 'Dismiss', {
+            duration: 20000,
+          });
+        }
+      );
+  }
+
+  loadMaCrossOverChart(data: ChartParam) {
+    this.resolving = true;
+    const currentDate = moment(data.date).format('YYYY-MM-DD');
+    const pastDate = moment(data.date).subtract(800, 'days').format('YYYY-MM-DD');
+
+    this.algo.getMaCrossOverBacktestChart(data.symbol, currentDate,
+                                          pastDate, data.params.fastAvg || 30,
+                                          data.params.slowAvg || 90)
+      .map(result => {
+        const time = [];
+        const seriesData = [];
+
+        result.signals.forEach(day => {
+          time.push(day.date);
+          const signal = this.buildSignal(day.action, day.close, day.volume);
+          seriesData.push(signal);
+
+          this.initChart(data.symbol, time, seriesData);
+        });
+      })
+      .subscribe(
+        response => {
+          this.stock = data.symbol;
           this.resolving = false;
         },
         err => {
@@ -222,6 +260,7 @@ export class ProductViewComponent implements OnInit {
         };
     }
   }
+
   loadBBChart(stock: string, endDate): void {
     this.resolving = true;
 

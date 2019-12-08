@@ -24,7 +24,8 @@ export class ChartDialogComponent implements OnInit {
     { value: 'mfi', viewValue: 'Money Flow Index' },
     { value: 'sma', viewValue: 'Moving Average' },
     { value: 'bollingerband', viewValue: 'Bollinger Band' },
-    { value: 'bollingerbandmfi', viewValue: 'Bollinger Band and MFI' }
+    { value: 'bollingerbandmfi', viewValue: 'Bollinger Band and MFI' },
+    { value: 'macrossover', viewValue: 'Moving Average Crossover' }
   ];
 
   selectedAlgo = 'bollingerbandmfi';
@@ -44,7 +45,7 @@ export class ChartDialogComponent implements OnInit {
   useSelected(): ChartParam {
     this.data.chartData.algorithm = this.selectedAlgo;
 
-    if (this.selectedAlgo === 'sma') {
+    if (this.selectedAlgo === 'sma' || this.selectedAlgo === 'macrossover') {
       const params = {
         deviation: this.smaForm.value.deviation,
         fastAvg: this.smaForm.value.fastAvg,

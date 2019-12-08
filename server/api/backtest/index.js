@@ -21,5 +21,6 @@ router.post('/rnn', BacktestController.runRNN);
 router.post('/rnn-status', BacktestController.getRNNPrediction);
 router.post('/rnn-activate', BacktestController.activateRNN);
 router.post('/bb-mfi', BacktestController.bbandMfi);
+router.post('/ma-crossover', BacktestController.getMaCrossOver);
 
 module.exports = router;
