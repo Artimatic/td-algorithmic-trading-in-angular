@@ -234,6 +234,7 @@ export class RhTableComponent implements OnInit, OnChanges {
               console.log(`Error on ${param.ticker} ${algo}`, error);
             });
         });
+        break;
         case 'moving_average_resistance':
           algoParams.forEach((param) => {
             this.algo.getResistanceChart(param.ticker, startDate, currentDate).subscribe(
