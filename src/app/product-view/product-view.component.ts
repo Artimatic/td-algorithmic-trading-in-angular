@@ -16,6 +16,7 @@ export class ProductViewComponent implements OnInit {
   chart;
   resolving = false;
   stock: string;
+  backtestResults: any[];
 
   constructor(
     public snackBar: MatSnackBar,
@@ -43,6 +44,10 @@ export class ProductViewComponent implements OnInit {
           this.loadMaCrossOverChart(chart);
           break;
         }
+        case 'findresistance': {
+          this.loadFindResistanceChart(chart);
+          break;
+        }
       }
     });
   }
@@ -68,16 +73,7 @@ export class ProductViewComponent implements OnInit {
     const pastDate = moment(params.date).subtract(800, 'days').format('YYYY-MM-DD');
     this.algo.getBBMfiBacktestChart(params.symbol, currentDate, pastDate)
       .map(result => {
-        const time = [];
-        const seriesData = [];
-
-        result.signals.forEach(day => {
-          time.push(day.date);
-          const signal = this.buildSignal(day.action, day.close, day.volume);
-          seriesData.push(signal);
-
-          this.initChart(params.symbol, time, seriesData);
-        });
+        this.initBacktestResults(params.symbol, result, result.signals);
       })
       .subscribe(
         response => {
@@ -102,16 +98,7 @@ export class ProductViewComponent implements OnInit {
                                           pastDate, data.params.fastAvg || 30,
                                           data.params.slowAvg || 90)
       .map(result => {
-        const time = [];
-        const seriesData = [];
-
-        result.signals.forEach(day => {
-          time.push(day.date);
-          const signal = this.buildSignal(day.action, day.close, day.volume);
-          seriesData.push(signal);
-
-          this.initChart(data.symbol, time, seriesData);
-        });
+        this.initBacktestResults(data.symbol, result, result.signals);
       })
       .subscribe(
         response => {
@@ -125,6 +112,43 @@ export class ProductViewComponent implements OnInit {
           });
         }
       );
+  }
+
+  loadFindResistanceChart(data: ChartParam) {
+    this.resolving = true;
+    const currentDate = moment(data.date).format('YYYY-MM-DD');
+    const pastDate = moment(data.date).subtract(800, 'days').format('YYYY-MM-DD');
+
+    this.algo.getResistanceChart(data.symbol, currentDate, pastDate)
+      .map(result => {
+        this.initBacktestResults(data.symbol, result, result.signals);
+      })
+      .subscribe(
+        response => {
+          this.stock = data.symbol;
+          this.resolving = false;
+        },
+        err => {
+          this.resolving = false;
+          this.snackBar.open(`Error: ${err}`, 'Dismiss', {
+            duration: 20000,
+          });
+        }
+      );
+  }
+
+  initBacktestResults(symbol, result, signals) {
+    this.backtestResults = [result];
+    const time = [];
+    const seriesData = [];
+
+    signals.forEach(day => {
+      time.push(day.date);
+      const signal = this.buildSignal(day.action, day.close, day.volume);
+      seriesData.push(signal);
+
+      this.initChart(symbol, time, seriesData);
+    });
   }
 
   loadSma(data: ChartParam, endDate): void {
@@ -269,16 +293,7 @@ export class ProductViewComponent implements OnInit {
 
     this.algo.getInfoV2Chart(stock, currentDate, startDate)
       .map(result => {
-        const time = [];
-        const seriesData = [];
-
-        result.forEach(day => {
-          time.push(day.date);
-          const signal = this.buildSignal(day.action, day.close, day.volume);
-          seriesData.push(signal);
-
-          this.initChart(stock, time, seriesData);
-        });
+        this.initBacktestResults(stock, {}, result);
       })
       .subscribe(
         response => {

@@ -60,7 +60,7 @@
     <tr [pSelectableRow]="element">
       <td *ngFor="let col of selectedColumns" [ngSwitch]="col.field">
         <span *ngSwitchCase="'returns'">
-          {{element[col.field]}}%
+          {{element[col.field] | percent}}
         </span>
         <span *ngSwitchCase="'lastVolume'">
           {{element.lastVolume | number}}

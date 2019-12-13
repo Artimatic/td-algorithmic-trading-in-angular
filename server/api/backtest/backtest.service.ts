@@ -925,15 +925,48 @@ class BacktestService {
       });
   }
 
-/*
-* {"symbol": "SPY",
-* "to": "2019-11-15",
-* "from":"2018-01-24",
-* "settings": [0.03, 30, 90, 80],
-* "strategy": "MOVINGAVERAGECROSSOVER"
-* }
-*/
-getMovingAverageCrossOverInfo(symbol, endDate, startDate, settings) {
+  /*
+  * {"symbol": "SPY",
+  * "to": "2019-11-15",
+  * "from":"2018-01-24",
+  * "settings": [0.03, 30, 90, 80],
+  * "strategy": "MOVINGAVERAGECROSSOVER"
+  * }
+  */
+  getMovingAverageCrossOverInfo(symbol, endDate, startDate, settings) {
+    const to = moment(endDate).format('YYYY-MM-DD');
+    const from = moment(startDate).format('YYYY-MM-DD');
+
+    const query = `${dataServiceUrl}backtest/strategy`;
+
+    const options = {
+      method: 'POST',
+      uri: query,
+      body: {
+        symbol,
+        to,
+        from,
+        strategy: 'MOVINGAVERAGECROSSOVER',
+        settings
+      },
+      json: true
+    };
+
+    return RequestPromise(options)
+      .catch((error) => {
+        console.log('Error: ', error);
+      });
+  }
+
+    /*
+  * {"symbol": "SPY",
+  * "to": "2019-11-15",
+  * "from":"2018-01-24",
+  * "settings": [0.03, 30, 90, 80],
+  * "strategy": "MOVINGAVERAGECROSSOVER"
+  * }
+  */
+ findResistance(symbol, endDate, startDate) {
   const to = moment(endDate).format('YYYY-MM-DD');
   const from = moment(startDate).format('YYYY-MM-DD');
 
@@ -946,8 +979,7 @@ getMovingAverageCrossOverInfo(symbol, endDate, startDate, settings) {
       symbol,
       to,
       from,
-      strategy: 'MOVINGAVERAGECROSSOVER',
-      settings
+      strategy: 'FINDRESISTANCE'
     },
     json: true
   };

@@ -93,6 +93,15 @@ export class BacktestService {
     return this.http.post(`${BASE_URL}api/backtest/bb-mfi`, data, {});
   }
 
+  getResistanceChart(symbol: string, to: string, from: string): Observable<any> {
+    const data = {
+      symbol,
+      to,
+      from
+    };
+    return this.http.post(`${BASE_URL}api/backtest/find-resistance`, data, {});
+  }
+
   getMaCrossOverBacktestChart(symbol: string, to: string, from: string,
                               shortTerm: number, longTerm: number): Observable<any> {
     const data = {

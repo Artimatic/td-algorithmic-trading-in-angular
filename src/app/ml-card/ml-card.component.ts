@@ -95,11 +95,11 @@ export class MlCardComponent implements OnInit {
       secondCtrl: ['', Validators.required]
     });
 
-    this.bullishPlay = new FormControl('UPRO', [
+    this.bullishPlay = new FormControl('SPY', [
       Validators.required
     ]);
 
-    this.bearishPlay = new FormControl('SPXU', [
+    this.bearishPlay = new FormControl('TLT', [
       Validators.required
     ]);
 

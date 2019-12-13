@@ -63,6 +63,7 @@ export class RhTableComponent implements OnInit, OnChanges {
         { value: 'v2', viewValue: 'Daily - Bollinger Band' },
         { value: 'v5', viewValue: 'Daily - Money Flow Index' },
         { value: 'v1', viewValue: 'Daily - Moving Average Crossover' },
+        { value: 'moving_average_resistance', viewValue: 'Daily - Moving Average Resistance' },
         { value: 'v3', viewValue: 'Intraday - MFI' },
         { value: 'v4', viewValue: 'Intraday - Bollinger Band' },
       ]
@@ -148,7 +149,7 @@ export class RhTableComponent implements OnInit, OnChanges {
             .subscribe((stockData: Stock) => {
               stockData.stock = param.ticker;
               stockData.recommendation = stockData.trending;
-              stockData.returns = +((stockData.totalReturns * 100).toFixed(2));
+              stockData.returns = stockData.totalReturns;
               this.addToList(stockData);
               this.incrementProgress();
               this.updateAlgoReport(stockData);
@@ -164,7 +165,6 @@ export class RhTableComponent implements OnInit, OnChanges {
           await this.algo.getInfoV2(param.ticker, currentDate, startDate).subscribe(
             result => {
               result.stock = param.ticker;
-              result.returns = +((result.returns * 100).toFixed(2));
               this.addToList(result);
               this.incrementProgress();
               this.updateAlgoReport(result);
@@ -224,7 +224,6 @@ export class RhTableComponent implements OnInit, OnChanges {
               if (testResults.length > 0) {
                 const result = testResults[testResults.length - 1];
                 result.stock = param.ticker;
-                result.returns = +((result.returns * 100).toFixed(2));
                 this.addToList(result);
                 this.updateAlgoReport(result);
               }
@@ -235,6 +234,23 @@ export class RhTableComponent implements OnInit, OnChanges {
               console.log(`Error on ${param.ticker} ${algo}`, error);
             });
         });
+        case 'moving_average_resistance':
+          algoParams.forEach((param) => {
+            this.algo.getResistanceChart(param.ticker, startDate, currentDate).subscribe(
+              (testResults: any[]) => {
+                if (testResults.length > 0) {
+                  const result = testResults[testResults.length - 1];
+                  result.stock = param.ticker;
+                  this.addToList(result);
+                  this.updateAlgoReport(result);
+                }
+                this.incrementProgress();
+              }, error => {
+                this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
+                this.incrementProgress();
+                console.log(`Error on ${param.ticker} ${algo}`, error);
+              });
+          });
         break;
     }
   }
@@ -394,6 +410,9 @@ export class RhTableComponent implements OnInit, OnChanges {
     this.getData(Stocks);
 
     this.selectedAlgo = 'v5';
+    this.getData(Stocks);
+
+    this.selectedAlgo = 'moving_average_resistance';
     this.getData(Stocks);
 
     this.progress = 0;

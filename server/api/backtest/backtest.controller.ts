@@ -88,6 +88,8 @@ class BacktestController extends BaseController {
     if (_.isEmpty(request.body)) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     } else {
+      console.log('Received: ', request.body);
+
       BacktestService.getSMA(request.body.real, request.body.period)
         .then((data) => BaseController.requestGetSuccessHandler(response, data))
         .catch((err) => BaseController.requestErrorHandler(response, err));
@@ -180,6 +182,12 @@ class BacktestController extends BaseController {
 
   getMaCrossOver(request, response) {
     BacktestService.getMovingAverageCrossOverInfo(request.body.symbol, request.body.to, request.body.from, request.body.settings)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+  findResistance(request, response) {
+    BacktestService.findResistance(request.body.symbol, request.body.to, request.body.from)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
