@@ -119,7 +119,7 @@ export class ProductViewComponent implements OnInit {
     const currentDate = moment(data.date).format('YYYY-MM-DD');
     const pastDate = moment(data.date).subtract(800, 'days').format('YYYY-MM-DD');
 
-    this.algo.getResistanceChart(data.symbol, currentDate, pastDate)
+    this.algo.getResistanceChart(data.symbol, pastDate, currentDate)
       .map(result => {
         this.initBacktestResults(data.symbol, result, result.signals);
       })

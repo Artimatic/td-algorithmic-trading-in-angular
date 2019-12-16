@@ -26,7 +26,7 @@ export class ChartDialogComponent implements OnInit {
     { value: 'bollingerband', viewValue: 'Bollinger Band' },
     { value: 'bollingerbandmfi', viewValue: 'Bollinger Band and MFI' },
     { value: 'macrossover', viewValue: 'Moving Average Crossover' },
-    { value: 'findresistance', viewValue: 'Find Resistance' }
+    { value: 'findresistance', viewValue: 'Moving Average Resistance' }
   ];
 
   selectedAlgo = 'bollingerbandmfi';
