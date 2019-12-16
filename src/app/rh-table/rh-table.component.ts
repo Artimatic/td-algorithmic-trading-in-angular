@@ -99,7 +99,7 @@ export class RhTableComponent implements OnInit, OnChanges {
       { field: 'strongbuySignals', header: 'Strong Buy' },
       { field: 'buySignals', header: 'Buy' },
       { field: 'sellSignals', header: 'Sell' },
-      { field: 'strongsellSignals', header: 'Strong Sell' }    ];
+      { field: 'strongsellSignals', header: 'Strong Sell' }];
 
     this.selectedColumns = [
       { field: 'stock', header: 'Stock' },
@@ -235,23 +235,23 @@ export class RhTableComponent implements OnInit, OnChanges {
             });
         });
         break;
-        case 'moving_average_resistance':
-          algoParams.forEach((param) => {
-            this.algo.getResistanceChart(param.ticker, startDate, currentDate).subscribe(
-              (testResults: any[]) => {
-                if (testResults.length > 0) {
-                  const result = testResults[testResults.length - 1];
-                  result.stock = param.ticker;
-                  this.addToList(result);
-                  this.updateAlgoReport(result);
-                }
-                this.incrementProgress();
-              }, error => {
-                this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
-                this.incrementProgress();
-                console.log(`Error on ${param.ticker} ${algo}`, error);
-              });
-          });
+      case 'moving_average_resistance':
+        algoParams.forEach((param) => {
+          this.algo.getResistanceChart(param.ticker, startDate, currentDate).subscribe(
+            (testResults: any[]) => {
+              if (testResults.length > 0) {
+                const result = testResults[testResults.length - 1];
+                result.stock = param.ticker;
+                this.addToList(result);
+                this.updateAlgoReport(result);
+              }
+              this.incrementProgress();
+            }, error => {
+              this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
+              this.incrementProgress();
+              console.log(`Error on ${param.ticker} ${algo}`, error);
+            });
+        });
         break;
     }
   }

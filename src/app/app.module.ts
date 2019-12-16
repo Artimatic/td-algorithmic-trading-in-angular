@@ -83,6 +83,7 @@ import { TestResultsTableComponent } from './test-results-table/test-results-tab
 import { ChartDialogComponent } from './chart-dialog/chart-dialog.component';
 import { TableModule } from 'primeng/table';
 import { MultiSelectModule } from 'primeng/multiselect';
+import { HeaderComponent } from './header/header.component';
 
 @NgModule({
   declarations: [
@@ -113,6 +114,7 @@ import { MultiSelectModule } from 'primeng/multiselect';
     MlCardComponent,
     TestResultsTableComponent,
     ChartDialogComponent,
+    HeaderComponent,
   ],
   entryComponents: [
     LoginDialogComponent,
