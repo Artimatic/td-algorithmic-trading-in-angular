@@ -762,10 +762,14 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
 
       if (!sell) {
-        const buyQuantity: number = this.scoringService.determineBetSize(this.order.holding.symbol, this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
+        let buyQuantity: number = this.scoringService.determineBetSize(this.order.holding.symbol, this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
           this.firstFormGroup.value.orderSize,
           this.buyCount,
           this.positionCount), this.positionCount, this.order.quantity);
+
+        if (this.indicators.vwma > quotes.close[idx]) {
+          buyQuantity = _.round(_.multiply(buyQuantity, 0.5), 0)
+        }
 
         const buy: SmartOrder = buyQuantity <= 0 ? null :
           await this.buildBuyOrder(buyQuantity, quotes.close[idx], timestamps[idx],

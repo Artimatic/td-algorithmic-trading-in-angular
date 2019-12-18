@@ -101,7 +101,7 @@ export class ScoreKeeperService {
   determineLossTallyModifier(stock: string) {
     switch (this.lossTally[stock]) {
       case 1:
-        return 0.9;
+        return 0.8;
       case 2:
         return 0.6;
       case 3:
