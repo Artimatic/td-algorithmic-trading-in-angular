@@ -269,11 +269,14 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
           }
         }
         if (moment().isAfter(moment(this.globalSettingsService.stopTime)) &&
-          moment().isBefore(moment(this.globalSettingsService.stopTime).add(this.interval * 2, 'minutes'))) {
-          const log = `Profit ${this.scoreKeeperService.total}`;
-          this.reportingService.addAuditLog(null, log);
-          this.reportingService.exportAuditHistory();
-          this.interval = moment(this.globalSettingsService.startTime).diff(moment().subtract(5, 'minutes'), 'milliseconds');
+            moment().isBefore(moment(this.globalSettingsService.stopTime).add(2, 'minutes'))) {
+          if (this.reportingService.logs.length > 0) {
+            const log = `Profit ${this.scoreKeeperService.total}`;
+            this.reportingService.addAuditLog(null, log);
+            this.reportingService.exportAuditHistory();
+          }
+          this.interval = moment().subtract(5, 'minutes').diff(moment(this.globalSettingsService.startTime), 'milliseconds');
+          console.log('new interval: ', this.interval);
         }
       });
   }
