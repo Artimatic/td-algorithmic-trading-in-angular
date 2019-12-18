@@ -19,6 +19,10 @@
       </div>
       <div class="ui-g-4">
         <div class="table-settings">
+          <div class="global-filter">
+              <i class="fa fa-search" style="margin:4px 4px 0 0"></i>
+              <input type="text" pInputText size="50" placeholder="Global Filter" (input)="dt.filterGlobal($event.target.value, 'contains')" style="width:auto">
+          </div>
           <div class="date-picker">
             End Date
             <input name="endDate" type="date" [ngModel]="endDate" (ngModelChange)="endDate = $event">
@@ -37,7 +41,7 @@
       <div class="ui-g-4">
         <div class="table-filters">
           <p-multiSelect class="filter" [options]="recommendations" [(ngModel)]="selectedRecommendation"
-            defaultLabel="All Recommendations" (onChange)="filter()"></p-multiSelect>
+            defaultLabel="All Recommendations" (onChange)="filter()" selectedItemsLabel="{0} recommendations selected"></p-multiSelect>
           <p-multiSelect class="filter" [options]="cols" [(ngModel)]="selectedColumns" optionLabel="header"
             selectedItemsLabel="{0} columns selected" [style]="{minWidth: '200px'}" defaultLabel="Choose Columns">
           </p-multiSelect>
