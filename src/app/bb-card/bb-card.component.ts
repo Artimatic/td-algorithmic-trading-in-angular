@@ -768,7 +768,7 @@ export class BbCardComponent implements OnInit, OnChanges {
           this.positionCount), this.positionCount, this.order.quantity);
 
         if (this.indicators.vwma > quotes.close[idx]) {
-          buyQuantity = _.round(_.multiply(buyQuantity, 0.5), 0)
+          buyQuantity = _.round(_.multiply(buyQuantity, 0.5), 0);
         }
 
         const buy: SmartOrder = buyQuantity <= 0 ? null :
