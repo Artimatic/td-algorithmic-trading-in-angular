@@ -20,13 +20,8 @@ import { TradeService } from '../shared/services/trade.service';
 })
 export class ShoppingListComponent implements OnInit, OnDestroy {
   defaultInterval = 70800;
-  mu: SmartOrder;
-  vti: SmartOrder;
-  upro: SmartOrder;
-  vxx: SmartOrder;
-  uvxy: SmartOrder;
-  sh: SmartOrder;
-  spxu: SmartOrder;
+  spy: SmartOrder;
+  tlt: SmartOrder;
 
   ordersStarted: number;
   interval: number;
@@ -49,7 +44,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
     this.interval = this.defaultInterval;
 
     this.ordersStarted = 0;
-    this.portfolioService.getInstruments('UPRO').subscribe((response) => {
+    this.portfolioService.getInstruments('SPY').subscribe((response) => {
       const instruments = response.results[0];
       const newHolding: Holding = {
         instrument: instruments.url,
@@ -71,7 +66,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
         spyMomentum: true,
         sellAtClose: true
       };
-      this.upro = order;
+      this.spy = order;
     },
       (error) => {
         this.snackBar.open('Error getting instruments for UPRO', 'Dismiss', {
@@ -79,102 +74,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
         });
       });
 
-    this.vti = {
-      holding:
-      {
-        instrument: 'https://api.robinhood.com/instruments/18226051-6bfa-4c56-bd9a-d7575f0245c1/',
-        symbol: 'VTI',
-        name: 'Vanguard Total Stock Market ETF',
-        realtime_price: 125.46
-      },
-      quantity: 3, price: 125.46,
-      submitted: false, pending: false,
-      side: 'DayTrade',
-      useTakeProfit: true,
-      useStopLoss: true,
-      stopped: false,
-      lossThreshold: -0.005,
-      profitTarget: 0.004,
-      spyMomentum: true,
-      sellAtClose: true,
-      meanReversion1: true
-    };
-
-    this.vxx = {
-      holding:
-      {
-        instrument: 'https://api.robinhood.com/instruments/55b9bfc4-c9e7-42ac-8478-73b0af48fad7/',
-        symbol: 'VXX',
-        name: 'iPath S&P 500 VIX Short-Term Futures ETN due 1/30/2019',
-        realtime_price: 31.74
-      },
-      quantity: 60, price: 31.74,
-      submitted: false, pending: false,
-      side: 'DayTrade',
-      useTakeProfit: true,
-      useStopLoss: true,
-      lossThreshold: -0.005,
-      profitTarget: 0.004,
-      spyMomentum: true,
-      sellAtClose: true
-    };
-
-    this.uvxy = {
-      holding:
-      {
-        instrument: 'https://api.robinhood.com/instruments/00e90099-4281-4c93-b50d-fbd4d2469821/',
-        symbol: 'UVXY',
-        name: 'ProShares Ultra VIX Short-Term Futures ETF',
-        realtime_price: 9.65
-      },
-      quantity: 60, price: 9.65,
-      submitted: false, pending: false,
-      side: 'DayTrade',
-      useTakeProfit: true,
-      useStopLoss: true
-    };
-
-    this.mu = {
-      holding:
-      {
-        instrument: 'https://api.robinhood.com/instruments/0a8a072c-e52c-4e41-a2ee-8adbd72217d3/',
-        symbol: 'MU',
-        name: 'Micron Technology, Inc. - Common Stock',
-        realtime_price: 54.59000015258789
-      },
-      quantity: 60, price: 54.59000015258789,
-      submitted: false, pending: false,
-      side: 'Buy',
-      useTakeProfit: true,
-      useStopLoss: true,
-      stopped: false,
-      lossThreshold: -0.005,
-      profitTarget: 0.004,
-      spyMomentum: true,
-      sellAtClose: true,
-      meanReversion1: true
-    };
-
-    this.sh = {
-      holding:
-      {
-        instrument: 'https://api.robinhood.com/instruments/625e3596-9e2e-49e7-a9bf-6cbbc9d72ecd/',
-        symbol: 'SH',
-        name: 'ProShares Short S&P500',
-        realtime_price: 31.86
-      },
-      quantity: 12, price: 31.86,
-      submitted: false, pending: false,
-      side: 'DayTrade',
-      useTakeProfit: true,
-      useStopLoss: true,
-      lossThreshold: -0.002,
-      profitTarget: 0.004,
-      spyMomentum: true,
-      sellAtClose: true
-    };
-
-    this.portfolioService.getInstruments('SPXU').subscribe((response) => {
+    this.portfolioService.getInstruments('TLT').subscribe((response) => {
       const instruments = response.results[0];
       const newHolding: Holding = {
         instrument: instruments.url,
@@ -196,7 +96,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
         spyMomentum: true,
         sellAtClose: true
       };
-      this.spxu = order;
+      this.tlt = order;
     },
       (error) => {
         this.snackBar.open('Error getting instruments', 'Dismiss', {
@@ -320,7 +220,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
   }
 
   loadExamples() {
-    this.cartService.addToCart(this.vti);
-    this.cartService.addToCart(this.mu);
+    this.cartService.addToCart(this.spy);
+    this.cartService.addToCart(this.tlt);
   }
 }
