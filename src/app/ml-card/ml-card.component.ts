@@ -226,7 +226,7 @@ export class MlCardComponent implements OnInit {
   placeBet(bet: Bet) {
     switch (bet.summary) {
       case Sentiment.Bullish:
-        if (this.settings.value == 'closePositions') {
+        if (this.settings.value === 'closePositions') {
           this.getOrder(this.bearishPlay.value).subscribe((order) => {
             this.sellAll(order);
           },
@@ -235,7 +235,7 @@ export class MlCardComponent implements OnInit {
                 duration: 2000,
               });
             });
-        } else if (this.settings.value == 'openPositions') {
+        } else if (this.settings.value === 'openPositions') {
           this.getOrder(this.bullishPlay.value).subscribe((order) => {
             this.buy(order, _.divide(bet.bullishOpen, bet.total));
           },
@@ -248,7 +248,7 @@ export class MlCardComponent implements OnInit {
 
         break;
       case Sentiment.Bearish:
-          if (this.settings.value == 'closePositions') {
+          if (this.settings.value === 'closePositions') {
             this.getOrder(this.bullishPlay.value).subscribe((order) => {
               this.sellAll(order);
             },
@@ -257,7 +257,7 @@ export class MlCardComponent implements OnInit {
                   duration: 2000,
                 });
               });
-          } else if (this.settings.value == 'openPositions' && !this.longOnly.value) {
+          } else if (this.settings.value === 'openPositions' && !this.longOnly.value) {
           this.getOrder(this.bearishPlay.value).subscribe((order) => {
             this.buy(order, _.divide(bet.bearishOpen, bet.total));
           },
