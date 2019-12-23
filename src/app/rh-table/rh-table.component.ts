@@ -48,6 +48,7 @@ export class RhTableComponent implements OnInit, OnChanges {
   progressPct = 0;
   progress = 0;
   totalStocks = 0;
+  interval: number;
   selectedAlgo = 'v2';
   algoControl = new FormControl();
   algoGroups: AlgoGroup[] = [
@@ -113,10 +114,12 @@ export class RhTableComponent implements OnInit, OnChanges {
 
     this.selectedRecommendation = ['strongbuy', 'buy', 'sell', 'strongsell'];
     this.filter();
+    this.interval = 0;
   }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes.data) {
+      this.interval = 0;
       this.getData(changes.data.currentValue);
     }
   }
@@ -161,19 +164,27 @@ export class RhTableComponent implements OnInit, OnChanges {
         });
         break;
       case 'v2':
-        for (const param of algoParams) {
-          await this.algo.getInfoV2(param.ticker, currentDate, startDate).subscribe(
+        const bbCb = (param) => {
+          this.algo.getInfoV2(param.ticker, currentDate, startDate).subscribe(
             result => {
-              result.stock = param.ticker;
-              this.addToList(result);
-              this.incrementProgress();
-              this.updateAlgoReport(result);
+              if (result) {
+                result.stock = param.ticker;
+                this.addToList(result);
+                this.incrementProgress();
+                this.updateAlgoReport(result);
+              } else {
+                this.snackBar.open(`No results for ${param.ticker}`, 'Dismiss');
+                console.log(`No results for ${param.ticker}`);
+              }
             }, error => {
               this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
               console.log(`Error on ${param.ticker}`, error);
               this.incrementProgress();
             });
-        }
+        };
+
+        this.iterateAlgoParams(algoParams, bbCb);
+
         break;
       case 'v3':
         algo = 'intraday';
@@ -218,7 +229,7 @@ export class RhTableComponent implements OnInit, OnChanges {
         break;
       case 'v5':
         algo = 'daily-mfi';
-        algoParams.forEach((param) => {
+        const mfiCb = (param) => {
           this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, algo).subscribe(
             (testResults: any[]) => {
               if (testResults.length > 0) {
@@ -233,10 +244,12 @@ export class RhTableComponent implements OnInit, OnChanges {
               this.incrementProgress();
               console.log(`Error on ${param.ticker} ${algo}`, error);
             });
-        });
+        };
+        this.iterateAlgoParams(algoParams, mfiCb);
+
         break;
       case 'moving_average_resistance':
-        algoParams.forEach((param) => {
+        const callback = (param) => {
           this.algo.getResistanceChart(param.ticker, startDate, currentDate).subscribe(
             (result: any) => {
               result.stock = param.ticker;
@@ -248,9 +261,21 @@ export class RhTableComponent implements OnInit, OnChanges {
               this.incrementProgress();
               console.log(`Error on ${param.ticker} ${algo}`, error);
             });
-        });
+        };
+
+        this.iterateAlgoParams(algoParams, callback);
         break;
     }
+  }
+
+  iterateAlgoParams(algoParams: any[], callback: Function) {
+    algoParams.forEach((param) => {
+      this.interval += (this.progress) * 10 + this.totalStocks + 100;
+      setTimeout(() => {
+        callback(param);
+      }, this.interval);
+      console.log('timer: ', this.interval);
+    });
   }
 
   incrementProgress() {
@@ -402,16 +427,20 @@ export class RhTableComponent implements OnInit, OnChanges {
   }
 
   runDefaultBacktest() {
+    this.interval = 0;
     const currentSelected = this.selectedAlgo;
-
     this.selectedAlgo = 'v2';
     this.getData(Stocks);
 
-    this.selectedAlgo = 'v5';
-    this.getData(Stocks);
+    setTimeout(() => {
+      this.selectedAlgo = 'v5';
+      this.getData(Stocks);
+    }, Stocks.length * 1000);
 
-    this.selectedAlgo = 'moving_average_resistance';
-    this.getData(Stocks);
+    setTimeout(() => {
+      this.selectedAlgo = 'moving_average_resistance';
+      this.getData(Stocks);
+    }, Stocks.length * 2000);
 
     this.progress = 0;
     this.selectedAlgo = currentSelected;
