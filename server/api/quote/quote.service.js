@@ -26,25 +26,31 @@ class QuoteService {
   getData(symbol, interval = '1d', range = '1d') {
     return this.getRawData(symbol, interval, range)
       .then((data) => {
-        console.log('Found: ', _.get(data, 'chart.result[0].indicators.quote', []).length);
-        const quotes = _.get(data, 'chart.result[0].indicators.quote[0]', []);
-        const timestamps = _.get(data, 'chart.result[0].timestamp', []);
-        const converted = [];
+        const dataSize = _.get(data, 'chart.result[0].timestamp', []).length;
+        console.log('Found: ', dataSize);
+        if (dataSize > 1) {
+          const quotes = _.get(data, 'chart.result[0].indicators.quote[0]', []);
+          const timestamps = _.get(data, 'chart.result[0].timestamp', []);
+          const converted = [];
 
-        timestamps.forEach((val, idx) => {
-          const quote = {
-            symbol: symbol,
-            date: moment.unix(val).toISOString(),
-            open: quotes.open[idx],
-            high: quotes.high[idx],
-            low: quotes.low[idx],
-            close: quotes.close[idx],
-            volume: quotes.volume[idx]
-          };
-          converted.push(quote);
-        });
+          timestamps.forEach((val, idx) => {
+            const quote = {
+              symbol: symbol,
+              date: moment.unix(val).toISOString(),
+              open: quotes.open[idx],
+              high: quotes.high[idx],
+              low: quotes.low[idx],
+              close: quotes.close[idx],
+              volume: quotes.volume[idx]
+            };
+            converted.push(quote);
+          });
 
-        return converted;
+          return converted;
+        } else  {
+          return api.getHistoricalData(symbol, interval, range);
+        }
+
       });
   }
 
