@@ -100,7 +100,10 @@ export class RhTableComponent implements OnInit, OnChanges {
       { field: 'strongbuySignals', header: 'Strong Buy' },
       { field: 'buySignals', header: 'Buy' },
       { field: 'sellSignals', header: 'Sell' },
-      { field: 'strongsellSignals', header: 'Strong Sell' }];
+      { field: 'strongsellSignals', header: 'Strong Sell' },
+      { field: 'upperResistance', header: 'Upper Resistance' },
+      { field: 'lowerResistance', header: 'Lower Resistance' }
+    ];
 
     this.selectedColumns = [
       { field: 'stock', header: 'Stock' },
@@ -109,7 +112,9 @@ export class RhTableComponent implements OnInit, OnChanges {
       { field: 'strongbuySignals', header: 'Strong Buy' },
       { field: 'buySignals', header: 'Buy' },
       { field: 'sellSignals', header: 'Sell' },
-      { field: 'strongsellSignals', header: 'Strong Sell' }
+      { field: 'strongsellSignals', header: 'Strong Sell' },
+      { field: 'upperResistance', header: 'Upper Resistance' },
+      { field: 'lowerResistance', header: 'Lower Resistance' }
     ];
 
     this.selectedRecommendation = ['strongbuy', 'buy', 'sell', 'strongsell'];
