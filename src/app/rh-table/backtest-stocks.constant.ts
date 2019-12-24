@@ -38,7 +38,6 @@ const stockList = [
   'GOOS',
   'BTG',
   'BX',
-  'SYMC',
   'C',
   'CAG',
   'F',

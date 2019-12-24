@@ -279,7 +279,6 @@ export class RhTableComponent implements OnInit, OnChanges {
       setTimeout(() => {
         callback(param);
       }, this.interval);
-      console.log('timer: ', this.interval);
     });
   }
 
