@@ -138,6 +138,8 @@ export class BbCardComponent implements OnInit, OnChanges {
         this.step();
       }
     });
+
+    this.chart = this.initPriceChart(this.order.holding.symbol);
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -237,8 +239,6 @@ export class BbCardComponent implements OnInit, OnChanges {
       const firstIndex = dataLength - this.bbandPeriod;
       this.runStrategy(quotes, timestamps, firstIndex, lastIndex);
     }
-
-    this.chart = this.initPriceChart(this.order.holding.symbol);
 
     for (let i = 0; i < dataLength; i += 1) {
       const closePrice = quotes.close[i];
@@ -351,8 +351,6 @@ export class BbCardComponent implements OnInit, OnChanges {
       const firstIndex = dataLength - this.bbandPeriod;
       this.runStrategy(quotes, timestamps, firstIndex, lastIndex);
     }
-
-    this.chart = this.initPriceChart(this.order.holding.symbol);
 
     for (let i = 0; i < dataLength; i += 1) {
       const closePrice = quotes.close[i];
