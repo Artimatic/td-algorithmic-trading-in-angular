@@ -349,7 +349,6 @@ const stockList = [
   'TEVA',
   'X',
   'VALE',
-  'CTRP',
   'UTX',
   'CGC',
   'NIO',
