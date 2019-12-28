@@ -202,7 +202,7 @@ export class MlCardComponent implements OnInit {
   }
 
   getOrder(symbol: string) {
-    return this.portfolioService.getInstruments(this.bullishPlay.value).map((response) => {
+    return this.portfolioService.getInstruments(symbol).map((response) => {
       const instruments = response.results[0];
       const newHolding: Holding = {
         instrument: instruments.url,
@@ -253,7 +253,7 @@ export class MlCardComponent implements OnInit {
               this.sellAll(order);
             },
               (error) => {
-                this.snackBar.open(`Error getting instruments for ${this.bearishPlay}`, 'Dismiss', {
+                this.snackBar.open(`Error getting instruments for ${this.bullishPlay}`, 'Dismiss', {
                   duration: 2000,
                 });
               });
@@ -294,17 +294,17 @@ export class MlCardComponent implements OnInit {
 
   sellAll(order: SmartOrder) {
     const resolve = () => {
-      this.snackBar.open(`Sell all ${this.bearishPlay.value} order sent`, 'Dismiss');
+      this.snackBar.open(`Sell all ${order.holding.symbol} order sent`, 'Dismiss');
     };
 
     const reject = (error) => {
       this.error = error._body;
-      this.snackBar.open(`Error selling ${this.bearishPlay.value}`, 'Dismiss');
+      this.snackBar.open(`Error selling ${order.holding.symbol}`, 'Dismiss');
     };
 
     const notFound = (error) => {
       this.error = error._body;
-      this.snackBar.open(`${this.bearishPlay.value} position not found`, 'Dismiss');
+      this.snackBar.open(`${order.holding.symbol} position not found`, 'Dismiss');
     };
     return this.getQuote(order.holding.symbol)
       .subscribe((bid) => {
