@@ -254,13 +254,13 @@ export class BbCardComponent implements OnInit, OnChanges {
 
         const order = await this.runStrategy(quotes, timestamps, firstIndex, lastIndex);
 
-        const vwmaDesc = this.indicators.vwma ? this.indicators.vwma.toFixed(2) : '';
-        const rocDesc = `roc10:${this.indicators.roc10}, `;
-        const bandDesc = `band:${this.indicators.band}, `;
-        const momentumDesc = `roc70:${this.indicators.momentum}, `;
-        const mfiDesc = `mfi:${this.indicators.mfi} `;
+        // const vwmaDesc = this.indicators.vwma ? this.indicators.vwma.toFixed(2) : '';
+        // const rocDesc = `roc10:${this.indicators.roc10}, `;
+        // const bandDesc = `band:${this.indicators.band}, `;
+        // const momentumDesc = `roc70:${this.indicators.momentum}, `;
+        // const mfiDesc = `mfi:${this.indicators.mfi} `;
 
-        point.description = `${vwmaDesc}${rocDesc}${bandDesc}${momentumDesc}${mfiDesc}`;
+        // point.description = `${vwmaDesc}${rocDesc}${bandDesc}${momentumDesc}${mfiDesc}`;
 
         if (order) {
           if (order.side.toLowerCase() === 'buy') {
@@ -489,14 +489,14 @@ export class BbCardComponent implements OnInit, OnChanges {
           }
         }
       },
-      tooltip: {
-        crosshairs: true,
-        shared: true,
-        formatter: function () {
-          return moment(this.x).format('hh:mm') + '<br><h3>Price:</h3> ' + Number(this.y).toFixed(2) + '<br>' +
-            '<h3>indicators:</h3> ' + this.points[0].point.options.description;
-        }
-      },
+      // tooltip: {
+      //   crosshairs: true,
+      //   shared: true,
+      //   formatter: function () {
+      //     return moment(this.x).format('hh:mm') + '<br><h3>Price:</h3> ' + Number(this.y).toFixed(2) + '<br>' +
+      //       '<h3>indicators:</h3> ' + this.points[0].point.options.description;
+      //   }
+      // },
       plotOptions: {
         spline: {
           marker: {
@@ -1005,47 +1005,25 @@ export class BbCardComponent implements OnInit, OnChanges {
 
   async runStrategy(quotes, timestamps, firstIdx, lastIdx) {
     const { firstIndex, lastIndex } = this.daytradeService.findMostCurrentQuoteIndex(quotes.close, firstIdx, lastIdx);
-    const reals = quotes.close.slice(firstIndex, lastIndex + 1);
-    const highs = quotes.high.slice(firstIndex, lastIndex + 1);
-    const lows = quotes.low.slice(firstIndex, lastIndex + 1);
-    const volumes = quotes.volume.slice(firstIndex, lastIndex + 1);
-    if (!quotes.close[lastIndex]) {
-      // const log = `Quote data is missing ${reals.toString()}`;
-      // this.reportingService.addAuditLog(this.order.holding.symbol, log);
-      return null;
-    }
-    this.indicators.band = await this.indicatorsService.getBBand(reals, this.bbandPeriod);
-    // const shortSma = await this.daytradeService.getSMA(reals, 5);
+    const close = quotes.close.slice(firstIndex, lastIndex + 1);
+    const high = quotes.high.slice(firstIndex, lastIndex + 1);
+    const low = quotes.low.slice(firstIndex, lastIndex + 1);
+    const volume = quotes.volume.slice(firstIndex, lastIndex + 1);
+    quotes = { close, high, low, volume };
 
-    this.indicators.roc10 = await this.indicatorsService.getROC(_.slice(reals, reals.length - 11), 10)
-      .then((result) => {
-        const rocLen = result[0].length - 1;
-        const roc1 = _.round(result[0][rocLen], 3);
-        return _.round(roc1, 4);
+    await this.indicatorsService.getIndicators(quotes, this.bbandPeriod, 2, 14, 70)
+      .then(result => {
+        this.indicators.band = result.bband;
+
+        this.indicators.roc10 = result.roc10;
+
+        this.indicators.momentum = result.roc70;
+
+        this.indicators.mfi = result.mfi;
+
+        this.indicators.vwma = result.vwma;
       });
 
-    this.indicators.momentum = await this.indicatorsService.getROC(reals, 70)
-      .then((result) => {
-        const rocLen = result[0].length - 1;
-        const roc1 = _.round(result[0][rocLen], 3);
-        return _.round(roc1, 4);
-      });
-
-    this.indicators.mfi = await this.indicatorsService.getMFI(this.daytradeService.getSubArray(highs, 14),
-      this.daytradeService.getSubArray(lows, 14),
-      this.daytradeService.getSubArray(reals, 14),
-      this.daytradeService.getSubArray(volumes, 14),
-      14)
-      .then((result) => {
-        const len = result[0].length - 1;
-        return _.round(result[0][len], 3);
-      });
-
-    this.indicators.vwma = await this.indicatorsService.getVwma(this.daytradeService.getSubArray(reals, 70), this.daytradeService.getSubArray(volumes, 70), 70)
-      .then((result) => {
-        const len = result[0].length - 1;
-        return _.round(result[0][len], 3);
-      });
     return this.buildOrder(quotes, timestamps, lastIndex, this.indicators);
   }
 

@@ -37,12 +37,12 @@ class BacktestController extends BaseController {
               .catch((err) => BaseController.requestErrorHandler(response, err));
             break;
           default:
-          return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+            return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
         }
       } else {
         BacktestService.intradayTest(request.body.ticker, request.body.end, request.body.start)
-        .then((data) => BaseController.requestGetSuccessHandler(response, data))
-        .catch((err) => BaseController.requestErrorHandler(response, err));
+          .then((data) => BaseController.requestGetSuccessHandler(response, data))
+          .catch((err) => BaseController.requestErrorHandler(response, err));
       }
     }
   }
@@ -140,20 +140,20 @@ class BacktestController extends BaseController {
 
   getHistoricalMatches(request, response) {
     BacktestService.getHistoricalMatches(request.body.symbol, request.body.to, request.body.from)
-    .then((data) => BaseController.requestGetSuccessHandler(response, data))
-    .catch((err) => BaseController.requestErrorHandler(response, err));
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
   getDataStatus(request, response) {
     BacktestService.checkServiceStatus('data')
-    .then((data) => BaseController.requestGetSuccessHandler(response, data))
-    .catch((err) => BaseController.requestErrorHandler(response, err));
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
   getAnalysisStatus(request, response) {
     BacktestService.checkServiceStatus('ml')
-    .then((data) => BaseController.requestGetSuccessHandler(response, data))
-    .catch((err) => BaseController.requestErrorHandler(response, err));
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
   runRNN(request, response) {
@@ -166,8 +166,8 @@ class BacktestController extends BaseController {
 
   getRNNPrediction(request, response) {
     BacktestService.checkRNNStatus(request.body.symbol, request.body.to)
-    .then((data) => { response.json(data); })
-    .catch((err) => BaseController.requestErrorHandler(response, err));
+      .then((data) => { response.json(data); })
+      .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
   activateRNN(request, response) {
@@ -188,6 +188,13 @@ class BacktestController extends BaseController {
 
   findResistance(request, response) {
     BacktestService.findResistance(request.body.symbol, request.body.to, request.body.from)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+  getDaytradeIndicators(request, response) {
+    BacktestService.getDaytradeIndicators(request.body.quotes, request.body.period, request.body.stddev,
+      request.body.mfiPeriod, request.body.vwmaPeriod)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }

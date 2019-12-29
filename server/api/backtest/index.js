@@ -23,5 +23,6 @@ router.post('/rnn-activate', BacktestController.activateRNN);
 router.post('/bb-mfi', BacktestController.bbandMfi);
 router.post('/ma-crossover', BacktestController.getMaCrossOver);
 router.post('/find-resistance', BacktestController.findResistance);
+router.post('/daytrade-indicators', BacktestController.getDaytradeIndicators);
 
 module.exports = router;

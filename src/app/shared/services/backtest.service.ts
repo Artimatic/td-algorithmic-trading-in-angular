@@ -259,4 +259,16 @@ export class BacktestService {
 
     return this.http.post(`${BASE_URL}api/backtest/rnn-activate`, data, {});
   }
+
+  getDaytradeIndicators(quotes: any, period: number, stddev: number, mfiPeriod: number,
+    vwmaPeriod: number): Observable<any> {
+      const data = {
+        quotes,
+        period,
+        stddev,
+        mfiPeriod,
+        vwmaPeriod
+      };
+    return this.http.post(`${BASE_URL}api/backtest/daytrade-indicators`, data, {});
+  }
 }

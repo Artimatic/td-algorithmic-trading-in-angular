@@ -48,6 +48,33 @@ class BacktestService {
     return tulind.indicators.vwma.indicator([close, volume], [period]);
   }
 
+  getDaytradeIndicators(quotes, period,
+    stddev, mfiPeriod, vwmaPeriod) {
+    let indicators = {
+      vwma: null,
+      mfi: null,
+      mfiLeft: null
+    };
+    quotes.reals = quotes.close;
+    quotes.highs = quotes.high;
+    quotes.lows = quotes.low;
+    quotes.volumes = quotes.volume;
+
+    return this.getIndicators(quotes, period, indicators)
+      .then(indicators => {
+        indicators = indicators;
+        indicators.bband = indicators.bband80;
+        return this.getVwma(this.getSubArray(quotes.close, vwmaPeriod),
+          this.getSubArray(quotes.volume, vwmaPeriod), vwmaPeriod);
+      })
+      .then(vwma => {
+        const vwmaLen = vwma[0].length - 1;
+        indicators.vwma = _.round(vwma[0][vwmaLen], 3)
+        indicators.mfi = indicators.mfiLeft;
+
+        return indicators;
+      })
+  }
 
   evaluateStrategyAll(ticker, end, start) {
     console.log('Executing: ', ticker, new Date());
@@ -622,30 +649,38 @@ class BacktestService {
     const currentQuote = quotes[quotes.length - 1];
     const indicators = this.processQuotes(quotes);
 
-    return this.getBBands(indicators.reals, 80, 2)
-      .then((bband80) => {
-        currentQuote.bband80 = bband80;
-        return this.getRateOfChange(this.getSubArray(indicators.reals, 10), 10);
-      })
-      .then((roc10) => {
-        const rocLen = roc10[0].length - 1;
-        currentQuote.roc10 = _.round(roc10[0][rocLen], 3);
-        return this.getRateOfChange(this.getSubArray(indicators.reals, 70), 70);
-      })
-      .then((roc70) => {
-        const rocLen = roc70[0].length - 1;
-        currentQuote.roc70 = _.round(roc70[0][rocLen], 3);
-        return this.getMfi(this.getSubArray(indicators.highs, 14),
-          this.getSubArray(indicators.lows, 14),
-          this.getSubArray(indicators.reals, 14),
-          this.getSubArray(indicators.volumes, 14),
-          14);
-      })
-      .then((mfiLeft) => {
-        const len = mfiLeft[0].length - 1;
-        currentQuote.mfiLeft = _.round(mfiLeft[0][len], 3);
-        return currentQuote;
-      });
+    return this.getIndicators(indicators, 80, currentQuote);
+  }
+
+  getIndicators(indicators, bbandPeriod, quote) {
+    const currentQuote = quote;
+    return this.getBBands(indicators.reals, bbandPeriod, 2)
+    .then((bband80) => {
+      currentQuote.bband80 = bband80;
+      return this.getRateOfChange(this.getSubArray(indicators.reals, 10), 10);
+    })
+    .then((roc10) => {
+      const rocLen = roc10[0].length - 1;
+      currentQuote.roc10 = _.round(roc10[0][rocLen], 3);
+
+      return this.getRateOfChange(this.getSubArray(indicators.reals, 70), 70);
+    })
+    .then((roc70) => {
+      const rocLen = roc70[0].length - 1;
+      currentQuote.roc70 = _.round(roc70[0][rocLen], 3);
+
+      return this.getMfi(this.getSubArray(indicators.highs, 14),
+        this.getSubArray(indicators.lows, 14),
+        this.getSubArray(indicators.reals, 14),
+        this.getSubArray(indicators.volumes, 14),
+        14);
+    })
+    .then((mfiLeft) => {
+      const len = mfiLeft[0].length - 1;
+      currentQuote.mfiLeft = _.round(mfiLeft[0][len], 3);
+
+      return currentQuote;
+    });
   }
 
   initMAIndicators(quotes) {
@@ -787,10 +822,10 @@ class BacktestService {
     switch (serviceName) {
       case 'data':
         serviceUrl = `${dataServiceUrl}actuator/health`;
-      break;
+        break;
       case 'ml':
         serviceUrl = `${mlServiceUrl}health`;
-      break;
+        break;
     }
 
     const options = {
@@ -958,37 +993,37 @@ class BacktestService {
       });
   }
 
-    /*
-  * {"symbol": "SPY",
-  * "to": "2019-11-15",
-  * "from":"2018-01-24",
-  * "settings": [0.03, 30, 90, 80],
-  * "strategy": "MOVINGAVERAGECROSSOVER"
-  * }
-  */
- findResistance(symbol, endDate, startDate) {
-  const to = moment(endDate).format('YYYY-MM-DD');
-  const from = moment(startDate).format('YYYY-MM-DD');
+  /*
+* {"symbol": "SPY",
+* "to": "2019-11-15",
+* "from":"2018-01-24",
+* "settings": [0.03, 30, 90, 80],
+* "strategy": "MOVINGAVERAGECROSSOVER"
+* }
+*/
+  findResistance(symbol, endDate, startDate) {
+    const to = moment(endDate).format('YYYY-MM-DD');
+    const from = moment(startDate).format('YYYY-MM-DD');
 
-  const query = `${dataServiceUrl}backtest/strategy`;
+    const query = `${dataServiceUrl}backtest/strategy`;
 
-  const options = {
-    method: 'POST',
-    uri: query,
-    body: {
-      symbol,
-      to,
-      from,
-      strategy: 'FINDRESISTANCE'
-    },
-    json: true
-  };
+    const options = {
+      method: 'POST',
+      uri: query,
+      body: {
+        symbol,
+        to,
+        from,
+        strategy: 'FINDRESISTANCE'
+      },
+      json: true
+    };
 
-  return RequestPromise(options)
-    .catch((error) => {
-      console.log('Error: ', error);
-    });
-}
+    return RequestPromise(options)
+      .catch((error) => {
+        console.log('Error: ', error);
+      });
+  }
 }
 
 export default new BacktestService();
