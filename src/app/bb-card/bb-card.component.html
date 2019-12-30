@@ -81,14 +81,14 @@
                 <button mat-fab *ngIf="firstFormGroup.value.orderType=='DayTrade'" color="accent">DAY</button>
               </mat-card-subtitle>
             </mat-card-header>
-            <mat-checkbox [(ngModel)]="showGraph">Chart</mat-checkbox>
+            <mat-checkbox (click)="toggleChart()">Chart</mat-checkbox>
           </div>
           <div fxFlex="95%">
-            <div *ngIf="showGraph">
+            <div *ngIf="showChart">
               <div [chart]="chart"></div>
               <!-- <div [chart]="volumeChart"></div> -->
             </div>
-            <div class="order-log" *ngIf="!showGraph">
+            <div class="order-log" *ngIf="!showChart">
               <mat-grid-list cols="3" rowHeight="150px">
                 <mat-grid-tile *ngFor="let tile of tiles" [colspan]="tile.cols" [rowspan]="tile.rows">
                   <table>

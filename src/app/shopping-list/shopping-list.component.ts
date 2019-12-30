@@ -63,7 +63,6 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
         useStopLoss: true,
         lossThreshold: -0.002,
         profitTarget: 0.004,
-        spyMomentum: true,
         sellAtClose: true
       };
       this.spy = order;
@@ -93,7 +92,6 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
         useStopLoss: true,
         lossThreshold: -0.002,
         profitTarget: 0.004,
-        spyMomentum: true,
         sellAtClose: true
       };
       this.tlt = order;

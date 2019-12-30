@@ -61,7 +61,7 @@ export class BbCardComponent implements OnInit, OnChanges {
   lastPrice: number;
   preferenceList: any[];
   config: CardOptions;
-  showGraph: boolean;
+  showChart: boolean;
   tiles;
   bbandPeriod: number;
   dataInterval: string;
@@ -103,7 +103,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         useUTC: false
       }
     });
-    this.showGraph = false;
+    this.showChart = false;
     this.bbandPeriod = 80;
     this.dataInterval = '1min';
 
@@ -222,6 +222,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       .toPromise()
       .then((result) => {
         this.backtestQuotes = result;
+        console.log(result);
       });
   }
 
@@ -233,12 +234,6 @@ export class BbCardComponent implements OnInit, OnChanges {
       timestamps = _.get(data, 'chart.result[0].timestamp'),
       dataLength = timestamps.length,
       quotes = _.get(data, 'chart.result[0].indicators.quote[0]');
-
-    if (dataLength > this.bbandPeriod) {
-      const lastIndex = dataLength - 1;
-      const firstIndex = dataLength - this.bbandPeriod;
-      this.runStrategy(quotes, timestamps, firstIndex, lastIndex);
-    }
 
     for (let i = 0; i < dataLength; i += 1) {
       const closePrice = quotes.close[i];
@@ -254,13 +249,13 @@ export class BbCardComponent implements OnInit, OnChanges {
 
         const order = await this.runStrategy(quotes, timestamps, firstIndex, lastIndex);
 
-        // const vwmaDesc = this.indicators.vwma ? this.indicators.vwma.toFixed(2) : '';
-        // const rocDesc = `roc10:${this.indicators.roc10}, `;
-        // const bandDesc = `band:${this.indicators.band}, `;
-        // const momentumDesc = `roc70:${this.indicators.momentum}, `;
-        // const mfiDesc = `mfi:${this.indicators.mfi} `;
+        const vwmaDesc = this.indicators.vwma ? this.indicators.vwma.toFixed(2) : '';
+        const rocDesc = `roc10:${this.indicators.roc10}, `;
+        const bandDesc = `band:${this.indicators.band}, `;
+        const momentumDesc = `roc70:${this.indicators.momentum}, `;
+        const mfiDesc = `mfi:${this.indicators.mfi} `;
 
-        // point.description = `${vwmaDesc}${rocDesc}${bandDesc}${momentumDesc}${mfiDesc}`;
+        point.description = `${vwmaDesc}${rocDesc}${bandDesc}${momentumDesc}${mfiDesc}`;
 
         if (order) {
           if (order.side.toLowerCase() === 'buy') {
@@ -489,14 +484,14 @@ export class BbCardComponent implements OnInit, OnChanges {
           }
         }
       },
-      // tooltip: {
-      //   crosshairs: true,
-      //   shared: true,
-      //   formatter: function () {
-      //     return moment(this.x).format('hh:mm') + '<br><h3>Price:</h3> ' + Number(this.y).toFixed(2) + '<br>' +
-      //       '<h3>indicators:</h3> ' + this.points[0].point.options.description;
-      //   }
-      // },
+      tooltip: {
+        crosshairs: true,
+        shared: true,
+        formatter: function () {
+          return moment(this.x).format('hh:mm') + '<br><h3>Price:</h3> ' + Number(this.y).toFixed(2) + '<br>' +
+            '<h3>indicators:</h3> ' + this.points[0].point.options.description;
+        }
+      },
       plotOptions: {
         spline: {
           marker: {
@@ -810,46 +805,38 @@ export class BbCardComponent implements OnInit, OnChanges {
       return null;
     }
 
-    if (this.indicators.vwma && price > this.indicators.vwma) {
-      return null;
-    }
-
     if (!this.globalSettingsService.backtesting && this.scoringService.total < 0 && this.scoringService.total < this.globalSettingsService.maxLoss * -1) {
       return null;
     }
 
-    if (this.config.Mfi) {
-      if (this.algoService.isOversoldBullish(roc, this.indicators.momentum, this.indicators.mfi)) {
-        const log = `mfi oversold Event - time: ${moment.unix(signalTime).format()}, short rate of change: ${roc}, long rate of change: ${this.indicators.momentum}, mfi: ${this.indicators.mfi}`;
+    if (this.algoService.isOversoldBullish(roc, this.indicators.momentum, this.indicators.mfi)) {
+      const log = `mfi oversold Event - time: ${moment.unix(signalTime).format()}, short rate of change: ${roc}, long rate of change: ${this.indicators.momentum}, mfi: ${this.indicators.mfi}`;
 
-        this.reportingService.addAuditLog(this.order.holding.symbol, log);
-        console.log(log);
-        return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
-      }
-    }
-    if (this.config.SpyMomentum) {
-      if (this.algoService.isMomentumBullish(signalPrice, mid[0], this.indicators.mfi, roc, this.indicators.momentum)) {
-        const log = `bb momentum Event -` +
-          `time: ${moment.unix(signalTime).format()}, bband mid: ${mid[0]}, mfi: ${this.indicators.mfi}` +
-          `roc: ${roc}, long roc: ${this.indicators.momentum}`;
-
-        this.reportingService.addAuditLog(this.order.holding.symbol, log);
-        console.log(log);
-        return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
-      }
+      this.reportingService.addAuditLog(this.order.holding.symbol, log);
+      console.log(log);
+      return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
     }
 
-    if (this.config.MeanReversion1) {
-      if (this.algoService.isBBandMeanReversionBullish(signalPrice, low[0], this.indicators.mfi, roc, this.indicators.momentum)) {
-        const log = `bb mean reversion Event -` +
-          `time: ${moment.unix(signalTime).format()}, bband low: ${low[0]}, mfi: ${this.indicators.mfi},` +
-          `roc: ${roc}, long roc: ${this.indicators.momentum}`;
+    if (this.algoService.isMomentumBullish(signalPrice, mid[0], this.indicators.mfi, roc, this.indicators.momentum)) {
+      const log = `bb momentum Event -` +
+        `time: ${moment.unix(signalTime).format()}, bband mid: ${mid[0]}, mfi: ${this.indicators.mfi}` +
+        `roc: ${roc}, long roc: ${this.indicators.momentum}`;
 
-        this.reportingService.addAuditLog(this.order.holding.symbol, log);
-        console.log(log);
-        return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
-      }
+      this.reportingService.addAuditLog(this.order.holding.symbol, log);
+      console.log(log);
+      return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
     }
+
+    if (this.algoService.isBBandMeanReversionBullish(signalPrice, low[0], this.indicators.mfi, roc, this.indicators.momentum)) {
+      const log = `bb mean reversion Event -` +
+        `time: ${moment.unix(signalTime).format()}, bband low: ${low[0]}, mfi: ${this.indicators.mfi},` +
+        `roc: ${roc}, long roc: ${this.indicators.momentum}`;
+
+      this.reportingService.addAuditLog(this.order.holding.symbol, log);
+      console.log(log);
+      return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
+    }
+
     return null;
   }
 
@@ -1013,13 +1000,13 @@ export class BbCardComponent implements OnInit, OnChanges {
 
     await this.indicatorsService.getIndicators(quotes, this.bbandPeriod, 2, 14, 70)
       .then(result => {
-        this.indicators.band = result.bband;
+        this.indicators.band = result.bband80;
 
         this.indicators.roc10 = result.roc10;
 
         this.indicators.momentum = result.roc70;
 
-        this.indicators.mfi = result.mfi;
+        this.indicators.mfi = result.mfiLeft;
 
         this.indicators.vwma = result.vwma;
       });
@@ -1051,18 +1038,6 @@ export class BbCardComponent implements OnInit, OnChanges {
       pref.push(OrderPref.TrailingStopLoss);
     }
 
-    if (this.order.meanReversion1) {
-      pref.push(OrderPref.MeanReversion1);
-    }
-
-    if (this.order.useMfi) {
-      pref.push(OrderPref.Mfi);
-    }
-
-    if (this.order.spyMomentum) {
-      pref.push(OrderPref.SpyMomentum);
-    }
-
     if (this.order.sellAtClose) {
       pref.push(OrderPref.SellAtClose);
     }
@@ -1079,5 +1054,9 @@ export class BbCardComponent implements OnInit, OnChanges {
   setLive() {
     this.live = true;
     this.stepper.next();
+  }
+
+  toggleChart() {
+    this.showChart = !this.showChart;
   }
 }

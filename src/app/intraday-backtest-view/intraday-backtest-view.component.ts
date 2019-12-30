@@ -68,9 +68,6 @@ export class IntradayBacktestViewComponent implements OnInit {
             useStopLoss: row.StopLoss || null,
             useTrailingStopLoss: row.TrailingStopLoss || null,
             useTakeProfit: row.TakeProfit || null,
-            meanReversion1: row.MeanReversion1 || null,
-            useMfi: row.Mfi || null,
-            spyMomentum: row.SpyMomentum || null,
             buyCloseSellOpen: row.BuyCloseSellOpen || null,
             yahooData: row.YahooData || null,
             sellAtClose: row.SellAtClose || null,
@@ -79,7 +76,7 @@ export class IntradayBacktestViewComponent implements OnInit {
           this.cartService.addToCart(order);
           this.progress++;
           this.progressPct = _.ceil((this.progress / file.length) * 100);
-        }, 1000);
+        }, 250);
       } catch (err) {
         this.snackBar.open('Error getting instruments', 'Dismiss', {
           duration: 2000,
@@ -94,18 +91,17 @@ export class IntradayBacktestViewComponent implements OnInit {
     this.triggerBacktest(this.cartService.otherOrders);
   }
 
-  triggerBacktest(orders: SmartOrder[]) {
+  async triggerBacktest(orders: SmartOrder[]) {
     this.globalSettingsService.backtesting = true;
-    _.forEach(orders, (order: SmartOrder, index: number) => {
-      setTimeout(() => {
-        this.requestQuotes(order.holding.symbol)
-          .then((data: any) => {
-            this.backtestData[order.holding.symbol] = data;
-            order.triggeredBacktest = true;
-          });
+
+    for (const order of orders) {
+      await this.requestQuotes(order.holding.symbol)
+      .then((data: any) => {
+        this.backtestData[order.holding.symbol] = data;
+        order.triggeredBacktest = true;
         console.log('request quote ', order.holding.symbol, new Date().getMinutes(), ':', new Date().getSeconds());
-      }, index * 180000);
-    });
+      });
+    }
   }
 
   requestQuotes(symbol: string) {

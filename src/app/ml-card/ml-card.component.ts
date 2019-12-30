@@ -143,7 +143,7 @@ export class MlCardComponent implements OnInit {
             .subscribe(() => {
               this.pendingResults = true;
               this.checkReportSub = TimerObservable.create(0, this.reportWaitInterval)
-                .takeWhile(() => { return this.pendingResults && this.live; })
+                .takeWhile(() => this.pendingResults && this.live)
                 .subscribe(() => {
                   this.backtestService.getRnn('SPY', this.getTradeDay())
                     .subscribe((data: any) => {
