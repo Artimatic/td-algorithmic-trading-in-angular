@@ -7,6 +7,7 @@ import { Observable, Subject } from 'rxjs';
 import { Injectable } from '@angular/core';
 
 import { environment } from '../../../environments/environment';
+import { Indicators } from '../models/indicators';
 
 const BASE_URL = environment.appUrl;
 
@@ -289,5 +290,16 @@ export class BacktestService {
         parameters
       };
     return this.http.post(`${BASE_URL}api/backtest/daytrade-backtest`, data, {});
+  }
+
+  getDaytradeRecommendation(price: number, paidPrice: number, indicators: Indicators,
+    parameters: DaytradeParameters): Observable<any> {
+      const data = {
+        price,
+        paidPrice,
+        indicators,
+        parameters
+      };
+    return this.http.post(`${BASE_URL}api/backtest/daytrade-recommendation`, data, {});
   }
 }

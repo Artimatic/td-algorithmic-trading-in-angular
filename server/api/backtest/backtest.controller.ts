@@ -213,6 +213,19 @@ class BacktestController extends BaseController {
                                         request.body.parameters, response);
 
   }
+
+  getDaytrade(request, response) {
+    if (_.isEmpty(request.body) ||
+        !request.body.indicators,
+        !request.body.parameters) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    }
+    BacktestService.getDaytrade(request.body.price,
+                                request.body.paidPrice,
+                                request.body.indicators,
+                                request.body.parameters, response);
+
+  }
 }
 
 export default new BacktestController();

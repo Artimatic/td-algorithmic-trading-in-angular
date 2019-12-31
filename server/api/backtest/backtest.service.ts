@@ -47,10 +47,23 @@ export interface DaytradeAlgos {
   momentum?: string;
 }
 
+export interface Recommendation {
+  recommendation: OrderType;
+  mfi: DaytradeRecommendation;
+  roc: DaytradeRecommendation;
+  bband: DaytradeRecommendation;
+}
+
 export enum DaytradeRecommendation {
   Bullish = 'Bullish',
   Bearish = 'Bearish',
   Neutral = 'Neutral'
+}
+
+export enum OrderType {
+  Buy = 'Buy',
+  Sell = 'Sell',
+  None = 'None'
 }
 
 let startTime;
@@ -214,12 +227,33 @@ class BacktestService {
       });
   }
 
-  getDaytradeRecommendation(price: number, indicator: Indicators): DaytradeRecommendation {
-    const counter = {
+  getDaytrade(price: number, paidPrice: number, indicator: Indicators, parameters, response) {
+    let recommendation;
+    const avgPrice = paidPrice;
+
+    const isAtLimit = this.determineStopProfit(avgPrice, price,
+                              parameters.lossThreshold, parameters.profitThreshold);
+    if (isAtLimit) {
+      recommendation.recommendation = OrderType.Sell;
+    } else {
+      recommendation = this.getDaytradeRecommendation(indicator.close, indicator);
+    }
+    response.status(200).send(recommendation);
+  }
+
+  getDaytradeRecommendation(price: number, indicator: Indicators): Recommendation {
+    let counter = {
       bullishCounter: 0,
       bearishCounter: 0,
       neutralCounter: 0
     };
+
+    const recommendations: Recommendation = {
+      recommendation: OrderType.None,
+      mfi: DaytradeRecommendation.Neutral,
+      roc: DaytradeRecommendation.Neutral,
+      bband: DaytradeRecommendation.Neutral
+    }
 
     const mfiRecommendation = AlgoService.checkMfi(indicator.mfiLeft);
     const rocMomentumRecommendation = AlgoService.checkRocMomentum(indicator.mfiLeft,
@@ -229,17 +263,22 @@ class BacktestService {
     const bbandRecommendation = AlgoService.checkBBand(price,
       AlgoService.getLowerBBand(indicator.bband80), AlgoService.getUpperBBand(indicator.bband80));
 
-    AlgoService.countRecommendation(mfiRecommendation, counter);
-    AlgoService.countRecommendation(rocMomentumRecommendation, counter);
-    AlgoService.countRecommendation(bbandRecommendation, counter);
+    counter = AlgoService.countRecommendation(mfiRecommendation, counter);
+    counter = AlgoService.countRecommendation(rocMomentumRecommendation, counter);
+    counter = AlgoService.countRecommendation(bbandRecommendation, counter);
 
-    if (counter.bearishCounter === 0 && counter.bullishCounter > 0) {
-      return DaytradeRecommendation.Bullish;
+    if (counter.bearishCounter === 0 && counter.bullishCounter > 1) {
+      recommendations.recommendation = OrderType.Buy;
     } else if (counter.bearishCounter > counter.bullishCounter) {
-      return DaytradeRecommendation.Bearish;
+      recommendations.recommendation = OrderType.Sell;
     } else {
-      return DaytradeRecommendation.Neutral;
+      recommendations.recommendation = OrderType.Buy;
     }
+
+    recommendations.mfi = mfiRecommendation;
+    recommendations.roc = rocMomentumRecommendation;
+    recommendations.bband = bbandRecommendation;
+    return recommendations;
   }
 
   backtestIndicators(recommendationFn: Function,
@@ -281,6 +320,9 @@ class BacktestService {
   }
 
   determineStopProfit(paidPrice, currentPrice, lossThreshold, profitThreshold) {
+    if (!paidPrice || !currentPrice) {
+      return false;
+    }
     const gain = DecisionService.getPercentChange(currentPrice, paidPrice);
     if (gain < lossThreshold || gain > profitThreshold) {
       return true;
