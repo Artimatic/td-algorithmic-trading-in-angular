@@ -11,6 +11,7 @@ import DecisionService from '../mean-reversion/reversion-decision.service';
 import BaseErrors from '../../components/errors/baseErrors';
 import * as tulind from 'tulind';
 import configurations from '../../config/environment';
+import AlgoService from './algo.service';
 
 const dataServiceUrl = configurations.apps.goliath;
 const mlServiceUrl = configurations.apps.armadillo;
@@ -26,25 +27,25 @@ export interface DaytradeParameters {
   lossThreshold?: number;
   profitThreshold?: number;
   minQuotes: number;
-};
+}
 
 export interface Indicators {
-  vwma: number,
-  mfiLeft: number,
-  bband80: number,
-  mfiPrevious?: number,
+  vwma: number;
+  mfiLeft: number;
+  bband80: number;
+  mfiPrevious?: number;
   roc10?: number;
   roc10Previous?: number;
   roc70?: number;
   roc70Previous?: number;
   close?: number;
-};
+}
 
 export interface DaytradeAlgos {
   mfi?: string;
   bband?: string;
   momentum?: string;
-};
+}
 
 export enum DaytradeRecommendation {
   Bullish = 'Bullish',
@@ -202,13 +203,14 @@ class BacktestService {
       });
   }
 
-  runDaytradeBacktest(symbol, currentDate, startDate, parameters) {
+  runDaytradeBacktest(symbol, currentDate, startDate, parameters, response) {
     this.initDaytradeStrategy(symbol, startDate, currentDate, parameters)
       .then(indicators => {
-
-        return this.backtestIndicators(this.getDaytradeRecommendation,
+        const testResults = this.backtestIndicators(this.getDaytradeRecommendation,
           indicators,
           parameters);
+
+        response.status(200).send(testResults);
       });
   }
 
@@ -219,17 +221,17 @@ class BacktestService {
       neutralCounter: 0
     };
 
-    const mfiRecommendation = this.checkMfi(indicator.mfiLeft);
-    const rocMomentumRecommendation = this.checkRocMomentum(indicator.mfiLeft,
+    const mfiRecommendation = AlgoService.checkMfi(indicator.mfiLeft);
+    const rocMomentumRecommendation = AlgoService.checkRocMomentum(indicator.mfiLeft,
       indicator.roc10, indicator.roc10Previous,
       indicator.roc70, indicator.roc70Previous);
 
-    const bbandRecommendation = this.checkBBand(price,
-      this.getLowerBBand(indicator.bband80), this.getUpperBBand(indicator.bband80));
+    const bbandRecommendation = AlgoService.checkBBand(price,
+      AlgoService.getLowerBBand(indicator.bband80), AlgoService.getUpperBBand(indicator.bband80));
 
-    this.countRecommendation(mfiRecommendation, counter);
-    this.countRecommendation(rocMomentumRecommendation, counter);
-    this.countRecommendation(bbandRecommendation, counter);
+    AlgoService.countRecommendation(mfiRecommendation, counter);
+    AlgoService.countRecommendation(rocMomentumRecommendation, counter);
+    AlgoService.countRecommendation(bbandRecommendation, counter);
 
     if (counter.bearishCounter === 0 && counter.bullishCounter > 0) {
       return DaytradeRecommendation.Bullish;
@@ -238,21 +240,6 @@ class BacktestService {
     } else {
       return DaytradeRecommendation.Neutral;
     }
-  }
-
-  countRecommendation(recommendation: DaytradeRecommendation,
-                     counter: any) {
-    switch(recommendation) {
-      case DaytradeRecommendation.Bullish:
-        counter.bullishCounter++;
-      break;
-      case DaytradeRecommendation.Bearish:
-        counter.bearishCounter++;
-      break;
-      default:
-        counter.neutralCounter++;
-    }
-    return counter;
   }
 
   backtestIndicators(recommendationFn: Function,
@@ -276,7 +263,7 @@ class BacktestService {
         if (isAtLimit) {
           orderType = 'sell';
         } else {
-          let recommendation: DaytradeRecommendation = recommendationFn(indicator.close, indicator);
+          const recommendation: DaytradeRecommendation = recommendationFn(indicator.close, indicator);
 
           if (recommendation === DaytradeRecommendation.Bullish) {
             orderType = 'buy';
@@ -289,6 +276,7 @@ class BacktestService {
       }
     });
 
+    console.log('order: ', orders, indicators.length);
     return { ...orders, indicators };
   }
 
@@ -299,52 +287,6 @@ class BacktestService {
     }
   }
 
-  getLowerBBand(bband): number {
-    return bband[0][0];
-  }
-
-  getUpperBBand(bband): number {
-    return bband[2][0];
-  }
-
-  checkMfi(mfi: number): DaytradeRecommendation {
-    if (mfi < 14) {
-      return DaytradeRecommendation.Bullish;
-    } else if (mfi > 80) {
-      return DaytradeRecommendation.Bearish;
-    }
-    return DaytradeRecommendation.Neutral;
-  }
-
-  checkRocMomentum(mfi: number,
-                   roc10: number, roc10Previous: number,
-                   roc70: number, roc70Previous: number): DaytradeRecommendation {
-    if (roc10Previous > 0 && roc10 < 0) {
-      if (mfi > 40) {
-        return DaytradeRecommendation.Bearish;
-      }
-    }
-
-    if (roc70Previous < 0 && roc70 > 0) {
-      if (mfi < 82) {
-        return DaytradeRecommendation.Bullish;
-      }
-    }
-
-    return DaytradeRecommendation.Neutral;
-  }
-
-  checkBBand(price: number, low: number, high: number): DaytradeRecommendation {
-    if (price <= low) {
-      return DaytradeRecommendation.Bullish;
-    }
-
-    if (price >= high) {
-      return DaytradeRecommendation.Bullish;
-    }
-
-    return DaytradeRecommendation.Neutral;
-  }
 
   runIntradayEvaluation(symbol, currentDate, startDate) {
     return this.initDaytradeStrategy(symbol, startDate, currentDate, { minQuotes: 81 })
@@ -415,7 +357,7 @@ class BacktestService {
           }
         });
         return Promise.all(getIndicatorQuotes);
-      })
+      });
   }
 
   runIntradayTest(symbol, currentDate, startDate) {

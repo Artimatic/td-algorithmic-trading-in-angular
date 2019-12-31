@@ -17,6 +17,14 @@ export interface ChartParam {
   params?: any;
 }
 
+export interface DaytradeParameters {
+  mfiRange?: number[];
+  bbandPeriod?: number;
+  lossThreshold?: number;
+  profitThreshold?: number;
+  minQuotes: number;
+}
+
 @Injectable()
 export class BacktestService {
   currentChart: Subject<ChartParam>;
@@ -270,5 +278,16 @@ export class BacktestService {
         vwmaPeriod
       };
     return this.http.post(`${BASE_URL}api/backtest/daytrade-indicators`, data, {});
+  }
+
+  getDaytradeBacktest(symbol: any, currentDate: string, startDate: string,
+    parameters: DaytradeParameters): Observable<any> {
+      const data = {
+        symbol,
+        currentDate,
+        startDate,
+        parameters
+      };
+    return this.http.post(`${BASE_URL}api/backtest/daytrade-backtest`, data, {});
   }
 }

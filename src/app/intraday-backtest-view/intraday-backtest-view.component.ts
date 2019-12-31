@@ -18,7 +18,6 @@ import { GlobalSettingsService } from '../settings/global-settings.service';
 })
 export class IntradayBacktestViewComponent implements OnInit {
 
-  backtestData: any;
   progressPct = 0;
   progress = 0;
 
@@ -33,7 +32,6 @@ export class IntradayBacktestViewComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.backtestData = {};
     this.todoService.setIntradayBacktest();
   }
 
@@ -95,12 +93,7 @@ export class IntradayBacktestViewComponent implements OnInit {
     this.globalSettingsService.backtesting = true;
 
     for (const order of orders) {
-      await this.requestQuotes(order.holding.symbol)
-      .then((data: any) => {
-        this.backtestData[order.holding.symbol] = data;
-        order.triggeredBacktest = true;
-        console.log('request quote ', order.holding.symbol, new Date().getMinutes(), ':', new Date().getSeconds());
-      });
+      order.triggeredBacktest = true;
     }
   }
 
