@@ -21,7 +21,6 @@ import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import { SmartOrder } from '../shared/models/smart-order';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { Subscription } from 'rxjs/Subscription';
-import { AlgoService } from '../shared/services/algo.service';
 import { IndicatorsService } from '../shared/services/indicators.service';
 import { CartService } from '../shared/services/cart.service';
 import { Indicators } from '../shared/models/indicators';
@@ -76,7 +75,6 @@ export class BbCardComponent implements OnInit, OnChanges {
     private reportingService: ReportingService,
     private scoringService: ScoreKeeperService,
     private portfolioService: PortfolioService,
-    private algoService: AlgoService,
     private indicatorsService: IndicatorsService,
     public cartService: CartService,
     private globalSettingsService: GlobalSettingsService,
@@ -104,8 +102,6 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.showChart = false;
     this.bbandPeriod = 80;
     this.dataInterval = '1min';
-
-    this.indicators;
 
     this.firstFormGroup = this._formBuilder.group({
       quantity: [this.order.quantity, Validators.required],
@@ -713,7 +709,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
 
     const daytradeType = this.firstFormGroup.value.orderType.toLowerCase();
-    this.backtestService.getDaytradeRecommendation(null, null, indicators, {minQuotes:81}).subscribe(
+    this.backtestService.getDaytradeRecommendation(null, null, indicators, { minQuotes: 81 }).subscribe(
       analysis => {
         if (daytradeType === 'buy') {
           if (this.buyCount >= this.firstFormGroup.value.quantity) {
@@ -800,7 +796,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     signalTime,
     analysis) {
 
-    let log = ''
+    let log = '';
     if (analysis.mfi.toLowerCase() === 'bullish') {
       log += `[mfi oversold Event - time: ${moment.unix(signalTime).format()}]`;
 
@@ -827,7 +823,7 @@ export class BbCardComponent implements OnInit, OnChanges {
   }
 
   buildSellOrder(orderQuantity: number, price, signalTime, analysis) {
-    let log = ''
+    let log = '';
     if (analysis.mfi.toLowerCase() === 'bearish') {
       log += `[mfi overbought Event - time: ${moment.unix(signalTime).format()}]`;
 

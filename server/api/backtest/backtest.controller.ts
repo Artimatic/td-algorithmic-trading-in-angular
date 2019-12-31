@@ -216,7 +216,7 @@ class BacktestController extends BaseController {
 
   getDaytrade(request, response) {
     if (_.isEmpty(request.body) ||
-        !request.body.indicators,
+        !request.body.indicators ||
         !request.body.parameters) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     }

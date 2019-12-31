@@ -253,7 +253,7 @@ class BacktestService {
       mfi: DaytradeRecommendation.Neutral,
       roc: DaytradeRecommendation.Neutral,
       bband: DaytradeRecommendation.Neutral
-    }
+    };
 
     const mfiRecommendation = AlgoService.checkMfi(indicator.mfiLeft);
     const rocMomentumRecommendation = AlgoService.checkRocMomentum(indicator.mfiLeft,
