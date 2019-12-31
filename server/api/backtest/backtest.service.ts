@@ -272,7 +272,7 @@ class BacktestService {
     } else if (counter.bearishCounter > counter.bullishCounter) {
       recommendations.recommendation = OrderType.Sell;
     } else {
-      recommendations.recommendation = OrderType.Buy;
+      recommendations.recommendation = OrderType.None;
     }
 
     recommendations.mfi = mfiRecommendation;
@@ -294,20 +294,20 @@ class BacktestService {
 
     _.forEach(indicators, (indicator) => {
       if (indicator.close) {
-        let orderType;
+        let orderType = OrderType.None;
         const avgPrice = this.estimateAverageBuyOrderPrice(orders);
 
         const isAtLimit = this.determineStopProfit(avgPrice, indicator.close,
                                  parameters.lossThreshold, parameters.profitThreshold);
         if (isAtLimit) {
-          orderType = 'sell';
+          orderType = OrderType.Sell;
         } else {
           const recommendation: DaytradeRecommendation = recommendationFn(indicator.close, indicator);
 
           if (recommendation === DaytradeRecommendation.Bullish) {
-            orderType = 'buy';
+            orderType = OrderType.Buy;
           } else if (recommendation === DaytradeRecommendation.Bearish) {
-            orderType = 'sell';
+            orderType = OrderType.Sell;
           }
         }
 
