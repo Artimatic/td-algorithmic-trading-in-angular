@@ -28,7 +28,7 @@ export class IntradayBacktestViewComponent implements OnInit {
     private backtestService: BacktestService,
     public snackBar: MatSnackBar,
     private todoService: TodoService,
-    private globalSettingsService: GlobalSettingsService
+    public globalSettingsService: GlobalSettingsService
   ) { }
 
   ngOnInit() {
