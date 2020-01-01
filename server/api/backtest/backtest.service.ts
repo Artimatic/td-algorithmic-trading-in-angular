@@ -50,9 +50,9 @@ export interface DaytradeAlgos {
 
 export interface Recommendation {
   recommendation: OrderType;
-  mfi: DaytradeRecommendation;
-  roc: DaytradeRecommendation;
-  bband: DaytradeRecommendation;
+  mfi?: DaytradeRecommendation;
+  roc?: DaytradeRecommendation;
+  bband?: DaytradeRecommendation;
 }
 
 export enum DaytradeRecommendation {
@@ -269,7 +269,7 @@ class BacktestService {
     counter = AlgoService.countRecommendation(rocMomentumRecommendation, counter);
     counter = AlgoService.countRecommendation(bbandRecommendation, counter);
 
-    if (counter.bearishCounter === 0 && counter.bullishCounter > 0) {
+    if (counter.bearishCounter === 0 && counter.bullishCounter > 1) {
       recommendations.recommendation = OrderType.Buy;
     } else if (counter.bearishCounter > counter.bullishCounter) {
       recommendations.recommendation = OrderType.Sell;
@@ -303,6 +303,7 @@ class BacktestService {
                                  parameters.lossThreshold, parameters.profitThreshold);
         if (isAtLimit) {
           orderType = OrderType.Sell;
+          indicator.recommendation = { recommendation: OrderType.Sell };
         } else {
           const recommendation: Recommendation = recommendationFn(indicator.close, indicator);
 
@@ -320,7 +321,7 @@ class BacktestService {
   }
 
   determineStopProfit(paidPrice, currentPrice, lossThreshold, profitThreshold) {
-    if (!paidPrice || !currentPrice) {
+    if (!paidPrice || !currentPrice || !lossThreshold || !profitThreshold) {
       return false;
     }
     const gain = DecisionService.getPercentChange(currentPrice, paidPrice);

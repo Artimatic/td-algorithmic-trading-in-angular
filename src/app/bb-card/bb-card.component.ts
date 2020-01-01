@@ -175,9 +175,9 @@ export class BbCardComponent implements OnInit, OnChanges {
       result => {
         this.backtestService.postIntraday(result).subscribe(
           status => {
-            this.runBacktest();
+            this.runServerSideBacktest();
           }, error => {
-            this.runBacktest();
+            this.runServerSideBacktest();
           });
       }, error => {
         this.error = `Error getting quotes for ${this.order.holding.symbol}`;
@@ -234,7 +234,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.isBacktest = false;
   }
 
-  async runBacktest() {
+  async runServerSideBacktest() {
     this.setup();
     this.stop();
     this.isBacktest = true;
@@ -249,13 +249,23 @@ export class BbCardComponent implements OnInit, OnChanges {
         minQuotes: 81
       }).subscribe(results => {
         console.log(results);
+        _.forEach(results.indicators, indicator => {
+          this.indicators = indicator;
+          const daytradeType = this.firstFormGroup.value.orderType.toLowerCase();
+          const date = moment(indicator.date).unix();
+
+          if (indicator.recommendation) {
+            this.processAnalysis(daytradeType, indicator.recommendation, indicator.close, date);
+          } else {
+            console.log('missing recommendation: ', indicator);
+          }
+        });
+
         this.isBacktest = false;
-        this.triggeredBacktest = false;
       },
         error => {
           this.error = error._body;
           this.isBacktest = false;
-          this.triggeredBacktest = false;
         }
       );
 
@@ -704,96 +714,20 @@ export class BbCardComponent implements OnInit, OnChanges {
     return order;
   }
 
-  async buildOrder(quotes,
+  buildOrder(quotes,
     timestamps,
     idx,
     indicators: Indicators) {
 
-    const specialOrder = this.processSpecialRules(quotes.close[idx], timestamps[idx]);
-
-    if (specialOrder) {
-      return specialOrder;
-    }
-
+    this.handleStoploss(quotes.close[idx], timestamps[idx]);
     const daytradeType = this.firstFormGroup.value.orderType.toLowerCase();
     this.backtestService.getDaytradeRecommendation(null, null, indicators, { minQuotes: 81 }).subscribe(
       analysis => {
-        if (daytradeType === 'buy') {
-          if (this.buyCount >= this.firstFormGroup.value.quantity) {
-            this.stop();
-          } else if ((!this.globalSettingsService.backtesting || !this.isBacktest) && this.scoringService.total < 0 && this.scoringService.total < this.globalSettingsService.maxLoss * -1) {
-            this.warning = 'Global stop loss exceeded. Buying paused.';
-          } else if (analysis.recommendation.toLowerCase() === 'buy') {
-            const orderQuantity = this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
-              this.firstFormGroup.value.orderSize,
-              this.buyCount,
-              this.positionCount);
-
-            if (orderQuantity > 0) {
-              const buyOrder = this.buildBuyOrder(orderQuantity,
-                quotes.close[idx],
-                timestamps[idx],
-                analysis);
-              this.sendBuy(buyOrder);
-            }
-          }
-        } else if (daytradeType === 'sell') {
-          if (this.sellCount >= this.firstFormGroup.value.quantity) {
-            this.stop();
-          } else if (analysis.recommendation.toLowerCase() === 'sell') {
-            const orderQuantity = this.daytradeService.getOrderQuantity(this.firstFormGroup.value.quantity,
-              this.firstFormGroup.value.orderSize,
-              this.sellCount);
-
-            if (orderQuantity > 0) {
-              const sellOrder = this.buildSellOrder(orderQuantity,
-                quotes.close[idx],
-                timestamps[idx],
-                analysis);
-
-              this.sendSell(sellOrder);
-            }
-          }
-        } else if (daytradeType === 'daytrade') {
-          if (this.hasReachedDayTradeOrderLimit()) {
-            this.stop();
-          } else if (analysis.recommendation.toLowerCase() === 'sell') {
-
-            if (this.buyCount >= this.sellCount) {
-              const orderQuantity = this.positionCount;
-              if (orderQuantity > 0) {
-                const sellOrder = this.buildSellOrder(orderQuantity,
-                  quotes.close[idx],
-                  timestamps[idx],
-                  analysis);
-
-                this.sendStopLoss(sellOrder);
-              }
-            }
-          } else if ((!this.globalSettingsService.backtesting || !this.isBacktest) && this.scoringService.total < 0 && this.scoringService.total < this.globalSettingsService.maxLoss * -1) {
-            this.warning = 'Global stop loss exceeded. Buying paused.';
-          } else if (analysis.recommendation.toLowerCase() === 'buy') {
-            let orderQuantity: number = this.scoringService.determineBetSize(this.order.holding.symbol, this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
-              this.firstFormGroup.value.orderSize,
-              this.buyCount,
-              this.positionCount), this.positionCount, this.order.quantity);
-
-            if (this.indicators.vwma > quotes.close[idx]) {
-              orderQuantity = _.round(_.multiply(orderQuantity, 0.5), 0);
-            }
-
-            if (orderQuantity > 0) {
-              const buyOrder = this.buildBuyOrder(orderQuantity,
-                quotes.close[idx],
-                timestamps[idx],
-                analysis);
-
-              this.sendBuy(buyOrder);
-            }
-          }
-        }
+        this.processAnalysis(daytradeType, analysis, quotes.close[idx], timestamps[idx]);
+        return null;
       },
       error => {
+        this.error = 'Issue getting analysis.'
       }
     );
   }
@@ -854,6 +788,89 @@ export class BbCardComponent implements OnInit, OnChanges {
     console.log(log);
     this.reportingService.addAuditLog(this.order.holding.symbol, log);
     return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
+  }
+
+  handleStoploss(quote, timestamp) {
+    const specialOrder = this.processSpecialRules(quote, timestamp);
+    if (specialOrder) {
+      return specialOrder;
+    }
+  }
+
+  processAnalysis(daytradeType, analysis, quote, timestamp) {
+    if (daytradeType === 'buy') {
+      if (this.buyCount >= this.firstFormGroup.value.quantity) {
+        this.stop();
+      } else if ((!this.globalSettingsService.backtesting || !this.isBacktest) && this.scoringService.total < 0 && this.scoringService.total < this.globalSettingsService.maxLoss * -1) {
+        this.warning = 'Global stop loss exceeded. Buying paused.';
+      } else if (analysis.recommendation.toLowerCase() === 'buy') {
+        const orderQuantity = this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
+          this.firstFormGroup.value.orderSize,
+          this.buyCount,
+          this.positionCount);
+
+        if (orderQuantity > 0) {
+          const buyOrder = this.buildBuyOrder(orderQuantity,
+            quote,
+            timestamp,
+            analysis);
+          this.sendBuy(buyOrder);
+        }
+      }
+    } else if (daytradeType === 'sell') {
+      if (this.sellCount >= this.firstFormGroup.value.quantity) {
+        this.stop();
+      } else if (analysis.recommendation.toLowerCase() === 'sell') {
+        const orderQuantity = this.daytradeService.getOrderQuantity(this.firstFormGroup.value.quantity,
+          this.firstFormGroup.value.orderSize,
+          this.sellCount);
+
+        if (orderQuantity > 0) {
+          const sellOrder = this.buildSellOrder(orderQuantity,
+            quote,
+            timestamp,
+            analysis);
+
+          this.sendSell(sellOrder);
+        }
+      }
+    } else if (daytradeType === 'daytrade') {
+      if (this.hasReachedDayTradeOrderLimit()) {
+        this.stop();
+      } else if (analysis.recommendation.toLowerCase() === 'sell') {
+        if (this.buyCount >= this.sellCount) {
+          const orderQuantity = this.positionCount;
+          if (orderQuantity > 0) {
+            const sellOrder = this.buildSellOrder(orderQuantity,
+              quote,
+              timestamp,
+              analysis);
+
+            this.sendStopLoss(sellOrder);
+          }
+        }
+      } else if ((!this.globalSettingsService.backtesting || !this.isBacktest) && this.scoringService.total < 0 && this.scoringService.total < this.globalSettingsService.maxLoss * -1) {
+        this.warning = 'Global stop loss exceeded. Buying paused.';
+      } else if (analysis.recommendation.toLowerCase() === 'buy') {
+        let orderQuantity: number = this.scoringService.determineBetSize(this.order.holding.symbol, this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
+          this.firstFormGroup.value.orderSize,
+          this.buyCount,
+          this.positionCount), this.positionCount, this.order.quantity);
+
+        if (this.indicators.vwma > quote) {
+          orderQuantity = _.round(_.multiply(orderQuantity, 0.5), 0);
+        }
+
+        if (orderQuantity > 0) {
+          const buyOrder = this.buildBuyOrder(orderQuantity,
+            quote,
+            timestamp,
+            analysis);
+
+          this.sendBuy(buyOrder);
+        }
+      }
+    }
   }
 
   closeAllPositions(price: number, signalTime: number) {
