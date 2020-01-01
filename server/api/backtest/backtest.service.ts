@@ -39,6 +39,7 @@ export interface Indicators {
   roc70?: number;
   roc70Previous?: number;
   close?: number;
+  recommendation?: Recommendation;
 }
 
 export interface DaytradeAlgos {
@@ -303,14 +304,12 @@ class BacktestService {
         if (isAtLimit) {
           orderType = OrderType.Sell;
         } else {
-          const recommendation: DaytradeRecommendation = recommendationFn(indicator.close, indicator);
+          const recommendation: Recommendation = recommendationFn(indicator.close, indicator);
 
-          if (recommendation === DaytradeRecommendation.Bullish) {
-            orderType = OrderType.Buy;
-          } else if (recommendation === DaytradeRecommendation.Bearish) {
-            orderType = OrderType.Sell;
-          }
+          orderType = recommendation.recommendation;
+          indicator.recommendation = recommendation;
         }
+
 
         orders = this.calcTrade(orders, indicator, orderType, avgPrice);
       }
@@ -742,7 +741,7 @@ class BacktestService {
   }
 
   calcTrade(orders, dayQuote, orderType, avgPrice) {
-    if (orderType === 'sell') {
+    if (orderType.toLowerCase() === 'sell') {
       // Sell
       orders.trades++;
       if (orders.buy.length > 0) {
@@ -755,7 +754,7 @@ class BacktestService {
         orders.history.push(dayQuote);
         orders.buy = [];
       }
-    } else if (orderType === 'buy') {
+    } else if (orderType.toLowerCase() === 'buy') {
       // Buy
       orders.buy.push(dayQuote.close);
       dayQuote.signal = 'buy';

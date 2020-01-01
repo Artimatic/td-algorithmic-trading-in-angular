@@ -235,6 +235,9 @@ export class BbCardComponent implements OnInit, OnChanges {
   }
 
   async runBacktest() {
+    this.setup();
+    this.stop();
+    this.isBacktest = true;
     const currentDate = this.globalSettingsService.backtestDate;
     const futureDate = moment().add(1, 'days').format('YYYY-MM-DD');
 
@@ -246,9 +249,13 @@ export class BbCardComponent implements OnInit, OnChanges {
         minQuotes: 81
       }).subscribe(results => {
         console.log(results);
+        this.isBacktest = false;
+        this.triggeredBacktest = false;
       },
         error => {
           this.error = error._body;
+          this.isBacktest = false;
+          this.triggeredBacktest = false;
         }
       );
 

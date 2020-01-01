@@ -91,10 +91,10 @@ export class IntradayBacktestViewComponent implements OnInit {
 
   async triggerBacktest(orders: SmartOrder[]) {
     this.globalSettingsService.backtesting = true;
-
     for (const order of orders) {
       order.triggeredBacktest = true;
     }
+    this.globalSettingsService.backtesting = false;
   }
 
   requestQuotes(symbol: string) {
