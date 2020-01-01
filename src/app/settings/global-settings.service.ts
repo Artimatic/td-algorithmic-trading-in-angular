@@ -16,6 +16,7 @@ export class GlobalSettingsService {
   maxLoss: number;
   brokerage: Brokerage;
   backtesting: boolean;
+  backtestDate: string;
   deviation: number;
   fastAvg: number;
   slowAvg: number;
@@ -26,5 +27,6 @@ export class GlobalSettingsService {
     this.stopTime = moment.tz('3:50pm', 'h:mma', 'America/New_York').toDate();
     this.maxLoss = 50;
     this.brokerage = Brokerage.Robinhood;
+    this.backtestDate = moment().format('YYYY-MM-DD');
   }
 }

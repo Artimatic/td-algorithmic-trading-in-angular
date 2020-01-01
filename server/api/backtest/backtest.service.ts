@@ -256,6 +256,7 @@ class BacktestService {
     };
 
     const mfiRecommendation = AlgoService.checkMfi(indicator.mfiLeft);
+
     const rocMomentumRecommendation = AlgoService.checkRocMomentum(indicator.mfiLeft,
       indicator.roc10, indicator.roc10Previous,
       indicator.roc70, indicator.roc70Previous);
@@ -267,7 +268,7 @@ class BacktestService {
     counter = AlgoService.countRecommendation(rocMomentumRecommendation, counter);
     counter = AlgoService.countRecommendation(bbandRecommendation, counter);
 
-    if (counter.bearishCounter === 0 && counter.bullishCounter > 1) {
+    if (counter.bearishCounter === 0 && counter.bullishCounter > 0) {
       recommendations.recommendation = OrderType.Buy;
     } else if (counter.bearishCounter > counter.bullishCounter) {
       recommendations.recommendation = OrderType.Sell;
@@ -810,7 +811,8 @@ class BacktestService {
     return this.getBBands(indicators.reals, bbandPeriod, 2)
     .then((bband80) => {
       currentQuote.bband80 = bband80;
-      return this.getRateOfChange(this.getSubArray(indicators.reals, 10), 10);
+      const quotes10Day = this.getSubArray(indicators.reals, 10);
+      return this.getRateOfChange(quotes10Day, 10);
     })
     .then((roc10) => {
       const rocLen = roc10[0].length - 1;

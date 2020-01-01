@@ -235,7 +235,7 @@ export class BbCardComponent implements OnInit, OnChanges {
   }
 
   async runBacktest() {
-    const currentDate = moment().format('YYYY-MM-DD');
+    const currentDate = this.globalSettingsService.backtestDate;
     const futureDate = moment().add(1, 'days').format('YYYY-MM-DD');
 
     this.backtestService.getDaytradeBacktest(this.order.holding.symbol,
