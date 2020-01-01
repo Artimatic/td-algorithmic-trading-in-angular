@@ -727,7 +727,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         return null;
       },
       error => {
-        this.error = 'Issue getting analysis.'
+        this.error = 'Issue getting analysis.';
       }
     );
   }
