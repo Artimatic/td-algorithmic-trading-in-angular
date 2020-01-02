@@ -248,18 +248,22 @@ export class BbCardComponent implements OnInit, OnChanges {
         profitThreshold: this.order.profitTarget,
         minQuotes: 81
       }).subscribe(results => {
-        console.log(results);
-        _.forEach(results.indicators, indicator => {
-          this.indicators = indicator;
-          const daytradeType = this.firstFormGroup.value.orderType.toLowerCase();
-          const date = moment(indicator.date).unix();
+        // console.log(results);
+        // _.forEach(results.indicators, indicator => {
+        //   this.indicators = indicator;
+        //   const daytradeType = this.firstFormGroup.value.orderType.toLowerCase();
+        //   const date = moment(indicator.date).unix();
 
-          if (indicator.recommendation) {
-            this.processAnalysis(daytradeType, indicator.recommendation, indicator.close, date);
-          } else {
-            console.log('missing recommendation: ', indicator);
-          }
-        });
+        //   if (indicator.recommendation) {
+        //     this.processAnalysis(daytradeType, indicator.recommendation, indicator.close, date);
+        //   } else {
+        //     console.log('missing recommendation: ', indicator);
+        //   }
+        // });
+
+        if (results.net) {
+          this.scoringService.addProfitLoss(this.order.holding.symbol, results.net);
+        }
 
         this.isBacktest = false;
       },
