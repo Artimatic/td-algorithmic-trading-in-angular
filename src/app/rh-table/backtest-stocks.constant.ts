@@ -28,7 +28,6 @@ const stockList = [
   'AXP',
   'EA',
   'BAC',
-  'BBT',
   'BDN',
   'BIG',
   'BK',

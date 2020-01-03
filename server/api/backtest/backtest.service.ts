@@ -742,12 +742,12 @@ class BacktestService {
   }
 
   calcTrade(orders, dayQuote, orderType, avgPrice) {
-    if (orderType.toLowerCase() === 'sell') {
+    if (orderType && orderType.toLowerCase() === 'sell') {
       // Sell
       orders.trades++;
       if (orders.buy.length > 0) {
-        const len = orders.buy.length,
-          profit = (dayQuote.close - avgPrice) * len;
+        const len = orders.buy.length;
+        const profit = (dayQuote.close - avgPrice) * len;
 
         orders.total += (avgPrice * len);
         orders.net += profit;
@@ -755,7 +755,7 @@ class BacktestService {
         orders.history.push(dayQuote);
         orders.buy = [];
       }
-    } else if (orderType.toLowerCase() === 'buy') {
+    } else if (orderType && orderType.toLowerCase() === 'buy') {
       // Buy
       orders.buy.push(dayQuote.close);
       dayQuote.signal = 'buy';
