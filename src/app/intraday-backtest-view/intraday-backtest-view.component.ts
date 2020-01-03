@@ -28,7 +28,7 @@ export class IntradayBacktestViewComponent implements OnInit {
     private backtestService: BacktestService,
     public snackBar: MatSnackBar,
     private todoService: TodoService,
-    private globalSettingsService: GlobalSettingsService
+    public globalSettingsService: GlobalSettingsService
   ) { }
 
   ngOnInit() {
@@ -91,10 +91,10 @@ export class IntradayBacktestViewComponent implements OnInit {
 
   async triggerBacktest(orders: SmartOrder[]) {
     this.globalSettingsService.backtesting = true;
-
     for (const order of orders) {
       order.triggeredBacktest = true;
     }
+    this.globalSettingsService.backtesting = false;
   }
 
   requestQuotes(symbol: string) {

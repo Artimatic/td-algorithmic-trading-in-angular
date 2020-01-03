@@ -39,6 +39,7 @@ export interface Indicators {
   roc70?: number;
   roc70Previous?: number;
   close?: number;
+  recommendation?: Recommendation;
 }
 
 export interface DaytradeAlgos {
@@ -49,9 +50,9 @@ export interface DaytradeAlgos {
 
 export interface Recommendation {
   recommendation: OrderType;
-  mfi: DaytradeRecommendation;
-  roc: DaytradeRecommendation;
-  bband: DaytradeRecommendation;
+  mfi?: DaytradeRecommendation;
+  roc?: DaytradeRecommendation;
+  bband?: DaytradeRecommendation;
 }
 
 export enum DaytradeRecommendation {
@@ -256,6 +257,7 @@ class BacktestService {
     };
 
     const mfiRecommendation = AlgoService.checkMfi(indicator.mfiLeft);
+
     const rocMomentumRecommendation = AlgoService.checkRocMomentum(indicator.mfiLeft,
       indicator.roc10, indicator.roc10Previous,
       indicator.roc70, indicator.roc70Previous);
@@ -301,15 +303,14 @@ class BacktestService {
                                  parameters.lossThreshold, parameters.profitThreshold);
         if (isAtLimit) {
           orderType = OrderType.Sell;
+          indicator.recommendation = { recommendation: OrderType.Sell };
         } else {
-          const recommendation: DaytradeRecommendation = recommendationFn(indicator.close, indicator);
+          const recommendation: Recommendation = recommendationFn(indicator.close, indicator);
 
-          if (recommendation === DaytradeRecommendation.Bullish) {
-            orderType = OrderType.Buy;
-          } else if (recommendation === DaytradeRecommendation.Bearish) {
-            orderType = OrderType.Sell;
-          }
+          orderType = recommendation.recommendation;
+          indicator.recommendation = recommendation;
         }
+
 
         orders = this.calcTrade(orders, indicator, orderType, avgPrice);
       }
@@ -320,7 +321,7 @@ class BacktestService {
   }
 
   determineStopProfit(paidPrice, currentPrice, lossThreshold, profitThreshold) {
-    if (!paidPrice || !currentPrice) {
+    if (!paidPrice || !currentPrice || !lossThreshold || !profitThreshold) {
       return false;
     }
     const gain = DecisionService.getPercentChange(currentPrice, paidPrice);
@@ -741,7 +742,7 @@ class BacktestService {
   }
 
   calcTrade(orders, dayQuote, orderType, avgPrice) {
-    if (orderType === 'sell') {
+    if (orderType.toLowerCase() === 'sell') {
       // Sell
       orders.trades++;
       if (orders.buy.length > 0) {
@@ -754,7 +755,7 @@ class BacktestService {
         orders.history.push(dayQuote);
         orders.buy = [];
       }
-    } else if (orderType === 'buy') {
+    } else if (orderType.toLowerCase() === 'buy') {
       // Buy
       orders.buy.push(dayQuote.close);
       dayQuote.signal = 'buy';
@@ -810,7 +811,8 @@ class BacktestService {
     return this.getBBands(indicators.reals, bbandPeriod, 2)
     .then((bband80) => {
       currentQuote.bband80 = bband80;
-      return this.getRateOfChange(this.getSubArray(indicators.reals, 10), 10);
+      const quotes10Day = this.getSubArray(indicators.reals, 10);
+      return this.getRateOfChange(quotes10Day, 10);
     })
     .then((roc10) => {
       const rocLen = roc10[0].length - 1;

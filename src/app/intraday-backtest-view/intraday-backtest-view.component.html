@@ -25,10 +25,22 @@
     </mat-card>
     <h3 mat-subheader>Order List</h3>
     <div class="card-container">
-      <div>
-        <button mat-button color="secondary" (click)="confirmBacktest()">Backtest</button>
-        <button mat-raised-button color="primary" (click)="loadDefaults()">Load Default Orders</button>
-      </div>
+      <app-score-board [title]="'Total'" [score]="scoreKeeperService.total"></app-score-board>
+      <mat-grid-list cols="5" rowHeight="150px">
+        <mat-grid-tile>
+          <button mat-button color="secondary" (click)="confirmBacktest()">Backtest</button>
+        </mat-grid-tile>
+        <mat-grid-tile>
+          <button mat-raised-button color="primary" (click)="loadDefaults()">Load Default Orders</button>
+        </mat-grid-tile>
+        <mat-grid-tile>
+          <div class="date-picker">
+            Enter last trading date:
+            <input name="endDate" type="date" [ngModel]="globalSettingsService.backtestDate"
+              (ngModelChange)="globalSettingsService.backtestDate = $event">
+          </div>
+        </mat-grid-tile>
+      </mat-grid-list>
       <div *ngFor="let other of cartService.otherOrders">
         <app-score-board [title]="other.holding.symbol"
           [score]="scoreKeeperService.profitLossHash[other.holding.symbol]"></app-score-board>
