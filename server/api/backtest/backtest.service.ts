@@ -263,13 +263,14 @@ class BacktestService {
       indicator.roc70, indicator.roc70Previous);
 
     const bbandRecommendation = AlgoService.checkBBand(price,
-      AlgoService.getLowerBBand(indicator.bband80), AlgoService.getUpperBBand(indicator.bband80));
+      AlgoService.getLowerBBand(indicator.bband80), AlgoService.getUpperBBand(indicator.bband80),
+        indicator.mfiLeft);
 
     counter = AlgoService.countRecommendation(mfiRecommendation, counter);
     counter = AlgoService.countRecommendation(rocMomentumRecommendation, counter);
     counter = AlgoService.countRecommendation(bbandRecommendation, counter);
 
-    if (counter.bearishCounter === 0 && counter.bullishCounter > 1) {
+    if (counter.bearishCounter === 0 && counter.bullishCounter > 0) {
       recommendations.recommendation = OrderType.Buy;
     } else if (counter.bearishCounter > counter.bullishCounter) {
       recommendations.recommendation = OrderType.Sell;
