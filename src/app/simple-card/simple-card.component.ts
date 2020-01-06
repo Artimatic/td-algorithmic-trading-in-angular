@@ -160,6 +160,7 @@ export class SimpleCardComponent implements OnInit, OnChanges {
           this.holdingCount -= this.holdingCount >= this.firstFormGroup.value.quantity ? this.firstFormGroup.value.quantity : 0;
           console.log(`${moment().format('hh:mm')} ${log}`);
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
+          this.stop();
         };
 
         const reject = (error) => {
