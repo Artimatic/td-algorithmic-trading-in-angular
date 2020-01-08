@@ -723,17 +723,20 @@ export class BbCardComponent implements OnInit, OnChanges {
     idx,
     indicators: Indicators) {
 
-    this.handleStoploss(quotes.close[idx], timestamps[idx]);
-    const daytradeType = this.firstFormGroup.value.orderType.toLowerCase();
-    this.backtestService.getDaytradeRecommendation(null, null, indicators, { minQuotes: 81 }).subscribe(
-      analysis => {
-        this.processAnalysis(daytradeType, analysis, quotes.close[idx], timestamps[idx]);
-        return null;
-      },
-      error => {
-        this.error = 'Issue getting analysis.';
-      }
-    );
+    const orderProcessed = this.handleStoploss(quotes.close[idx], timestamps[idx]);
+
+    if (!orderProcessed) {
+      const daytradeType = this.firstFormGroup.value.orderType.toLowerCase();
+      this.backtestService.getDaytradeRecommendation(null, null, indicators, { minQuotes: 81 }).subscribe(
+        analysis => {
+          this.processAnalysis(daytradeType, analysis, quotes.close[idx], timestamps[idx]);
+          return null;
+        },
+        error => {
+          this.error = 'Issue getting analysis.';
+        }
+      );
+    }
   }
 
   buildBuyOrder(orderQuantity: number,
@@ -794,11 +797,8 @@ export class BbCardComponent implements OnInit, OnChanges {
     return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
   }
 
-  handleStoploss(quote, timestamp) {
-    const specialOrder = this.processSpecialRules(quote, timestamp);
-    if (specialOrder) {
-      return specialOrder;
-    }
+  handleStoploss(quote, timestamp): boolean {
+    return this.processSpecialRules(quote, timestamp);
   }
 
   processAnalysis(daytradeType, analysis, quote, timestamp) {
@@ -881,25 +881,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     return this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, price, signalTime);
   }
 
-  processSpecialRules(closePrice: number, signalTime) {
-    const score = this.scoringService.getScore(this.order.holding.symbol);
-    if (score && score.total > 3) {
-      const scorePct = _.round(_.divide(score.wins, score.total), 2);
-      if (scorePct < 0.10) {
-        if (this.isBacktest) {
-          console.log('Trading not halted in backtest mode.');
-        } else {
-          this.stop();
-          const msg = 'Too many losses. Halting trading in Wins:' +
-            `${this.order.holding.symbol} ${score.wins} Loss: ${score.losses}`;
-
-          this.reportingService.addAuditLog(this.order.holding.symbol, msg);
-          console.log(msg);
-
-          return this.closeAllPositions(closePrice, signalTime);
-        }
-      }
-    }
+  processSpecialRules(closePrice: number, signalTime): boolean {
     if (this.positionCount > 0 && closePrice) {
       const estimatedPrice = this.daytradeService.estimateAverageBuyOrderPrice(this.orders);
 
@@ -913,7 +895,8 @@ export class BbCardComponent implements OnInit, OnChanges {
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
           console.log(log);
           const stopLossOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
-          return this.sendStopLoss(stopLossOrder);
+          this.sendStopLoss(stopLossOrder);
+          return true;
         }
       }
 
@@ -931,7 +914,8 @@ export class BbCardComponent implements OnInit, OnChanges {
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
           console.log(log);
           const sellOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
-          return this.sendSell(sellOrder);
+          this.sendSell(sellOrder);
+          return true;
         }
       }
 
@@ -943,11 +927,40 @@ export class BbCardComponent implements OnInit, OnChanges {
             `${this.order.holding.symbol} PROFIT HARVEST TRIGGERED: ${closePrice}/${estimatedPrice}`);
           console.log(warning);
           const sellOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
-          return this.sendSell(sellOrder);
+          this.sendSell(sellOrder);
+          return true;
+        }
+      }
+
+      if (this.order.sellAtClose && moment().isAfter(moment(this.globalSettingsService.sellAtCloseTime)) &&
+          this.positionCount > 0) {
+        const log = `Closing positions: ${closePrice}/${estimatedPrice}`;
+        this.reportingService.addAuditLog(this.order.holding.symbol, log);
+        console.log(log);
+        const stopLossOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
+        this.sendStopLoss(stopLossOrder);
+        return true;
+      }
+    }
+
+    const score = this.scoringService.getScore(this.order.holding.symbol);
+    if (score && score.total > 3) {
+      const scorePct = _.round(_.divide(score.wins, score.total), 2);
+      if (scorePct < 0.10) {
+        if (this.isBacktest) {
+          console.log('Trading not halted in backtest mode.');
+        } else {
+          this.stop();
+          const msg = 'Too many losses. Halting trading in Wins:' +
+            `${this.order.holding.symbol} ${score.wins} Loss: ${score.losses}`;
+
+          this.reportingService.addAuditLog(this.order.holding.symbol, msg);
+          console.log(msg);
+          return true;
         }
       }
     }
-    return null;
+    return false;
   }
 
   removeOrder(oldOrder) {
