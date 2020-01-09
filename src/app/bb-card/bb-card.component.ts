@@ -861,7 +861,7 @@ export class BbCardComponent implements OnInit, OnChanges {
           this.buyCount,
           this.positionCount), this.positionCount, this.order.quantity);
 
-        if (this.indicators.vwma > quote) {
+        if (this.indicators.vwma < quote) {
           orderQuantity = _.round(_.multiply(orderQuantity, 0.5), 0);
         }
 
