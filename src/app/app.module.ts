@@ -8,33 +8,6 @@ import { ChartModule } from 'angular-highcharts';
 
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import 'hammerjs';
-import {
-  MatMenuModule,
-  MatToolbarModule,
-  MatIconModule,
-  MatCardModule,
-  MatProgressSpinnerModule,
-  MatProgressBarModule,
-  MatGridListModule,
-  MatButtonModule,
-  MatSidenavModule,
-  MatExpansionModule,
-  MatTableModule,
-  MatCheckboxModule,
-  MatRadioModule,
-  MatDialogModule,
-  MatFormFieldModule,
-  MatInputModule,
-  MatSnackBarModule,
-  MatTabsModule,
-  MatListModule,
-  MatChipsModule,
-  MatStepperModule,
-  MatSelectModule,
-  MatTooltipModule,
-  MatSlideToggleModule,
-} from '@angular/material';
-
 import { FlexLayoutModule } from '@angular/flex-layout';
 
 import { routes } from './app.routes';
@@ -56,7 +29,6 @@ import {
 
 import { RhInputComponent } from './rh-input/rh-input.component';
 import { ProductViewComponent } from './product-view/product-view.component';
-import { LoginComponent } from './login/login.component';
 import { LoginDialogComponent } from './login-dialog/login-dialog.component';
 import { TradeViewComponent } from './trade-view/trade-view.component';
 import { PortfolioTableComponent } from './portfolio-table/portfolio-table.component';
@@ -81,9 +53,8 @@ import { MachineLearningModule } from './machine-learning/machine-learning.modul
 import { MlCardComponent } from './ml-card/ml-card.component';
 import { TestResultsTableComponent } from './test-results-table/test-results-table.component';
 import { ChartDialogComponent } from './chart-dialog/chart-dialog.component';
-import { TableModule } from 'primeng/table';
-import { MultiSelectModule } from 'primeng/multiselect';
 import { HeaderComponent } from './header/header.component';
+import { SharedModule } from './shared/shared.module';
 
 @NgModule({
   declarations: [
@@ -93,7 +64,6 @@ import { HeaderComponent } from './header/header.component';
     RhTableComponent,
     RhInputComponent,
     ProductViewComponent,
-    LoginComponent,
     LoginDialogComponent,
     TradeViewComponent,
     PortfolioTableComponent,
@@ -131,37 +101,12 @@ import { HeaderComponent } from './header/header.component';
     HttpModule,
     HttpClientModule,
     RouterModule.forRoot(routes),
-    MatMenuModule,
-    MatToolbarModule,
-    MatIconModule,
-    MatCardModule,
-    MatProgressSpinnerModule,
-    MatProgressBarModule,
-    MatGridListModule,
-    MatButtonModule,
-    MatSidenavModule,
-    MatExpansionModule,
-    MatTableModule,
-    MatCheckboxModule,
-    MatRadioModule,
-    MatDialogModule,
     ChartModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSnackBarModule,
-    MatTabsModule,
-    MatListModule,
-    MatChipsModule,
-    MatStepperModule,
-    MatSelectModule,
-    MatTooltipModule,
     FlexLayoutModule,
     OverviewModule,
     SettingsModule,
     MachineLearningModule,
-    MatSlideToggleModule,
-    TableModule,
-    MultiSelectModule,
+    SharedModule
   ],
   providers: [
     BacktestService,

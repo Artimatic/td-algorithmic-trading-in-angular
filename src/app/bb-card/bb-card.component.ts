@@ -838,7 +838,7 @@ export class BbCardComponent implements OnInit, OnChanges {
           this.sendSell(sellOrder);
         }
       }
-    } else if (daytradeType === 'daytrade') {
+    } else if (this.isDayTrading()) {
       if (this.hasReachedDayTradeOrderLimit()) {
         this.stop();
       } else if (analysis.recommendation.toLowerCase() === 'sell') {
@@ -932,14 +932,16 @@ export class BbCardComponent implements OnInit, OnChanges {
         }
       }
 
-      if (this.order.sellAtClose && moment().isAfter(moment(this.globalSettingsService.sellAtCloseTime)) &&
-          this.positionCount > 0) {
-        const log = `Closing positions: ${closePrice}/${estimatedPrice}`;
-        this.reportingService.addAuditLog(this.order.holding.symbol, log);
-        console.log(log);
-        const stopLossOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
-        this.sendStopLoss(stopLossOrder);
-        return true;
+      if (this.isDayTrading()) {
+        if (this.order.sellAtClose && moment().isAfter(moment(this.globalSettingsService.sellAtCloseTime)) &&
+            this.positionCount > 0) {
+          const log = `Closing positions: ${closePrice}/${estimatedPrice}`;
+          this.reportingService.addAuditLog(this.order.holding.symbol, log);
+          console.log(log);
+          const stopLossOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
+          this.sendStopLoss(stopLossOrder);
+          return true;
+        }
       }
     }
 
@@ -961,6 +963,10 @@ export class BbCardComponent implements OnInit, OnChanges {
       }
     }
     return false;
+  }
+
+  isDayTrading(): boolean {
+    return this.firstFormGroup.value.orderType.toLowerCase() === 'daytrade';
   }
 
   removeOrder(oldOrder) {

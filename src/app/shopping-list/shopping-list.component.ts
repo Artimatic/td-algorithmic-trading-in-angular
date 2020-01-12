@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CartService } from '../shared/services/cart.service';
 import { SmartOrder } from '../shared/models/smart-order';
-import { ScoreKeeperService, ReportingService, DaytradeService, PortfolioService } from '../shared';
+import { ScoreKeeperService, ReportingService, DaytradeService, PortfolioService, AuthenticationService } from '../shared';
 import { MatDialog, MatSnackBar } from '@angular/material';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
@@ -38,9 +38,14 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
     public snackBar: MatSnackBar,
     private portfolioService: PortfolioService,
     public globalSettingsService: GlobalSettingsService,
-    private tradeService: TradeService) { }
+    private tradeService: TradeService,
+    private authenticationService: AuthenticationService) { }
 
   ngOnInit() {
+    if (!this.authenticationService.isAuthenticated()) {
+
+    }
+
     this.interval = this.defaultInterval;
 
     this.ordersStarted = 0;

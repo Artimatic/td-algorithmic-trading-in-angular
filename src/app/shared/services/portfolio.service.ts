@@ -17,7 +17,7 @@ export class PortfolioService {
   }
 
   getPortfolio(): Observable<Holding[]> {
-    const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.token });
+    const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.getToken() });
     const options = new RequestOptions({ headers: headers });
 
     return this.http.get('/api/portfolio/positions/', options)
@@ -57,7 +57,7 @@ export class PortfolioService {
     if (quantity === 0) {
       throw new Error('Order Quantity is 0');
     }
-    const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.token });
+    const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.getToken() });
     const options = new RequestOptions({ headers: headers });
     const body = {
       'account': this.authenticationService.myAccount.account,
@@ -81,7 +81,7 @@ export class PortfolioService {
     if (quantity === 0) {
       throw new Error('Order Quantity is 0');
     }
-    const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.token });
+    const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.getToken() });
     const options = new RequestOptions({ headers: headers });
     const body = {
       'account': this.authenticationService.myAccount.account,
@@ -110,7 +110,7 @@ export class PortfolioService {
     if (quantity === 0) {
       throw new Error('Order Quantity is 0');
     }
-    const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.token });
+    const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.getToken() });
     const options = new RequestOptions({ headers: headers });
     const body = {
       'account': this.authenticationService.myAccount.account,

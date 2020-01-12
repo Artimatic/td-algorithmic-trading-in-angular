@@ -4,15 +4,27 @@ import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 import { Account } from '../account';
 
+export interface TdaAccount {
+  accountId: string;
+  consumerKey: string;
+  refreshToken: string;
+}
+
+
 @Injectable()
 export class AuthenticationService {
-  public token: string;
+  private token: string;
   public myAccount: Account;
+  public tdaAccounts: TdaAccount[] = [];
+  public selectedTdaAccount: TdaAccount;
 
   constructor(private http: Http) {
-    // set token if saved in local storage
+  }
+
+  getToken() {
     const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
     this.token = currentUser && currentUser.token;
+    return this.token;
   }
 
   login(username: string, password: string): Observable<boolean> {
@@ -84,5 +96,56 @@ export class AuthenticationService {
       return true;
     }
     return false;
+  }
+
+  saveTdaLogin(newAccount: TdaAccount) {
+    if (this.tdaAccounts.length > 0) {
+      const foundIdx = this.tdaAccounts.findIndex(account => {
+        return account.accountId === newAccount.accountId;
+      });
+      if (foundIdx > -1) {
+        this.tdaAccounts.splice(foundIdx, 1);
+      }
+    }
+
+    this.tdaAccounts.push(newAccount);
+    sessionStorage.setItem('tdaAccounts', JSON.stringify(this.tdaAccounts));
+  }
+
+  refreshTdaAccounts(): TdaAccount[] {
+    this.tdaAccounts = JSON.parse(sessionStorage.getItem('tdaAccounts'));
+    if(!this.selectedTdaAccount && this.tdaAccounts.length > 0) {
+      this.selectedTdaAccount = this.tdaAccounts[0];
+    }
+    return this.tdaAccounts;
+  }
+
+  selectTdaAccount(accountId: string): void {
+    this.selectedTdaAccount = this.tdaAccounts.find((account: TdaAccount) => {
+      return account.accountId === accountId;
+    });
+  }
+
+  setTdaAccount(accountId, consumerKey, refreshToken) {
+    const account: TdaAccount = {
+      accountId,
+      consumerKey,
+      refreshToken
+    };
+
+    this.saveTdaLogin(account);
+    this.selectTdaAccount(accountId);
+  }
+
+  removeTdaAccount(accountId: string): void {
+    if (this.selectedTdaAccount && this.selectedTdaAccount.accountId === accountId) {
+      this.selectedTdaAccount = null;
+    }
+    const idx = this.tdaAccounts.findIndex((account: TdaAccount) => {
+      return account.accountId === accountId;
+    });
+
+    this.tdaAccounts.splice(idx, 1);
+    sessionStorage.setItem('tdaAccounts', JSON.stringify(this.tdaAccounts));
   }
 }
