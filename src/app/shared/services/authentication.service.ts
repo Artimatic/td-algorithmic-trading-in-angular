@@ -114,7 +114,7 @@ export class AuthenticationService {
 
   refreshTdaAccounts(): TdaAccount[] {
     this.tdaAccounts = JSON.parse(sessionStorage.getItem('tdaAccounts'));
-    if(!this.selectedTdaAccount && this.tdaAccounts.length > 0) {
+    if (!this.selectedTdaAccount && this.tdaAccounts.length > 0) {
       this.selectedTdaAccount = this.tdaAccounts[0];
     }
     return this.tdaAccounts;

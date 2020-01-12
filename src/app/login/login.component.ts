@@ -3,7 +3,6 @@ import { MatDialog, MatSnackBar } from '@angular/material';
 import { LoginDialogComponent } from '../login-dialog/login-dialog.component';
 import { AuthenticationService } from '../shared';
 import { SelectItem } from 'primeng/components/common/selectitem';
-import { TdaAccount } from '../shared/services/authentication.service';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 
 @Component({
