@@ -747,22 +747,16 @@ export class BbCardComponent implements OnInit, OnChanges {
     let log = '';
     if (analysis.mfi.toLowerCase() === 'bullish') {
       log += `[mfi oversold Event - time: ${moment.unix(signalTime).format()}]`;
-
-      this.reportingService.addAuditLog(this.order.holding.symbol, log);
     }
 
     if (analysis.bband.toLowerCase() === 'bullish') {
       log += `[Bollinger band bullish Event -` +
         `time: ${moment.unix(signalTime).format()}]`;
-
-      this.reportingService.addAuditLog(this.order.holding.symbol, log);
-      console.log(log);
     }
 
     if (analysis.roc.toLowerCase() === 'bullish') {
       log += `[Rate of Change Crossover bullish Event -` +
         `time: ${moment.unix(signalTime).format()}}]`;
-
     }
 
     console.log(log);
@@ -774,22 +768,16 @@ export class BbCardComponent implements OnInit, OnChanges {
     let log = '';
     if (analysis.mfi.toLowerCase() === 'bearish') {
       log += `[mfi overbought Event - time: ${moment.unix(signalTime).format()}]`;
-
-      this.reportingService.addAuditLog(this.order.holding.symbol, log);
     }
 
     if (analysis.bband.toLowerCase() === 'bearish') {
       log += `[Bollinger band bearish Event -` +
         `time: ${moment.unix(signalTime).format()}]`;
-
-      this.reportingService.addAuditLog(this.order.holding.symbol, log);
-      console.log(log);
     }
 
     if (analysis.roc.toLowerCase() === 'bearish') {
       log += `[Rate of Change Crossover bearish Event -` +
         `time: ${moment.unix(signalTime).format()}}]`;
-
     }
 
     console.log(log);

@@ -23,7 +23,7 @@ class AlgoService {
     roc10: number, roc10Previous: number,
     roc70: number, roc70Previous: number): DaytradeRecommendation {
     if (roc10Previous > 0 && roc10 < 0) {
-      if (mfi > 40) {
+      if (mfi > 38) {
         return DaytradeRecommendation.Bearish;
       }
     }
