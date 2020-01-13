@@ -47,15 +47,21 @@ export class IntradayBacktestViewComponent implements OnInit {
 
         setTimeout(() => {
           const instruments = instrument.results[0];
+          let newHolding;
+
           if (!instruments) {
             this.snackBar.open(`Missing instruments for ${row.symbol}`, 'Dismiss');
             console.log('Missing instruments for ', row.symbol, instrument);
+            newHolding = {
+              instrument: instruments.url,
+              symbol: instruments.symbol,
+              name: instruments.name
+            };
+          } else {
+            newHolding = {
+              symbol: row.symbol
+            };
           }
-          const newHolding: Holding = {
-            instrument: instruments.url,
-            symbol: instruments.symbol,
-            name: instruments.name
-          };
 
           const order: SmartOrder = {
             holding: newHolding,
