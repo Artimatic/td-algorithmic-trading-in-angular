@@ -76,9 +76,8 @@ export class IntradayBacktestViewComponent implements OnInit {
           this.progressPct = _.ceil((this.progress / file.length) * 100);
         }, 50);
       } catch (err) {
-        this.snackBar.open('Error getting instruments', 'Dismiss', {
-          duration: 2000,
-        });
+        this.snackBar.open(`Error getting instrument ${row.symbol}`, 'Dismiss');
+        console.log('Error getting instrument for ', row.symbol);
       }
     }
   }

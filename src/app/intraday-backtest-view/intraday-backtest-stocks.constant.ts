@@ -1,27 +1,4 @@
 import { OrderRow } from '../shared/models/order-row';
-
-function createRow(ticker: string): OrderRow {
-  return {
-    symbol: ticker,
-    price: 10,
-    quantity: 100,
-    side: 'DayTrade',
-    Stop: 0.003,
-    TrailingStop: 0.001,
-    Target: 0.007,
-    StopLoss: true,
-    TrailingStopLoss: true,
-    TakeProfit: true,
-    MeanReversion1: true,
-    Mfi: true,
-    SpyMomentum: true,
-    BuyCloseSellOpen: false,
-    YahooData: false,
-    SellAtClose: true,
-    OrderSize: 10
-  };
-}
-
 const stockList = [
   'AA',
   'GOLD',
@@ -471,6 +448,28 @@ const stockList = [
   'WORK',
   'PINS'
 ];
+
+function createRow(ticker: string): OrderRow {
+  return {
+    symbol: ticker,
+    price: 10,
+    quantity: 100,
+    side: 'DayTrade',
+    Stop: 0.003,
+    TrailingStop: 0.001,
+    Target: 0.007,
+    StopLoss: true,
+    TrailingStopLoss: true,
+    TakeProfit: true,
+    MeanReversion1: true,
+    Mfi: true,
+    SpyMomentum: true,
+    BuyCloseSellOpen: false,
+    YahooData: false,
+    SellAtClose: true,
+    OrderSize: 10
+  };
+}
 
 const IntradayStocks: OrderRow[] = [];
 
