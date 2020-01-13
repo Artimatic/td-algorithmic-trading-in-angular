@@ -35,60 +35,36 @@ export class IntradayBacktestViewComponent implements OnInit {
     this.todoService.setIntradayBacktest();
   }
 
-  getInstrument(symbol: string) {
-    return this.portfolioService.getInstruments(symbol).toPromise();
-  }
-
   async import(file) {
     let row: OrderRow;
     for (row of file) {
-      try {
-        const instrument = await this.getInstrument(row.symbol);
+      let newHolding = {
+        instrument: null,
+        symbol: row.symbol,
+        name: null
+      };
 
-        setTimeout(() => {
-          const instruments = instrument.results[0];
-          let newHolding;
-
-          if (!instruments) {
-            this.snackBar.open(`Missing instruments for ${row.symbol}`, 'Dismiss');
-            console.log('Missing instruments for ', row.symbol, instrument);
-            newHolding = {
-              symbol: row.symbol
-            };
-          } else {
-            newHolding = {
-              instrument: instruments.url,
-              symbol: instruments.symbol,
-              name: instruments.name
-            };
-          }
-
-          const order: SmartOrder = {
-            holding: newHolding,
-            quantity: row.quantity * 1,
-            price: row.price,
-            submitted: false,
-            pending: false,
-            side: row.side,
-            lossThreshold: row.Stop * 1 || null,
-            trailingStop: row.TrailingStop || null,
-            profitTarget: row.Target * 1 || null,
-            useStopLoss: row.StopLoss || null,
-            useTrailingStopLoss: row.TrailingStopLoss || null,
-            useTakeProfit: row.TakeProfit || null,
-            buyCloseSellOpen: row.BuyCloseSellOpen || null,
-            yahooData: row.YahooData || null,
-            sellAtClose: row.SellAtClose || null,
-            orderSize: row.OrderSize * 1 || null,
-          };
-          this.cartService.addToCart(order);
-          this.progress++;
-          this.progressPct = _.ceil((this.progress / file.length) * 100);
-        }, 100);
-      } catch (err) {
-        this.snackBar.open(`Error getting instrument ${row.symbol}`, 'Dismiss');
-        console.log('Error getting instrument for ', row.symbol);
-      }
+      const order: SmartOrder = {
+        holding: newHolding,
+        quantity: row.quantity * 1,
+        price: row.price,
+        submitted: false,
+        pending: false,
+        side: row.side,
+        lossThreshold: row.Stop * 1 || null,
+        trailingStop: row.TrailingStop || null,
+        profitTarget: row.Target * 1 || null,
+        useStopLoss: row.StopLoss || null,
+        useTrailingStopLoss: row.TrailingStopLoss || null,
+        useTakeProfit: row.TakeProfit || null,
+        buyCloseSellOpen: row.BuyCloseSellOpen || null,
+        yahooData: row.YahooData || null,
+        sellAtClose: row.SellAtClose || null,
+        orderSize: row.OrderSize * 1 || null,
+      };
+      this.cartService.addToCart(order);
+      this.progress++;
+      this.progressPct = _.ceil((this.progress / file.length) * 100);
     }
   }
 
