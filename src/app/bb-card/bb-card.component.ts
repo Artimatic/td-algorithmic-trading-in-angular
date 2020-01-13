@@ -292,7 +292,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     indicators.forEach(quote => {
       if (quote.close) {
         const closePrice = quote.close;
-        const time = moment.utc(quote.date).tz("America/New_York").valueOf()
+        const time = moment.utc(quote.date).tz('America/New_York').valueOf();
         const point: Point = {
           y: closePrice
         };
@@ -305,8 +305,8 @@ export class BbCardComponent implements OnInit, OnChanges {
         point.description = `${vwmaDesc}${roc10}${roc70}${mfiDesc}`;
 
         point.description += `mfi: ${quote.recommendation.mfi}`;
-        point.description += `roc: ${quote.recommendation.roc}`
-        point.description += `bband: ${quote.recommendation.bband}`
+        point.description += `roc: ${quote.recommendation.roc}`;
+        point.description += `bband: ${quote.recommendation.bband}`;
 
         if (quote.recommendation.recommendation.toLowerCase() === 'buy') {
           point.marker = {

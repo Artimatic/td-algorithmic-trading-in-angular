@@ -7,7 +7,6 @@ import * as _ from 'lodash';
 import { MatSnackBar } from '@angular/material';
 import { TodoService } from '../overview/todo-list/todo.service';
 import IntradayStocks from './intraday-backtest-stocks.constant';
-import { OrderRow } from '../shared/models/order-row';
 import { GlobalSettingsService } from '../settings/global-settings.service';
 import { Holding } from '../shared/models';
 
@@ -37,7 +36,7 @@ export class IntradayBacktestViewComponent implements OnInit {
   }
 
   async import(file) {
-    for (let row of file) {
+    for (const row of file) {
       setTimeout(() => {
         const newHolding: Holding = {
           instrument: null,
