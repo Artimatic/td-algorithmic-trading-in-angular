@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CartService } from '../shared/services/cart.service';
 import { SmartOrder } from '../shared/models/smart-order';
-import { ScoreKeeperService, BacktestService, PortfolioService } from '../shared';
-import { Holding } from '../shared/models';
+import { ScoreKeeperService, BacktestService } from '../shared';
 
 import * as _ from 'lodash';
 import { MatSnackBar } from '@angular/material';
@@ -10,6 +9,7 @@ import { TodoService } from '../overview/todo-list/todo.service';
 import IntradayStocks from './intraday-backtest-stocks.constant';
 import { OrderRow } from '../shared/models/order-row';
 import { GlobalSettingsService } from '../settings/global-settings.service';
+import { Holding } from '../shared/models';
 
 @Component({
   selector: 'app-intraday-backtest-view',
@@ -22,7 +22,6 @@ export class IntradayBacktestViewComponent implements OnInit {
   progress = 0;
 
   constructor(
-    private portfolioService: PortfolioService,
     public cartService: CartService,
     public scoreKeeperService: ScoreKeeperService,
     private backtestService: BacktestService,
@@ -38,7 +37,7 @@ export class IntradayBacktestViewComponent implements OnInit {
   async import(file) {
     let row: OrderRow;
     for (row of file) {
-      let newHolding = {
+      const newHolding: Holding = {
         instrument: null,
         symbol: row.symbol,
         name: null
