@@ -35,7 +35,7 @@ export class IntradayBacktestViewComponent implements OnInit {
     this.backtestsCtr = 0;
   }
 
-  async import(file) {
+  async import(file, trigger = false) {
     for (const row of file) {
       setTimeout(() => {
         const newHolding: Holding = {
@@ -64,9 +64,15 @@ export class IntradayBacktestViewComponent implements OnInit {
         };
         this.cartService.addToCart(order);
 
+        if (trigger) {
+          setTimeout(() => {
+            this.backtestService.triggerBacktest.next(order.holding.symbol);
+          }, 100);
+        }
+
         this.progress++;
         this.progressPct = _.ceil((this.progress / file.length) * 100);
-      }, 10);
+      }, 100);
     }
   }
 
@@ -92,6 +98,6 @@ export class IntradayBacktestViewComponent implements OnInit {
   }
 
   loadDefaults() {
-    this.import(IntradayStocks);
+    this.import(IntradayStocks, true);
   }
 }
