@@ -47,6 +47,10 @@ export class IntradayBacktestViewComponent implements OnInit {
 
         setTimeout(() => {
           const instruments = instrument.results[0];
+          if (!instruments) {
+            this.snackBar.open(`Missing instruments for ${row.symbol}`, 'Dismiss');
+            console.log('Missing instruments for ', row.symbol, instrument);
+          }
           const newHolding: Holding = {
             instrument: instruments.url,
             symbol: instruments.symbol,
@@ -74,7 +78,7 @@ export class IntradayBacktestViewComponent implements OnInit {
           this.cartService.addToCart(order);
           this.progress++;
           this.progressPct = _.ceil((this.progress / file.length) * 100);
-        }, 50);
+        }, 100);
       } catch (err) {
         this.snackBar.open(`Error getting instrument ${row.symbol}`, 'Dismiss');
         console.log('Error getting instrument for ', row.symbol);

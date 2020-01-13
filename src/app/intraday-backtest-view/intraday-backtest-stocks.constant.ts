@@ -393,7 +393,6 @@ const stockList = [
   'ITB',
   'XHB',
   'TPR',
-  'EOG',
   'PSX',
   'SU',
   'SC',
