@@ -37,7 +37,6 @@ import { TradeService } from '../shared/services/trade.service';
 export class BbCardComponent implements OnInit, OnChanges {
   @ViewChild('stepper') stepper;
   @Input() order: SmartOrder;
-  @Input() triggeredBacktest: boolean;
   @Input() init: boolean;
   @Input() tearDown: boolean;
   chart: Chart;
@@ -128,13 +127,18 @@ export class BbCardComponent implements OnInit, OnChanges {
     });
 
     this.chart = this.initPriceChart(this.order.holding.symbol);
+
+    this.backtestService.triggerBacktest
+      .subscribe(stock => {
+        if (stock === this.order.holding.symbol) {
+          this.backtest();
+        }
+      });
   }
 
   ngOnChanges(changes: SimpleChanges) {
     if (_.get(changes, 'tearDown.currentValue')) {
       this.stop();
-    } else if (_.get(changes, 'triggeredBacktest.currentValue')) {
-      this.backtest();
     } else {
       if (_.get(changes, 'init.currentValue') && !this.isBacktest) {
         this.initRun();

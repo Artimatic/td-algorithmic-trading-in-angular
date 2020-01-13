@@ -15,7 +15,6 @@ export interface SmartOrder extends Order {
     sellAtClose?: boolean;
     yahooData?: boolean;
     orderSize?: number;
-    triggeredBacktest?: boolean;
     init?: boolean;
     stopped?: boolean;
 }

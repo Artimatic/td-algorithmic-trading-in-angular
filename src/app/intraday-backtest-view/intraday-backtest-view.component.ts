@@ -20,6 +20,7 @@ export class IntradayBacktestViewComponent implements OnInit {
 
   progressPct = 0;
   progress = 0;
+  backtestsCtr: number;
 
   constructor(
     public cartService: CartService,
@@ -32,6 +33,7 @@ export class IntradayBacktestViewComponent implements OnInit {
 
   ngOnInit() {
     this.todoService.setIntradayBacktest();
+    this.backtestsCtr = 0;
   }
 
   async import(file) {
@@ -76,7 +78,8 @@ export class IntradayBacktestViewComponent implements OnInit {
   async triggerBacktest(orders: SmartOrder[]) {
     this.globalSettingsService.backtesting = true;
     for (const order of orders) {
-      order.triggeredBacktest = true;
+      this.scoreKeeperService.resetProfitLoss(order.holding.symbol);
+      this.backtestService.triggerBacktest.next(order.holding.symbol);
     }
     this.globalSettingsService.backtesting = false;
   }

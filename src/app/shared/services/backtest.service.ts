@@ -28,11 +28,10 @@ export interface DaytradeParameters {
 
 @Injectable()
 export class BacktestService {
-  currentChart: Subject<ChartParam>;
+  currentChart: Subject<ChartParam> = new Subject();
+  triggerBacktest: Subject<string> = new Subject();
 
-  constructor(private http: HttpClient) {
-    this.currentChart = new Subject();
-  }
+  constructor(private http: HttpClient) { }
 
   getInfo(data: any): Observable<any> {
     return this.http.post(`${BASE_URL}api/mean-reversion/info`, data, {});
