@@ -53,13 +53,13 @@ export class IntradayBacktestViewComponent implements OnInit {
             this.snackBar.open(`Missing instruments for ${row.symbol}`, 'Dismiss');
             console.log('Missing instruments for ', row.symbol, instrument);
             newHolding = {
-              instrument: instruments.url,
-              symbol: instruments.symbol,
-              name: instruments.name
+              symbol: row.symbol
             };
           } else {
             newHolding = {
-              symbol: row.symbol
+              instrument: instruments.url,
+              symbol: instruments.symbol,
+              name: instruments.name
             };
           }
 
