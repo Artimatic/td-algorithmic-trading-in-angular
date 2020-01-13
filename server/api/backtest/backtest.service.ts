@@ -817,25 +817,25 @@ class BacktestService {
     })
     .then((roc10) => {
       const rocLen = roc10[0].length - 1;
-      currentQuote.roc10 = _.round(roc10[0][rocLen], 3);
+      currentQuote.roc10 = _.round(roc10[0][rocLen], 4);
 
       return this.getRateOfChange(this.getSubArrayShift(indicators.reals, 10, -3), 10);
     })
     .then((roc10Previous) => {
       const rocLen = roc10Previous[0].length - 1;
-      currentQuote.roc10Previous = _.round(roc10Previous[0][rocLen], 3);
+      currentQuote.roc10Previous = _.round(roc10Previous[0][rocLen], 4);
 
       return this.getRateOfChange(this.getSubArray(indicators.reals, 70), 70);
     })
     .then((roc70) => {
       const rocLen = roc70[0].length - 1;
-      currentQuote.roc70 = _.round(roc70[0][rocLen], 3);
+      currentQuote.roc70 = _.round(roc70[0][rocLen], 4);
 
       return this.getRateOfChange(this.getSubArrayShift(indicators.reals, 70, -3), 70);
     })
     .then((roc70Previous) => {
       const rocLen = roc70Previous[0].length - 1;
-      currentQuote.roc70Previous = _.round(roc70Previous[0][rocLen], 3);
+      currentQuote.roc70Previous = _.round(roc70Previous[0][rocLen], 4);
 
       return this.getMfi(this.getSubArray(indicators.highs, 14),
         this.getSubArray(indicators.lows, 14),

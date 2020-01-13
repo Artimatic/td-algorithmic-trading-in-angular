@@ -37,35 +37,37 @@ export class IntradayBacktestViewComponent implements OnInit {
   }
 
   async import(file) {
-    let row: OrderRow;
-    for (row of file) {
-      const newHolding: Holding = {
-        instrument: null,
-        symbol: row.symbol,
-        name: null
-      };
+    for (let row of file) {
+      setTimeout(() => {
+        const newHolding: Holding = {
+          instrument: null,
+          symbol: row.symbol,
+          name: null
+        };
 
-      const order: SmartOrder = {
-        holding: newHolding,
-        quantity: row.quantity * 1,
-        price: row.price,
-        submitted: false,
-        pending: false,
-        side: row.side,
-        lossThreshold: row.Stop * 1 || null,
-        trailingStop: row.TrailingStop || null,
-        profitTarget: row.Target * 1 || null,
-        useStopLoss: row.StopLoss || null,
-        useTrailingStopLoss: row.TrailingStopLoss || null,
-        useTakeProfit: row.TakeProfit || null,
-        buyCloseSellOpen: row.BuyCloseSellOpen || null,
-        yahooData: row.YahooData || null,
-        sellAtClose: row.SellAtClose || null,
-        orderSize: row.OrderSize * 1 || null,
-      };
-      this.cartService.addToCart(order);
-      this.progress++;
-      this.progressPct = _.ceil((this.progress / file.length) * 100);
+        const order: SmartOrder = {
+          holding: newHolding,
+          quantity: row.quantity * 1,
+          price: row.price,
+          submitted: false,
+          pending: false,
+          side: row.side,
+          lossThreshold: row.Stop * 1 || null,
+          trailingStop: row.TrailingStop || null,
+          profitTarget: row.Target * 1 || null,
+          useStopLoss: row.StopLoss || null,
+          useTrailingStopLoss: row.TrailingStopLoss || null,
+          useTakeProfit: row.TakeProfit || null,
+          buyCloseSellOpen: row.BuyCloseSellOpen || null,
+          yahooData: row.YahooData || null,
+          sellAtClose: row.SellAtClose || null,
+          orderSize: row.OrderSize * 1 || null,
+        };
+        this.cartService.addToCart(order);
+
+        this.progress++;
+        this.progressPct = _.ceil((this.progress / file.length) * 100);
+      }, 10);
     }
   }
 
@@ -78,7 +80,6 @@ export class IntradayBacktestViewComponent implements OnInit {
   async triggerBacktest(orders: SmartOrder[]) {
     this.globalSettingsService.backtesting = true;
     for (const order of orders) {
-      this.scoreKeeperService.resetProfitLoss(order.holding.symbol);
       this.backtestService.triggerBacktest.next(order.holding.symbol);
     }
     this.globalSettingsService.backtesting = false;

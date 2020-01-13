@@ -137,6 +137,6 @@ export class ScoreKeeperService {
   }
 
   resetProfitLoss(stock: string) {
-    this.profitLossHash[stock];
+    this.profitLossHash[stock] = 0;
   }
 }
