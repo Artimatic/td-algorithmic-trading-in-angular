@@ -67,7 +67,7 @@ export class IntradayBacktestViewComponent implements OnInit {
         if (trigger) {
           setTimeout(() => {
             this.backtestService.triggerBacktest.next(order.holding.symbol);
-          }, 100);
+          }, 500);
         }
 
         this.progress++;
