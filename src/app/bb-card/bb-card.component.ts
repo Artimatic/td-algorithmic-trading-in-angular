@@ -304,8 +304,8 @@ export class BbCardComponent implements OnInit, OnChanges {
 
         point.description = `${vwmaDesc}${roc10}${roc70}${mfiDesc}`;
 
-        point.description += `mfi: ${quote.recommendation.mfi}`;
-        point.description += `roc: ${quote.recommendation.roc}`;
+        point.description += ` mfi: ${quote.recommendation.mfi}, `;
+        point.description += `roc: ${quote.recommendation.roc}, `;
         point.description += `bband: ${quote.recommendation.bband}`;
 
         if (quote.recommendation.recommendation.toLowerCase() === 'buy') {
