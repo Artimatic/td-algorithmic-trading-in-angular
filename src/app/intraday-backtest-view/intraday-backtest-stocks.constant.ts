@@ -315,7 +315,6 @@ const stockList = [
   'MJ',
   'RLJ',
   'NYCB',
-  'DF',
   'ASNA',
   'AMRN',
   'AAL',

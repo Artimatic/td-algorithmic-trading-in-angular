@@ -1256,7 +1256,7 @@ class BacktestService {
     };
 
     for (const symbol of symbols) {
-      quotesPromises.push(this.initDaytradeStrategy(symbol, currentDate, startDate, parameters));
+      quotesPromises.push(this.initDaytradeStrategy(symbol, startDate, currentDate, parameters));
     }
 
     Promise.all(quotesPromises).then(function(indicators) {

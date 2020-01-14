@@ -126,9 +126,26 @@ export class IntradayBacktestViewComponent implements OnInit {
     const stocks = ['MSFT', 'AAPL', 'FB', 'CRM', 'D'];
     const startDate = this.globalSettingsService.backtestDate;
     const futureDate = moment().add(1, 'days').format('YYYY-MM-DD');
-    this.backtestService.calibrateDaytrade(stocks, futureDate, startDate)
+    const quotesPromises = [];
+
+    for (const symbol of stocks) {
+      quotesPromises.push(this.backtestService.getYahooIntraday(symbol).toPromise()
+      .then(quotes => {
+        return this.backtestService.postIntraday(quotes).subscribe();
+      }));
+    }
+
+    Promise.all(quotesPromises).then(() => {
+      this.backtestService.calibrateDaytrade(stocks, futureDate, startDate)
       .subscribe(result => {
         console.log('results: ', result);
       });
+    })
+    .catch(() => {
+      this.backtestService.calibrateDaytrade(stocks, futureDate, startDate)
+      .subscribe(result => {
+        console.log('results: ', result);
+      });
+    });
   }
 }
