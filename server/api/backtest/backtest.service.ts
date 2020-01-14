@@ -53,6 +53,7 @@ export interface Recommendation {
   mfi?: DaytradeRecommendation;
   roc?: DaytradeRecommendation;
   bband?: DaytradeRecommendation;
+  vwma?: DaytradeRecommendation;
 }
 
 export enum DaytradeRecommendation {
@@ -110,13 +111,6 @@ class BacktestService {
     return this.getIndicators(quotes, period, indicators)
       .then(results => {
         indicators = results;
-        return this.getVwma(this.getSubArray(quotes.close, vwmaPeriod),
-          this.getSubArray(quotes.volume, vwmaPeriod), vwmaPeriod);
-      })
-      .then(vwma => {
-        const vwmaLen = vwma[0].length - 1;
-        indicators.vwma = _.round(vwma[0][vwmaLen], 3);
-
         return indicators;
       });
   }
@@ -253,7 +247,8 @@ class BacktestService {
       recommendation: OrderType.None,
       mfi: DaytradeRecommendation.Neutral,
       roc: DaytradeRecommendation.Neutral,
-      bband: DaytradeRecommendation.Neutral
+      bband: DaytradeRecommendation.Neutral,
+      vwma: DaytradeRecommendation.Neutral
     };
 
     const mfiRecommendation = AlgoService.checkMfi(indicator.mfiLeft);
@@ -266,12 +261,18 @@ class BacktestService {
       AlgoService.getLowerBBand(indicator.bband80), AlgoService.getUpperBBand(indicator.bband80),
         indicator.mfiLeft);
 
+    const vwmaRecommendation = AlgoService.checkVwma(price, indicator.vwma);
+
     counter = AlgoService.countRecommendation(mfiRecommendation, counter);
     counter = AlgoService.countRecommendation(rocMomentumRecommendation, counter);
     counter = AlgoService.countRecommendation(bbandRecommendation, counter);
 
     if (counter.bearishCounter === 0 && counter.bullishCounter > 0) {
-      recommendations.recommendation = OrderType.Buy;
+      if (vwmaRecommendation !== DaytradeRecommendation.Bearish) {
+        recommendations.recommendation = OrderType.Buy;
+      } else {
+        recommendations.recommendation = OrderType.None;
+      }
     } else if (counter.bearishCounter > counter.bullishCounter) {
       recommendations.recommendation = OrderType.Sell;
     } else {
@@ -846,6 +847,12 @@ class BacktestService {
     .then((mfiLeft) => {
       const len = mfiLeft[0].length - 1;
       currentQuote.mfiLeft = _.round(mfiLeft[0][len], 3);
+      return this.getVwma(this.getSubArray(indicators.reals, 70),
+                          this.getSubArray(indicators.volumes, 70), 70);
+    })
+    .then(vwma => {
+      const vwmaLen = vwma[0].length - 1;
+      currentQuote.vwma = _.round(vwma[0][vwmaLen], 3);
 
       return currentQuote;
     });
@@ -1191,6 +1198,52 @@ class BacktestService {
       .catch((error) => {
         console.log('Error: ', error);
       });
+  }
+
+  getRoc(quotes, currentQuote) {
+    const quotes10Day = this.getSubArray(quotes.close, 10);
+    return this.getRateOfChange(quotes10Day, 10)
+      .then((roc10) => {
+        const rocLen = roc10[0].length - 1;
+        currentQuote.roc10 = _.round(roc10[0][rocLen], 4);
+
+        return this.getRateOfChange(this.getSubArrayShift(quotes.close, 10, -3), 10);
+      })
+      .then((roc10Previous) => {
+        const rocLen = roc10Previous[0].length - 1;
+        currentQuote.roc10Previous = _.round(roc10Previous[0][rocLen], 4);
+
+        return this.getRateOfChange(this.getSubArray(quotes.close, 70), 70);
+      })
+      .then((roc70) => {
+        const rocLen = roc70[0].length - 1;
+        currentQuote.roc70 = _.round(roc70[0][rocLen], 4);
+
+        return this.getRateOfChange(this.getSubArrayShift(quotes.close, 70, -3), 70);
+      })
+      .then((roc70Previous) => {
+        const rocLen = roc70Previous[0].length - 1;
+        currentQuote.roc70Previous = _.round(roc70Previous[0][rocLen], 4);
+
+        return currentQuote;
+      });
+  }
+
+  evaluateDailyRoc(symbol, currentDate, startDate) {
+    const getIndicatorQuotes = [];
+    const minQuotes = 71;
+    return this.getData(symbol, currentDate, startDate)
+      .then(quotes => {
+        console.log('quotes: ', quotes.length);
+        _.forEach(quotes, (value, key) => {
+          const idx = Number(key);
+          if (idx > minQuotes) {
+            const q = _.slice(quotes, idx - minQuotes, idx);
+            getIndicatorQuotes.push(this.initMAIndicators(q));
+          }
+        });
+        return Promise.all(getIndicatorQuotes);
+      })
   }
 }
 

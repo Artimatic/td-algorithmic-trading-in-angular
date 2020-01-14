@@ -10,6 +10,14 @@ class AlgoService {
     return bband[2][0];
   }
 
+  checkVwma(lastClose: number, vwma: number): DaytradeRecommendation {
+    if (lastClose > vwma) {
+      return DaytradeRecommendation.Bearish;
+    } else {
+      return DaytradeRecommendation.Neutral;
+    }
+  }
+
   checkMfi(mfi: number): DaytradeRecommendation {
     if (mfi < 14) {
       return DaytradeRecommendation.Bullish;

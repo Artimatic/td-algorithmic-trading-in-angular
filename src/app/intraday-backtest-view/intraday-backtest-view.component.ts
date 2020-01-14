@@ -110,12 +110,13 @@ export class IntradayBacktestViewComponent implements OnInit {
   importRandom() {
     const stockList = [];
     const uniqueCheck = {};
-    for (let i = 0; i < 25; i++) {
+    for (let i = 0; i < 10; i++) {
       let rand;
       do  {
         rand = Math.floor(Math.random() * IntradayStocks.length);
-      } while (!uniqueCheck[rand])
+      } while (uniqueCheck[rand])
       stockList.push(IntradayStocks[rand]);
+      uniqueCheck[rand] = true;
     }
     return stockList;
   }
