@@ -301,4 +301,13 @@ export class BacktestService {
       };
     return this.http.post(`${BASE_URL}api/backtest/daytrade-recommendation`, data, {});
   }
+
+  calibrateDaytrade(symbols: string[], currentDate: string, startDate: string): Observable<any> {
+      const data = {
+        symbols,
+        currentDate,
+        startDate
+      };
+    return this.http.post(`${BASE_URL}api/backtest/daytrade-calibrate`, data, {});
+  }
 }

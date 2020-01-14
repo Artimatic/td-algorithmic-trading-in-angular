@@ -226,6 +226,20 @@ class BacktestController extends BaseController {
                                 request.body.parameters, response);
 
   }
+
+  calibrateDaytrade(request, response) {
+    if (_.isEmpty(request.body) ||
+        !request.body.symbols ||
+        !request.body.currentDate ||
+        !request.body.startDate) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    }
+    BacktestService.calibrateDaytrade(request.body.symbols,
+                                      request.body.currentDate,
+                                      request.body.startDate,
+                                      response);
+
+  }
 }
 
 export default new BacktestController();

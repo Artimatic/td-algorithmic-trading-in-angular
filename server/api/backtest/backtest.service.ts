@@ -394,6 +394,7 @@ class BacktestService {
 
     return QuoteService.queryForIntraday(symbol, startDate, currentDate)
       .then(quotes => {
+        console.log('quotes ', quotes.length);
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);
           if (idx > minQuotes) {
@@ -1243,7 +1244,24 @@ class BacktestService {
           }
         });
         return Promise.all(getIndicatorQuotes);
-      })
+      });
+  }
+
+  calibrateDaytrade(symbols, currentDate, startDate, response) {
+    const quotesPromises = [];
+    const parameters = {
+      lossThreshold: 0.003,
+      profitThreshold: 0.003,
+      minQuotes: 81
+    };
+
+    for (const symbol of symbols) {
+      quotesPromises.push(this.initDaytradeStrategy(symbol, currentDate, startDate, parameters));
+    }
+
+    Promise.all(quotesPromises).then(function(indicators) {
+      response.status(200).send(indicators);
+    });
   }
 }
 

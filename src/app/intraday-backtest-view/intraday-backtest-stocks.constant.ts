@@ -105,7 +105,7 @@ const stockList = [
   'MDY',
   'PG',
   'MKC',
-  'RYN',
+  'RY',
   'MRVL',
   'MS',
   'MTG',

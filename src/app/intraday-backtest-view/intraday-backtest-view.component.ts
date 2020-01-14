@@ -3,6 +3,7 @@ import { CartService } from '../shared/services/cart.service';
 import { SmartOrder } from '../shared/models/smart-order';
 import { ScoreKeeperService, BacktestService } from '../shared';
 
+import * as moment from 'moment-timezone';
 import * as _ from 'lodash';
 import { MatSnackBar } from '@angular/material';
 import { TodoService } from '../overview/todo-list/todo.service';
@@ -110,14 +111,24 @@ export class IntradayBacktestViewComponent implements OnInit {
   importRandom() {
     const stockList = [];
     const uniqueCheck = {};
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 25; i++) {
       let rand;
       do  {
         rand = Math.floor(Math.random() * IntradayStocks.length);
-      } while (uniqueCheck[rand])
+      } while (uniqueCheck[rand]);
       stockList.push(IntradayStocks[rand]);
       uniqueCheck[rand] = true;
     }
     return stockList;
+  }
+
+  calibrate() {
+    const stocks = ['MSFT', 'AAPL', 'FB', 'CRM', 'D'];
+    const startDate = this.globalSettingsService.backtestDate;
+    const futureDate = moment().add(1, 'days').format('YYYY-MM-DD');
+    this.backtestService.calibrateDaytrade(stocks, futureDate, startDate)
+      .subscribe(result => {
+        console.log('results: ', result);
+      });
   }
 }

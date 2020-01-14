@@ -37,6 +37,9 @@
           <button mat-raised-button color="primary" (click)="loadRandoms()">Random Backtest Orders</button>
         </mat-grid-tile>
         <mat-grid-tile>
+          <button mat-raised-button color="primary" (click)="calibrate()">Calibrate</button>
+        </mat-grid-tile>
+        <mat-grid-tile>
           <div class="date-picker">
             Enter last trading date:
             <input name="endDate" type="date" [ngModel]="globalSettingsService.backtestDate"

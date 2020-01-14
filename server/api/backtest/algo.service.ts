@@ -30,13 +30,13 @@ class AlgoService {
   checkRocMomentum(mfi: number,
     roc10: number, roc10Previous: number,
     roc70: number, roc70Previous: number): DaytradeRecommendation {
-    if (roc10Previous === 0 && roc10 < 0) {
+    if (roc10Previous >= 0 && roc10 < 0) {
       if (mfi > 38) {
         return DaytradeRecommendation.Bearish;
       }
     }
 
-    if (roc70Previous === 0 && roc70 > 0) {
+    if (roc70Previous <= 0 && roc70 > 0) {
       if (mfi < 40) {
         return DaytradeRecommendation.Bullish;
       }
