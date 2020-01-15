@@ -8,6 +8,7 @@ import { Injectable } from '@angular/core';
 
 import { environment } from '../../../environments/environment';
 import { Indicators } from '../models/indicators';
+import { AuthenticationService } from './authentication.service';
 
 const BASE_URL = environment.appUrl;
 
@@ -31,7 +32,7 @@ export class BacktestService {
   currentChart: Subject<ChartParam> = new Subject();
   triggerBacktest: Subject<string> = new Subject();
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private authenticationService: AuthenticationService) { }
 
   getInfo(data: any): Observable<any> {
     return this.http.post(`${BASE_URL}api/mean-reversion/info`, data, {});
@@ -182,7 +183,8 @@ export class BacktestService {
     const options = {
       headers: headers,
       params: {
-        symbol
+        symbol,
+        accountId: this.authenticationService.selectedTdaAccount.accountId
       }
     };
 

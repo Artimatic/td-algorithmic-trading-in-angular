@@ -13,7 +13,8 @@
     "postinstall": "ng build --aot && npm run build-ts",
     "build-ts": "tsc -p ./server/tsconfig.json",
     "watch-ts": "tsc -p ./server/tsconfig.json -w",
-    "tslint": "tslint -c tslint.json -p tsconfig.json"
+    "tslint": "tslint -c tslint.json -p tsconfig.json",
+    "lintfix": "tslint --fix -c tslint.json -p tsconfig.json"
   },
   "private": true,
   "dependencies": {
