@@ -15,7 +15,7 @@ export interface TdaAccount {
 export class AuthenticationService {
   private token: string;
   public myAccount: Account;
-  public tdaAccounts: TdaAccount[] = [];
+  public tdaAccounts: TdaAccount[];
   public selectedTdaAccount: TdaAccount;
 
   constructor(private http: Http) {
@@ -99,6 +99,9 @@ export class AuthenticationService {
   }
 
   saveTdaLogin(newAccount: TdaAccount) {
+    if (!this.tdaAccounts) {
+      this.tdaAccounts = [];
+    }
     if (this.tdaAccounts.length > 0) {
       const foundIdx = this.tdaAccounts.findIndex(account => {
         return account.accountId === newAccount.accountId;

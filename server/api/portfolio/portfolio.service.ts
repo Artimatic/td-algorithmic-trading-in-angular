@@ -110,7 +110,7 @@ class PortfolioService {
   getResource(instrument, reply) {
     (async () => {
       try {
-        let inst = await robinhood.getResource(instrument);
+        const inst = await robinhood.getResource(instrument);
         reply.status(200).send(inst);
       } catch (e) {
         reply.status(500).send(e);
@@ -137,7 +137,7 @@ class PortfolioService {
 
   sell(account, token, instrumentUrl, symbol, quantity, price, type = 'limit',
     extendedHours = false) {
-    let headers = {
+    const headers = {
       'Accept': '*/*',
       'Accept-Encoding': 'gzip, deflate',
       'Accept-Language': 'en;q=1, fr;q=0.9, de;q=0.8, ja;q=0.7, nl;q=0.6, it;q=0.5',
@@ -189,7 +189,7 @@ class PortfolioService {
     price,
     type = 'limit',
     extendedHours = false) {
-    let headers = {
+    const headers = {
       'Accept': '*/*',
       'Accept-Encoding': 'gzip, deflate',
       'Accept-Language': 'en;q=1, fr;q=0.9, de;q=0.8, ja;q=0.7, nl;q=0.6, it;q=0.5',
@@ -251,7 +251,7 @@ class PortfolioService {
   getIntraday(symbol, accountId) {
     if (!this.access_token[accountId]) {
       return this.renewTDAuth(accountId)
-        .then(() => this.getTDIntraday(symbol, accountId))
+        .then(() => this.getTDIntraday(symbol, accountId));
     } else {
       return this.getTDIntraday(symbol, accountId)
         .catch(() => {
@@ -283,13 +283,13 @@ class PortfolioService {
       .then((data) => {
         const response = this.processTDData(data);
         return QuoteService.convertTdIntraday(response.candles);
-      })
+      });
   }
 
   getDailyQuotes(symbol, startDate, endDate, accountId = tdAccountId) {
     if (!this.access_token[accountId]) {
       return this.renewTDAuth(accountId)
-        .then(() => this.getTDDailyQuotes(symbol, startDate, endDate, accountId))
+        .then(() => this.getTDDailyQuotes(symbol, startDate, endDate, accountId));
     } else {
       return this.getTDDailyQuotes(symbol, startDate, endDate, accountId)
         .catch(() => {
@@ -321,7 +321,7 @@ class PortfolioService {
       .then((data) => {
         const response = this.processTDData(data);
         return QuoteService.convertTdIntraday(response.candles);
-      })
+      });
   }
 
   getTDMarketData(symbol, accountId) {
@@ -386,7 +386,7 @@ class PortfolioService {
     price,
     type = 'LIMIT',
     extendedHours = false, accountId) {
-    let headers = {
+    const headers = {
       'Accept': '*/*',
       'Accept-Encoding': 'gzip',
       'Accept-Language': 'en-US',
@@ -401,7 +401,7 @@ class PortfolioService {
       gzip: true,
       body: {
         orderType: type,
-        session: extendedHours? 'SEAMLESS' : 'NORMAL',
+        session: extendedHours ? 'SEAMLESS' : 'NORMAL',
         duration: 'DAY',
         orderStrategyType: 'SINGLE',
         price: price,
@@ -442,7 +442,7 @@ class PortfolioService {
     price,
     type = 'LIMIT',
     extendedHours = false, accountId) {
-    let headers = {
+    const headers = {
       'Accept': '*/*',
       'Accept-Encoding': 'gzip',
       'Accept-Language': 'en-US',
@@ -457,7 +457,7 @@ class PortfolioService {
       gzip: true,
       body: {
         orderType: type,
-        session: extendedHours? 'SEAMLESS' : 'NORMAL',
+        session: extendedHours ? 'SEAMLESS' : 'NORMAL',
         duration: 'DAY',
         orderStrategyType: 'SINGLE',
         price: price,
@@ -483,7 +483,7 @@ class PortfolioService {
       .then(() => {
         return this.sendTdPositionRequest(accountId)
           .then((pos) => {
-            return pos.securitiesAccount.positions
+            return pos.securitiesAccount.positions;
           });
       });
   }
@@ -513,7 +513,7 @@ class PortfolioService {
     return request.get(options)
       .then((data) => {
         return this.processTDData(data);
-      })
+      });
   }
 
   setCredentials(accountId, key, refreshToken, response) {
@@ -523,7 +523,7 @@ class PortfolioService {
   }
 
   isSet(accountId, response) {
-    const isSet = !_.isNil(this.refreshToken[accountId]) && !_.isNil(this.tdaKey[accountId])
+    const isSet = !_.isNil(this.refreshToken[accountId]) && !_.isNil(this.tdaKey[accountId]);
     response.status(200).send({set: isSet});
   }
 }
