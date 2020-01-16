@@ -6,8 +6,6 @@ import { Account } from '../account';
 
 export interface TdaAccount {
   accountId: string;
-  consumerKey: string;
-  refreshToken: string;
 }
 
 
@@ -18,8 +16,7 @@ export class AuthenticationService {
   public tdaAccounts: TdaAccount[];
   public selectedTdaAccount: TdaAccount;
 
-  constructor(private http: Http) {
-  }
+  constructor(private http: Http) {}
 
   getToken() {
     const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
@@ -117,9 +114,14 @@ export class AuthenticationService {
 
   refreshTdaAccounts(): TdaAccount[] {
     this.tdaAccounts = JSON.parse(sessionStorage.getItem('tdaAccounts'));
-    if (!this.selectedTdaAccount && this.tdaAccounts.length > 0) {
+    if (!this.selectedTdaAccount && this.tdaAccounts && this.tdaAccounts.length > 0) {
       this.selectedTdaAccount = this.tdaAccounts[0];
+      this.checkCredentials(this.tdaAccounts[0].accountId)
+        .subscribe(isSet => {
+          this.selectedTdaAccount = this.tdaAccounts[0];
+        });
     }
+
     return this.tdaAccounts;
   }
 
@@ -129,15 +131,14 @@ export class AuthenticationService {
     });
   }
 
-  setTdaAccount(accountId, consumerKey, refreshToken) {
+  setTdaAccount(accountId, consumerKey, refreshToken): Observable<any> {
     const account: TdaAccount = {
-      accountId,
-      consumerKey,
-      refreshToken
+      accountId
     };
 
     this.saveTdaLogin(account);
     this.selectTdaAccount(accountId);
+    return this.setCredentials(accountId, consumerKey, refreshToken);
   }
 
   removeTdaAccount(accountId: string): void {
@@ -150,5 +151,29 @@ export class AuthenticationService {
 
     this.tdaAccounts.splice(idx, 1);
     sessionStorage.setItem('tdaAccounts', JSON.stringify(this.tdaAccounts));
+    this.deleteCredentials(accountId).subscribe();
+  }
+
+  setCredentials(accountId, key, refreshToken) {
+    const body = {
+      accountId,
+      key,
+      refreshToken
+    };
+    return this.http.post('/api/portfolio/v3/set-account', body);
+  }
+
+  checkCredentials(accountId) {
+    const body = {
+      accountId
+    };
+    return this.http.post('/api/portfolio/v3/check-account', body);
+  }
+
+  deleteCredentials(accountId) {
+    const body = {
+      accountId
+    };
+    return this.http.post('/api/portfolio/v3/delete-cred', body);
   }
 }

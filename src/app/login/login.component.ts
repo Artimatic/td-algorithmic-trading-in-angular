@@ -117,8 +117,16 @@ export class LoginComponent implements OnInit {
   }
 
   saveTdaLogin() {
-    this.authenticationService.setTdaAccount(this.tdaForm.value.accountId, this.tdaForm.value.consumerKey, this.tdaForm.value.refreshToken);
-    this.tdaForm.reset();
+    this.authenticationService.setTdaAccount(this.tdaForm.value.accountId,
+      this.tdaForm.value.consumerKey,
+      this.tdaForm.value.refreshToken)
+      .subscribe(success => {
+        this.tdaForm.reset();
+      },
+      error => {
+        console.log(error);
+        this.snackBar.open('Error setting TDA account.', 'Dismiss');
+      });
   }
 
   selectAccount(account) {

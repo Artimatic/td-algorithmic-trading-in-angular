@@ -95,7 +95,7 @@ class QuoteService {
         startDate = moment(endDate).subtract(5, 'years').valueOf();
       }
 
-      return PortfolioService.getDailyQuotes(symbol, startDate, endDate);
+      return PortfolioService.getDailyQuoteInternal(symbol, startDate, endDate);
     }
   }
 

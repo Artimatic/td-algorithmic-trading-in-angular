@@ -13,9 +13,6 @@ const robinhoodDevice = {
 
 const apiUrl = 'https://api.robinhood.com/';
 const tdaUrl = 'https://api.tdameritrade.com/v1/';
-// const tdaKey = configurations.tdameritrade.consumer_key;
-// const tdaRefreshToken = configurations.tdameritrade.refresh_token;
-const tdAccountId = configurations.tdameritrade.accountId;
 
 class PortfolioService {
 
@@ -286,7 +283,7 @@ class PortfolioService {
       });
   }
 
-  getDailyQuotes(symbol, startDate, endDate, accountId = tdAccountId) {
+  getDailyQuotes(symbol, startDate, endDate, accountId) {
     if (!this.access_token[accountId]) {
       return this.renewTDAuth(accountId)
         .then(() => this.getTDDailyQuotes(symbol, startDate, endDate, accountId));
@@ -297,6 +294,17 @@ class PortfolioService {
             .then(() => this.getTDDailyQuotes(symbol, startDate, endDate, accountId));
         });
     }
+  }
+
+  getDailyQuoteInternal(symbol, startDate, endDate) {
+    let accountId;
+    const accountIds = Object.getOwnPropertyNames(this.refreshToken);
+    if (accountIds.length > 0) {
+      accountId = accountIds[0];
+    } else {
+      console.log('Missing accountId');
+    }
+    return this.getDailyQuotes(symbol, startDate, endDate, accountId);
   }
 
   getTDDailyQuotes(symbol, startDate, endDate, accountId) {
@@ -524,7 +532,18 @@ class PortfolioService {
 
   isSet(accountId, response) {
     const isSet = !_.isNil(this.refreshToken[accountId]) && !_.isNil(this.tdaKey[accountId]);
-    response.status(200).send({set: isSet});
+
+    if (isSet) {
+      response.status(200).send(isSet);
+    } else {
+      response.status(404).send(isSet);
+    }
+  }
+
+  deleteCredentials(accountId, response) {
+    this.refreshToken[accountId] = null;
+    this.tdaKey[accountId] = null;
+    response.status(200).send({});
   }
 }
 

@@ -7,7 +7,6 @@ import { AuthenticationService } from './authentication.service';
 import { Holding } from '../models';
 import * as _ from 'lodash';
 import { GlobalSettingsService, Brokerage } from '../../settings/global-settings.service';
-import { HttpParams } from '@angular/common/http';
 
 @Injectable()
 export class PortfolioService {
@@ -136,17 +135,25 @@ export class PortfolioService {
   }
 
   getQuote(symbol: string): Observable<any> {
-    const options = { params: new HttpParams()
-                                    .set('symbol', symbol)
-                                    .set('accountId', this.authenticationService.selectedTdaAccount.accountId)};
+    const options = {
+      params: {
+        symbol,
+        accountId: this.authenticationService.selectedTdaAccount.accountId
+      }
+    };
+
     return this.http.get('/api/portfolio/quote', options)
       .map((response: Response) => response.json());
   }
 
   getPrice(symbol: string): Observable<any> {
-    const options = { params: new HttpParams()
-      .set('symbol', symbol)
-      .set('accountId', this.authenticationService.selectedTdaAccount.accountId)};
+    const options = {
+      params: {
+        symbol,
+        accountId: this.authenticationService.selectedTdaAccount.accountId
+      }
+    };
+
     return this.http.get('/api/portfolio/quote', options)
       .map((response: Response) => {
         return _.round(response.json().askPrice, 2);
@@ -178,7 +185,12 @@ export class PortfolioService {
   }
 
   getTdBalance(): Observable<any> {
-    const options = { params: new HttpParams().set('accountId', this.authenticationService.selectedTdaAccount.accountId) };
+    const options = {
+      params: {
+        accountId: this.authenticationService.selectedTdaAccount.accountId
+      }
+    };
+
     return this.http.get('/api/portfolio/balance', options)
       .map((response: Response) => response.json());
   }

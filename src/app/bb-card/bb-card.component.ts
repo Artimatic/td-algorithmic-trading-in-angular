@@ -1018,4 +1018,32 @@ export class BbCardComponent implements OnInit, OnChanges {
   toggleChart() {
     this.showChart = !this.showChart;
   }
+
+  testBuy() {
+    this.portfolioService.getPrice(this.order.holding.symbol)
+      .toPromise()
+      .then((quote) => {
+        const orderQuantity = this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
+          this.firstFormGroup.value.orderSize,
+          this.buyCount,
+          this.positionCount);
+
+        const buyOrder = this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, 1 * quote, null);
+        this.sendBuy(buyOrder);
+      });
+  }
+
+  testSell() {
+    this.portfolioService.getPrice(this.order.holding.symbol)
+      .toPromise()
+      .then((quote) => {
+        const orderQuantity = this.daytradeService.getOrderQuantity(this.firstFormGroup.value.quantity,
+          this.firstFormGroup.value.orderSize,
+          this.sellCount);
+
+        const sellOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, 1 * quote, null);
+
+        this.sendSell(sellOrder);
+      });
+  }
 }

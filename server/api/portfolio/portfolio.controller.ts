@@ -138,7 +138,7 @@ class PortfolioController extends BaseController {
                                     request.body.price,
                                     request.body.type,
                                     request.body.extendedHours,
-                                    request.query.accountId)
+                                    request.body.accountId)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
@@ -149,7 +149,7 @@ class PortfolioController extends BaseController {
                                      request.body.price,
                                      request.body.type,
                                      request.body.extendedHours,
-                                     request.query.accountId)
+                                     request.body.accountId)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
@@ -175,6 +175,10 @@ class PortfolioController extends BaseController {
 
   checkForCredentials(request, response) {
     PortfolioService.isSet(request.body.accountId, response);
+  }
+
+  deleteCredentials(request, response) {
+    PortfolioService.deleteCredentials(request.body.accountId, response);
   }
 }
 

@@ -71,3 +71,7 @@ export const setAccount = (request, response) => {
 export const checkAccount = (request, response) => {
   PortfolioController.checkForCredentials(request, response);
 }
+
+export const deleteCredentials = (request, response) => {
+  PortfolioController.deleteCredentials(request, response);
+}
