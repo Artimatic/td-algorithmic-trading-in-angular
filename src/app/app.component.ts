@@ -24,7 +24,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit() {
     setTimeout(() => {
-      this.authenticationService.refreshTdaAccounts();
+      this.authenticationService.retrieveLocalAccounts();
     }, 1000);
   }
 

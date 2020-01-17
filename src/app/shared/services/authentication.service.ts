@@ -3,7 +3,7 @@ import { Http, Headers, RequestOptions, Response } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 import { Account } from '../account';
-import { MatDialog } from '@angular/material';
+import { MatDialog, MatSnackBar } from '@angular/material';
 import { RedirectLoginDialogComponent } from '../../redirect-login-dialog/redirect-login-dialog.component';
 
 export interface TdaAccount {
@@ -18,7 +18,7 @@ export class AuthenticationService {
   public tdaAccounts: TdaAccount[];
   public selectedTdaAccount: TdaAccount;
 
-  constructor(private http: Http, private dialog: MatDialog) { }
+  constructor(private http: Http, private dialog: MatDialog, public snackBar: MatSnackBar) { }
 
   openLoginDialog(): void {
     this.dialog.open(RedirectLoginDialogComponent, {
@@ -121,17 +121,14 @@ export class AuthenticationService {
     sessionStorage.setItem('tdaAccounts', JSON.stringify(this.tdaAccounts));
   }
 
+  retrieveLocalAccounts(): void {
+    this.tdaAccounts = JSON.parse(sessionStorage.getItem('tdaAccounts'));
+
+    this.refreshTdaAccounts();
+  }
+
   refreshTdaAccounts(): void {
-    if (!this.selectedTdaAccount && this.tdaAccounts && this.tdaAccounts.length > 0) {
-      for (const acc of this.tdaAccounts) {
-        this.checkCredentials(acc.accountId)
-          .subscribe(() => {
-            this.selectedTdaAccount = this.tdaAccounts[0];
-          }, () => {
-            this.openLoginDialog();
-          });
-      }
-    } else {
+    if (!this.selectedTdaAccount) {
       this.openLoginDialog();
     }
   }
@@ -139,6 +136,12 @@ export class AuthenticationService {
   selectTdaAccount(accountId: string): void {
     this.selectedTdaAccount = this.tdaAccounts.find((account: TdaAccount) => {
       return account.accountId === accountId;
+    });
+
+    this.checkCredentials(this.selectedTdaAccount.accountId)
+    .subscribe(() => {
+    }, () => {
+      this.snackBar.open('Current selected account info is missing. Reenter credentials.', 'Dismiss');
     });
   }
 
