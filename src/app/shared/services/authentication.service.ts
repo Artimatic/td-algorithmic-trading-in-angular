@@ -3,6 +3,8 @@ import { Http, Headers, RequestOptions, Response } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 import { Account } from '../account';
+import { MatDialog } from '@angular/material';
+import { RedirectLoginDialogComponent } from '../../redirect-login-dialog/redirect-login-dialog.component';
 
 export interface TdaAccount {
   accountId: string;
@@ -16,7 +18,14 @@ export class AuthenticationService {
   public tdaAccounts: TdaAccount[];
   public selectedTdaAccount: TdaAccount;
 
-  constructor(private http: Http) {}
+  constructor(private http: Http, private dialog: MatDialog) { }
+
+  openLoginDialog(): void {
+    this.dialog.open(RedirectLoginDialogComponent, {
+      width: '500px',
+      height: '500px'
+    });
+  }
 
   getToken() {
     const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
@@ -116,10 +125,14 @@ export class AuthenticationService {
     if (!this.selectedTdaAccount && this.tdaAccounts && this.tdaAccounts.length > 0) {
       for (const acc of this.tdaAccounts) {
         this.checkCredentials(acc.accountId)
-        .subscribe(() => {
-          this.selectedTdaAccount = this.tdaAccounts[0];
-        });
+          .subscribe(() => {
+            this.selectedTdaAccount = this.tdaAccounts[0];
+          }, () => {
+            this.openLoginDialog();
+          });
       }
+    } else {
+      this.openLoginDialog();
     }
   }
 

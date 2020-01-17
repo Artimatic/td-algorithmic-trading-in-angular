@@ -1,10 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit } from '@angular/core';
 
 import 'rxjs/add/operator/filter';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/operator/share';
-import { BacktestService } from './shared';
+import { BacktestService, AuthenticationService } from './shared';
 import { ServiceStatus } from './shared/models/service-status';
 
 @Component({
@@ -12,14 +12,20 @@ import { ServiceStatus } from './shared/models/service-status';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, AfterViewInit {
   dataStatus: boolean;
   mlStatus: boolean;
 
-  constructor(private backtestService: BacktestService) { }
+  constructor(private backtestService: BacktestService, private authenticationService: AuthenticationService) { }
 
   ngOnInit() {
     this.checkStatus();
+  }
+
+  ngAfterViewInit() {
+    setTimeout(() => {
+      this.authenticationService.refreshTdaAccounts();
+    }, 1000);
   }
 
   checkStatus() {

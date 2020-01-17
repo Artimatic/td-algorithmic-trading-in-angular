@@ -46,7 +46,6 @@ export class LoginComponent implements OnInit {
     ];
 
     this.selectedLogin = 'tda';
-    this.authenticationService.refreshTdaAccounts();
     this.selectedItem = '';
   }
 

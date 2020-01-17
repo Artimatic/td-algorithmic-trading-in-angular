@@ -55,6 +55,7 @@ import { TestResultsTableComponent } from './test-results-table/test-results-tab
 import { ChartDialogComponent } from './chart-dialog/chart-dialog.component';
 import { HeaderComponent } from './header/header.component';
 import { SharedModule } from './shared/shared.module';
+import { RedirectLoginDialogComponent } from './redirect-login-dialog/redirect-login-dialog.component';
 
 @NgModule({
   declarations: [
@@ -85,6 +86,7 @@ import { SharedModule } from './shared/shared.module';
     TestResultsTableComponent,
     ChartDialogComponent,
     HeaderComponent,
+    RedirectLoginDialogComponent,
   ],
   entryComponents: [
     LoginDialogComponent,
@@ -92,6 +94,7 @@ import { SharedModule } from './shared/shared.module';
     ConfirmDialogComponent,
     ReportDialogComponent,
     ChartDialogComponent,
+    RedirectLoginDialogComponent,
   ],
   imports: [
     BrowserModule,
