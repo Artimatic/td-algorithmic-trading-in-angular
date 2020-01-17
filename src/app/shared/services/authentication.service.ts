@@ -112,17 +112,15 @@ export class AuthenticationService {
     sessionStorage.setItem('tdaAccounts', JSON.stringify(this.tdaAccounts));
   }
 
-  refreshTdaAccounts(): TdaAccount[] {
-    this.tdaAccounts = JSON.parse(sessionStorage.getItem('tdaAccounts'));
+  refreshTdaAccounts(): void {
     if (!this.selectedTdaAccount && this.tdaAccounts && this.tdaAccounts.length > 0) {
-      this.selectedTdaAccount = this.tdaAccounts[0];
-      this.checkCredentials(this.tdaAccounts[0].accountId)
-        .subscribe(isSet => {
+      for (const acc of this.tdaAccounts) {
+        this.checkCredentials(acc.accountId)
+        .subscribe(() => {
           this.selectedTdaAccount = this.tdaAccounts[0];
         });
+      }
     }
-
-    return this.tdaAccounts;
   }
 
   selectTdaAccount(accountId: string): void {

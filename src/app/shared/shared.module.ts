@@ -60,7 +60,7 @@ const materialModules = [
   TableModule,
   MultiSelectModule,
   SelectButtonModule,
-  ListboxModule
+  ListboxModule,
 ];
 
 @NgModule({
