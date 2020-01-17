@@ -27,7 +27,12 @@ export class PortfolioService {
   }
 
   getTdPortfolio(): Observable<any> {
-    return this.http.get('/api/portfolio/v2/positions/')
+    const options = {
+      params: {
+        accountId: this.authenticationService.selectedTdaAccount.accountId
+      }
+    };
+    return this.http.get('/api/portfolio/v2/positions/', options)
       .map((response: Response) => response.json());
   }
 

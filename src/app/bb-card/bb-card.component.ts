@@ -401,13 +401,6 @@ export class BbCardComponent implements OnInit, OnChanges {
           };
         }
       }
-
-      this.chart.addPoint(point);
-
-      volume.push([
-        moment.unix(timestamps[i]).valueOf(), // the date
-        quotes.volume[i] // the volume
-      ]);
     }
 
     this.tiles = this.daytradeService.buildTileList(this.orders);
