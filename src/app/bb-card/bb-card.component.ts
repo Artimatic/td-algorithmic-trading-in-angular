@@ -363,8 +363,7 @@ export class BbCardComponent implements OnInit, OnChanges {
           });
       });
 
-    const volume = [],
-      timestamps = _.get(data, 'chart.result[0].timestamp'),
+    const timestamps = _.get(data, 'chart.result[0].timestamp'),
       dataLength = timestamps.length,
       quotes = _.get(data, 'chart.result[0].indicators.quote[0]');
 
