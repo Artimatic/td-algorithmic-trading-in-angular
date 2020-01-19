@@ -140,6 +140,7 @@ export class AuthenticationService {
 
     this.checkCredentials(this.selectedTdaAccount.accountId)
     .subscribe(() => {
+      this.snackBar.open('Credentials selected.', 'Dismiss', {duration: 2000});
     }, () => {
       this.snackBar.open('Current selected account info is missing. Reenter credentials.', 'Dismiss');
     });

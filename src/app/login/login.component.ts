@@ -121,6 +121,7 @@ export class LoginComponent implements OnInit {
       this.tdaForm.value.refreshToken)
       .subscribe(() => {
         this.tdaForm.reset();
+        this.snackBar.open('Credentials saved.', 'Dismiss', {duration: 2000});
       },
       error => {
         console.log(error);
