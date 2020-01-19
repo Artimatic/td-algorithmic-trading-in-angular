@@ -119,7 +119,7 @@ export class LoginComponent implements OnInit {
     this.authenticationService.setTdaAccount(this.tdaForm.value.accountId,
       this.tdaForm.value.consumerKey,
       this.tdaForm.value.refreshToken)
-      .subscribe(success => {
+      .subscribe(() => {
         this.tdaForm.reset();
       },
       error => {

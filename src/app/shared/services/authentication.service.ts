@@ -150,9 +150,11 @@ export class AuthenticationService {
       accountId
     };
 
-    this.saveTdaLogin(account);
-    this.selectTdaAccount(accountId);
-    return this.setCredentials(accountId, consumerKey, refreshToken);
+    return this.setCredentials(accountId, consumerKey, refreshToken)
+      .map(() => {
+        this.saveTdaLogin(account);
+        this.selectTdaAccount(accountId);
+      });
   }
 
   removeTdaAccount(accountId: string): void {
