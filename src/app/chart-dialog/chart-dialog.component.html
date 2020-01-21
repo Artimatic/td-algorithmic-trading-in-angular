@@ -8,6 +8,17 @@
       </mat-option>
     </mat-select>
   </mat-form-field>
+  <form *ngIf="selectedAlgo==='sma' || selectedAlgo==='macrossover'" [formGroup]="smaForm">
+    <mat-form-field hintLabel="Deviation">
+      <input matInput placeholder="0.003" formControlName="deviation">
+    </mat-form-field>
+    <mat-form-field hintLabel="Fast Average">
+      <input matInput placeholder="30" formControlName="fastAvg">
+    </mat-form-field>
+    <mat-form-field hintLabel="Slow Average">
+      <input matInput placeholder="90" formControlName="slowAvg">
+    </mat-form-field>
+  </form>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
   <button mat-button mat-dialog-close>Cancel</button>

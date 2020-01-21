@@ -91,9 +91,6 @@ export class OrderDialogComponent implements OnInit {
       useTakeProfit: true,
       useTrailingStopLoss: true,
       useStopLoss: true,
-      meanReversion1: true,
-      useMfi: true,
-      spyMomentum: true,
       sellAtClose: true,
       yahooData: true
     };
@@ -112,9 +109,6 @@ export class OrderDialogComponent implements OnInit {
       useTakeProfit: true,
       useTrailingStopLoss: true,
       useStopLoss: true,
-      meanReversion1: true,
-      useMfi: true,
-      spyMomentum: true,
       sellAtClose: true,
       yahooData: true
     };

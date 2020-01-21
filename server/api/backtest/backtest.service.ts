@@ -11,14 +11,62 @@ import DecisionService from '../mean-reversion/reversion-decision.service';
 import BaseErrors from '../../components/errors/baseErrors';
 import * as tulind from 'tulind';
 import configurations from '../../config/environment';
+import AlgoService from './algo.service';
 
 const dataServiceUrl = configurations.apps.goliath;
 const mlServiceUrl = configurations.apps.armadillo;
 
 const config = {
-  shortTerm: [30, 110],
-  longTerm: [90, 290]
+  shortTerm: [5, 110],
+  longTerm: [10, 290]
 };
+
+export interface DaytradeParameters {
+  mfiRange?: number[];
+  bbandPeriod?: number;
+  lossThreshold?: number;
+  profitThreshold?: number;
+  minQuotes: number;
+}
+
+export interface Indicators {
+  vwma: number;
+  mfiLeft: number;
+  bband80: number;
+  mfiPrevious?: number;
+  roc10?: number;
+  roc10Previous?: number;
+  roc70?: number;
+  roc70Previous?: number;
+  close?: number;
+  recommendation?: Recommendation;
+}
+
+export interface DaytradeAlgos {
+  mfi?: string;
+  bband?: string;
+  momentum?: string;
+}
+
+export interface Recommendation {
+  recommendation: OrderType;
+  mfi?: DaytradeRecommendation;
+  roc?: DaytradeRecommendation;
+  bband?: DaytradeRecommendation;
+  vwma?: DaytradeRecommendation;
+}
+
+export enum DaytradeRecommendation {
+  Bullish = 'Bullish',
+  Bearish = 'Bearish',
+  Neutral = 'Neutral'
+}
+
+export enum OrderType {
+  Buy = 'Buy',
+  Sell = 'Sell',
+  None = 'None'
+}
 
 let startTime;
 let endTime;
@@ -48,6 +96,24 @@ class BacktestService {
     return tulind.indicators.vwma.indicator([close, volume], [period]);
   }
 
+  getDaytradeIndicators(quotes, period,
+    stddev, mfiPeriod, vwmaPeriod) {
+    let indicators: Indicators = {
+      vwma: null,
+      mfiLeft: null,
+      bband80: null
+    };
+    quotes.reals = quotes.close;
+    quotes.highs = quotes.high;
+    quotes.lows = quotes.low;
+    quotes.volumes = quotes.volume;
+
+    return this.getIndicators(quotes, period, indicators)
+      .then(results => {
+        indicators = results;
+        return indicators;
+      });
+  }
 
   evaluateStrategyAll(ticker, end, start) {
     console.log('Executing: ', ticker, new Date());
@@ -105,7 +171,7 @@ class BacktestService {
         const fields = ['shortTerm', 'longTerm', 'totalReturns', 'totalTrades', 'recommendedDifference'];
         for (let i = shortTerm[0]; i < shortTerm[1]; i++) {
           for (let j = longTerm[0]; j < longTerm[1]; j++) {
-            if (i < j) {
+            if (i + 3 < j) {
               const MAs = ReversionService.executeMeanReversion(ReversionService.calcMA, quotes, i, j);
               const recommendedDifference = 0.003;
 
@@ -145,22 +211,130 @@ class BacktestService {
       });
   }
 
-  runIntradayEvaluation(symbol, currentDate, startDate) {
-    const minQuotes = 81;
-    const getIndicatorQuotes = [];
+  runDaytradeBacktest(symbol, currentDate, startDate, parameters, response) {
+    this.initDaytradeStrategy(symbol, startDate, currentDate, parameters)
+      .then(indicators => {
+        const testResults = this.backtestIndicators(this.getDaytradeRecommendation,
+          indicators,
+          parameters);
 
-    return QuoteService.queryForIntraday(symbol, startDate, currentDate)
-      .then(quotes => {
-        console.log(`Found ${quotes.length} for ${symbol}`);
-        _.forEach(quotes, (value, key) => {
-          const idx = Number(key);
-          if (idx > minQuotes) {
-            const q = _.slice(quotes, idx - minQuotes, idx);
-            getIndicatorQuotes.push(this.initStrategy(q));
-          }
-        });
-        return Promise.all(getIndicatorQuotes);
-      })
+        response.status(200).send(testResults);
+      });
+  }
+
+  getDaytrade(price: number, paidPrice: number, indicator: Indicators, parameters, response) {
+    let recommendation;
+    const avgPrice = paidPrice;
+
+    const isAtLimit = this.determineStopProfit(avgPrice, price,
+                              parameters.lossThreshold, parameters.profitThreshold);
+    if (isAtLimit) {
+      recommendation.recommendation = OrderType.Sell;
+    } else {
+      recommendation = this.getDaytradeRecommendation(indicator.close, indicator);
+    }
+    response.status(200).send(recommendation);
+  }
+
+  getDaytradeRecommendation(price: number, indicator: Indicators): Recommendation {
+    let counter = {
+      bullishCounter: 0,
+      bearishCounter: 0,
+      neutralCounter: 0
+    };
+
+    const recommendations: Recommendation = {
+      recommendation: OrderType.None,
+      mfi: DaytradeRecommendation.Neutral,
+      roc: DaytradeRecommendation.Neutral,
+      bband: DaytradeRecommendation.Neutral,
+      vwma: DaytradeRecommendation.Neutral
+    };
+
+    const mfiRecommendation = AlgoService.checkMfi(indicator.mfiLeft);
+
+    const rocMomentumRecommendation = AlgoService.checkRocMomentum(indicator.mfiLeft,
+      indicator.roc10, indicator.roc10Previous,
+      indicator.roc70, indicator.roc70Previous);
+
+    const bbandRecommendation = AlgoService.checkBBand(price,
+      AlgoService.getLowerBBand(indicator.bband80), AlgoService.getUpperBBand(indicator.bband80),
+        indicator.mfiLeft);
+
+    const vwmaRecommendation = AlgoService.checkVwma(price, indicator.vwma);
+
+    counter = AlgoService.countRecommendation(mfiRecommendation, counter);
+    counter = AlgoService.countRecommendation(rocMomentumRecommendation, counter);
+    counter = AlgoService.countRecommendation(bbandRecommendation, counter);
+
+    if (counter.bearishCounter === 0 && counter.bullishCounter > 0) {
+      if (vwmaRecommendation !== DaytradeRecommendation.Bearish) {
+        recommendations.recommendation = OrderType.Buy;
+      } else {
+        recommendations.recommendation = OrderType.None;
+      }
+    } else if (counter.bearishCounter > counter.bullishCounter) {
+      recommendations.recommendation = OrderType.Sell;
+    } else {
+      recommendations.recommendation = OrderType.None;
+    }
+
+    recommendations.mfi = mfiRecommendation;
+    recommendations.roc = rocMomentumRecommendation;
+    recommendations.bband = bbandRecommendation;
+    return recommendations;
+  }
+
+  backtestIndicators(recommendationFn: Function,
+                     indicators: Indicators[],
+                     parameters: DaytradeParameters) {
+    let orders = {
+      trades: 0,
+      buy: [],
+      history: [],
+      net: 0,
+      total: 0
+    };
+
+    _.forEach(indicators, (indicator) => {
+      if (indicator.close) {
+        let orderType = OrderType.None;
+        const avgPrice = this.estimateAverageBuyOrderPrice(orders);
+
+        const isAtLimit = this.determineStopProfit(avgPrice, indicator.close,
+                                 parameters.lossThreshold, parameters.profitThreshold);
+        if (isAtLimit) {
+          orderType = OrderType.Sell;
+          indicator.recommendation = { recommendation: OrderType.Sell };
+        } else {
+          const recommendation: Recommendation = recommendationFn(indicator.close, indicator);
+
+          orderType = recommendation.recommendation;
+          indicator.recommendation = recommendation;
+        }
+
+
+        orders = this.calcTrade(orders, indicator, orderType, avgPrice);
+      }
+    });
+
+    console.log('order: ', orders, indicators.length);
+    return { ...orders, indicators };
+  }
+
+  determineStopProfit(paidPrice, currentPrice, lossThreshold, profitThreshold) {
+    if (!paidPrice || !currentPrice || !lossThreshold || !profitThreshold) {
+      return false;
+    }
+    const gain = DecisionService.getPercentChange(currentPrice, paidPrice);
+    if (gain < lossThreshold || gain > profitThreshold) {
+      return true;
+    }
+  }
+
+
+  runIntradayEvaluation(symbol, currentDate, startDate) {
+    return this.initDaytradeStrategy(symbol, startDate, currentDate, { minQuotes: 81 })
       .then(indicators => {
         const bbRangeFn = (price, bband) => {
           const lower = bband[0][0];
@@ -214,12 +388,13 @@ class BacktestService {
       });
   }
 
-  runIntradayTest(symbol, currentDate, startDate) {
-    const minQuotes = 81;
+  initDaytradeStrategy(symbol, startDate, currentDate, parameters) {
+    const minQuotes = parameters.minQuotes;
     const getIndicatorQuotes = [];
 
     return QuoteService.queryForIntraday(symbol, startDate, currentDate)
       .then(quotes => {
+        console.log('quotes ', quotes.length);
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);
           if (idx > minQuotes) {
@@ -228,7 +403,11 @@ class BacktestService {
           }
         });
         return Promise.all(getIndicatorQuotes);
-      })
+      });
+  }
+
+  runIntradayTest(symbol, currentDate, startDate) {
+    return this.initDaytradeStrategy(symbol, startDate, currentDate, { minQuotes: 81 })
       .then(indicators => {
         const bbRangeFn = (price, bband) => {
           const lower = bband[0][0];
@@ -566,12 +745,12 @@ class BacktestService {
   }
 
   calcTrade(orders, dayQuote, orderType, avgPrice) {
-    if (orderType === 'sell') {
+    if (orderType && orderType.toLowerCase() === 'sell') {
       // Sell
       orders.trades++;
       if (orders.buy.length > 0) {
-        const len = orders.buy.length,
-          profit = (dayQuote.close - avgPrice) * len;
+        const len = orders.buy.length;
+        const profit = (dayQuote.close - avgPrice) * len;
 
         orders.total += (avgPrice * len);
         orders.net += profit;
@@ -579,7 +758,7 @@ class BacktestService {
         orders.history.push(dayQuote);
         orders.buy = [];
       }
-    } else if (orderType === 'buy') {
+    } else if (orderType && orderType.toLowerCase() === 'buy') {
       // Buy
       orders.buy.push(dayQuote.close);
       dayQuote.signal = 'buy';
@@ -596,6 +775,11 @@ class BacktestService {
 
   getSubArray(reals, period) {
     return _.slice(reals, reals.length - (period + 1));
+  }
+
+  getSubArrayShift(reals, period, modifier) {
+    const length = reals.length + modifier;
+    return _.slice(reals, length - (period + 1), length);
   }
 
   processQuotes(quotes) {
@@ -622,30 +806,57 @@ class BacktestService {
     const currentQuote = quotes[quotes.length - 1];
     const indicators = this.processQuotes(quotes);
 
-    return this.getBBands(indicators.reals, 80, 2)
-      .then((bband80) => {
-        currentQuote.bband80 = bband80;
-        return this.getRateOfChange(this.getSubArray(indicators.reals, 10), 10);
-      })
-      .then((roc10) => {
-        const rocLen = roc10[0].length - 1;
-        currentQuote.roc10 = _.round(roc10[0][rocLen], 3);
-        return this.getRateOfChange(this.getSubArray(indicators.reals, 70), 70);
-      })
-      .then((roc70) => {
-        const rocLen = roc70[0].length - 1;
-        currentQuote.roc70 = _.round(roc70[0][rocLen], 3);
-        return this.getMfi(this.getSubArray(indicators.highs, 14),
-          this.getSubArray(indicators.lows, 14),
-          this.getSubArray(indicators.reals, 14),
-          this.getSubArray(indicators.volumes, 14),
-          14);
-      })
-      .then((mfiLeft) => {
-        const len = mfiLeft[0].length - 1;
-        currentQuote.mfiLeft = _.round(mfiLeft[0][len], 3);
-        return currentQuote;
-      });
+    return this.getIndicators(indicators, 80, currentQuote);
+  }
+
+  getIndicators(indicators, bbandPeriod, quote) {
+    const currentQuote = quote;
+    return this.getBBands(indicators.reals, bbandPeriod, 2)
+    .then((bband80) => {
+      currentQuote.bband80 = bband80;
+      const quotes10Day = this.getSubArray(indicators.reals, 10);
+      return this.getRateOfChange(quotes10Day, 10);
+    })
+    .then((roc10) => {
+      const rocLen = roc10[0].length - 1;
+      currentQuote.roc10 = _.round(roc10[0][rocLen], 4);
+
+      return this.getRateOfChange(this.getSubArrayShift(indicators.reals, 10, -2), 10);
+    })
+    .then((roc10Previous) => {
+      const rocLen = roc10Previous[0].length - 1;
+      currentQuote.roc10Previous = _.round(roc10Previous[0][rocLen], 4);
+
+      return this.getRateOfChange(this.getSubArray(indicators.reals, 70), 70);
+    })
+    .then((roc70) => {
+      const rocLen = roc70[0].length - 1;
+      currentQuote.roc70 = _.round(roc70[0][rocLen], 4);
+
+      return this.getRateOfChange(this.getSubArrayShift(indicators.reals, 70, -2), 70);
+    })
+    .then((roc70Previous) => {
+      const rocLen = roc70Previous[0].length - 1;
+      currentQuote.roc70Previous = _.round(roc70Previous[0][rocLen], 4);
+
+      return this.getMfi(this.getSubArray(indicators.highs, 14),
+        this.getSubArray(indicators.lows, 14),
+        this.getSubArray(indicators.reals, 14),
+        this.getSubArray(indicators.volumes, 14),
+        14);
+    })
+    .then((mfiLeft) => {
+      const len = mfiLeft[0].length - 1;
+      currentQuote.mfiLeft = _.round(mfiLeft[0][len], 3);
+      return this.getVwma(this.getSubArray(indicators.reals, 70),
+                          this.getSubArray(indicators.volumes, 70), 70);
+    })
+    .then(vwma => {
+      const vwmaLen = vwma[0].length - 1;
+      currentQuote.vwma = _.round(vwma[0][vwmaLen], 3);
+
+      return currentQuote;
+    });
   }
 
   initMAIndicators(quotes) {
@@ -787,10 +998,10 @@ class BacktestService {
     switch (serviceName) {
       case 'data':
         serviceUrl = `${dataServiceUrl}actuator/health`;
-      break;
+        break;
       case 'ml':
         serviceUrl = `${mlServiceUrl}health`;
-      break;
+        break;
     }
 
     const options = {
@@ -923,6 +1134,134 @@ class BacktestService {
       .catch((error) => {
         console.log('Error: ', error);
       });
+  }
+
+  /*
+  * {"symbol": "SPY",
+  * "to": "2019-11-15",
+  * "from":"2018-01-24",
+  * "settings": [0.03, 30, 90, 80],
+  * "strategy": "MOVINGAVERAGECROSSOVER"
+  * }
+  */
+  getMovingAverageCrossOverInfo(symbol, endDate, startDate, settings) {
+    const to = moment(endDate).format('YYYY-MM-DD');
+    const from = moment(startDate).format('YYYY-MM-DD');
+
+    const query = `${dataServiceUrl}backtest/strategy`;
+
+    const options = {
+      method: 'POST',
+      uri: query,
+      body: {
+        symbol,
+        to,
+        from,
+        strategy: 'MOVINGAVERAGECROSSOVER',
+        settings
+      },
+      json: true
+    };
+
+    return RequestPromise(options)
+      .catch((error) => {
+        console.log('Error: ', error);
+      });
+  }
+
+  /*
+* {"symbol": "SPY",
+* "to": "2019-11-15",
+* "from":"2018-01-24",
+* "settings": [0.03, 30, 90, 80],
+* "strategy": "MOVINGAVERAGECROSSOVER"
+* }
+*/
+  findResistance(symbol, endDate, startDate) {
+    const to = moment(endDate).format('YYYY-MM-DD');
+    const from = moment(startDate).format('YYYY-MM-DD');
+
+    const query = `${dataServiceUrl}backtest/strategy`;
+
+    const options = {
+      method: 'POST',
+      uri: query,
+      body: {
+        symbol,
+        to,
+        from,
+        strategy: 'FINDRESISTANCE'
+      },
+      json: true
+    };
+
+    return RequestPromise(options)
+      .catch((error) => {
+        console.log('Error: ', error);
+      });
+  }
+
+  getRoc(quotes, currentQuote) {
+    const quotes10Day = this.getSubArray(quotes.close, 10);
+    return this.getRateOfChange(quotes10Day, 10)
+      .then((roc10) => {
+        const rocLen = roc10[0].length - 1;
+        currentQuote.roc10 = _.round(roc10[0][rocLen], 4);
+
+        return this.getRateOfChange(this.getSubArrayShift(quotes.close, 10, -3), 10);
+      })
+      .then((roc10Previous) => {
+        const rocLen = roc10Previous[0].length - 1;
+        currentQuote.roc10Previous = _.round(roc10Previous[0][rocLen], 4);
+
+        return this.getRateOfChange(this.getSubArray(quotes.close, 70), 70);
+      })
+      .then((roc70) => {
+        const rocLen = roc70[0].length - 1;
+        currentQuote.roc70 = _.round(roc70[0][rocLen], 4);
+
+        return this.getRateOfChange(this.getSubArrayShift(quotes.close, 70, -3), 70);
+      })
+      .then((roc70Previous) => {
+        const rocLen = roc70Previous[0].length - 1;
+        currentQuote.roc70Previous = _.round(roc70Previous[0][rocLen], 4);
+
+        return currentQuote;
+      });
+  }
+
+  evaluateDailyRoc(symbol, currentDate, startDate) {
+    const getIndicatorQuotes = [];
+    const minQuotes = 71;
+    return this.getData(symbol, currentDate, startDate)
+      .then(quotes => {
+        console.log('quotes: ', quotes.length);
+        _.forEach(quotes, (value, key) => {
+          const idx = Number(key);
+          if (idx > minQuotes) {
+            const q = _.slice(quotes, idx - minQuotes, idx);
+            getIndicatorQuotes.push(this.initMAIndicators(q));
+          }
+        });
+        return Promise.all(getIndicatorQuotes);
+      });
+  }
+
+  calibrateDaytrade(symbols, currentDate, startDate, response) {
+    const quotesPromises = [];
+    const parameters = {
+      lossThreshold: 0.003,
+      profitThreshold: 0.003,
+      minQuotes: 81
+    };
+
+    for (const symbol of symbols) {
+      quotesPromises.push(this.initDaytradeStrategy(symbol, startDate, currentDate, parameters));
+    }
+
+    Promise.all(quotesPromises).then(function(indicators) {
+      response.status(200).send(indicators);
+    });
   }
 }
 

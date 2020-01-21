@@ -21,7 +21,6 @@ import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import { SmartOrder } from '../shared/models/smart-order';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { Subscription } from 'rxjs/Subscription';
-import { AlgoService } from '../shared/services/algo.service';
 import { IndicatorsService } from '../shared/services/indicators.service';
 import { CartService } from '../shared/services/cart.service';
 import { Indicators } from '../shared/models/indicators';
@@ -38,10 +37,8 @@ import { TradeService } from '../shared/services/trade.service';
 export class BbCardComponent implements OnInit, OnChanges {
   @ViewChild('stepper') stepper;
   @Input() order: SmartOrder;
-  @Input() triggeredBacktest: boolean;
   @Input() init: boolean;
   @Input() tearDown: boolean;
-  @Input() backtestData: number;
   chart: Chart;
   volumeChart: Chart;
   alive: boolean;
@@ -61,11 +58,10 @@ export class BbCardComponent implements OnInit, OnChanges {
   lastPrice: number;
   preferenceList: any[];
   config: CardOptions;
-  showGraph: boolean;
+  showChart: boolean;
   tiles;
   bbandPeriod: number;
   dataInterval: string;
-  backtestQuotes: JSON[];
   stopped: boolean;
   isBacktest: boolean;
   indicators: Indicators;
@@ -78,7 +74,6 @@ export class BbCardComponent implements OnInit, OnChanges {
     private reportingService: ReportingService,
     private scoringService: ScoreKeeperService,
     private portfolioService: PortfolioService,
-    private algoService: AlgoService,
     private indicatorsService: IndicatorsService,
     public cartService: CartService,
     private globalSettingsService: GlobalSettingsService,
@@ -103,17 +98,9 @@ export class BbCardComponent implements OnInit, OnChanges {
         useUTC: false
       }
     });
-    this.showGraph = false;
+    this.showChart = false;
     this.bbandPeriod = 80;
     this.dataInterval = '1min';
-
-    this.indicators = {
-      mfi: null,
-      momentum: null,
-      vwma: null,
-      roc10: null,
-      band: null
-    };
 
     this.firstFormGroup = this._formBuilder.group({
       quantity: [this.order.quantity, Validators.required],
@@ -138,15 +125,18 @@ export class BbCardComponent implements OnInit, OnChanges {
         this.step();
       }
     });
+
+    this.backtestService.triggerBacktest
+      .subscribe(stock => {
+        if (stock === this.order.holding.symbol) {
+          this.backtest();
+        }
+      });
   }
 
   ngOnChanges(changes: SimpleChanges) {
     if (_.get(changes, 'tearDown.currentValue')) {
       this.stop();
-    } else if (_.get(changes, 'backtestData.currentValue')) {
-      this.backtest(this.backtestData);
-    } else if (_.get(changes, 'triggeredBacktest.currentValue')) {
-      this.backtest(this.backtestData);
     } else {
       if (_.get(changes, 'init.currentValue') && !this.isBacktest) {
         this.initRun();
@@ -176,20 +166,24 @@ export class BbCardComponent implements OnInit, OnChanges {
     });
   }
 
-  backtest(data: any): void {
+  backtest(): void {
     this.setup();
     this.stop();
 
     this.isBacktest = true;
-    if (data) {
-      this.backtestQuotes = data;
-      this.runBacktest();
-    } else {
-      this.requestQuotes()
-        .then(() => {
-          this.runBacktest();
+
+    this.backtestService.getYahooIntraday(this.order.holding.symbol)
+      .subscribe(
+        result => {
+          this.backtestService.postIntraday(result).subscribe(
+            status => {
+              this.runServerSideBacktest();
+            }, error => {
+              this.runServerSideBacktest();
+            });
+        }, error => {
+          this.error = `Error getting quotes for ${this.order.holding.symbol}`;
         });
-    }
   }
 
   goLive() {
@@ -216,100 +210,128 @@ export class BbCardComponent implements OnInit, OnChanges {
   }
 
   requestQuotes() {
-    return this.backtestService.getTdIntraday(this.order.holding.symbol)
-      .toPromise()
-      .then((result) => {
-        this.backtestQuotes = result;
-      });
+    return this.backtestService.getTdIntraday(this.order.holding.symbol);
   }
 
-  async runBacktest() {
+  async testRuntime() {
     this.setup();
-    const data = this.backtestQuotes;
+    this.stop();
+    this.isBacktest = true;
 
-    const volume = [],
-      timestamps = _.get(data, 'chart.result[0].timestamp'),
-      dataLength = timestamps.length,
-      quotes = _.get(data, 'chart.result[0].indicators.quote[0]');
+    const tdQuotes = await this.requestQuotes().toPromise();
+    const timestamps = _.get(tdQuotes, 'chart.result[0].timestamp');
+    const quotes = _.get(tdQuotes, 'chart.result[0].indicators.quote[0]');
 
-    if (dataLength > this.bbandPeriod) {
-      const lastIndex = dataLength - 1;
-      const firstIndex = dataLength - this.bbandPeriod;
-      this.runStrategy(quotes, timestamps, firstIndex, lastIndex);
-    }
-
-    this.chart = this.initPriceChart(this.order.holding.symbol);
-
-    for (let i = 0; i < dataLength; i += 1) {
-      const closePrice = quotes.close[i];
-
-      const point: Point = {
-        x: moment.unix(timestamps[i]).valueOf(),
-        y: closePrice
-      };
-
+    for (let i = 0; i < timestamps.length; i += 1) {
       if (i > this.bbandPeriod) {
         const lastIndex = i;
         const firstIndex = i - this.bbandPeriod;
 
-        const order = await this.runStrategy(quotes, timestamps, firstIndex, lastIndex);
-
-        const vwmaDesc = this.indicators.vwma ? this.indicators.vwma.toFixed(2) : '';
-        const rocDesc = `roc10:${this.indicators.roc10}, `;
-        const bandDesc = `band:${this.indicators.band}, `;
-        const momentumDesc = `roc70:${this.indicators.momentum}, `;
-        const mfiDesc = `mfi:${this.indicators.mfi} `;
-
-        point.description = `${vwmaDesc}${rocDesc}${bandDesc}${momentumDesc}${mfiDesc}`;
-
-        if (order) {
-          if (order.side.toLowerCase() === 'buy') {
-            point.marker = {
-              symbol: 'triangle',
-              fillColor: 'green',
-              radius: 5
-            };
-          } else if (order.side.toLowerCase() === 'sell') {
-            point.marker = {
-              symbol: 'triangle-down',
-              fillColor: 'red',
-              radius: 5
-            };
-          }
-        }
+        await this.runStrategy(quotes, timestamps, firstIndex, lastIndex);
       }
+    }
 
-      const foundOrder = this.orders.find((order) => {
-        return point.x === order.signalTime;
-      });
+    this.tiles = this.daytradeService.buildTileList(this.orders);
 
-      if (foundOrder) {
-        if (foundOrder.side.toLowerCase() === 'buy') {
+    this.isBacktest = false;
+  }
+
+  async runServerSideBacktest() {
+    this.setup();
+    this.stop();
+    this.isBacktest = true;
+    const currentDate = this.globalSettingsService.backtestDate;
+    const futureDate = moment().add(1, 'days').format('YYYY-MM-DD');
+
+    this.backtestService.getDaytradeBacktest(this.order.holding.symbol,
+      futureDate, currentDate,
+      {
+        lossThreshold: this.order.lossThreshold,
+        profitThreshold: this.order.profitTarget,
+        minQuotes: 81
+      }).subscribe(results => {
+        // console.log(results);
+        // _.forEach(results.indicators, indicator => {
+        //   this.indicators = indicator;
+        //   const daytradeType = this.firstFormGroup.value.orderType.toLowerCase();
+        //   const date = moment(indicator.date).unix();
+
+        //   if (indicator.recommendation) {
+        //     this.processAnalysis(daytradeType, indicator.recommendation, indicator.close, date);
+        //   } else {
+        //     console.log('missing recommendation: ', indicator);
+        //   }
+        // });
+
+        if (results.net) {
+          this.scoringService.resetProfitLoss(this.order.holding.symbol);
+          this.scoringService.addProfitLoss(this.order.holding.symbol, results.net);
+        }
+
+        if (results.indicators) {
+          this.populateChart(results.indicators);
+        }
+        this.isBacktest = false;
+      },
+        error => {
+          this.error = error._body;
+          this.isBacktest = false;
+        }
+      );
+
+    this.tiles = this.daytradeService.buildTileList(this.orders);
+
+    this.isBacktest = false;
+  }
+
+  populateChart(indicators) {
+    const volume = [];
+    const points = [];
+    const timestamps = [];
+
+    indicators.forEach(quote => {
+      if (quote.close) {
+        const closePrice = quote.close;
+        const time = moment.utc(quote.date).tz('America/New_York').valueOf();
+        const point: Point = {
+          y: closePrice
+        };
+
+        const vwmaDesc = quote.vwma ? quote.vwma.toFixed(2) : '';
+        const roc10 = `roc10:(${quote.roc10Previous})-(${quote.roc10}), `;
+        const roc70 = `roc70:(${quote.roc70Previous})-(${quote.roc70}), `;
+        const mfiDesc = `mfi:${quote.mfiLeft} `;
+
+        point.description = `${vwmaDesc}${roc10}${roc70}${mfiDesc}`;
+
+        point.description += ` mfi: ${quote.recommendation.mfi}, `;
+        point.description += `roc: ${quote.recommendation.roc}, `;
+        point.description += `bband: ${quote.recommendation.bband}`;
+
+        if (quote.recommendation.recommendation.toLowerCase() === 'buy') {
           point.marker = {
             symbol: 'triangle',
             fillColor: 'green',
             radius: 5
           };
-        } else if (foundOrder.side.toLowerCase() === 'sell') {
+        } else if (quote.recommendation.recommendation.toLowerCase() === 'sell') {
           point.marker = {
             symbol: 'triangle-down',
             fillColor: 'red',
             radius: 5
           };
         }
+
+        points.push(point);
+        timestamps.push(time);
+        volume.push([
+          moment(quote.date).valueOf(), // the date
+          quote.volume // the volume
+        ]);
       }
+    });
 
-      this.chart.addPoint(point);
-
-      volume.push([
-        moment.unix(timestamps[i]).valueOf(), // the date
-        quotes.volume[i] // the volume
-      ]);
-    }
-
-    this.tiles = this.daytradeService.buildTileList(this.orders);
-
-    this.isBacktest = false;
+    this.chart = this.initPriceChart(this.order.holding.symbol, timestamps, points);
   }
 
   async play() {
@@ -341,8 +363,7 @@ export class BbCardComponent implements OnInit, OnChanges {
           });
       });
 
-    const volume = [],
-      timestamps = _.get(data, 'chart.result[0].timestamp'),
+    const timestamps = _.get(data, 'chart.result[0].timestamp'),
       dataLength = timestamps.length,
       quotes = _.get(data, 'chart.result[0].indicators.quote[0]');
 
@@ -351,8 +372,6 @@ export class BbCardComponent implements OnInit, OnChanges {
       const firstIndex = dataLength - this.bbandPeriod;
       this.runStrategy(quotes, timestamps, firstIndex, lastIndex);
     }
-
-    this.chart = this.initPriceChart(this.order.holding.symbol);
 
     for (let i = 0; i < dataLength; i += 1) {
       const closePrice = quotes.close[i];
@@ -381,22 +400,9 @@ export class BbCardComponent implements OnInit, OnChanges {
           };
         }
       }
-
-      this.chart.addPoint(point);
-
-      volume.push([
-        moment.unix(timestamps[i]).valueOf(), // the date
-        quotes.volume[i] // the volume
-      ]);
     }
 
     this.tiles = this.daytradeService.buildTileList(this.orders);
-
-    if (this.config.SellAtClose) {
-      if (moment().isAfter(moment(this.globalSettingsService.sellAtCloseTime)) && this.positionCount <= 0) {
-        this.stop();
-      }
-    }
   }
 
   initVolumeChart(data): Chart {
@@ -459,7 +465,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     });
   }
 
-  initPriceChart(title): Chart {
+  initPriceChart(title, timestamps, seriesData): Chart {
     return new Chart({
       chart: {
         type: 'spline',
@@ -495,7 +501,8 @@ export class BbCardComponent implements OnInit, OnChanges {
           formatter: function () {
             return moment(this.value).format('hh:mm');
           }
-        }
+        },
+        categories: timestamps
       },
       tooltip: {
         crosshairs: true,
@@ -522,8 +529,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       },
       series: [{
         name: title,
-        id: title,
-        data: []
+        data: seriesData
       }]
     });
   }
@@ -688,258 +694,158 @@ export class BbCardComponent implements OnInit, OnChanges {
     return order;
   }
 
-  async buildOrder(quotes,
+  buildOrder(quotes,
     timestamps,
     idx,
     indicators: Indicators) {
 
-    if (indicators.band.length !== 3) {
-      return null;
+    const orderProcessed = this.handleStoploss(quotes.close[idx], timestamps[idx]);
+
+    if (!orderProcessed) {
+      const daytradeType = this.firstFormGroup.value.orderType.toLowerCase();
+      this.backtestService.getDaytradeRecommendation(null, null, indicators, { minQuotes: 81 }).subscribe(
+        analysis => {
+          this.processAnalysis(daytradeType, analysis, quotes.close[idx], timestamps[idx]);
+          return null;
+        },
+        error => {
+          this.error = 'Issue getting analysis.';
+        }
+      );
+    }
+  }
+
+  buildBuyOrder(orderQuantity: number,
+    price,
+    signalTime,
+    analysis) {
+
+    let log = '';
+    if (analysis.mfi.toLowerCase() === 'bullish') {
+      log += `[mfi oversold Event - time: ${moment.unix(signalTime).format()}]`;
     }
 
-    const specialOrder = this.processSpecialRules(quotes.close[idx], timestamps[idx]);
-
-    if (specialOrder) {
-      return specialOrder;
+    if (analysis.bband.toLowerCase() === 'bullish') {
+      log += `[Bollinger band bullish Event -` +
+        `time: ${moment.unix(signalTime).format()}]`;
     }
 
-    if (this.firstFormGroup.value.orderType.toLowerCase() === 'buy') {
+    if (analysis.roc.toLowerCase() === 'bullish') {
+      log += `[Rate of Change Crossover bullish Event -` +
+        `time: ${moment.unix(signalTime).format()}}]`;
+    }
+
+    console.log(log);
+    this.reportingService.addAuditLog(this.order.holding.symbol, log);
+    return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
+  }
+
+  buildSellOrder(orderQuantity: number, price, signalTime, analysis) {
+    let log = '';
+    if (analysis.mfi.toLowerCase() === 'bearish') {
+      log += `[mfi overbought Event - time: ${moment.unix(signalTime).format()}]`;
+    }
+
+    if (analysis.bband.toLowerCase() === 'bearish') {
+      log += `[Bollinger band bearish Event -` +
+        `time: ${moment.unix(signalTime).format()}]`;
+    }
+
+    if (analysis.roc.toLowerCase() === 'bearish') {
+      log += `[Rate of Change Crossover bearish Event -` +
+        `time: ${moment.unix(signalTime).format()}}]`;
+    }
+
+    console.log(log);
+    this.reportingService.addAuditLog(this.order.holding.symbol, log);
+    return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
+  }
+
+  handleStoploss(quote, timestamp): boolean {
+    return this.processSpecialRules(quote, timestamp);
+  }
+
+  processAnalysis(daytradeType, analysis, quote, timestamp) {
+    if (daytradeType === 'buy') {
       if (this.buyCount >= this.firstFormGroup.value.quantity) {
         this.stop();
-        return null;
+      } else if ((!this.globalSettingsService.backtesting || !this.isBacktest) && this.scoringService.total < 0 && this.scoringService.total < this.globalSettingsService.maxLoss * -1) {
+        this.warning = 'Global stop loss exceeded. Buying paused.';
+      } else if (analysis.recommendation.toLowerCase() === 'buy') {
+        const orderQuantity = this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
+          this.firstFormGroup.value.orderSize,
+          this.buyCount,
+          this.positionCount);
+
+        if (orderQuantity > 0) {
+          const buyOrder = this.buildBuyOrder(orderQuantity,
+            quote,
+            timestamp,
+            analysis);
+          this.sendBuy(buyOrder);
+        }
       }
-
-      const orderQuantity = this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
-        this.firstFormGroup.value.orderSize,
-        this.buyCount,
-        this.positionCount);
-
-      if (orderQuantity <= 0) {
-        return null;
-      }
-
-      const buyOrder = await this.buildBuyOrder(orderQuantity,
-        quotes.close[idx],
-        timestamps[idx],
-        quotes.low[idx] || quotes.close[idx],
-        indicators.band,
-        indicators.roc10);
-
-      return this.sendBuy(buyOrder);
-    } else if (this.firstFormGroup.value.orderType.toLowerCase() === 'sell') {
+    } else if (daytradeType === 'sell') {
       if (this.sellCount >= this.firstFormGroup.value.quantity) {
         this.stop();
-        return null;
+      } else if (analysis.recommendation.toLowerCase() === 'sell') {
+        const orderQuantity = this.daytradeService.getOrderQuantity(this.firstFormGroup.value.quantity,
+          this.firstFormGroup.value.orderSize,
+          this.sellCount);
+
+        if (orderQuantity > 0) {
+          const sellOrder = this.buildSellOrder(orderQuantity,
+            quote,
+            timestamp,
+            analysis);
+
+          this.sendSell(sellOrder);
+        }
       }
-
-      const orderQuantity = this.daytradeService.getOrderQuantity(this.firstFormGroup.value.quantity,
-        this.firstFormGroup.value.orderSize,
-        this.sellCount);
-
-      if (orderQuantity <= 0) {
-        return null;
-      }
-
-      const sellOrder = this.buildSellOrder(orderQuantity,
-        quotes.close[idx],
-        timestamps[idx],
-        quotes.high[idx] || quotes.close[idx],
-        indicators.band,
-        indicators.roc10);
-
-      return this.sendSell(sellOrder);
-    } else if (this.firstFormGroup.value.orderType.toLowerCase() === 'daytrade') {
+    } else if (this.isDayTrading()) {
       if (this.hasReachedDayTradeOrderLimit()) {
         this.stop();
-        return null;
-      }
-      const sellQuantity: number = this.positionCount;
+      } else if (analysis.recommendation.toLowerCase() === 'sell') {
+        if (this.buyCount >= this.sellCount) {
+          const orderQuantity = this.positionCount;
+          if (orderQuantity > 0) {
+            const sellOrder = this.buildSellOrder(orderQuantity,
+              quote,
+              timestamp,
+              analysis);
 
-      const sell: SmartOrder = sellQuantity <= 0 ? null :
-        this.buildSellOrder(sellQuantity,
-          quotes.close[idx],
-          timestamps[idx],
-          quotes.high[idx] || quotes.close[idx],
-          indicators.band,
-          indicators.roc10);
-
-      if (sell && this.buyCount >= this.sellCount) {
-        return this.sendStopLoss(sell);
-      }
-
-      if (!sell) {
-        const buyQuantity: number = this.scoringService.determineBetSize(this.order.holding.symbol, this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
+            this.sendStopLoss(sellOrder);
+          }
+        }
+      } else if ((!this.globalSettingsService.backtesting || !this.isBacktest) && this.scoringService.total < 0 && this.scoringService.total < this.globalSettingsService.maxLoss * -1) {
+        this.warning = 'Global stop loss exceeded. Buying paused.';
+      } else if (analysis.recommendation.toLowerCase() === 'buy') {
+        let orderQuantity: number = this.scoringService.determineBetSize(this.order.holding.symbol, this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
           this.firstFormGroup.value.orderSize,
           this.buyCount,
           this.positionCount), this.positionCount, this.order.quantity);
 
-        const buy: SmartOrder = buyQuantity <= 0 ? null :
-          await this.buildBuyOrder(buyQuantity, quotes.close[idx], timestamps[idx],
-            quotes.low[idx] || quotes.close[idx], indicators.band, indicators.roc10);
+        if (this.indicators.vwma < quote) {
+          orderQuantity = _.round(_.multiply(orderQuantity, 0.5), 0);
+        }
 
-        if (buy) {
-          return this.sendBuy(buy);
+        if (orderQuantity > 0) {
+          const buyOrder = this.buildBuyOrder(orderQuantity,
+            quote,
+            timestamp,
+            analysis);
+
+          this.sendBuy(buyOrder);
         }
       }
-      return null;
     }
-  }
-
-  async buildBuyOrder(orderQuantity: number,
-    price,
-    signalTime,
-    signalPrice,
-    band: any[],
-    roc: number) {
-
-    const mid = band[1],
-      low = band[0];
-
-    const pricePaid = this.daytradeService.estimateAverageBuyOrderPrice(this.orders);
-    const gains = this.daytradeService.getPercentChange(signalPrice, pricePaid);
-
-    if (gains < this.firstFormGroup.value.lossThreshold) {
-      this.setWarning('Loss threshold met. Buying is stalled. Estimated loss: ' +
-        `${this.daytradeService.convertToFixedNumber(gains, 4) * 100}%`);
-      this.reportingService.addAuditLog(this.order.holding.symbol,
-        `Loss circuit breaker triggered. Current: ${signalPrice}, Paid: ${pricePaid}, Gains: ${gains}`);
-      return null;
-    }
-
-    if (orderQuantity <= 0) {
-      return null;
-    }
-
-    if (!signalPrice || !price) {
-      return null;
-    }
-
-    if (this.indicators.vwma && price > this.indicators.vwma) {
-      return null;
-    }
-
-    if (!this.globalSettingsService.backtesting && this.scoringService.total < 0 && this.scoringService.total < this.globalSettingsService.maxLoss * -1) {
-      return null;
-    }
-
-    if (this.config.Mfi) {
-      if (this.algoService.isOversoldBullish(roc, this.indicators.momentum, this.indicators.mfi)) {
-        const log = `mfi oversold Event - time: ${moment.unix(signalTime).format()}, short rate of change: ${roc}, long rate of change: ${this.indicators.momentum}, mfi: ${this.indicators.mfi}`;
-
-        this.reportingService.addAuditLog(this.order.holding.symbol, log);
-        console.log(log);
-        return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
-      }
-    }
-    if (this.config.SpyMomentum) {
-      if (this.algoService.isMomentumBullish(signalPrice, mid[0], this.indicators.mfi, roc, this.indicators.momentum)) {
-        const log = `bb momentum Event -` +
-          `time: ${moment.unix(signalTime).format()}, bband mid: ${mid[0]}, mfi: ${this.indicators.mfi}` +
-          `roc: ${roc}, long roc: ${this.indicators.momentum}`;
-
-        this.reportingService.addAuditLog(this.order.holding.symbol, log);
-        console.log(log);
-        return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
-      }
-    }
-
-    if (this.config.MeanReversion1) {
-      if (this.algoService.isBBandMeanReversionBullish(signalPrice, low[0], this.indicators.mfi, roc, this.indicators.momentum)) {
-        const log = `bb mean reversion Event -` +
-          `time: ${moment.unix(signalTime).format()}, bband low: ${low[0]}, mfi: ${this.indicators.mfi},` +
-          `roc: ${roc}, long roc: ${this.indicators.momentum}`;
-
-        this.reportingService.addAuditLog(this.order.holding.symbol, log);
-        console.log(log);
-        return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
-      }
-    }
-    return null;
-  }
-
-  buildSellOrder(orderQuantity: number, price, signalTime, signalPrice, band: any[], roc1: number) {
-    const upper = band[2],
-      mid = band[1],
-      lower = band[0];
-
-    if (orderQuantity <= 0) {
-      return null;
-    }
-
-    if (!signalPrice || !price) {
-      return null;
-    }
-
-    if (this.config.SellAtClose) {
-      if (moment.unix(signalTime).isAfter(moment(this.globalSettingsService.sellAtCloseTime))) {
-        return this.closeAllPositions(price, signalTime);
-      }
-    }
-
-    const num = this.indicators.momentum,
-      den = roc1;
-
-    const momentumDiff = _.round(_.divide(num, den), 3);
-    const rocDiffRange = [0, 0.5];
-
-    if (momentumDiff > rocDiffRange[0] || momentumDiff < rocDiffRange[1]) {
-      if (signalPrice > upper[0] && (this.indicators.mfi > 46)) {
-        const log = `BB overbought Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}, mid: ${mid[0]}, lower: ${lower[0]}`;
-        this.reportingService.addAuditLog(this.order.holding.symbol, log);
-
-        console.log(log);
-
-        return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
-      }
-    }
-
-    if (momentumDiff > rocDiffRange[0] || momentumDiff < rocDiffRange[1]) {
-      if (signalPrice < lower[0] && (this.indicators.mfi > 60)) {
-        const log = `BB momentum Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}, mid: ${mid[0]}, lower: ${lower[0]}`;
-        this.reportingService.addAuditLog(this.order.holding.symbol, log);
-
-        console.log(log);
-
-        return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
-      }
-    }
-
-    if (this.indicators.mfi > 75) {
-      const log = `mfi Sell Event - time: ${moment.unix(signalTime).format()}, price: ${signalPrice}, roc: ${roc1}`;
-
-      this.reportingService.addAuditLog(this.order.holding.symbol, log);
-
-      console.log(log);
-
-      return this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, price, signalTime);
-    }
-
-    return null;
   }
 
   closeAllPositions(price: number, signalTime: number) {
     return this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, price, signalTime);
   }
 
-  processSpecialRules(closePrice: number, signalTime) {
-    const score = this.scoringService.getScore(this.order.holding.symbol);
-    if (score && score.total > 3) {
-      const scorePct = _.round(_.divide(score.wins, score.total), 2);
-      if (scorePct < 0.10) {
-        if (this.isBacktest) {
-          console.log('Trading not halted in backtest mode.');
-        } else {
-          this.stop();
-          const msg = 'Too many losses. Halting trading in Wins:' +
-            `${this.order.holding.symbol} ${score.wins} Loss: ${score.losses}`;
-
-          this.reportingService.addAuditLog(this.order.holding.symbol, msg);
-          console.log(msg);
-
-          return this.closeAllPositions(closePrice, signalTime);
-        }
-      }
-    }
+  processSpecialRules(closePrice: number, signalTime): boolean {
     if (this.positionCount > 0 && closePrice) {
       const estimatedPrice = this.daytradeService.estimateAverageBuyOrderPrice(this.orders);
 
@@ -953,7 +859,8 @@ export class BbCardComponent implements OnInit, OnChanges {
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
           console.log(log);
           const stopLossOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
-          return this.sendStopLoss(stopLossOrder);
+          this.sendStopLoss(stopLossOrder);
+          return true;
         }
       }
 
@@ -971,7 +878,8 @@ export class BbCardComponent implements OnInit, OnChanges {
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
           console.log(log);
           const sellOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
-          return this.sendSell(sellOrder);
+          this.sendSell(sellOrder);
+          return true;
         }
       }
 
@@ -983,11 +891,46 @@ export class BbCardComponent implements OnInit, OnChanges {
             `${this.order.holding.symbol} PROFIT HARVEST TRIGGERED: ${closePrice}/${estimatedPrice}`);
           console.log(warning);
           const sellOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
-          return this.sendSell(sellOrder);
+          this.sendSell(sellOrder);
+          return true;
+        }
+      }
+
+      if (this.isDayTrading()) {
+        if (this.order.sellAtClose && moment().isAfter(moment(this.globalSettingsService.sellAtCloseTime)) &&
+          this.positionCount > 0) {
+          const log = `Closing positions: ${closePrice}/${estimatedPrice}`;
+          this.reportingService.addAuditLog(this.order.holding.symbol, log);
+          console.log(log);
+          const stopLossOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
+          this.sendStopLoss(stopLossOrder);
+          return true;
         }
       }
     }
-    return null;
+
+    const score = this.scoringService.getScore(this.order.holding.symbol);
+    if (score && score.total > 3) {
+      const scorePct = _.round(_.divide(score.wins, score.total), 2);
+      if (scorePct < 0.10) {
+        if (this.isBacktest) {
+          console.log('Trading not halted in backtest mode.');
+        } else {
+          this.stop();
+          const msg = 'Too many losses. Halting trading in Wins:' +
+            `${this.order.holding.symbol} ${score.wins} Loss: ${score.losses}`;
+
+          this.reportingService.addAuditLog(this.order.holding.symbol, msg);
+          console.log(msg);
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  isDayTrading(): boolean {
+    return this.firstFormGroup.value.orderType.toLowerCase() === 'daytrade';
   }
 
   removeOrder(oldOrder) {
@@ -1009,48 +952,17 @@ export class BbCardComponent implements OnInit, OnChanges {
 
   async runStrategy(quotes, timestamps, firstIdx, lastIdx) {
     const { firstIndex, lastIndex } = this.daytradeService.findMostCurrentQuoteIndex(quotes.close, firstIdx, lastIdx);
-    const reals = quotes.close.slice(firstIndex, lastIndex + 1);
-    const highs = quotes.high.slice(firstIndex, lastIndex + 1);
-    const lows = quotes.low.slice(firstIndex, lastIndex + 1);
-    const volumes = quotes.volume.slice(firstIndex, lastIndex + 1);
-    if (!quotes.close[lastIndex]) {
-      // const log = `Quote data is missing ${reals.toString()}`;
-      // this.reportingService.addAuditLog(this.order.holding.symbol, log);
-      return null;
-    }
-    this.indicators.band = await this.indicatorsService.getBBand(reals, this.bbandPeriod);
-    // const shortSma = await this.daytradeService.getSMA(reals, 5);
+    const close = quotes.close.slice(firstIndex, lastIndex + 1);
+    const high = quotes.high.slice(firstIndex, lastIndex + 1);
+    const low = quotes.low.slice(firstIndex, lastIndex + 1);
+    const volume = quotes.volume.slice(firstIndex, lastIndex + 1);
+    const indicatorQuotes = { close, high, low, volume };
 
-    this.indicators.roc10 = await this.indicatorsService.getROC(_.slice(reals, reals.length - 11), 10)
-      .then((result) => {
-        const rocLen = result[0].length - 1;
-        const roc1 = _.round(result[0][rocLen], 3);
-        return _.round(roc1, 4);
+    await this.indicatorsService.getIndicators(indicatorQuotes, this.bbandPeriod, 2, 14, 70)
+      .then(result => {
+        this.indicators = result;
+        this.buildOrder(quotes, timestamps, lastIndex, this.indicators);
       });
-
-    this.indicators.momentum = await this.indicatorsService.getROC(reals, 70)
-      .then((result) => {
-        const rocLen = result[0].length - 1;
-        const roc1 = _.round(result[0][rocLen], 3);
-        return _.round(roc1, 4);
-      });
-
-    this.indicators.mfi = await this.indicatorsService.getMFI(this.daytradeService.getSubArray(highs, 14),
-      this.daytradeService.getSubArray(lows, 14),
-      this.daytradeService.getSubArray(reals, 14),
-      this.daytradeService.getSubArray(volumes, 14),
-      14)
-      .then((result) => {
-        const len = result[0].length - 1;
-        return _.round(result[0][len], 3);
-      });
-
-    this.indicators.vwma = await this.indicatorsService.getVwma(this.daytradeService.getSubArray(reals, 70), this.daytradeService.getSubArray(volumes, 70), 70)
-      .then((result) => {
-        const len = result[0].length - 1;
-        return _.round(result[0][len], 3);
-      });
-    return this.buildOrder(quotes, timestamps, lastIndex, this.indicators);
   }
 
   hasReachedDayTradeOrderLimit() {
@@ -1077,18 +989,6 @@ export class BbCardComponent implements OnInit, OnChanges {
       pref.push(OrderPref.TrailingStopLoss);
     }
 
-    if (this.order.meanReversion1) {
-      pref.push(OrderPref.MeanReversion1);
-    }
-
-    if (this.order.useMfi) {
-      pref.push(OrderPref.Mfi);
-    }
-
-    if (this.order.spyMomentum) {
-      pref.push(OrderPref.SpyMomentum);
-    }
-
     if (this.order.sellAtClose) {
       pref.push(OrderPref.SellAtClose);
     }
@@ -1105,5 +1005,37 @@ export class BbCardComponent implements OnInit, OnChanges {
   setLive() {
     this.live = true;
     this.stepper.next();
+  }
+
+  toggleChart() {
+    this.showChart = !this.showChart;
+  }
+
+  testBuy() {
+    this.portfolioService.getPrice(this.order.holding.symbol)
+      .toPromise()
+      .then((quote) => {
+        const orderQuantity = this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
+          this.firstFormGroup.value.orderSize,
+          this.buyCount,
+          this.positionCount);
+
+        const buyOrder = this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, 1 * quote, null);
+        this.sendBuy(buyOrder);
+      });
+  }
+
+  testSell() {
+    this.portfolioService.getPrice(this.order.holding.symbol)
+      .toPromise()
+      .then((quote) => {
+        const orderQuantity = this.daytradeService.getOrderQuantity(this.firstFormGroup.value.quantity,
+          this.firstFormGroup.value.orderSize,
+          this.sellCount);
+
+        const sellOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', orderQuantity, 1 * quote, null);
+
+        this.sendSell(sellOrder);
+      });
   }
 }

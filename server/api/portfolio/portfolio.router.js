@@ -63,3 +63,15 @@ export const tdPosition = (request, response) => {
 export const tdBalance = (request, response) => {
   PortfolioController.tdBalance(request, response);
 }
+
+export const setAccount = (request, response) => {
+  PortfolioController.setCredentials(request, response);
+}
+
+export const checkAccount = (request, response) => {
+  PortfolioController.checkForCredentials(request, response);
+}
+
+export const deleteCredentials = (request, response) => {
+  PortfolioController.deleteCredentials(request, response);
+}

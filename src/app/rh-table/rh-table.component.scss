@@ -1,0 +1,27 @@
+.table-commands {
+  text-align: left;
+}
+
+.table-setteings {
+  text-align: center;
+}
+
+.table-filters {
+  text-align: right;
+  .filter {
+    padding: 0 5px 0 5px;
+  }
+}
+
+.empty-table {
+  padding: 25px;
+  text-align: center;
+}
+
+.table-title {
+  padding: 5px 10px 5px 10px;
+}
+
+.global-filter {
+  padding: 3px;
+}

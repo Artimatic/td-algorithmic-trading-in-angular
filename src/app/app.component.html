@@ -1,11 +1,8 @@
 <mat-sidenav-container>
-  <mat-sidenav mode="side" opened>
+  <mat-sidenav class="side-nav" mode="side" opened>
     <mat-list role="list">
       <mat-nav-list role="listitem">
         <app-reporting></app-reporting>
-      </mat-nav-list>
-      <mat-nav-list role="listitem">
-        <app-login></app-login>
       </mat-nav-list>
       <mat-nav-list role="listitem">
         <a routerLink="/overview" matTooltip="overview">
@@ -27,7 +24,7 @@
         <a routerLink="/research" matTooltip="Run backtesting on stocks">
           <button mat-button class="nav-item">
             <mat-icon>assessment</mat-icon>
-            Find Recommendations
+            Recommendations
           </button>
         </a>
       </mat-nav-list>

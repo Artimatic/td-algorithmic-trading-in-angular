@@ -19,5 +19,8 @@ router.post('/buy', handler.buy);
 router.post('/instruments', handler.instruments);
 router.post('/v2/buy', handler.tdBuy);
 router.post('/v2/sell', handler.tdSell);
+router.post('/v3/set-account', handler.setAccount);
+router.post('/v3/check-account', handler.checkAccount);
+router.post('/v3/delete-cred', handler.checkAccount);
 
 module.exports = router;

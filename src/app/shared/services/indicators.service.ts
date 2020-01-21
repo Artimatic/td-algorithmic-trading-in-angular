@@ -57,6 +57,13 @@ export class IndicatorsService {
     return await this.backtestService.getVwma(body).toPromise();
   }
 
+  async getIndicators(quotes: any, period: number, stddev: number, mfiPeriod: number,
+    vwmaPeriod: number): Promise<any> {
+
+    return await this.backtestService.getDaytradeIndicators(quotes, period, stddev, mfiPeriod,
+      vwmaPeriod).toPromise();
+  }
+
   fillInMissingReals(reals: number[]) {
     for (let i = 1, length = reals.length; i < length; i++) {
       if (!reals[i]) {

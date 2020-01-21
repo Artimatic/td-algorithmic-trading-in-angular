@@ -13,6 +13,7 @@ import { FormControl } from '@angular/forms';
 import Stocks from './backtest-stocks.constant';
 import { ChartDialogComponent } from '../chart-dialog/chart-dialog.component';
 import { ChartParam } from '../shared/services/backtest.service';
+import { GlobalSettingsService } from '../settings/global-settings.service';
 export interface Algo {
   value: string;
   viewValue: string;
@@ -27,13 +28,13 @@ export interface AlgoGroup {
 @Component({
   selector: 'app-rh-table',
   templateUrl: './rh-table.component.html',
-  styleUrls: ['./rh-table.component.css']
+  styleUrls: ['./rh-table.component.scss']
 })
 export class RhTableComponent implements OnInit, OnChanges {
   @Input() data: AlgoParam[];
   @Input() displayedColumns: string[];
 
-  recommendation = 'strongbuy';
+  selectedRecommendation: string[];
   stockList: Stock[] = [];
   currentList: Stock[] = [];
   algoReport = {
@@ -47,6 +48,7 @@ export class RhTableComponent implements OnInit, OnChanges {
   progressPct = 0;
   progress = 0;
   totalStocks = 0;
+  interval: number;
   selectedAlgo = 'v2';
   algoControl = new FormControl();
   algoGroups: AlgoGroup[] = [
@@ -62,25 +64,67 @@ export class RhTableComponent implements OnInit, OnChanges {
         { value: 'v2', viewValue: 'Daily - Bollinger Band' },
         { value: 'v5', viewValue: 'Daily - Money Flow Index' },
         { value: 'v1', viewValue: 'Daily - Moving Average Crossover' },
+        { value: 'moving_average_resistance', viewValue: 'Daily - Moving Average Resistance' },
         { value: 'v3', viewValue: 'Intraday - MFI' },
         { value: 'v4', viewValue: 'Intraday - Bollinger Band' },
       ]
     }
   ];
+  recommendations: any[];
+  cols: any[];
+  selectedColumns: any[];
+  selectedStock: any;
+  twoOrMoreSignalsOnly: boolean;
 
   constructor(
     public snackBar: MatSnackBar,
     private algo: BacktestService,
     public dialog: MatDialog,
-    private portfolioService: PortfolioService) { }
+    private portfolioService: PortfolioService,
+    private globalSettingsService: GlobalSettingsService) { }
 
   ngOnInit() {
-    this.filterRecommendation();
+    this.recommendations = [
+      { value: 'strongbuy', label: 'Strong Buy' },
+      { value: 'buy', label: 'Buy' },
+      { value: 'sell', label: 'Sell' },
+      { value: 'strongsell', label: 'Strong Sell' }
+    ];
     this.endDate = moment(this.endDate).format('YYYY-MM-DD');
+    this.cols = [
+      { field: 'stock', header: 'Stock' },
+      { field: 'returns', header: 'Returns' },
+      { field: 'lastVolume', header: 'Last Volume' },
+      { field: 'lastPrice', header: 'Last Price' },
+      { field: 'totalTrades', header: 'Trades' },
+      { field: 'strongbuySignals', header: 'Strong Buy' },
+      { field: 'buySignals', header: 'Buy' },
+      { field: 'sellSignals', header: 'Sell' },
+      { field: 'strongsellSignals', header: 'Strong Sell' },
+      { field: 'upperResistance', header: 'Upper Resistance' },
+      { field: 'lowerResistance', header: 'Lower Resistance' }
+    ];
+
+    this.selectedColumns = [
+      { field: 'stock', header: 'Stock' },
+      { field: 'returns', header: 'Returns' },
+      { field: 'totalTrades', header: 'Trades' },
+      { field: 'strongbuySignals', header: 'Strong Buy' },
+      { field: 'buySignals', header: 'Buy' },
+      { field: 'sellSignals', header: 'Sell' },
+      { field: 'strongsellSignals', header: 'Strong Sell' },
+      { field: 'upperResistance', header: 'Upper Resistance' },
+      { field: 'lowerResistance', header: 'Lower Resistance' }
+    ];
+
+    this.selectedRecommendation = ['strongbuy', 'buy', 'sell', 'strongsell'];
+    this.filter();
+    this.interval = 0;
   }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes.data) {
+      this.interval = 0;
       this.getData(changes.data.currentValue);
     }
   }
@@ -90,7 +134,7 @@ export class RhTableComponent implements OnInit, OnChanges {
     const startDate = moment(this.endDate).subtract(700, 'days').format('YYYY-MM-DD');
 
     this.progress = 0;
-    this.totalStocks = algoParams.length;
+    this.totalStocks += algoParams.length;
     this.algoReport = {
       totalReturns: 0,
       totalTrades: 0,
@@ -113,7 +157,7 @@ export class RhTableComponent implements OnInit, OnChanges {
             .subscribe((stockData: Stock) => {
               stockData.stock = param.ticker;
               stockData.recommendation = stockData.trending;
-              stockData.returns = +((stockData.totalReturns * 100).toFixed(2));
+              stockData.returns = stockData.totalReturns;
               this.addToList(stockData);
               this.incrementProgress();
               this.updateAlgoReport(stockData);
@@ -125,20 +169,27 @@ export class RhTableComponent implements OnInit, OnChanges {
         });
         break;
       case 'v2':
-        for (const param of algoParams) {
-          await this.algo.getInfoV2(param.ticker, currentDate, startDate).subscribe(
+        const bbCb = (param) => {
+          this.algo.getInfoV2(param.ticker, currentDate, startDate).subscribe(
             result => {
-              result.stock = param.ticker;
-              result.returns = +((result.returns * 100).toFixed(2));
-              this.addToList(result);
-              this.incrementProgress();
-              this.updateAlgoReport(result);
+              if (result) {
+                result.stock = param.ticker;
+                this.addToList(result);
+                this.incrementProgress();
+                this.updateAlgoReport(result);
+              } else {
+                this.snackBar.open(`No results for ${param.ticker}`, 'Dismiss');
+                console.log(`No results for ${param.ticker}`);
+              }
             }, error => {
               this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
               console.log(`Error on ${param.ticker}`, error);
               this.incrementProgress();
             });
-        }
+        };
+
+        this.iterateAlgoParams(algoParams, bbCb);
+
         break;
       case 'v3':
         algo = 'intraday';
@@ -183,13 +234,12 @@ export class RhTableComponent implements OnInit, OnChanges {
         break;
       case 'v5':
         algo = 'daily-mfi';
-        algoParams.forEach((param) => {
+        const mfiCb = (param) => {
           this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, algo).subscribe(
             (testResults: any[]) => {
               if (testResults.length > 0) {
                 const result = testResults[testResults.length - 1];
                 result.stock = param.ticker;
-                result.returns = +((result.returns * 100).toFixed(2));
                 this.addToList(result);
                 this.updateAlgoReport(result);
               }
@@ -199,9 +249,37 @@ export class RhTableComponent implements OnInit, OnChanges {
               this.incrementProgress();
               console.log(`Error on ${param.ticker} ${algo}`, error);
             });
-        });
+        };
+        this.iterateAlgoParams(algoParams, mfiCb);
+
+        break;
+      case 'moving_average_resistance':
+        const callback = (param) => {
+          this.algo.getResistanceChart(param.ticker, startDate, currentDate).subscribe(
+            (result: any) => {
+              result.stock = param.ticker;
+              this.addToList(result);
+              this.updateAlgoReport(result);
+              this.incrementProgress();
+            }, error => {
+              this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
+              this.incrementProgress();
+              console.log(`Error on ${param.ticker} ${algo}`, error);
+            });
+        };
+
+        this.iterateAlgoParams(algoParams, callback);
         break;
     }
+  }
+
+  iterateAlgoParams(algoParams: any[], callback: Function) {
+    algoParams.forEach((param) => {
+      this.interval += (this.progress) * 10 + this.totalStocks + 100;
+      setTimeout(() => {
+        callback(param);
+      }, this.interval);
+    });
   }
 
   incrementProgress() {
@@ -220,44 +298,67 @@ export class RhTableComponent implements OnInit, OnChanges {
     this.algoReport.averageTrades = +((this.algoReport.totalTrades / this.totalStocks).toFixed(5));
   }
 
+  filter() {
+    this.filterRecommendation();
+    if (this.twoOrMoreSignalsOnly) {
+      this.filterTwoOrMoreSignalsOnly();
+    }
+  }
+
+  filterTwoOrMoreSignalsOnly() {
+    this.currentList = _.filter(this.currentList, (stock: Stock) => {
+      return (stock.strongbuySignals.length + stock.buySignals.length +
+        stock.strongsellSignals.length + stock.sellSignals.length) > 1;
+    });
+  }
+
   filterRecommendation() {
-    if (this.recommendation === '') {
+    this.currentList = [];
+    if (this.selectedRecommendation.length === 0) {
       this.currentList = _.clone(this.stockList);
     } else {
       this.currentList = _.filter(this.stockList, (stock: Stock) => {
-        switch (this.recommendation) {
-          case 'strongbuy':
-            return stock.strongbuySignals.length > 0;
-          case 'buy':
-            return stock.buySignals.length > 0;
-          case 'strongsell':
-            return stock.strongsellSignals.length > 0;
-          case 'sell':
-            return stock.sellSignals.length > 0;
+        for (const recommendation of this.selectedRecommendation) {
+          if (this.hasRecommendation(stock, recommendation)) {
+            return true;
+          }
         }
-        return stock.recommendation.toLowerCase() === this.recommendation;
       });
     }
   }
 
-  addToList(stock: Stock) {
-    stock = this.findAndUpdate(stock, this.stockList);
-    if (this.recommendation === '' || stock.recommendation.toLowerCase() === this.recommendation) {
-      this.findAndUpdate(stock, this.currentList);
+  hasRecommendation(stock: Stock, recommendation) {
+    switch (recommendation) {
+      case 'strongbuy':
+        return stock.strongbuySignals.length > 0;
+      case 'buy':
+        return stock.buySignals.length > 0;
+      case 'strongsell':
+        return stock.strongsellSignals.length > 0;
+      case 'sell':
+        return stock.sellSignals.length > 0;
     }
   }
 
-  findAndUpdate(stock: Stock, list: any[]): Stock {
-    const idx = _.findIndex(list, (s) => s.stock === stock.stock);
+  addToList(stock: Stock) {
+    this.stockList = this.findAndUpdate(stock, this.stockList);
+    this.filter();
+  }
+
+  /*
+  * Find matching stock in current list and update with new data
+  */
+  findAndUpdate(stock: Stock, tableList: any[]): Stock[] {
+    const idx = _.findIndex(tableList, (s) => s.stock === stock.stock);
     let updateStock;
     if (idx > -1) {
-      updateStock = this.updateRecommendationCount(list[idx], stock);
-      list[idx] = updateStock;
+      updateStock = this.updateRecommendationCount(tableList[idx], stock);
+      tableList[idx] = updateStock;
     } else {
       updateStock = this.updateRecommendationCount(null, stock);
-      list.push(updateStock);
+      tableList.push(updateStock);
     }
-    return updateStock;
+    return tableList;
   }
 
   updateRecommendationCount(current: Stock, incomingStock: Stock): Stock {
@@ -280,15 +381,19 @@ export class RhTableComponent implements OnInit, OnChanges {
     switch (incomingStock.recommendation.toLowerCase()) {
       case 'strongbuy':
         current.strongbuySignals.push(incomingStock.algo);
+        current.strongbuySignals = current.strongbuySignals.slice();
         break;
       case 'buy':
         current.buySignals.push(incomingStock.algo);
+        current.buySignals = current.buySignals.slice();
         break;
       case 'strongsell':
         current.strongsellSignals.push(incomingStock.algo);
+        current.strongsellSignals = current.strongsellSignals.slice();
         break;
       case 'sell':
         current.sellSignals.push(incomingStock.algo);
+        current.sellSignals = current.sellSignals.slice();
         break;
     }
 
@@ -326,33 +431,53 @@ export class RhTableComponent implements OnInit, OnChanges {
   }
 
   runDefaultBacktest() {
+    this.interval = 0;
     const currentSelected = this.selectedAlgo;
-
     this.selectedAlgo = 'v2';
     this.getData(Stocks);
 
-    this.selectedAlgo = 'v5';
-    this.getData(Stocks);
+    setTimeout(() => {
+      this.selectedAlgo = 'v5';
+      this.getData(Stocks);
+    }, Stocks.length * 10);
 
-    this.progress = Stocks.length * 2;
+    setTimeout(() => {
+      this.selectedAlgo = 'moving_average_resistance';
+      this.getData(Stocks);
+    }, Stocks.length * 50);
+
+    this.progress = 0;
     this.selectedAlgo = currentSelected;
   }
 
   openChartDialog(element: Stock, endDate) {
+    const params: ChartParam = {
+      algorithm: this.globalSettingsService.selectedAlgo,
+      symbol: element.stock,
+      date: endDate,
+      params: {
+        deviation: this.globalSettingsService.deviation,
+        fastAvg: this.globalSettingsService.fastAvg,
+        slowAvg: this.globalSettingsService.slowAvg
+      }
+    };
+
     const dialogRef = this.dialog.open(ChartDialogComponent, {
       width: '500px',
-      height: '500px'
+      height: '500px',
+      data: { chartData: params }
     });
 
     dialogRef.afterClosed().subscribe(result => {
       console.log('Closed dialog', result);
+      if (result.algorithm === 'sma' || result.algorithm === 'macrossover') {
+        this.globalSettingsService.deviation = result.params.deviation;
+        this.globalSettingsService.fastAvg = result.params.fastAvg;
+        this.globalSettingsService.slowAvg = result.params.slowAvg;
+      }
+      this.globalSettingsService.selectedAlgo = result.algorithm;
 
-      const params: ChartParam = {
-        algorithm: result,
-        symbol: element.stock,
-        date: endDate
-      };
-      this.algo.currentChart.next(params);
+      this.algo.currentChart.next(result);
     });
   }
 }

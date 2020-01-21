@@ -81,25 +81,27 @@
                 <button mat-fab *ngIf="firstFormGroup.value.orderType=='DayTrade'" color="accent">DAY</button>
               </mat-card-subtitle>
             </mat-card-header>
-            <mat-checkbox [(ngModel)]="showGraph">Chart</mat-checkbox>
+            <mat-checkbox (click)="toggleChart()">Chart</mat-checkbox>
           </div>
           <div fxFlex="95%">
-            <div *ngIf="showGraph">
+            <div *ngIf="showChart">
               <div [chart]="chart"></div>
-              <!-- <div [chart]="volumeChart"></div> -->
+              <div [chart]="volumeChart"></div>
             </div>
-            <div class="order-log" *ngIf="!showGraph">
+            <div class="order-log" *ngIf="!showChart">
               <mat-grid-list cols="3" rowHeight="150px">
                 <mat-grid-tile *ngFor="let tile of tiles" [colspan]="tile.cols" [rowspan]="tile.rows">
-                  <table>
-                    <tr *ngFor="let order of tile.orders">
-                      <td>{{order.signalTime}}</td>
-                      <td>{{order.action}}</td>
-                      <td>{{order.quantity}}@</td>
-                      <td>${{order.price}}</td>
-                      <td> on {{order.timeSubmitted}}</td>
-                    </tr>
-                  </table>
+                  <div class="tiles">
+                    <table>
+                      <tr *ngFor="let order of tile.orders">
+                        <td>{{order.signalTime}}</td>
+                        <td>{{order.action}}</td>
+                        <td>{{order.quantity}}@</td>
+                        <td>${{order.price}}</td>
+                        <td> on {{order.timeSubmitted}}</td>
+                      </tr>
+                    </table>
+                  </div>
                 </mat-grid-tile>
               </mat-grid-list>
             </div>
@@ -107,8 +109,11 @@
         </div>
         <mat-card-actions>
           <button mat-raised-button color="warn" (click)="resetStepper(stepper)">STOP</button>
-          <button mat-button color="primary" (click)="backtest(null)">Backtest</button>
+          <button mat-button color="primary" (click)="backtest()">Backtest</button>
+          <button mat-button color="primary" (click)="testRuntime()">Test Runtime</button>
           <button mat-button color="warn" (click)="openDialog()">GO LIVE</button>
+          <button mat-button color="warn" (click)="testBuy()">Buy</button>
+          <button mat-button color="warn" (click)="testSell()">Sell</button>
         </mat-card-actions>
       </mat-card>
     </mat-step>

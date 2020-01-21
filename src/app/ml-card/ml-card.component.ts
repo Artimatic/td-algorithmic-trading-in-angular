@@ -43,6 +43,7 @@ export class MlCardComponent implements OnInit {
 
   bullishPlay: FormControl;
   bearishPlay: FormControl;
+  settings: FormControl;
 
   error: string;
   warning: string;
@@ -95,11 +96,15 @@ export class MlCardComponent implements OnInit {
       secondCtrl: ['', Validators.required]
     });
 
-    this.bullishPlay = new FormControl('UPRO', [
+    this.bullishPlay = new FormControl('SPY', [
       Validators.required
     ]);
 
-    this.bearishPlay = new FormControl('SPXU', [
+    this.bearishPlay = new FormControl('TLT', [
+      Validators.required
+    ]);
+
+    this.settings = new FormControl('closePositions', [
       Validators.required
     ]);
 
@@ -138,7 +143,7 @@ export class MlCardComponent implements OnInit {
             .subscribe(() => {
               this.pendingResults = true;
               this.checkReportSub = TimerObservable.create(0, this.reportWaitInterval)
-                .takeWhile(() => this.pendingResults)
+                .takeWhile(() => this.pendingResults && this.live)
                 .subscribe(() => {
                   this.backtestService.getRnn('SPY', this.getTradeDay())
                     .subscribe((data: any) => {
@@ -170,9 +175,9 @@ export class MlCardComponent implements OnInit {
     };
 
     _.forEach(predictions, (prediction) => {
-      if (prediction.nextOutput > 0.6) {
+      if (prediction.nextOutput > 0.55) {
         bet.bullishOpen++;
-      } else if (prediction.nextOutput < 0.4) {
+      } else if (prediction.nextOutput < 0.45) {
         bet.bearishOpen++;
       }
       bet.total++;
@@ -196,51 +201,64 @@ export class MlCardComponent implements OnInit {
     return bet;
   }
 
+  getOrder(symbol: string) {
+    return this.portfolioService.getInstruments(symbol).map((response) => {
+      const instruments = response.results[0];
+      const newHolding: Holding = {
+        instrument: instruments.url,
+        symbol: instruments.symbol,
+        name: instruments.name
+      };
+
+      const order: SmartOrder = {
+        holding: newHolding,
+        quantity: 0,
+        price: 0,
+        submitted: false,
+        pending: false,
+        side: 'DayTrade',
+      };
+
+      return order;
+    });
+  }
+
   placeBet(bet: Bet) {
     switch (bet.summary) {
       case Sentiment.Bullish:
-        this.portfolioService.getInstruments(this.bullishPlay.value).subscribe((response) => {
-          const instruments = response.results[0];
-          const newHolding: Holding = {
-            instrument: instruments.url,
-            symbol: instruments.symbol,
-            name: instruments.name
-          };
-
-          const order: SmartOrder = {
-            holding: newHolding,
-            quantity: 0,
-            price: 0,
-            submitted: false,
-            pending: false,
-            side: 'DayTrade',
-          };
-          this.buy(order, _.divide(bet.bullishOpen, bet.total));
-        },
-          (error) => {
-            this.snackBar.open(`Error getting instruments for ${this.bullishPlay}`, 'Dismiss', {
-              duration: 2000,
+        if (this.settings.value === 'closePositions') {
+          this.getOrder(this.bearishPlay.value).subscribe((order) => {
+            this.sellAll(order);
+          },
+            (error) => {
+              this.snackBar.open(`Error getting instruments for ${this.bearishPlay}`, 'Dismiss', {
+                duration: 2000,
+              });
             });
-          });
+        } else if (this.settings.value === 'openPositions') {
+          this.getOrder(this.bullishPlay.value).subscribe((order) => {
+            this.buy(order, _.divide(bet.bullishOpen, bet.total));
+          },
+            (error) => {
+              this.snackBar.open(`Error getting instruments for ${this.bullishPlay}`, 'Dismiss', {
+                duration: 2000,
+              });
+            });
+        }
+
         break;
       case Sentiment.Bearish:
-        if (!this.longOnly.value) {
-          this.portfolioService.getInstruments(this.bearishPlay.value).subscribe((response) => {
-            const instruments = response.results[0];
-            const newHolding: Holding = {
-              instrument: instruments.url,
-              symbol: instruments.symbol,
-              name: instruments.name
-            };
-
-            const order: SmartOrder = {
-              holding: newHolding,
-              quantity: 0,
-              price: 0,
-              submitted: false,
-              pending: false,
-              side: 'DayTrade',
-            };
+          if (this.settings.value === 'closePositions') {
+            this.getOrder(this.bullishPlay.value).subscribe((order) => {
+              this.sellAll(order);
+            },
+              (error) => {
+                this.snackBar.open(`Error getting instruments for ${this.bullishPlay}`, 'Dismiss', {
+                  duration: 2000,
+                });
+              });
+          } else if (this.settings.value === 'openPositions' && !this.longOnly.value) {
+          this.getOrder(this.bearishPlay.value).subscribe((order) => {
             this.buy(order, _.divide(bet.bearishOpen, bet.total));
           },
             (error) => {
@@ -259,10 +277,9 @@ export class MlCardComponent implements OnInit {
     }
   }
 
-  buy(order: SmartOrder, modifier: number) {
-    return this.portfolioService.getQuote(order.holding.symbol)
-      .toPromise()
-      .then((quote) => {
+  getQuote(symbol: string) {
+    return this.portfolioService.getQuote(symbol)
+      .map((quote) => {
         let bid: number = quote.price;
 
         if (_.round(_.divide(quote.askPrice, quote.bidPrice), 3) < 1.005) {
@@ -271,6 +288,34 @@ export class MlCardComponent implements OnInit {
           bid = quote.price;
         }
 
+        return bid;
+      });
+  }
+
+  sellAll(order: SmartOrder) {
+    const resolve = () => {
+      this.snackBar.open(`Sell all ${order.holding.symbol} order sent`, 'Dismiss');
+    };
+
+    const reject = (error) => {
+      this.error = error._body;
+      this.snackBar.open(`Error selling ${order.holding.symbol}`, 'Dismiss');
+    };
+
+    const notFound = (error) => {
+      this.error = error._body;
+      this.snackBar.open(`${order.holding.symbol} position not found`, 'Dismiss');
+    };
+    return this.getQuote(order.holding.symbol)
+      .subscribe((bid) => {
+        order.price = bid;
+        this.daytradeService.closePosition(order, 'limit', resolve, reject, notFound);
+      });
+  }
+
+  buy(order: SmartOrder, modifier: number) {
+    return this.getQuote(order.holding.symbol)
+      .subscribe((bid) => {
         if (this.globalSettingsService.brokerage === Brokerage.Td) {
           this.portfolioService.getTdBalance()
             .subscribe(balance => {

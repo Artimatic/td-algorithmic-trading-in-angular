@@ -1,15 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { CartService } from '../shared/services/cart.service';
 import { SmartOrder } from '../shared/models/smart-order';
-import { ScoreKeeperService, BacktestService, PortfolioService } from '../shared';
-import { Holding } from '../shared/models';
+import { ScoreKeeperService, BacktestService } from '../shared';
 
+import * as moment from 'moment-timezone';
 import * as _ from 'lodash';
 import { MatSnackBar } from '@angular/material';
 import { TodoService } from '../overview/todo-list/todo.service';
 import IntradayStocks from './intraday-backtest-stocks.constant';
-import { OrderRow } from '../shared/models/order-row';
 import { GlobalSettingsService } from '../settings/global-settings.service';
+import { Holding } from '../shared/models';
 
 @Component({
   selector: 'app-intraday-backtest-view',
@@ -18,73 +18,62 @@ import { GlobalSettingsService } from '../settings/global-settings.service';
 })
 export class IntradayBacktestViewComponent implements OnInit {
 
-  backtestData: any;
   progressPct = 0;
   progress = 0;
+  backtestsCtr: number;
 
   constructor(
-    private portfolioService: PortfolioService,
     public cartService: CartService,
     public scoreKeeperService: ScoreKeeperService,
     private backtestService: BacktestService,
     public snackBar: MatSnackBar,
     private todoService: TodoService,
-    private globalSettingsService: GlobalSettingsService
+    public globalSettingsService: GlobalSettingsService
   ) { }
 
   ngOnInit() {
-    this.backtestData = {};
     this.todoService.setIntradayBacktest();
+    this.backtestsCtr = 0;
   }
 
-  getInstrument(symbol: string) {
-    return this.portfolioService.getInstruments(symbol).toPromise();
-  }
+  async import(file, trigger = false) {
+    for (const row of file) {
+      setTimeout(() => {
+        const newHolding: Holding = {
+          instrument: null,
+          symbol: row.symbol,
+          name: null
+        };
 
-  async import(file) {
-    let row: OrderRow;
-    for (row of file) {
-      try {
-        const instrument = await this.getInstrument(row.symbol);
+        const order: SmartOrder = {
+          holding: newHolding,
+          quantity: row.quantity * 1,
+          price: row.price,
+          submitted: false,
+          pending: false,
+          side: row.side,
+          lossThreshold: row.Stop * 1 || null,
+          trailingStop: row.TrailingStop || null,
+          profitTarget: row.Target * 1 || null,
+          useStopLoss: row.StopLoss || null,
+          useTrailingStopLoss: row.TrailingStopLoss || null,
+          useTakeProfit: row.TakeProfit || null,
+          buyCloseSellOpen: row.BuyCloseSellOpen || null,
+          yahooData: row.YahooData || null,
+          sellAtClose: row.SellAtClose || null,
+          orderSize: row.OrderSize * 1 || null,
+        };
+        this.cartService.addToCart(order);
 
-        setTimeout(() => {
-          const instruments = instrument.results[0];
-          const newHolding: Holding = {
-            instrument: instruments.url,
-            symbol: instruments.symbol,
-            name: instruments.name
-          };
+        if (trigger) {
+          setTimeout(() => {
+            this.backtestService.triggerBacktest.next(order.holding.symbol);
+          }, 500);
+        }
 
-          const order: SmartOrder = {
-            holding: newHolding,
-            quantity: row.quantity * 1,
-            price: row.price,
-            submitted: false,
-            pending: false,
-            side: row.side,
-            lossThreshold: row.Stop * 1 || null,
-            trailingStop: row.TrailingStop || null,
-            profitTarget: row.Target * 1 || null,
-            useStopLoss: row.StopLoss || null,
-            useTrailingStopLoss: row.TrailingStopLoss || null,
-            useTakeProfit: row.TakeProfit || null,
-            meanReversion1: row.MeanReversion1 || null,
-            useMfi: row.Mfi || null,
-            spyMomentum: row.SpyMomentum || null,
-            buyCloseSellOpen: row.BuyCloseSellOpen || null,
-            yahooData: row.YahooData || null,
-            sellAtClose: row.SellAtClose || null,
-            orderSize: row.OrderSize * 1 || null,
-          };
-          this.cartService.addToCart(order);
-          this.progress++;
-          this.progressPct = _.ceil((this.progress / file.length) * 100);
-        }, 1000);
-      } catch (err) {
-        this.snackBar.open('Error getting instruments', 'Dismiss', {
-          duration: 2000,
-        });
-      }
+        this.progress++;
+        this.progressPct = _.ceil((this.progress / file.length) * 100);
+      }, 100);
     }
   }
 
@@ -94,18 +83,12 @@ export class IntradayBacktestViewComponent implements OnInit {
     this.triggerBacktest(this.cartService.otherOrders);
   }
 
-  triggerBacktest(orders: SmartOrder[]) {
+  async triggerBacktest(orders: SmartOrder[]) {
     this.globalSettingsService.backtesting = true;
-    _.forEach(orders, (order: SmartOrder, index: number) => {
-      setTimeout(() => {
-        this.requestQuotes(order.holding.symbol)
-          .then((data: any) => {
-            this.backtestData[order.holding.symbol] = data;
-            order.triggeredBacktest = true;
-          });
-        console.log('request quote ', order.holding.symbol, new Date().getMinutes(), ':', new Date().getSeconds());
-      }, index * 180000);
-    });
+    for (const order of orders) {
+      this.backtestService.triggerBacktest.next(order.holding.symbol);
+    }
+    this.globalSettingsService.backtesting = false;
   }
 
   requestQuotes(symbol: string) {
@@ -116,6 +99,53 @@ export class IntradayBacktestViewComponent implements OnInit {
   }
 
   loadDefaults() {
-    this.import(IntradayStocks);
+    this.import(IntradayStocks, true);
+  }
+
+  loadRandoms() {
+    const stocks = this.importRandom();
+    console.log('Loading ', stocks);
+    this.import(stocks, true);
+  }
+
+  importRandom() {
+    const stockList = [];
+    const uniqueCheck = {};
+    for (let i = 0; i < 25; i++) {
+      let rand;
+      do  {
+        rand = Math.floor(Math.random() * IntradayStocks.length);
+      } while (uniqueCheck[rand]);
+      stockList.push(IntradayStocks[rand]);
+      uniqueCheck[rand] = true;
+    }
+    return stockList;
+  }
+
+  calibrate() {
+    const stocks = ['MSFT', 'AAPL', 'FB', 'CRM', 'D'];
+    const startDate = this.globalSettingsService.backtestDate;
+    const futureDate = moment().add(1, 'days').format('YYYY-MM-DD');
+    const quotesPromises = [];
+
+    for (const symbol of stocks) {
+      quotesPromises.push(this.backtestService.getYahooIntraday(symbol).toPromise()
+      .then(quotes => {
+        return this.backtestService.postIntraday(quotes).subscribe();
+      }));
+    }
+
+    Promise.all(quotesPromises).then(() => {
+      this.backtestService.calibrateDaytrade(stocks, futureDate, startDate)
+      .subscribe(result => {
+        console.log('results: ', result);
+      });
+    })
+    .catch(() => {
+      this.backtestService.calibrateDaytrade(stocks, futureDate, startDate)
+      .subscribe(result => {
+        console.log('results: ', result);
+      });
+    });
   }
 }

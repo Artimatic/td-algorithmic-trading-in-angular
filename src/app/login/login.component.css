@@ -1,3 +1,27 @@
 .login-button {
     padding-left: 16px;
 }
+
+.login-container {
+  margin-top: 20%;
+}
+
+.login-input {
+  width: 250px;
+}
+
+.available-accounts {
+  margin: 0 auto;
+  width: 20%;
+  text-align: left;
+  display: flex;
+}
+
+.item-container {
+  display: flex;
+}
+
+.action-icon {
+  display: flex;
+  margin-left: 25%;
+}

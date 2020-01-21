@@ -13,7 +13,8 @@
     "postinstall": "ng build --aot && npm run build-ts",
     "build-ts": "tsc -p ./server/tsconfig.json",
     "watch-ts": "tsc -p ./server/tsconfig.json -w",
-    "tslint": "tslint -c tslint.json -p tsconfig.json"
+    "tslint": "tslint -c tslint.json -p tsconfig.json",
+    "lintfix": "tslint --fix -c tslint.json -p tsconfig.json"
   },
   "private": true,
   "dependencies": {
@@ -43,6 +44,7 @@
     "d3fc-financial-feed": "^3.0.0",
     "errorhandler": "^1.5.0",
     "errors": "^0.3.0",
+    "eslint": "^6.8.0",
     "express": "^4.16.1",
     "feedparser": "^2.2.7",
     "file-saver": "^1.3.3",
@@ -58,6 +60,8 @@
     "morgan": "^1.9.0",
     "ngx-bootstrap": "^4.1.1",
     "path": "^0.12.7",
+    "primeicons": "^2.0.0",
+    "primeng": "^8.1.1",
     "qs": "^6.5.1",
     "request-promise": "^4.2.4",
     "robinhood": "1.1.2",
@@ -66,7 +70,7 @@
     "rxjs-compat": "^6.4.0",
     "serve-favicon": "^2.4.5",
     "string": "^3.3.3",
-    "tslib": "^1.9.0",
+    "tslib": "^1.10.0",
     "tulind": "^0.8.15",
     "xlsx": "^0.14.2",
     "yahoo-finance-data": "^3.2.0",

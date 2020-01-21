@@ -16,25 +16,31 @@
   </div>
   <app-score-board [title]="'Total'" [score]="scoreKeeperService.total"></app-score-board>
   <div *ngFor="let sell of cartService.sellOrders">
-    <app-bb-card [order]="sell" [triggeredBacktest]="sell.triggeredBacktest" [init]="sell.init" [tearDown]="sell.stopped">
+    <app-bb-card [order]="sell"
+                 [init]="sell.init"
+                 [tearDown]="sell.stopped">
     </app-bb-card>
   </div>
   <div *ngFor="let buy of cartService.buyOrders">
-    <app-bb-card [order]="buy" [triggeredBacktest]="buy.triggeredBacktest" [init]="buy.init" [tearDown]="buy.stopped">
+    <app-bb-card [order]="buy"
+                 [init]="buy.init"
+                 [tearDown]="buy.stopped">
     </app-bb-card>
   </div>
   <div *ngFor="let other of cartService.otherOrders">
-    <app-bb-card [order]="other" [triggeredBacktest]="other.triggeredBacktest" [init]="other.init" [tearDown]="other.stopped">
+    <app-bb-card [order]="other"
+                 [init]="other.init"
+                 [tearDown]="other.stopped">
     </app-bb-card>
   </div>
   <hr>
   <h1 matTooltip="Disregards global settings.">Default Orders</h1>
-  <span *ngIf="upro">
-    <app-simple-card [order]="upro">
+  <span *ngIf="spy">
+    <app-simple-card [order]="spy">
     </app-simple-card>
   </span>
-  <span *ngIf="spxu">
-    <app-simple-card [order]="spxu">
+  <span *ngIf="tlt">
+    <app-simple-card [order]="tlt">
     </app-simple-card>
   </span>
   <app-ml-card></app-ml-card>

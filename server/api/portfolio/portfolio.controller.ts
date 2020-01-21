@@ -109,7 +109,7 @@ class PortfolioController extends BaseController {
   }
 
   getQuote(request, response) {
-    PortfolioService.getQuote(request.query.symbol)
+    PortfolioService.getQuote(request.query.symbol, request.query.accountId)
       .then((priceData) => {
         response.status(200).send({
           price: 1 * this.midPrice(priceData[request.query.symbol].askPrice, priceData[request.query.symbol].bidPrice),
@@ -121,47 +121,64 @@ class PortfolioController extends BaseController {
   }
 
   getIntraday(request, response) {
-    PortfolioService.getIntraday(request.query.symbol)
+    PortfolioService.getIntraday(request.query.symbol, request.query.accountId)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
   getDailyQuotes(request, response) {
-    PortfolioService.getDailyQuotes(request.query.symbol, request.query.datetime)
+    PortfolioService.getDailyQuotes(request.query.symbol, request.query.startDate, request.query.endDate, request.query.accountId)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
   tdBuy(request, response) {
     PortfolioService.sendTdBuyOrder(request.body.symbol,
-      request.body.quantity,
-      request.body.price,
-      request.body.type,
-      request.body.extendedHours)
+                                    request.body.quantity,
+                                    request.body.price,
+                                    request.body.type,
+                                    request.body.extendedHours,
+                                    request.body.accountId)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
   tdSell(request, response) {
     PortfolioService.sendTdSellOrder(request.body.symbol,
-      request.body.quantity,
-      request.body.price,
-      request.body.type,
-      request.body.extendedHours)
+                                     request.body.quantity,
+                                     request.body.price,
+                                     request.body.type,
+                                     request.body.extendedHours,
+                                     request.body.accountId)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
   tdPosition(request, response) {
-    PortfolioService.getTdPositions()
+    PortfolioService.getTdPositions(request.query.accountId)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
   tdBalance(request, response) {
-    PortfolioService.getTdBalance()
+    PortfolioService.getTdBalance(request.query.accountId)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+  setCredentials(request, response) {
+    PortfolioService.setCredentials(request.body.accountId,
+                                    request.body.key,
+                                    request.body.refreshToken,
+                                    response);
+  }
+
+  checkForCredentials(request, response) {
+    PortfolioService.isSet(request.body.accountId, response);
+  }
+
+  deleteCredentials(request, response) {
+    PortfolioService.deleteCredentials(request.body.accountId, response);
   }
 }
 

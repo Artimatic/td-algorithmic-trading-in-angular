@@ -7,4 +7,29 @@
       <div [chart]="chart"></div>
     </span>
   </div>
+  <h3 class="first">Results</h3>
+  <p-table [value]="backtestResults">
+      <ng-template pTemplate="header">
+          <tr>
+              <th>Algorithm</th>
+              <th>Invested</th>
+              <th>Last Price</th>
+              <th>Last Volume</th>
+              <th>Recommendation</th>
+              <th>Total Trades</th>
+              <th>Returns</th>
+          </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-result>
+          <tr>
+              <td>{{result.algo}}</td>
+              <td>{{result.invested | currency}}</td>
+              <td>{{result.lastPrice | currency}}</td>
+              <td>{{result.lastVolume | number}}</td>
+              <td>{{result.recommendation}}</td>
+              <td>{{result.totalTrades | number}}</td>
+              <td>{{result.returns | percent}}</td>
+          </tr>
+      </ng-template>
+  </p-table>
 </mat-card>

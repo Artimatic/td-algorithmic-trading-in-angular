@@ -37,12 +37,12 @@ class BacktestController extends BaseController {
               .catch((err) => BaseController.requestErrorHandler(response, err));
             break;
           default:
-          return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+            return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
         }
       } else {
         BacktestService.intradayTest(request.body.ticker, request.body.end, request.body.start)
-        .then((data) => BaseController.requestGetSuccessHandler(response, data))
-        .catch((err) => BaseController.requestErrorHandler(response, err));
+          .then((data) => BaseController.requestGetSuccessHandler(response, data))
+          .catch((err) => BaseController.requestErrorHandler(response, err));
       }
     }
   }
@@ -88,6 +88,8 @@ class BacktestController extends BaseController {
     if (_.isEmpty(request.body)) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     } else {
+      console.log('Received: ', request.body);
+
       BacktestService.getSMA(request.body.real, request.body.period)
         .then((data) => BaseController.requestGetSuccessHandler(response, data))
         .catch((err) => BaseController.requestErrorHandler(response, err));
@@ -138,20 +140,20 @@ class BacktestController extends BaseController {
 
   getHistoricalMatches(request, response) {
     BacktestService.getHistoricalMatches(request.body.symbol, request.body.to, request.body.from)
-    .then((data) => BaseController.requestGetSuccessHandler(response, data))
-    .catch((err) => BaseController.requestErrorHandler(response, err));
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
   getDataStatus(request, response) {
     BacktestService.checkServiceStatus('data')
-    .then((data) => BaseController.requestGetSuccessHandler(response, data))
-    .catch((err) => BaseController.requestErrorHandler(response, err));
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
   getAnalysisStatus(request, response) {
     BacktestService.checkServiceStatus('ml')
-    .then((data) => BaseController.requestGetSuccessHandler(response, data))
-    .catch((err) => BaseController.requestErrorHandler(response, err));
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
   runRNN(request, response) {
@@ -164,8 +166,8 @@ class BacktestController extends BaseController {
 
   getRNNPrediction(request, response) {
     BacktestService.checkRNNStatus(request.body.symbol, request.body.to)
-    .then((data) => { response.json(data); })
-    .catch((err) => BaseController.requestErrorHandler(response, err));
+      .then((data) => { response.json(data); })
+      .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
   activateRNN(request, response) {
@@ -176,6 +178,67 @@ class BacktestController extends BaseController {
     BacktestService.bbandMfiInfo(request.body.symbol, request.body.to, request.body.from)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+  getMaCrossOver(request, response) {
+    BacktestService.getMovingAverageCrossOverInfo(request.body.symbol, request.body.to, request.body.from, request.body.settings)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+  findResistance(request, response) {
+    BacktestService.findResistance(request.body.symbol, request.body.to, request.body.from)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+  getDaytradeIndicators(request, response) {
+    BacktestService.getDaytradeIndicators(request.body.quotes, request.body.period, request.body.stddev,
+      request.body.mfiPeriod, request.body.vwmaPeriod)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+  getDaytradeBacktest(request, response) {
+    if (_.isEmpty(request.body) ||
+      !request.body.symbol ||
+      !request.body.currentDate ||
+      !request.body.startDate ||
+      !request.body.parameters) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    }
+    BacktestService.runDaytradeBacktest(request.body.symbol,
+                                        request.body.currentDate,
+                                        request.body.startDate,
+                                        request.body.parameters, response);
+
+  }
+
+  getDaytrade(request, response) {
+    if (_.isEmpty(request.body) ||
+        !request.body.indicators ||
+        !request.body.parameters) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    }
+    BacktestService.getDaytrade(request.body.price,
+                                request.body.paidPrice,
+                                request.body.indicators,
+                                request.body.parameters, response);
+
+  }
+
+  calibrateDaytrade(request, response) {
+    if (_.isEmpty(request.body) ||
+        !request.body.symbols ||
+        !request.body.currentDate ||
+        !request.body.startDate) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    }
+    BacktestService.calibrateDaytrade(request.body.symbols,
+                                      request.body.currentDate,
+                                      request.body.startDate,
+                                      response);
+
   }
 }
 

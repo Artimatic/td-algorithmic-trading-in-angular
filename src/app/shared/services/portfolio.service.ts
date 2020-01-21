@@ -17,7 +17,7 @@ export class PortfolioService {
   }
 
   getPortfolio(): Observable<Holding[]> {
-    const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.token });
+    const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.getToken() });
     const options = new RequestOptions({ headers: headers });
 
     return this.http.get('/api/portfolio/positions/', options)
@@ -27,7 +27,12 @@ export class PortfolioService {
   }
 
   getTdPortfolio(): Observable<any> {
-    return this.http.get('/api/portfolio/v2/positions/')
+    const options = {
+      params: {
+        accountId: this.authenticationService.selectedTdaAccount.accountId
+      }
+    };
+    return this.http.get('/api/portfolio/v2/positions/', options)
       .map((response: Response) => response.json());
   }
 
@@ -57,7 +62,7 @@ export class PortfolioService {
     if (quantity === 0) {
       throw new Error('Order Quantity is 0');
     }
-    const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.token });
+    const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.getToken() });
     const options = new RequestOptions({ headers: headers });
     const body = {
       'account': this.authenticationService.myAccount.account,
@@ -81,7 +86,7 @@ export class PortfolioService {
     if (quantity === 0) {
       throw new Error('Order Quantity is 0');
     }
-    const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.token });
+    const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.getToken() });
     const options = new RequestOptions({ headers: headers });
     const body = {
       'account': this.authenticationService.myAccount.account,
@@ -110,7 +115,7 @@ export class PortfolioService {
     if (quantity === 0) {
       throw new Error('Order Quantity is 0');
     }
-    const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.token });
+    const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.getToken() });
     const options = new RequestOptions({ headers: headers });
     const body = {
       'account': this.authenticationService.myAccount.account,
@@ -135,14 +140,26 @@ export class PortfolioService {
   }
 
   getQuote(symbol: string): Observable<any> {
-    const options = new RequestOptions();
-    return this.http.get(`/api/portfolio/quote?symbol=${symbol}`, options)
+    const options = {
+      params: {
+        symbol,
+        accountId: this.authenticationService.selectedTdaAccount.accountId
+      }
+    };
+
+    return this.http.get('/api/portfolio/quote', options)
       .map((response: Response) => response.json());
   }
 
   getPrice(symbol: string): Observable<any> {
-    const options = new RequestOptions();
-    return this.http.get(`/api/portfolio/quote?symbol=${symbol}`, options)
+    const options = {
+      params: {
+        symbol,
+        accountId: this.authenticationService.selectedTdaAccount.accountId
+      }
+    };
+
+    return this.http.get('/api/portfolio/quote', options)
       .map((response: Response) => {
         return _.round(response.json().askPrice, 2);
       });
@@ -154,7 +171,8 @@ export class PortfolioService {
       quantity: quantity,
       price: price,
       type: 'LIMIT',
-      extendedHours: extended
+      extendedHours: extended,
+      accountId: this.authenticationService.selectedTdaAccount.accountId
     };
     return this.http.post('/api/portfolio/v2/buy', body);
   }
@@ -165,13 +183,20 @@ export class PortfolioService {
       quantity: quantity,
       price: price,
       type: 'LIMIT',
-      extendedHours: extended
+      extendedHours: extended,
+      accountId: this.authenticationService.selectedTdaAccount.accountId
     };
     return this.http.post('/api/portfolio/v2/sell', body);
   }
 
   getTdBalance(): Observable<any> {
-    return this.http.get('/api/portfolio/balance')
+    const options = {
+      params: {
+        accountId: this.authenticationService.selectedTdaAccount.accountId
+      }
+    };
+
+    return this.http.get('/api/portfolio/balance', options)
       .map((response: Response) => response.json());
   }
 }

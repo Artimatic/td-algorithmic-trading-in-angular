@@ -1,14 +1,6 @@
-<form [formGroup]="form" (keyup.enter)="submit()" novalidate>
-    <mat-form-field>
-        <input matInput formControlName="query" placeholder="Enter ticker symbol"/>
-      </mat-form-field>
-      <mat-form-field>
-        <input matInput formControlName="deviation" placeholder="Deviation" type="number">
-      </mat-form-field>
-      <mat-form-field>
-        <input matInput formControlName="short" placeholder="Short Term" type="number">
-      </mat-form-field>
-      <mat-form-field>
-        <input matInput formControlName="long" placeholder="Long Term" type="number">
-      </mat-form-field>
+<form [formGroup]="form" novalidate>
+  <mat-form-field>
+    <input matInput formControlName="query" placeholder="Enter ticker symbol" />
+  </mat-form-field>
+  <button mat-button (click)="submit()">Submit</button>
 </form>
