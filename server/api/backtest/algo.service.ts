@@ -72,7 +72,18 @@ class AlgoService {
     return counter;
   }
 
+  checkRocCrossover(roc10: number, roc10Previous: number,
+    roc70: number, roc70Previous: number): DaytradeRecommendation {
+    if (roc10Previous >= 0 && roc10 < 0) {
+      return DaytradeRecommendation.Bearish;
+    }
 
+    if (roc70Previous <= 0 && roc70 > 0) {
+      return DaytradeRecommendation.Bullish;
+    }
+
+    return DaytradeRecommendation.Neutral;
+  }
 }
 
 export default new AlgoService();

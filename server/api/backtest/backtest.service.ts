@@ -1201,26 +1201,29 @@ class BacktestService {
       });
   }
 
-  getRoc(quotes, currentQuote) {
-    const quotes10Day = this.getSubArray(quotes.close, 10);
+  getRoc(quotes) {
+    const currentQuote = quotes[quotes.length - 1];
+    const indicators = this.processQuotes(quotes);
+
+    const quotes10Day = this.getSubArray(indicators.reals, 10);
     return this.getRateOfChange(quotes10Day, 10)
       .then((roc10) => {
         const rocLen = roc10[0].length - 1;
         currentQuote.roc10 = _.round(roc10[0][rocLen], 4);
 
-        return this.getRateOfChange(this.getSubArrayShift(quotes.close, 10, -3), 10);
+        return this.getRateOfChange(this.getSubArrayShift(indicators.reals, 10, -3), 10);
       })
       .then((roc10Previous) => {
         const rocLen = roc10Previous[0].length - 1;
         currentQuote.roc10Previous = _.round(roc10Previous[0][rocLen], 4);
 
-        return this.getRateOfChange(this.getSubArray(quotes.close, 70), 70);
+        return this.getRateOfChange(this.getSubArray(indicators.reals, 70), 70);
       })
       .then((roc70) => {
         const rocLen = roc70[0].length - 1;
         currentQuote.roc70 = _.round(roc70[0][rocLen], 4);
 
-        return this.getRateOfChange(this.getSubArrayShift(quotes.close, 70, -3), 70);
+        return this.getRateOfChange(this.getSubArrayShift(indicators.reals, 70, -3), 70);
       })
       .then((roc70Previous) => {
         const rocLen = roc70Previous[0].length - 1;
@@ -1230,20 +1233,36 @@ class BacktestService {
       });
   }
 
+  getDailyRocRecommendation(price: number, indicator: Indicators): DaytradeRecommendation {
+    return AlgoService.checkRocCrossover(indicator.roc10, indicator.roc10Previous,
+      indicator.roc70, indicator.roc70Previous);
+  }
+
   evaluateDailyRoc(symbol, currentDate, startDate) {
     const getIndicatorQuotes = [];
     const minQuotes = 71;
+    const parameters = {
+      lossThreshold: 0.05,
+      profitThreshold: 1,
+      minQuotes: 81
+    };
     return this.getData(symbol, currentDate, startDate)
       .then(quotes => {
-        console.log('quotes: ', quotes.length);
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);
           if (idx > minQuotes) {
             const q = _.slice(quotes, idx - minQuotes, idx);
-            getIndicatorQuotes.push(this.initMAIndicators(q));
+            getIndicatorQuotes.push(this.getRoc(q));
           }
         });
         return Promise.all(getIndicatorQuotes);
+      })
+      .then(indicators => {
+        const testResults = this.backtestIndicators(this.getDaytradeRecommendation,
+          indicators,
+          parameters);
+
+        return testResults;
       });
   }
 

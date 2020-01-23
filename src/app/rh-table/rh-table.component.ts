@@ -64,6 +64,7 @@ export class RhTableComponent implements OnInit, OnChanges {
         { value: 'v2', viewValue: 'Daily - Bollinger Band' },
         { value: 'v5', viewValue: 'Daily - Money Flow Index' },
         { value: 'v1', viewValue: 'Daily - Moving Average Crossover' },
+        { value: 'daily-roc', viewValue: 'Daily - Rate of Change' },
         { value: 'moving_average_resistance', viewValue: 'Daily - Moving Average Resistance' },
         { value: 'v3', viewValue: 'Intraday - MFI' },
         { value: 'v4', viewValue: 'Intraday - Bollinger Band' },
@@ -251,6 +252,27 @@ export class RhTableComponent implements OnInit, OnChanges {
             });
         };
         this.iterateAlgoParams(algoParams, mfiCb);
+
+        break;
+      case 'daily-roc':
+        algo = 'daily-roc';
+        const rocCb = (param) => {
+          this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, algo).subscribe(
+            (testResults: any[]) => {
+              if (testResults.length > 0) {
+                const result = testResults[testResults.length - 1];
+                result.stock = param.ticker;
+                this.addToList(result);
+                this.updateAlgoReport(result);
+              }
+              this.incrementProgress();
+            }, error => {
+              this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
+              this.incrementProgress();
+              console.log(`Error on ${param.ticker} ${algo}`, error);
+            });
+        };
+        this.iterateAlgoParams(algoParams, rocCb);
 
         break;
       case 'moving_average_resistance':
