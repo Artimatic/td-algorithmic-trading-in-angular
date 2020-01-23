@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CartService } from '../shared/services/cart.service';
 import { SmartOrder } from '../shared/models/smart-order';
-import { ScoreKeeperService, ReportingService, DaytradeService, PortfolioService, AuthenticationService } from '../shared';
+import { ScoreKeeperService, ReportingService, DaytradeService, PortfolioService } from '../shared';
 import { MatDialog, MatSnackBar } from '@angular/material';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
@@ -30,6 +30,8 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
 
   sub: Subscription;
 
+  lastCheckedTime: string;
+
   constructor(public cartService: CartService,
     public scoreKeeperService: ScoreKeeperService,
     public dialog: MatDialog,
@@ -38,14 +40,9 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
     public snackBar: MatSnackBar,
     private portfolioService: PortfolioService,
     public globalSettingsService: GlobalSettingsService,
-    private tradeService: TradeService,
-    private authenticationService: AuthenticationService) { }
+    private tradeService: TradeService) { }
 
   ngOnInit() {
-    if (!this.authenticationService.isAuthenticated()) {
-
-    }
-
     this.interval = this.defaultInterval;
 
     this.ordersStarted = 0;
@@ -155,6 +152,9 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
     this.sub = TimerObservable.create(0, this.interval)
       .takeWhile(() => this.alive)
       .subscribe(() => {
+        this.lastCheckedTime = moment().format('hh:mm');
+        console.log('interval check: ', moment(), this.globalSettingsService.startTime, moment().isAfter(moment(this.globalSettingsService.startTime)) &&
+          moment().isBefore(moment(this.globalSettingsService.stopTime)));
         if (this.interval !== this.defaultInterval) {
           this.interval = this.defaultInterval;
         }
