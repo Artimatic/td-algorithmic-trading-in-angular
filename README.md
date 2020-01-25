@@ -35,7 +35,8 @@ export default {
     */
     tdameritrade: {
         consumer_key: 'TD AMERITRADE API CONSUMER KEY', // Necessary for daytrading. Provides realtime quotes
-        refresh_token: 'REFRESH_TOKEN'
+        refresh_token: 'REFRESH_TOKEN',
+        accountId: 'ACCOUNTI_D
     },
     goliathUrl: 'http://localhost:8100/', // Data service local address https://github.com/Artimatic/station-data-service
     armadilloUrl: 'http://localhost:3000/' // Machine Learning service local address https://github.com/Artimatic/robinhood-algorithmic-trading-in-angular
