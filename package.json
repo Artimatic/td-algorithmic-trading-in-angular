@@ -2,6 +2,7 @@
   "name": "robinhood-algorithmic-trading-in-angular",
   "version": "1.0.0",
   "license": "MIT",
+  "main": "server/app.js",
   "scripts": {
     "ng": "ng",
     "start": "npm run build && npm run serve",
