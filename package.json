@@ -7,7 +7,7 @@
     "ng": "ng",
     "start": "npm run serve",
     "build": "ng build --aot && npm run build-ts && npm run tslint",
-    "serve": "node --max-old-space-size=8192 dist/app.js",
+    "serve": "node dist/app.js",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
