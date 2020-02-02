@@ -26,6 +26,7 @@ export class ChartDialogComponent implements OnInit {
     { value: 'bollingerband', viewValue: 'Bollinger Band' },
     { value: 'bollingerbandmfi', viewValue: 'Bollinger Band and MFI' },
     { value: 'macrossover', viewValue: 'Moving Average Crossover' },
+    { value: 'daily-roc', viewValue: 'Rate of Change/MFI Divergence' },
     { value: 'findresistance', viewValue: 'Moving Average Resistance' }
   ];
 

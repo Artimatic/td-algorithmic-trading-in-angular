@@ -5,8 +5,10 @@
 import * as credentials from './client-config';
 import * as _ from 'lodash';
 
-const goliathDataServiceUrl = _.get(credentials, 'default.goliathDataServiceUrl', _.get(credentials, 'goliathDataServiceUrl', null)) || 9000;
-const armidilloMlServiceUrl = _.get(credentials, 'default.goliathDataServiceUrl', _.get(credentials, 'goliathDataServiceUrl', null)) || 9000;
+const goliathDataServiceUrl = _.get(credentials,
+  'default.goliathDataServiceUrl', _.get(credentials, 'goliathDataServiceUrl', null)) || 9000;
+const armidilloMlServiceUrl = _.get(credentials,
+  'default.goliathDataServiceUrl', _.get(credentials, 'goliathDataServiceUrl', null)) || 9000;
 
 export const environment = {
   production: false,

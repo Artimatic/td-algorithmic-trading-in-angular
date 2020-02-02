@@ -268,8 +268,8 @@ export class BbCardComponent implements OnInit, OnChanges {
           this.scoringService.addProfitLoss(this.order.holding.symbol, results.net);
         }
 
-        if (results.indicators) {
-          this.populateChart(results.indicators);
+        if (results.signals) {
+          this.populateChart(results.signals);
         }
         this.isBacktest = false;
       },
@@ -769,7 +769,10 @@ export class BbCardComponent implements OnInit, OnChanges {
     if (daytradeType === 'buy') {
       if (this.buyCount >= this.firstFormGroup.value.quantity) {
         this.stop();
-      } else if ((!this.globalSettingsService.backtesting || !this.isBacktest) && this.scoringService.total < 0 && this.scoringService.total < this.globalSettingsService.maxLoss * -1) {
+      } else if ((!this.globalSettingsService.backtesting ||
+        !this.isBacktest) &&
+        this.scoringService.total < 0 &&
+        this.scoringService.total < this.globalSettingsService.maxLoss * -1) {
         this.warning = 'Global stop loss exceeded. Buying paused.';
       } else if (analysis.recommendation.toLowerCase() === 'buy') {
         const orderQuantity = this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
@@ -817,7 +820,10 @@ export class BbCardComponent implements OnInit, OnChanges {
             this.sendStopLoss(sellOrder);
           }
         }
-      } else if ((!this.globalSettingsService.backtesting || !this.isBacktest) && this.scoringService.total < 0 && this.scoringService.total < this.globalSettingsService.maxLoss * -1) {
+      } else if ((!this.globalSettingsService.backtesting ||
+        !this.isBacktest) &&
+        this.scoringService.total < 0 &&
+        this.scoringService.total < this.globalSettingsService.maxLoss * -1) {
         this.warning = 'Global stop loss exceeded. Buying paused.';
       } else if (analysis.recommendation.toLowerCase() === 'buy') {
         let orderQuantity: number = this.scoringService.determineBetSize(this.order.holding.symbol, this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,

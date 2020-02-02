@@ -112,7 +112,7 @@ export class MlCardComponent implements OnInit {
   }
 
   trainModel() {
-    this.backtestService.runRnn('SPY', moment().subtract({ day: 1 }).format('YYYY-MM-DD'), '1990-01-01').subscribe();
+    this.backtestService.runRnn('SPY', moment().subtract({ day: 1 }).format('YYYY-MM-DD'), moment().subtract({ day: 300 }).format('YYYY-MM-DD')).subscribe();
   }
 
   getTradeDay() {
