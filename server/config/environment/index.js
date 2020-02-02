@@ -1,16 +1,16 @@
 import * as path from 'path';
 import * as _ from 'lodash';
-
-import * as credentials from './credentials';
-
-if (!credentials) {
-    console.log('Credentials are missing. Continuing without credentials.');
+let credentials;
+try {
+  credentials = require('./credentials');
+} catch(error) {
+  console.log('Credentials are missing. Continuing without credentials.');
 }
 
 // All configurations will extend these options
 // ============================================
 
-const defaultPort = process.env.PORT  || _.get(credentials, 'default.port', _.get(credentials, 'port', null)) || 9000;
+const defaultPort = _.get(credentials, 'default.port', _.get(credentials, 'port', null)) || 9000;
 export default {
   env: process.env.NODE_ENV,
 
