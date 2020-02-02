@@ -48,6 +48,10 @@ export class ProductViewComponent implements OnInit {
           this.loadFindResistanceChart(chart);
           break;
         }
+        default: {
+          this.loadChart(chart);
+          break;
+        }
       }
     });
   }
@@ -120,6 +124,29 @@ export class ProductViewComponent implements OnInit {
     const pastDate = moment(data.date).subtract(800, 'days').format('YYYY-MM-DD');
 
     this.algo.getResistanceChart(data.symbol, pastDate, currentDate)
+      .map(result => {
+        this.initBacktestResults(data.symbol, result, result.signals);
+      })
+      .subscribe(
+        response => {
+          this.stock = data.symbol;
+          this.resolving = false;
+        },
+        err => {
+          this.resolving = false;
+          this.snackBar.open(`Error: ${err}`, 'Dismiss', {
+            duration: 20000,
+          });
+        }
+      );
+  }
+
+  loadChart(data: ChartParam) {
+    this.resolving = true;
+    const currentDate = moment(data.date).format('YYYY-MM-DD');
+    const pastDate = moment(data.date).subtract(800, 'days').format('YYYY-MM-DD');
+
+    this.algo.getBacktestEvaluation(data.symbol, pastDate, currentDate, data.algorithm)
       .map(result => {
         this.initBacktestResults(data.symbol, result, result.signals);
       })

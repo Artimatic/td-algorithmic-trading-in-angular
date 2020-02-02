@@ -25,6 +25,25 @@ export interface AlgoGroup {
   algorithm: Algo[];
 }
 
+export interface BacktestResponse extends Stock {
+  stock: string;
+  algo: string;
+  totalTrades: number;
+  total: number;
+  invested: number;
+  returns: number;
+  lastVolume: number;
+  lastPrice: number;
+  recommendation: string;
+  buys: number[];
+  orderHistory: any[];
+  startDate: string;
+  endDate: string;
+  signals: any[];
+  upperResistance: number;
+  lowerResistance: number;
+}
+
 @Component({
   selector: 'app-rh-table',
   templateUrl: './rh-table.component.html',
@@ -64,7 +83,7 @@ export class RhTableComponent implements OnInit, OnChanges {
         { value: 'v2', viewValue: 'Daily - Bollinger Band' },
         { value: 'v5', viewValue: 'Daily - Money Flow Index' },
         { value: 'v1', viewValue: 'Daily - Moving Average Crossover' },
-        { value: 'daily-roc', viewValue: 'Daily - Rate of Change' },
+        { value: 'daily-roc', viewValue: 'Daily - Rate of Change/MFI' },
         { value: 'moving_average_resistance', viewValue: 'Daily - Moving Average Resistance' },
         { value: 'v3', viewValue: 'Intraday - MFI' },
         { value: 'v4', viewValue: 'Intraday - Bollinger Band' },
@@ -258,12 +277,11 @@ export class RhTableComponent implements OnInit, OnChanges {
         algo = 'daily-roc';
         const rocCb = (param) => {
           this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, algo).subscribe(
-            (testResults: any[]) => {
-              if (testResults.length > 0) {
-                const result = testResults[testResults.length - 1];
-                result.stock = param.ticker;
-                this.addToList(result);
-                this.updateAlgoReport(result);
+            (testResults: BacktestResponse) => {
+              if (testResults) {
+                testResults.stock = param.ticker;
+                this.addToList(testResults);
+                this.updateAlgoReport(testResults);
               }
               this.incrementProgress();
             }, error => {
@@ -463,10 +481,10 @@ export class RhTableComponent implements OnInit, OnChanges {
       this.getData(Stocks);
     }, Stocks.length * 10);
 
-    setTimeout(() => {
-      this.selectedAlgo = 'moving_average_resistance';
-      this.getData(Stocks);
-    }, Stocks.length * 50);
+    // setTimeout(() => {
+    //   this.selectedAlgo = 'moving_average_resistance';
+    //   this.getData(Stocks);
+    // }, Stocks.length * 50);
 
     this.progress = 0;
     this.selectedAlgo = currentSelected;

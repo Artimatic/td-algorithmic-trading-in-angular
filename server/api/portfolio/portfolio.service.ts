@@ -301,6 +301,8 @@ class PortfolioService {
     const accountIds = Object.getOwnPropertyNames(this.refreshToken);
     if (accountIds.length > 0) {
       accountId = accountIds[0];
+    } else if (configurations.tdameritrade.accountId) {
+      accountId = configurations.tdameritrade.accountId;
     } else {
       console.log('Missing accountId');
     }
@@ -351,12 +353,24 @@ class PortfolioService {
   }
 
   getTDAccessToken(accountId) {
+    let refreshToken;
+    let key;
+    if (!accountId ||
+      !this.refreshToken[accountId] || !this.tdaKey[accountId]) {
+      accountId = configurations.tdameritrade.accountId;
+      key = configurations.tdameritrade.consumer_key;
+      refreshToken = configurations.tdameritrade.refresh_token;
+    } else {
+      refreshToken = this.refreshToken[accountId];
+      key = this.tdaKey[accountId];
+    }
+
     return request.post({
       uri: tdaUrl + 'oauth2/token',
       form: {
         grant_type: 'refresh_token',
-        refresh_token: this.refreshToken[accountId],
-        client_id: `${this.tdaKey[accountId]}@AMER.OAUTHAP`
+        refresh_token: refreshToken,
+        client_id: `${key}@AMER.OAUTHAP`
       }
     })
       .then(this.processTDData)

@@ -1,5 +1,6 @@
 import * as _ from 'lodash';
 import { DaytradeRecommendation } from './backtest.service';
+import DecisionService from '../mean-reversion/reversion-decision.service';
 
 class AlgoService {
   getLowerBBand(bband): number {
@@ -74,12 +75,30 @@ class AlgoService {
 
   checkRocCrossover(roc10: number, roc10Previous: number,
     roc70: number, roc70Previous: number): DaytradeRecommendation {
-    if (roc10Previous >= 0 && roc10 < 0) {
+    if (roc70Previous > 0 && roc70 < 0) {
+      return DaytradeRecommendation.Bearish;
+    }
+    if (roc70Previous < 0 && roc70 > 0) {
+      return DaytradeRecommendation.Bullish;
+    }
+
+    if (roc10Previous > 0 && roc10 < 0) {
       return DaytradeRecommendation.Bearish;
     }
 
-    if (roc70Previous <= 0 && roc70 > 0) {
+    if (roc10Previous < 0 && roc10 > 0) {
       return DaytradeRecommendation.Bullish;
+    }
+    return DaytradeRecommendation.Neutral;
+  }
+
+  checkMfiTrend(mfiPrevious: number, mfi: number): DaytradeRecommendation {
+    const change = DecisionService.getPercentChange(mfi, mfiPrevious);
+
+    if (change < 0.05) {
+      return DaytradeRecommendation.Bullish;
+    } else if (change > 0.05) {
+      return DaytradeRecommendation.Bearish;
     }
 
     return DaytradeRecommendation.Neutral;
