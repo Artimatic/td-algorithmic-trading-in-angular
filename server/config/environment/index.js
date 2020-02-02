@@ -9,7 +9,8 @@ if (!credentials) {
 
 // All configurations will extend these options
 // ============================================
-const defaultPort = _.get(credentials, 'default.port', _.get(credentials, 'port', null)) || 9000;
+
+const defaultPort = process.env.PORT  || _.get(credentials, 'default.port', _.get(credentials, 'port', null)) || 9000;
 export default {
   env: process.env.NODE_ENV,
 
