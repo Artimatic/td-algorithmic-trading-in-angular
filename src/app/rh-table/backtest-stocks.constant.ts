@@ -258,7 +258,6 @@ const stockList = [
   'TMV',
   'EMR',
   'TBT',
-  'XOP',
   'SBUX',
   'JNJ',
   'PLAY',
