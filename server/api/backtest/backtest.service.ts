@@ -1297,8 +1297,7 @@ class BacktestService {
       mfiTrade: DaytradeRecommendation.Neutral
     };
 
-    const rocCrossoverRecommendation = AlgoService.checkRocCrossover(indicator.roc10, indicator.roc10Previous,
-      indicator.roc70, indicator.roc70Previous);
+    const rocCrossoverRecommendation = AlgoService.checkRocCrossover(indicator.roc10Previous, indicator.roc10, indicator.roc70Previous, indicator.roc70);
 
     const mfiTrendRecommendation = AlgoService.checkMfiTrend(indicator.mfiPrevious, indicator.mfiLeft);
 
@@ -1306,11 +1305,11 @@ class BacktestService {
     recommendations.mfiTrade = mfiTrendRecommendation;
 
     if (recommendations.roc === DaytradeRecommendation.Bullish &&
-      recommendations.mfiTrade === DaytradeRecommendation.Bearish) {
-      recommendations.recommendation = OrderType.Sell;
-    } else if (recommendations.roc === DaytradeRecommendation.Bearish &&
-      recommendations.mfiTrade === DaytradeRecommendation.Bullish) {
+        recommendations.mfiTrade === DaytradeRecommendation.Bullish) {
       recommendations.recommendation = OrderType.Buy;
+    } else if (recommendations.roc === DaytradeRecommendation.Bearish &&
+               recommendations.mfiTrade === DaytradeRecommendation.Bearish) {
+      recommendations.recommendation = OrderType.Sell;
     }
 
     return recommendations;
@@ -1318,10 +1317,10 @@ class BacktestService {
 
   evaluateDailyRocMfiTrend(symbol, currentDate, startDate) {
     const getIndicatorQuotes = [];
-    const minQuotes = 71;
+    const minQuotes = 100;
     const parameters = {
-      lossThreshold: 0.05,
-      profitThreshold: 1,
+      lossThreshold: null,
+      profitThreshold: null,
       minQuotes: 81
     };
     return this.getData(symbol, currentDate, startDate)

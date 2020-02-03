@@ -481,10 +481,10 @@ export class RhTableComponent implements OnInit, OnChanges {
       this.getData(Stocks);
     }, Stocks.length * 10);
 
-    // setTimeout(() => {
-    //   this.selectedAlgo = 'moving_average_resistance';
-    //   this.getData(Stocks);
-    // }, Stocks.length * 50);
+    setTimeout(() => {
+      this.selectedAlgo = 'daily-roc';
+      this.getData(Stocks);
+    }, Stocks.length * 50);
 
     this.progress = 0;
     this.selectedAlgo = currentSelected;

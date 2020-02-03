@@ -73,8 +73,11 @@ class AlgoService {
     return counter;
   }
 
-  checkRocCrossover(roc10: number, roc10Previous: number,
-    roc70: number, roc70Previous: number): DaytradeRecommendation {
+  checkRocCrossover(roc10Previous: number, roc10: number, roc70Previous: number, roc70: number): DaytradeRecommendation {
+    if (roc10Previous > 0 && roc10 < 0) {
+      return DaytradeRecommendation.Bearish;
+    }
+
     if (roc70Previous > 0 && roc70 < 0) {
       return DaytradeRecommendation.Bearish;
     }
@@ -82,22 +85,15 @@ class AlgoService {
       return DaytradeRecommendation.Bullish;
     }
 
-    if (roc10Previous > 0 && roc10 < 0) {
-      return DaytradeRecommendation.Bearish;
-    }
-
-    if (roc10Previous < 0 && roc10 > 0) {
-      return DaytradeRecommendation.Bullish;
-    }
     return DaytradeRecommendation.Neutral;
   }
 
   checkMfiTrend(mfiPrevious: number, mfi: number): DaytradeRecommendation {
     const change = DecisionService.getPercentChange(mfi, mfiPrevious);
 
-    if (change < 0.05) {
+    if (change > 0.03) {
       return DaytradeRecommendation.Bullish;
-    } else if (change > 0.05) {
+    } else if (change < -0.03) {
       return DaytradeRecommendation.Bearish;
     }
 
