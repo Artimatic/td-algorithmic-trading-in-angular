@@ -1051,7 +1051,7 @@ class BacktestService {
       });
   }
 
-  getTrainingData(symbol, endDate, startDate) {
+  getTrainingData(symbol, endDate, startDate, useClosePrice = false) {
     const to = moment(endDate).format('YYYY-MM-DD');
     const from = moment(startDate).format('YYYY-MM-DD');
 
@@ -1065,7 +1065,8 @@ class BacktestService {
         ticker: symbol,
         to,
         from,
-        save: false
+        save: false,
+        useClosePrice
       },
     };
 
