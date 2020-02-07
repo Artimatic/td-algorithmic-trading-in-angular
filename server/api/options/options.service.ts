@@ -1,8 +1,7 @@
 
-import round from 'lodash/round';
+import * as _ from 'lodash';
 import PortfolioService from '../portfolio/portfolio.service';
 import portfolioController from '../portfolio/portfolio.controller';
-import DecisionService from '../mean-reversion/reversion-decision.service';
 
 export interface MonthlyStrategyList {
     month: string;
@@ -72,25 +71,25 @@ export interface ImpliedMove {
 }
 
 class OptionService {
-    calculateImpliedMove(accountId, symbol, strikeCount, optionType): ImpliedMove {
+    calculateImpliedMove(accountId, symbol, strikeCount, optionType) {
         return PortfolioService.getOptionsStraddle(accountId, symbol, strikeCount, optionType)
             .then((straddleOptionsChain: OptionsChain) => {
                 const strategyList = straddleOptionsChain.monthlyStrategyList[0];
                 const goal = straddleOptionsChain.underlying.last;
-                console.log('goal: ', goal);
 
                 const closestStrikeStraddle = strategyList.optionStrategyList.reduce((prev, curr) =>  {
-                    console.log('examinging: ', curr.strategyStrike);
                     return (Math.abs(curr.strategyStrike - goal) < Math.abs(prev.strategyStrike - goal) ? curr : prev);
                   });
 
                 const strategyCost = portfolioController.midPrice(closestStrikeStraddle.strategyAsk, closestStrikeStraddle.strategyBid);
-                const move = round(DecisionService.calculatePercentDifference(strategyCost, goal));
+                const move = _.round(strategyCost / goal, 3);
+                const movePrice = _.round(move * goal, 2);
 
                 return {
                     move,
-                    upperPrice: null,
-                    lowerPrice: null,
+                    upperPrice: goal + movePrice,
+                    lowerPrice: goal - movePrice,
+                    strategyCost,
                     strategy: closestStrikeStraddle
                 };
             });
