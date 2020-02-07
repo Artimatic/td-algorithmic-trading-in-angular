@@ -87,8 +87,8 @@ class OptionService {
 
                 return {
                     move,
-                    upperPrice: goal + movePrice,
-                    lowerPrice: goal - movePrice,
+                    upperPrice: _.round(goal + movePrice, 2),
+                    lowerPrice: _.round(goal - movePrice, 2),
                     strategyCost,
                     strategy: closestStrikeStraddle
                 };
