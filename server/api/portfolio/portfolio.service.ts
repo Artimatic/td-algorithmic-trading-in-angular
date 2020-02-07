@@ -559,6 +559,37 @@ class PortfolioService {
     this.tdaKey[accountId] = null;
     response.status(200).send({});
   }
+
+  getOptionsStraddle(accountId, symbol, strikeCount, optionType = 'S') {
+    if (!accountId) {
+      accountId = configurations.tdameritrade.accountId;
+    }
+
+    const query = `${tdaUrl}marketdata/chains`;
+    const options = {
+      uri: query,
+      qs: {
+        symbol,
+        strikeCount,
+        includeQuotes: true,
+        strategy: 'STRADDLE',
+        interval: 0,
+        range: 'SNK',
+        optionType
+      },
+      headers: {
+        Authorization: `Bearer ${this.access_token[accountId]}`
+      }
+    };
+
+    return this.renewTDAuth(accountId)
+    .then(() => {
+      return request.get(options)
+      .then((data) => {
+        return this.processTDData(data);
+      });
+    });
+  }
 }
 
 export default new PortfolioService();
