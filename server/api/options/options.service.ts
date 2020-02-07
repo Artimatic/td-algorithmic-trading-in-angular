@@ -74,7 +74,7 @@ class OptionService {
     calculateImpliedMove(accountId, symbol, strikeCount, optionType) {
         return PortfolioService.getOptionsStraddle(accountId, symbol, strikeCount, optionType)
             .then((straddleOptionsChain: OptionsChain) => {
-                const strategyList = straddleOptionsChain.monthlyStrategyList[0];
+                const strategyList = straddleOptionsChain.monthlyStrategyList.find(element => element.daysToExp > 10);
                 const goal = straddleOptionsChain.underlying.last;
 
                 const closestStrikeStraddle = strategyList.optionStrategyList.reduce((prev, curr) =>  {
