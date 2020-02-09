@@ -11,10 +11,10 @@ class TrainingService {
     const finalDataSet: TrainingData[] = [];
     let spyDataSet: TrainingData[];
 
-    return BacktestService.getTrainingData('SPY', endDate, startDate, true)
+    return BacktestService.getTrainingData('SPY', endDate, startDate, false)
       .then(spyData => {
         spyDataSet = spyData;
-        return BacktestService.getTrainingData(symbol, endDate, startDate, true);
+        return BacktestService.getTrainingData(symbol, endDate, startDate, false);
       })
       .then((targetData: any[]) => {
         // if (targetData.length === spyDataSet.length) {
