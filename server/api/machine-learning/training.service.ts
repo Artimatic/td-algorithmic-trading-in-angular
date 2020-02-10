@@ -85,6 +85,14 @@ class TrainingService {
 
     return Promise.all(quotesPromises);
   }
+
+  testModel(symbol, endDate, startDate) {
+    return BacktestService.trainV2Model(symbol, endDate, startDate);
+  }
+
+  activateModel(symbol, startDate) {
+    BacktestService.activateV2Model(symbol, startDate);
+  }
 }
 
 export default new TrainingService();

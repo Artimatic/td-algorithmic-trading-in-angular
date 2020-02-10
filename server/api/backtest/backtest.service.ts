@@ -1436,6 +1436,55 @@ class BacktestService {
       response.status(200).send(indicators);
     });
   }
+
+  trainV2Model(symbol, endDate, startDate) {
+    const to = moment(endDate).format('YYYY-MM-DD');
+    const from = moment(startDate).format('YYYY-MM-DD');
+
+    const URI = `${mlServiceUrl}api/test-model?`;
+
+    const options = {
+      method: 'GET',
+      uri: URI,
+      qs: {
+        symbol,
+        to,
+        from
+      }
+    };
+
+    return RequestPromise(options)
+      .catch((error) => {
+        console.log('Error: ', error);
+      });
+  }
+
+  activateV2Model(symbol, startDate) {
+    const today = moment(startDate).format('YYYY-MM-DD');
+    const yesterday = moment(startDate).add(-1, 'days').format('YYYY-MM-DD');
+
+    return this.getTrainingData(symbol, today, yesterday)
+      .then((trainingData) => {
+        const URI = `${mlServiceUrl}api/v2/activate`;
+
+        const options = {
+          method: 'POST',
+          uri: URI,
+          body: {
+            symbol: 'SPY',
+            input: trainingData[trainingData.length - 1].input,
+            round: false,
+            to: today
+          },
+          json: true
+        };
+
+        RequestPromise(options)
+          .catch((error) => {
+            console.log('Error: ', error);
+          });
+      });
+  }
 }
 
 export default new BacktestService();
