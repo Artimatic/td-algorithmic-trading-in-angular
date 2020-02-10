@@ -14,6 +14,12 @@ class MachineLearningController extends BaseController {
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
+
+  getIntradayTrainingData(request, response) {
+    TrainingService.getTrainingDataFromIntraday(request.query.symbol, request.query.accountId)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
 }
 
 export default new MachineLearningController();

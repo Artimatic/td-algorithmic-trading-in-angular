@@ -1,4 +1,5 @@
 import BacktestService from '../backtest/backtest.service';
+import PortfolioService from '../portfolio/portfolio.service';
 
 export interface TrainingData {
   date: string;
@@ -12,6 +13,7 @@ class TrainingService {
     let spyDataSet: TrainingData[];
     let qqqDataSet: TrainingData[];
     let tltDataSet: TrainingData[];
+    let gldDataSet: TrainingData[];
 
     return BacktestService.getTrainingData('SPY', endDate, startDate, false)
       .then(spyData => {
@@ -24,6 +26,10 @@ class TrainingService {
       })
       .then(tltData => {
         tltDataSet = tltData;
+        return BacktestService.getTrainingData('GLD', endDate, startDate, false);
+      })
+      .then(gldData => {
+        gldDataSet = gldData;
         return BacktestService.getTrainingData(symbol, endDate, startDate, false);
       })
       .then((targetData: any[]) => {
@@ -32,10 +38,12 @@ class TrainingService {
             const target = targetData[idx];
             const qqq = qqqDataSet[idx];
             const tlt = tltDataSet[idx];
+            const gld = gldDataSet[idx];
 
             if (spyData.date === target.date &&
                 qqq.date === target.date &&
-                tlt.date === target.date) {
+                tlt.date === target.date &&
+                gld.date === target.date) {
               const dataSetObj = {
                 date: null,
                 input: null,
@@ -48,13 +56,14 @@ class TrainingService {
                 .concat(spyData.input)
                 .concat(qqq.input)
                 .concat(tlt.input)
+                .concat(gld.input)
                 .concat(target.input);
 
               dataSetObj.output = target.output;
 
               finalDataSet.push(dataSetObj);
             } else {
-              console.log(spyData.date, ' does not match ', target.date);
+              console.log(spyData.date, qqq.date, tlt.date, gld.date, ' does not match ', target.date);
             }
           });
         // } else {
@@ -64,6 +73,17 @@ class TrainingService {
         return finalDataSet;
       });
 
+  }
+
+  getTrainingDataFromIntraday(symbol, accountId) {
+    const stocks = [symbol, 'SPY', 'QQQ', 'TLT', 'GLD'];
+    const quotesPromises = [];
+
+    for (const stock of stocks) {
+      quotesPromises.push(PortfolioService.getIntraday(stock, accountId));
+    }
+
+    return Promise.all(quotesPromises);
   }
 }
 

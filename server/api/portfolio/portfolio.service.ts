@@ -246,7 +246,7 @@ class PortfolioService {
   }
 
   getIntraday(symbol, accountId) {
-    if (!this.access_token[accountId]) {
+    if (!accountId || !this.access_token[accountId]) {
       return this.renewTDAuth(accountId)
         .then(() => this.getTDIntraday(symbol, accountId));
     } else {
@@ -259,6 +259,10 @@ class PortfolioService {
   }
 
   getTDIntraday(symbol, accountId) {
+    if (!accountId) {
+      accountId = configurations.tdameritrade.accountId;
+    }
+
     const query = `${tdaUrl}marketdata/${symbol}/pricehistory`;
     const options = {
       uri: query,
