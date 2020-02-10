@@ -45,13 +45,13 @@
         </a>
       </mat-nav-list>
       <mat-nav-list class="mat-chip-list-stacked" role="listitem">
-        <h3>Status:</h3>
+        <h3>Online Status:</h3>
         <mat-chip-list multiple>
           <mat-chip color="primary" [selected]="dataStatus" (click)="checkStatus()" matTooltip="Station Data Service">
             Data Service
           </mat-chip>
           <mat-chip color="primary" [selected]="mlStatus" (click)="checkStatus()" matTooltip="Station Analysis Service">
-            Analysis Service
+            Machine Learning Service
           </mat-chip>
         </mat-chip-list>
       </mat-nav-list>

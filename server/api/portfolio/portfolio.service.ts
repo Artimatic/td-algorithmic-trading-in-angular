@@ -287,6 +287,37 @@ class PortfolioService {
       });
   }
 
+  getIntradayV2(symbol) {
+    return this.renewTDAuth(null)
+      .then(() => this.getTDIntradayV2(symbol));
+  }
+
+  getTDIntradayV2(symbol) {
+    const accountId = configurations.tdameritrade.accountId;
+
+    const query = `${tdaUrl}marketdata/${symbol}/pricehistory`;
+    const options = {
+      uri: query,
+      qs: {
+        apikey: this.tdaKey[accountId],
+        periodType: 'day',
+        period: 2,
+        frequencyType: 'minute',
+        frequency: 1,
+        endDate: Date.now(),
+        needExtendedHoursData: false
+      },
+      headers: {
+        Authorization: `Bearer ${this.access_token[accountId]}`
+      }
+    };
+
+    return request.get(options)
+      .then((data) => {
+        return this.processTDData(data);
+      });
+  }
+
   getDailyQuotes(symbol, startDate, endDate, accountId) {
     if (!this.access_token[accountId]) {
       return this.renewTDAuth(accountId)

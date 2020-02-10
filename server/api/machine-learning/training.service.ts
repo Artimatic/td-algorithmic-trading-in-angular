@@ -75,12 +75,12 @@ class TrainingService {
 
   }
 
-  getTrainingDataFromIntraday(symbol, accountId) {
+  getTrainingDataFromIntraday(symbol) {
     const stocks = [symbol, 'SPY', 'QQQ', 'TLT', 'GLD'];
     const quotesPromises = [];
 
     for (const stock of stocks) {
-      quotesPromises.push(PortfolioService.getIntraday(stock, accountId));
+      quotesPromises.push(PortfolioService.getIntradayV2(stock));
     }
 
     return Promise.all(quotesPromises);

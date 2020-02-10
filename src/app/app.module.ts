@@ -56,6 +56,7 @@ import { ChartDialogComponent } from './chart-dialog/chart-dialog.component';
 import { HeaderComponent } from './header/header.component';
 import { SharedModule } from './shared/shared.module';
 import { RedirectLoginDialogComponent } from './redirect-login-dialog/redirect-login-dialog.component';
+import { NeuroCardComponent } from './neuro-card/neuro-card.component';
 
 @NgModule({
   declarations: [
@@ -87,6 +88,7 @@ import { RedirectLoginDialogComponent } from './redirect-login-dialog/redirect-l
     ChartDialogComponent,
     HeaderComponent,
     RedirectLoginDialogComponent,
+    NeuroCardComponent,
   ],
   entryComponents: [
     LoginDialogComponent,

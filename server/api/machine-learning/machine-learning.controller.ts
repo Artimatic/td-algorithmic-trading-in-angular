@@ -16,7 +16,7 @@ class MachineLearningController extends BaseController {
   }
 
   getIntradayTrainingData(request, response) {
-    TrainingService.getTrainingDataFromIntraday(request.query.symbol, request.query.accountId)
+    TrainingService.getTrainingDataFromIntraday(request.query.symbol)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
@@ -28,7 +28,7 @@ class MachineLearningController extends BaseController {
   }
 
   activateV2Model(request, response) {
-    TrainingService.activateModel(request.query.symbol, request.query.startDate)
+    TrainingService.activateModel(request.query.symbol, request.query.startDate);
     response.status(200).send({});
   }
 }
