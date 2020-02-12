@@ -1,5 +1,7 @@
+import * as moment from 'moment';
 import BacktestService from '../backtest/backtest.service';
 import PortfolioService from '../portfolio/portfolio.service';
+import QuoteService from '../quote/quote.service';
 
 export interface TrainingData {
   date: string;
@@ -34,38 +36,38 @@ class TrainingService {
       })
       .then((targetData: any[]) => {
         // if (targetData.length === spyDataSet.length) {
-          spyDataSet.forEach((spyData, idx) => {
-            const target = targetData[idx];
-            const qqq = qqqDataSet[idx];
-            const tlt = tltDataSet[idx];
-            const gld = gldDataSet[idx];
+        spyDataSet.forEach((spyData, idx) => {
+          const target = targetData[idx];
+          const qqq = qqqDataSet[idx];
+          const tlt = tltDataSet[idx];
+          const gld = gldDataSet[idx];
 
-            if (spyData.date === target.date &&
-                qqq.date === target.date &&
-                tlt.date === target.date &&
-                gld.date === target.date) {
-              const dataSetObj = {
-                date: null,
-                input: null,
-                output: null
-              };
-              const day = new Date(target.date).getUTCDay();
+          if (spyData.date === target.date &&
+            qqq.date === target.date &&
+            tlt.date === target.date &&
+            gld.date === target.date) {
+            const dataSetObj = {
+              date: null,
+              input: null,
+              output: null
+            };
+            const day = new Date(target.date).getUTCDay();
 
-              dataSetObj.date = target.date;
-              dataSetObj.input = [day]
-                .concat(spyData.input)
-                .concat(qqq.input)
-                .concat(tlt.input)
-                .concat(gld.input)
-                .concat(target.input);
+            dataSetObj.date = target.date;
+            dataSetObj.input = [day]
+              .concat(spyData.input.slice(1))
+              .concat(qqq.input.slice(1))
+              .concat(tlt.input.slice(1))
+              .concat(gld.input.slice(1))
+              .concat(target.input.slice(1));
 
-              dataSetObj.output = target.output;
+            dataSetObj.output = target.output;
 
-              finalDataSet.push(dataSetObj);
-            } else {
-              console.log(spyData.date, qqq.date, tlt.date, gld.date, ' does not match ', target.date);
-            }
-          });
+            finalDataSet.push(dataSetObj);
+          } else {
+            console.log(spyData.date, qqq.date, tlt.date, gld.date, ' does not match ', target.date);
+          }
+        });
         // } else {
         //   throw Error('SPY data history size does not match the target history size.');
         // }
@@ -77,13 +79,69 @@ class TrainingService {
 
   getTrainingDataFromIntraday(symbol) {
     const stocks = [symbol, 'SPY', 'QQQ', 'TLT', 'GLD'];
+    const intradayQuotesPromises = [];
     const quotesPromises = [];
+    const endDate = moment().subtract({ day: 1 });
+    const startDate = moment().subtract({ day: 2 });
 
     for (const stock of stocks) {
-      quotesPromises.push(PortfolioService.getIntradayV2(stock));
+      intradayQuotesPromises.push(PortfolioService.getIntradayV2(stock));
     }
 
-    return Promise.all(quotesPromises);
+    for (const stock of stocks) {
+      quotesPromises.push(QuoteService.getDailyQuotes(stock, endDate, startDate));
+    }
+
+    return Promise.all(quotesPromises)
+      .then(quotes => {
+        return Promise.all(intradayQuotesPromises)
+          .then(intradayQuotes => {
+            let inputs = [];
+            quotes.forEach((val, idx) => {
+              const quote = val[val.length - 1];
+              const intraday = intradayQuotes[idx].candles;
+              inputs = inputs.concat(this.buildTrainingData(quote, intraday));
+            });
+
+            return inputs;
+          });
+      });
+  }
+
+  buildTrainingData(quote, intradayQuotes) {
+    const currentQuote = this.processIntraday(intradayQuotes);
+    console.log('intraday quote: ', currentQuote);
+    const input = [
+      quote.open > currentQuote.open ? 0 : 1,
+      quote.close > currentQuote.close ? 0 : 1,
+      quote.high > currentQuote.high ? 0 : 1,
+      quote.low > currentQuote.low ? 0 : 1,
+    ];
+    console.log('processed: ', input);
+
+    return input;
+  }
+
+  processIntraday(intradayQuotes) {
+    const accumulator = {
+      volume: 0,
+      open: null,
+      close: intradayQuotes[intradayQuotes.length - 1].close,
+      high: null,
+      low: null,
+    };
+
+    return intradayQuotes.reduce((acc, curr) => {
+      if (!acc.open) {
+        acc.open = curr.open;
+        acc.high = curr.high;
+        acc.low = curr.low;
+      } else {
+        acc.high = curr.high > acc.high ? curr.high : acc.high;
+        acc.low = curr.low < acc.low ? curr.low : acc.low;
+      }
+      return acc;
+    }, accumulator);
   }
 
   testModel(symbol, endDate, startDate) {

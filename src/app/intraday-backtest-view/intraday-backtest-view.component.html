@@ -25,6 +25,27 @@
     </mat-card>
     <h3 mat-subheader>Order List</h3>
     <div class="card-container">
+      <p-table [columns]="cols" [value]="stocks">
+        <ng-template pTemplate="caption">
+          <button pButton type="button" icon="pi pi-sort-down" iconPos="left"(click)="sort()">Sort Results</button>
+        </ng-template>
+        <ng-template pTemplate="header">
+          <tr>
+            <th>symbol</th>
+            <th>
+              result
+            </th>
+            <th>price</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-stock>
+          <tr>
+            <td>{{stock.symbol}}</td>
+            <td>{{scoreKeeperService.profitLossHash[stock.symbol]}}</td>
+            <td>{{stock.price | currency}}</td>
+          </tr>
+        </ng-template>
+      </p-table>
       <app-score-board [title]="'Total'" [score]="scoreKeeperService.total"></app-score-board>
       <mat-grid-list cols="5" rowHeight="150px">
         <mat-grid-tile>
@@ -53,21 +74,15 @@
       </div>
       <app-score-board [title]="'Total'" [score]="scoreKeeperService.total"></app-score-board>
       <div *ngFor="let sell of cartService.sellOrders">
-        <app-bb-card [order]="sell"
-                     [tearDown]="sell.stopped"
-                     [init]="sell.init">
+        <app-bb-card [order]="sell" [tearDown]="sell.stopped" [init]="sell.init">
         </app-bb-card>
       </div>
       <div *ngFor="let buy of cartService.buyOrders">
-        <app-bb-card [order]="buy"
-                     [tearDown]="buy.stopped"
-                     [init]="buy.init">
+        <app-bb-card [order]="buy" [tearDown]="buy.stopped" [init]="buy.init">
         </app-bb-card>
       </div>
       <div *ngFor="let other of cartService.otherOrders">
-        <app-bb-card [order]="other"
-                     [tearDown]="other.stopped"
-                     [init]="other.init">
+        <app-bb-card [order]="other" [tearDown]="other.stopped" [init]="other.init">
         </app-bb-card>
       </div>
     </div>

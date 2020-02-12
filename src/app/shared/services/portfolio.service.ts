@@ -152,13 +152,15 @@ export class PortfolioService {
   }
 
   getPrice(symbol: string): Observable<any> {
-    const options = {
+    const options: any = {
       params: {
-        symbol,
-        accountId: this.authenticationService.selectedTdaAccount.accountId
+        symbol
       }
     };
 
+    if (this.authenticationService.selectedTdaAccount) {
+      options.params.accountId = this.authenticationService.selectedTdaAccount.accountId;
+    }
     return this.http.get('/api/portfolio/quote', options)
       .map((response: Response) => {
         return _.round(response.json().askPrice, 2);

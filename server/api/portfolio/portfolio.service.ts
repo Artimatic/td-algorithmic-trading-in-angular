@@ -305,7 +305,7 @@ class PortfolioService {
         frequencyType: 'minute',
         frequency: 1,
         endDate: Date.now(),
-        needExtendedHoursData: false
+        needExtendedHoursData: true
       },
       headers: {
         Authorization: `Bearer ${this.access_token[accountId]}`
@@ -418,7 +418,7 @@ class PortfolioService {
   renewExpiredTDAccessTokenAndGetQuote(symbol, accountId) {
     return this.getTDAccessToken(accountId)
       .then((token) => {
-        return this.getTDMarketData(symbol, accountId)
+        return this.getTDMarketData(symbol, accountId || configurations.tdameritrade.accountId)
           .then(this.processTDData);
       });
   }
