@@ -125,21 +125,11 @@ export class NeuroCardComponent implements OnInit {
           if (momentInst.isAfter(this.startTime) &&
             momentInst.isBefore(this.stopTime) || this.testing.value) {
             this.alive = false;
-            this.backtestService.activateRnn(this.stockFormControl.value, this.getTradeDay())
-              .subscribe(() => {
-                this.pendingResults = true;
-                this.checkReportSub = TimerObservable.create(0, this.reportWaitInterval)
-                  .takeWhile(() => this.pendingResults && this.live)
-                  .subscribe(() => {
-                    this.backtestService.getRnn(this.stockFormControl.value, this.getTradeDay())
-                      .subscribe((data: any) => {
-                        console.log('rnn data: ', this.getTradeDay(), data);
-                        if (data) {
-                          this.makeDecision(data);
-                          this.pendingResults = false;
-                        }
-                      }, error => { });
-                  });
+            this.backtestService.activateLstmV2(this.stockFormControl.value, this.getTradeDay())
+              .subscribe((data) => {
+                if (data) {
+                  this.makeDecision(data);
+                }
               }, error => {
                 console.log('error: ', error);
                 this.setWarning(error);
@@ -211,14 +201,16 @@ export class NeuroCardComponent implements OnInit {
 
 
   makeDecision(predictionResults) {
-    this.getOrder(this.stockFormControl.value).subscribe((order) => {
-      this.sellAll(order);
-    },
-      (error) => {
-        this.snackBar.open(`Error getting instruments for ${this.stockFormControl.value}`, 'Dismiss', {
-          duration: 2000,
+    if (predictionResults.nextOutput < 0.4) {
+      this.getOrder(this.stockFormControl.value).subscribe((order) => {
+        this.sellAll(order);
+      },
+        (error) => {
+          this.snackBar.open(`Error getting instruments for ${this.stockFormControl.value}`, 'Dismiss', {
+            duration: 2000,
+          });
         });
-      });
+    }
   }
 
   setWarning(message) {

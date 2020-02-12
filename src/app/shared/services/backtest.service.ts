@@ -270,13 +270,13 @@ export class BacktestService {
     return this.http.post(`${BASE_URL}api/backtest/rnn-activate`, data, {});
   }
 
-  activateLstmV2(symbol: string, to: string = null): Observable<any> {
+  activateLstmV2(symbol: string, startDate: string = null): Observable<any> {
     const data = {
       symbol,
-      to
+      startDate
     };
 
-    return this.http.post(`${BASE_URL}api/backtest/rnn-activate`, data, {});
+    return this.http.post(`${BASE_URL}api/machine-learning/activate`, data, {});
   }
 
   getDaytradeIndicators(quotes: any, period: number, stddev: number, mfiPeriod: number,
