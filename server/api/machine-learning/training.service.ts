@@ -148,8 +148,12 @@ class TrainingService {
     return BacktestService.trainV2Model(symbol, endDate, startDate);
   }
 
-  activateModel(symbol, startDate) {
-    BacktestService.activateV2Model(symbol, startDate);
+  async activateModel(symbol, startDate) {
+    const today = moment(startDate).format('YYYY-MM-DD');
+    const yesterday = moment(startDate).add(-1, 'days').format('YYYY-MM-DD');
+
+    const trainingData = await this.train(symbol, yesterday, today);
+    return BacktestService.activateV2Model(symbol, startDate, trainingData);
   }
 }
 

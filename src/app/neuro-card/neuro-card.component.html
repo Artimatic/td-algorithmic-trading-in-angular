@@ -1,3 +1,61 @@
-<p>
-  neuro-card works!
-</p>
+<mat-card>
+  <mat-card-header>
+    <div *ngIf="live">
+      <mat-chip color="warn" selected="true">LIVE</mat-chip>
+    </div>
+    <div *ngIf="!live">
+      <button mat-raised-button disabled>STALLED</button>
+    </div>
+    <div class="banner" *ngIf="error">
+      <div class="banner-content">
+        ERROR: {{error}}
+      </div>
+    </div>
+    <div class="banner-warning" *ngIf="warning">
+      <div class="banner-content-warning">
+        WARNING: {{warning}}
+      </div>
+    </div>
+  </mat-card-header>
+  <mat-card-content>
+    <h3>LSTM</h3>
+    <p>
+      Close position before close on bearish signal.
+    </p>
+    <form>
+      <mat-grid-list cols="8" rowHeight="25px">
+        <mat-grid-tile [colspan]="2" [rowspan]="1">
+          <mat-form-field>
+            <mat-label>Stock</mat-label>
+            <input matInput [formControl]="stockFormControl" [errorStateMatcher]="matcher"
+              placeholder="Ex. MSFT">
+            <mat-error *ngIf="stockFormControl.hasError('stock') && !stockFormControl.hasError('required')">
+              Please enter a valid symbol
+            </mat-error>
+            <mat-error *ngIf="stockFormControl.hasError('required')">
+              Stock is <strong>required</strong>
+            </mat-error>
+          </mat-form-field>
+        </mat-grid-tile>
+        <mat-grid-tile [colspan]="2" [rowspan]="1">
+          <mat-form-field>
+            <mat-label>Settings</mat-label>
+            <mat-select [formControl]="settings">
+              <mat-option value="closePositions">Close Positions</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </mat-grid-tile>
+        <mat-grid-tile [colspan]="2" [rowspan]="2">
+          <mat-slide-toggle [formControl]="testing" (change)="setTest()">
+            Test Mode
+          </mat-slide-toggle>
+        </mat-grid-tile>
+      </mat-grid-list>
+    </form>
+  </mat-card-content>
+  <mat-card-actions>
+    <button mat-raised-button color="warn" (click)="stop()">STOP</button>
+    <button mat-button color="warn" (click)="goLive()">GO LIVE</button>
+    <button mat-button color="primary" (click)="trainModel()">Train Model</button>
+  </mat-card-actions>
+</mat-card>

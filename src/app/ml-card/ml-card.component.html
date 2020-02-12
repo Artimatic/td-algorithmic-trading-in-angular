@@ -104,23 +104,6 @@
               <mat-card-title>RNN Algo</mat-card-title>
             </mat-card-header>
           </div>
-          <div fxFlex="95%">
-            <div class="order-log">
-              <mat-grid-list cols="3" rowHeight="150px">
-                <mat-grid-tile *ngFor="let tile of tiles" [colspan]="tile.cols" [rowspan]="tile.rows">
-                  <table>
-                    <tr *ngFor="let order of tile.orders">
-                      <!-- <td>{{order.signalTime}}</td>
-                      <td>{{order.action}}</td>
-                      <td>{{order.quantity}}@</td>
-                      <td>${{order.price}}</td>
-                      <td> on {{order.timeSubmitted}}</td> -->
-                    </tr>
-                  </table>
-                </mat-grid-tile>
-              </mat-grid-list>
-            </div>
-          </div>
         </div>
         <mat-card-actions>
           <button mat-raised-button color="warn" (click)="resetStepper(stepper)">STOP</button>

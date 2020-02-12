@@ -270,6 +270,15 @@ export class BacktestService {
     return this.http.post(`${BASE_URL}api/backtest/rnn-activate`, data, {});
   }
 
+  activateLstmV2(symbol: string, to: string = null): Observable<any> {
+    const data = {
+      symbol,
+      to
+    };
+
+    return this.http.post(`${BASE_URL}api/backtest/rnn-activate`, data, {});
+  }
+
   getDaytradeIndicators(quotes: any, period: number, stddev: number, mfiPeriod: number,
     vwmaPeriod: number): Observable<any> {
       const data = {

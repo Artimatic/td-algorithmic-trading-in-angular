@@ -27,9 +27,9 @@ class MachineLearningController extends BaseController {
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
-  activateV2Model(request, response) {
-    TrainingService.activateModel(request.query.symbol, request.query.startDate);
-    response.status(200).send({});
+  async activateV2Model(request, response) {
+    const result = await TrainingService.activateModel(request.query.symbol, request.query.startDate);
+    response.status(200).send(result);
   }
 }
 

@@ -1459,30 +1459,26 @@ class BacktestService {
       });
   }
 
-  activateV2Model(symbol, startDate) {
+  activateV2Model(symbol, startDate, trainingData) {
     const today = moment(startDate).format('YYYY-MM-DD');
-    const yesterday = moment(startDate).add(-1, 'days').format('YYYY-MM-DD');
 
-    return this.getTrainingData(symbol, today, yesterday)
-      .then((trainingData) => {
-        const URI = `${mlServiceUrl}api/v2/activate`;
+    const URI = `${mlServiceUrl}api/v2/activate`;
 
-        const options = {
-          method: 'POST',
-          uri: URI,
-          body: {
-            symbol: 'SPY',
-            input: trainingData[trainingData.length - 1].input,
-            round: false,
-            to: today
-          },
-          json: true
-        };
+    const options = {
+      method: 'POST',
+      uri: URI,
+      body: {
+        symbol,
+        input: trainingData[trainingData.length - 1].input,
+        round: false,
+        to: today
+      },
+      json: true
+    };
 
-        RequestPromise(options)
-          .catch((error) => {
-            console.log('Error: ', error);
-          });
+    return RequestPromise(options)
+      .catch((error) => {
+        console.log('Error: ', error);
       });
   }
 }
