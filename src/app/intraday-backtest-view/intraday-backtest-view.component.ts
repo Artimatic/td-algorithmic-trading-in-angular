@@ -55,8 +55,12 @@ export class IntradayBacktestViewComponent implements OnInit {
   }
 
   sort() {
+    this.stocks.forEach((stock, idx) => {
+      this.stocks[idx].result = this.scoreKeeperService.profitLossHash[stock.symbol];
+    });
+
     this.stocks = this.stocks.sort((a, b) => {
-      return a.price - b.price;
+      return b.result - a.result;
     });
   }
 

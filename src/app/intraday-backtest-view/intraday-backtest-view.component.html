@@ -27,7 +27,7 @@
     <div class="card-container">
       <p-table [columns]="cols" [value]="stocks">
         <ng-template pTemplate="caption">
-          <button pButton type="button" icon="pi pi-sort-down" iconPos="left"(click)="sort()">Sort Results</button>
+          <button pButton type="button" (click)="sort()">Sort Results</button>
         </ng-template>
         <ng-template pTemplate="header">
           <tr>
