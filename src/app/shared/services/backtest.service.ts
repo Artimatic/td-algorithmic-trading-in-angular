@@ -270,13 +270,30 @@ export class BacktestService {
     return this.http.post(`${BASE_URL}api/backtest/rnn-activate`, data, {});
   }
 
+  runLstmV2(symbol: string, endDate: string = null, startDate: string = null): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const options = {
+      headers: headers,
+      params: {
+        symbol,
+        startDate,
+        endDate
+      }
+    };
+    return this.http.get(`${BASE_URL}api/machine-learning/test-model`, options);
+  }
+
   activateLstmV2(symbol: string, startDate: string = null): Observable<any> {
-    const data = {
-      symbol,
-      startDate
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const options = {
+      headers: headers,
+      params: {
+        symbol,
+        startDate
+      }
     };
 
-    return this.http.post(`${BASE_URL}api/machine-learning/activate`, data, {});
+    return this.http.get(`${BASE_URL}api/machine-learning/activate`, options);
   }
 
   getDaytradeIndicators(quotes: any, period: number, stddev: number, mfiPeriod: number,

@@ -41,6 +41,7 @@ export class NeuroCardComponent implements OnInit {
 
   stockFormControl: FormControl;
   testing = new FormControl();
+  settings: FormControl;
 
   sub: Subscription;
   checkReportSub: Subscription;
@@ -68,6 +69,10 @@ export class NeuroCardComponent implements OnInit {
       Validators.required
     ]);
 
+    this.settings = new FormControl('closePositions', [
+      Validators.required
+    ]);
+
     this.setup();
   }
 
@@ -88,7 +93,7 @@ export class NeuroCardComponent implements OnInit {
   trainModel() {
     const cb = () => {
       this.backtestService
-        .runRnn(this.stockFormControl.value,
+        .runLstmV2(this.stockFormControl.value,
           moment().subtract({ day: 1 }).format('YYYY-MM-DD'),
           moment().subtract({ day: 300 }).format('YYYY-MM-DD')
         ).subscribe();

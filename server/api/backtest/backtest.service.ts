@@ -1440,6 +1440,7 @@ class BacktestService {
   trainV2Model(symbol, endDate, startDate) {
     const to = moment(endDate).format('YYYY-MM-DD');
     const from = moment(startDate).format('YYYY-MM-DD');
+    console.log('from - to: ', from, to);
 
     const URI = `${mlServiceUrl}api/test-model?`;
 
