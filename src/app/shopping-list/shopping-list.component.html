@@ -1,4 +1,14 @@
 <div class="shopping-list">
+  <mat-accordion>
+    <mat-expansion-panel>
+        <mat-expansion-panel-header>
+            <mat-panel-title>
+                Import Orders
+            </mat-panel-title>
+        </mat-expansion-panel-header>
+        <app-xls-import (onImport)="import($event)"></app-xls-import>
+    </mat-expansion-panel>
+  </mat-accordion>
   <h1 mat-subheader>Shopping List</h1>
   <p>Import and execute your trading algorithms</p>
   <app-setting-controls></app-setting-controls>

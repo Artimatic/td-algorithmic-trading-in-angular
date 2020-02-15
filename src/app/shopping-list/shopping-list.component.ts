@@ -12,6 +12,7 @@ import * as _ from 'lodash';
 import { Holding } from '../shared/models';
 import { GlobalSettingsService } from '../settings/global-settings.service';
 import { TradeService } from '../shared/services/trade.service';
+import { OrderRow } from '../shared/models/order-row';
 
 @Component({
   selector: 'app-shopping-list',
@@ -226,4 +227,43 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
     this.cartService.addToCart(this.spy);
     this.cartService.addToCart(this.tlt);
   }
+
+  import(file) {
+    file.forEach((row: OrderRow) => {
+      this.portfolioService.getInstruments(row.symbol).subscribe((response) => {
+        const instruments = response.results[0];
+        const newHolding: Holding = {
+          instrument: instruments.url,
+          symbol: instruments.symbol,
+          name: instruments.name
+        };
+
+        const order: SmartOrder = {
+          holding: newHolding,
+          quantity: row.quantity * 1,
+          price: row.price,
+          submitted: false,
+          pending: false,
+          side: row.side,
+          lossThreshold: row.Stop * 1 || null,
+          profitTarget: row.Target * 1 || null,
+          trailingStop: row.TrailingStop || null,
+          useStopLoss: row.StopLoss || null,
+          useTrailingStopLoss: row.TrailingStopLoss || null,
+          useTakeProfit: row.TakeProfit || null,
+          buyCloseSellOpen: row.BuyCloseSellOpen || null,
+          sellAtClose: row.SellAtClose || null,
+          yahooData: row.YahooData || null,
+          orderSize: row.OrderSize * 1 || null
+        };
+        this.cartService.addToCart(order);
+      },
+        (error) => {
+          this.snackBar.open('Error getting instruments', 'Dismiss', {
+            duration: 2000,
+          });
+        });
+    });
+  }
+
 }
