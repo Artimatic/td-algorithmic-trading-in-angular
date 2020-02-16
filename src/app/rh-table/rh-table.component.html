@@ -12,6 +12,9 @@
           <button mat-button (click)="openChartDialog(selectedStock, endDate)" [disabled]="!selectedStock">
             Chart
           </button>
+          <button mat-button (click)="getImpliedMovement(selectedStock)" [disabled]="!selectedStock">
+            Get Implied Movement
+          </button>
           <button mat-button color="primary" (click)=runDefaultBacktest() *ngIf="progress>=totalStocks">Run Default
             Backtest
           </button>
@@ -71,6 +74,9 @@
         </span>
         <span *ngSwitchCase="'lastPrice'">
           {{element.lastVolume | currency}}
+        </span>
+        <span *ngSwitchCase="'impliedMovement'">
+          {{element.lastVolume | percent}}
         </span>
         <span *ngSwitchDefault>
           {{element[col.field]}}

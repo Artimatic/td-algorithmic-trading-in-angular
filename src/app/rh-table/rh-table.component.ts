@@ -14,6 +14,7 @@ import Stocks from './backtest-stocks.constant';
 import { ChartDialogComponent } from '../chart-dialog/chart-dialog.component';
 import { ChartParam } from '../shared/services/backtest.service';
 import { GlobalSettingsService } from '../settings/global-settings.service';
+import { OptionsDataService } from '../shared/options-data.service';
 export interface Algo {
   value: string;
   viewValue: string;
@@ -101,7 +102,8 @@ export class RhTableComponent implements OnInit, OnChanges {
     private algo: BacktestService,
     public dialog: MatDialog,
     private portfolioService: PortfolioService,
-    private globalSettingsService: GlobalSettingsService) { }
+    private globalSettingsService: GlobalSettingsService,
+    private optionsDataService: OptionsDataService) { }
 
   ngOnInit() {
     this.recommendations = [
@@ -122,7 +124,8 @@ export class RhTableComponent implements OnInit, OnChanges {
       { field: 'sellSignals', header: 'Sell' },
       { field: 'strongsellSignals', header: 'Strong Sell' },
       { field: 'upperResistance', header: 'Upper Resistance' },
-      { field: 'lowerResistance', header: 'Lower Resistance' }
+      { field: 'lowerResistance', header: 'Lower Resistance' },
+      { field: 'impliedMovement', header: 'Implied Movement'}
     ];
 
     this.selectedColumns = [
@@ -134,7 +137,8 @@ export class RhTableComponent implements OnInit, OnChanges {
       { field: 'sellSignals', header: 'Sell' },
       { field: 'strongsellSignals', header: 'Strong Sell' },
       { field: 'upperResistance', header: 'Upper Resistance' },
-      { field: 'lowerResistance', header: 'Lower Resistance' }
+      { field: 'lowerResistance', header: 'Lower Resistance' },
+      { field: 'impliedMovement', header: 'Implied Movement' }
     ];
 
     this.selectedRecommendation = ['strongbuy', 'buy', 'sell', 'strongsell'];
@@ -401,6 +405,10 @@ export class RhTableComponent implements OnInit, OnChanges {
     return tableList;
   }
 
+  findStock(symbol, tableList: any[]): Stock {
+    return _.find(tableList, (s) => s.stock === symbol);
+  }
+
   updateRecommendationCount(current: Stock, incomingStock: Stock): Stock {
     if (!current) {
       current = incomingStock;
@@ -473,13 +481,9 @@ export class RhTableComponent implements OnInit, OnChanges {
   runDefaultBacktest() {
     this.interval = 0;
     const currentSelected = this.selectedAlgo;
-    this.selectedAlgo = 'v2';
-    this.getData(Stocks);
 
-    setTimeout(() => {
-      this.selectedAlgo = 'v5';
-      this.getData(Stocks);
-    }, Stocks.length * 10);
+    this.selectedAlgo = 'v5';
+    this.getData(Stocks);
 
     setTimeout(() => {
       this.selectedAlgo = 'daily-roc';
@@ -519,5 +523,17 @@ export class RhTableComponent implements OnInit, OnChanges {
 
       this.algo.currentChart.next(result);
     });
+  }
+
+  getImpliedMovement(stock: Stock) {
+    const symbol = stock.stock;
+    const foundStock = this.findStock(symbol, this.stockList);
+    this.optionsDataService.getImpliedMove(symbol)
+      .subscribe({
+        next: data => {
+          foundStock.impliedMovement = data.move;
+          this.addToList(foundStock);
+        }
+      });
   }
 }

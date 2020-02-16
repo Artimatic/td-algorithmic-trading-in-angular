@@ -12,4 +12,5 @@ export interface Stock {
   strongsellSignals ?: string[];
   buySignals ?: string[];
   sellSignals ?: string[];
+  impliedMovement ?: number;
 }
