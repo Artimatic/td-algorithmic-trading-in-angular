@@ -765,7 +765,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     return this.processSpecialRules(quote, timestamp);
   }
 
-  processAnalysis(daytradeType, analysis, quote, timestamp) {
+  async processAnalysis(daytradeType, analysis, quote, timestamp) {
     if (daytradeType === 'buy') {
       if (this.buyCount >= this.firstFormGroup.value.quantity) {
         this.stop();
@@ -830,6 +830,9 @@ export class BbCardComponent implements OnInit, OnChanges {
           this.firstFormGroup.value.orderSize,
           this.buyCount,
           this.positionCount), this.positionCount, this.order.quantity);
+
+          const modifier = await this.globalSettingsService.globalModifier();
+          orderQuantity = _.round(_.multiply(modifier, orderQuantity), 0);
 
         if (this.indicators.vwma < quote) {
           orderQuantity = _.round(_.multiply(orderQuantity, 0.5), 0);

@@ -12,6 +12,7 @@ module.exports = function(app) {
   app.use('/api/portfolio', require('./api/portfolio'));
   app.use('/api/options', require('./api/options'));
   app.use('/api/machine-learning', require('./api/machine-learning'));
+  app.use('/api/bonds', require('./api/bonds'));
 
   app.route('/*')
     .get(function(req, res) {

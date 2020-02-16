@@ -8,7 +8,6 @@ import { Holding } from '../shared/models';
 import { PortfolioTableComponent } from '../portfolio-table/portfolio-table.component';
 import { AuthenticationService } from '../shared/services/authentication.service';
 import { CartService } from '../shared/services/cart.service';
-import { OrderRow } from '../shared/models/order-row';
 import { MatSnackBar } from '@angular/material';
 import { ExcelService } from '../shared/services/excel-service.service';
 import { SmartOrder } from '../shared/models/smart-order';
