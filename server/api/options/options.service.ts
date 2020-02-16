@@ -71,10 +71,10 @@ export interface ImpliedMove {
 }
 
 class OptionService {
-    calculateImpliedMove(accountId, symbol, strikeCount, optionType) {
+    calculateImpliedMove(accountId, symbol, strikeCount, optionType, minExpiration = 15) {
         return PortfolioService.getOptionsStraddle(accountId, symbol, strikeCount, optionType)
             .then((straddleOptionsChain: OptionsChain) => {
-                const strategyList = straddleOptionsChain.monthlyStrategyList.find(element => element.daysToExp > 10);
+                const strategyList = straddleOptionsChain.monthlyStrategyList.find(element => element.daysToExp >= minExpiration);
                 const goal = straddleOptionsChain.underlying.last;
 
                 const closestStrikeStraddle = strategyList.optionStrategyList.reduce((prev, curr) =>  {

@@ -11,7 +11,8 @@ class OptionsController extends BaseController {
         return optionsService.calculateImpliedMove(request.query.accountId,
             request.query.symbol,
             request.query.strikeCount,
-            request.query.optionType)
+            request.query.optionType,
+            request.query.minExpiration)
             .then(optionsData => {
                 response.status(200).send(optionsData);
             })
