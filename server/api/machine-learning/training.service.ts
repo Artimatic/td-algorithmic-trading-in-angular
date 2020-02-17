@@ -74,7 +74,6 @@ class TrainingService {
 
         return finalDataSet;
       });
-
   }
 
   getTrainingDataFromIntraday(symbol) {

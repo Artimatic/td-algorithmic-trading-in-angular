@@ -34,7 +34,6 @@ export class MlCardComponent implements OnInit {
   @ViewChild('stepper') stepper;
 
   sub: Subscription;
-  checkReportSub: Subscription;
 
   alive: boolean;
   live: boolean;
@@ -112,7 +111,7 @@ export class MlCardComponent implements OnInit {
   }
 
   trainModel() {
-    this.backtestService.runRnn('SPY', moment().subtract({ day: 1 }).format('YYYY-MM-DD'), moment().subtract({ day: 300 }).format('YYYY-MM-DD')).subscribe();
+    this.backtestService.runLstmV2('VTI', moment().subtract({ day: 1 }).format('YYYY-MM-DD'), moment().subtract({ day: 300 }).format('YYYY-MM-DD')).subscribe();
   }
 
   getTradeDay() {
@@ -139,34 +138,22 @@ export class MlCardComponent implements OnInit {
         if (momentInst.isAfter(this.startTime) &&
           momentInst.isBefore(this.stopTime) || this.testing.value) {
           this.alive = false;
-          this.backtestService.activateRnn('SPY', this.getTradeDay())
-            .subscribe(() => {
-              this.pendingResults = true;
-              this.checkReportSub = TimerObservable.create(0, this.reportWaitInterval)
-                .takeWhile(() => this.pendingResults && this.live)
-                .subscribe(() => {
-                  this.backtestService.getRnn('SPY', this.getTradeDay())
-                    .subscribe((data: any) => {
-                      console.log('rnn data: ', this.getTradeDay(), data);
+          this.pendingResults = true;
+          this.backtestService.activateLstmV2('VTI', this.getTradeDay())
+            .subscribe((data: any) => {
+              console.log('rnn data: ', this.getTradeDay(), data);
 
-                      if (data) {
-                        const bet = this.determineBet(data);
-                        this.placeBet(bet);
-                        this.pendingResults = false;
-                      }
-                    }, error => { });
-                });
-            }, error => {
-              console.log('error: ', error);
-              this.setWarning(error);
-              this.stop();
-            });
+              if (data) {
+                const bet = this.determineBet(data);
+                this.placeBet(bet);
+                this.pendingResults = false;
+              }
+            }, error => { });
         }
       });
   }
 
-  determineBet(predictionResults) {
-    const predictions = predictionResults[0].results;
+  determineBet(prediction) {
     const bet: Bet = {
       total: 0,
       bearishOpen: 0,
@@ -174,14 +161,12 @@ export class MlCardComponent implements OnInit {
       summary: Sentiment.Neutral
     };
 
-    _.forEach(predictions, (prediction) => {
-      if (prediction.nextOutput > 0.55) {
-        bet.bullishOpen++;
-      } else if (prediction.nextOutput < 0.45) {
-        bet.bearishOpen++;
-      }
-      bet.total++;
-    });
+    if (prediction.nextOutput > 0.55) {
+      bet.bullishOpen++;
+    } else if (prediction.nextOutput < 0.45) {
+      bet.bearishOpen++;
+    }
+    bet.total++;
 
     const bullishRatio = _.floor(_.divide(bet.bullishOpen, bet.total), 2);
     const bearishRatio = _.floor(_.divide(bet.bearishOpen, bet.total), 2);
@@ -248,16 +233,16 @@ export class MlCardComponent implements OnInit {
 
         break;
       case Sentiment.Bearish:
-          if (this.settings.value === 'closePositions') {
-            this.getOrder(this.bullishPlay.value).subscribe((order) => {
-              this.sellAll(order);
-            },
-              (error) => {
-                this.snackBar.open(`Error getting instruments for ${this.bullishPlay}`, 'Dismiss', {
-                  duration: 2000,
-                });
+        if (this.settings.value === 'closePositions') {
+          this.getOrder(this.bullishPlay.value).subscribe((order) => {
+            this.sellAll(order);
+          },
+            (error) => {
+              this.snackBar.open(`Error getting instruments for ${this.bullishPlay}`, 'Dismiss', {
+                duration: 2000,
               });
-          } else if (this.settings.value === 'openPositions' && !this.longOnly.value) {
+            });
+        } else if (this.settings.value === 'openPositions' && !this.longOnly.value) {
           this.getOrder(this.bearishPlay.value).subscribe((order) => {
             this.buy(order, _.divide(bet.bearishOpen, bet.total));
           },
