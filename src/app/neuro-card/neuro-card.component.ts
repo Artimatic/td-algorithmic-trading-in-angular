@@ -34,7 +34,6 @@ export class NeuroCardComponent implements OnInit {
   warning: string;
 
   interval: number;
-  reportWaitInterval: number;
 
   startTime: moment.Moment;
   stopTime: moment.Moment;
@@ -59,7 +58,6 @@ export class NeuroCardComponent implements OnInit {
     this.stopTime = moment.tz('4:00pm', 'h:mma', 'America/New_York');
 
     this.interval = 600000;
-    this.reportWaitInterval = 180000;
 
     this.live = false;
     this.alive = true;
@@ -221,5 +219,11 @@ export class NeuroCardComponent implements OnInit {
   setWarning(message) {
     this.warning = message;
     this.reportingService.addAuditLog('', `Neuro card - ${message}`);
+  }
+
+  setTest() {
+    if (this.testing.value) {
+      this.interval = 1000;
+    }
   }
 }

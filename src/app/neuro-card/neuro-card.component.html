@@ -27,8 +27,7 @@
         <mat-grid-tile [colspan]="2" [rowspan]="1">
           <mat-form-field>
             <mat-label>Stock</mat-label>
-            <input matInput [formControl]="stockFormControl" [errorStateMatcher]="matcher"
-              placeholder="Ex. MSFT">
+            <input matInput [formControl]="stockFormControl" placeholder="Ex. MSFT">
             <mat-error *ngIf="stockFormControl.hasError('stock') && !stockFormControl.hasError('required')">
               Please enter a valid symbol
             </mat-error>
