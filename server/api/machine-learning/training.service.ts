@@ -76,7 +76,7 @@ class TrainingService {
       });
   }
 
-  getTrainingDataFromIntraday(symbol) {
+  trainWithIntraday(symbol) {
     const stocks = [symbol, 'SPY', 'QQQ', 'TLT', 'GLD'];
     const intradayQuotesPromises = [];
     const quotesPromises = [];
@@ -95,14 +95,17 @@ class TrainingService {
       .then(quotes => {
         return Promise.all(intradayQuotesPromises)
           .then(intradayQuotes => {
-            let inputs = [];
+            let input = [];
             quotes.forEach((val, idx) => {
               const quote = val[val.length - 1];
               const intraday = intradayQuotes[idx].candles;
-              inputs = inputs.concat(this.buildTrainingData(quote, intraday));
+              input = input.concat(this.buildTrainingData(quote, intraday));
             });
 
-            return inputs;
+            return [{input}];
+          })
+          .then(trainingData => {
+            return BacktestService.activateV2Model(symbol, startDate, trainingData);
           });
       });
   }
