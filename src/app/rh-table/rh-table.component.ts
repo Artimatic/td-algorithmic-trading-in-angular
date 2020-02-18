@@ -482,8 +482,13 @@ export class RhTableComponent implements OnInit, OnChanges {
     this.interval = 0;
     const currentSelected = this.selectedAlgo;
 
-    this.selectedAlgo = 'v5';
+    this.selectedAlgo = 'v2';
     this.getData(Stocks);
+
+    setTimeout(() => {
+      this.selectedAlgo = 'v5';
+      this.getData(Stocks);
+    }, Stocks.length * 10);
 
     setTimeout(() => {
       this.selectedAlgo = 'daily-roc';
