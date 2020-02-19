@@ -105,7 +105,6 @@ class TrainingService {
             return [{input}];
           })
           .then(trainingData => {
-            console.log('using input ', trainingData);
             return BacktestService.activateV2Model(symbol, startDate, trainingData);
           });
       });
