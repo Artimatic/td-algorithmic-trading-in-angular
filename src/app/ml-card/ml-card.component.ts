@@ -73,8 +73,8 @@ export class MlCardComponent implements OnInit {
     public dialog: MatDialog) { }
 
   ngOnInit() {
-    this.startTime = moment.tz('5:01pm', 'h:mma', 'America/New_York');
-    this.stopTime = moment.tz('6:00pm', 'h:mma', 'America/New_York');
+    this.startTime = moment.tz('3:55pm', 'h:mma', 'America/New_York');
+    this.stopTime = moment.tz('4:00pm', 'h:mma', 'America/New_York');
 
     this.holdingCount = 0;
 
@@ -139,7 +139,7 @@ export class MlCardComponent implements OnInit {
           momentInst.isBefore(this.stopTime) || this.testing.value) {
           this.alive = false;
           this.pendingResults = true;
-          this.backtestService.activateLstmV2('VTI', this.getTradeDay())
+          this.backtestService.activateLstmV2('VTI')
             .subscribe((data: any) => {
               console.log('rnn data: ', this.getTradeDay(), data);
 

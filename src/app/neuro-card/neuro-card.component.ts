@@ -128,7 +128,7 @@ export class NeuroCardComponent implements OnInit {
           if (momentInst.isAfter(this.startTime) &&
             momentInst.isBefore(this.stopTime) || this.testing.value) {
             this.alive = false;
-            this.backtestService.activateLstmV2(this.stockFormControl.value, this.getTradeDay())
+            this.backtestService.activateLstmV2(this.stockFormControl.value)
               .subscribe((data) => {
                 if (data) {
                   this.makeDecision(data);
