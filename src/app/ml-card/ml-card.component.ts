@@ -148,7 +148,10 @@ export class MlCardComponent implements OnInit {
                 this.placeBet(bet);
                 this.pendingResults = false;
               }
-            }, error => { });
+            }, error => {
+              console.log('ML activation failed. Trying again.');
+              this.alive = true;
+            });
         }
       });
   }
