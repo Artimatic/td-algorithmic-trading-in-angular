@@ -74,7 +74,7 @@ export class MlCardComponent implements OnInit {
 
   ngOnInit() {
     this.startTime = moment.tz('3:55pm', 'h:mma', 'America/New_York');
-    this.stopTime = moment.tz('4:00pm', 'h:mma', 'America/New_York');
+    this.stopTime = moment.tz('5:00pm', 'h:mma', 'America/New_York');
 
     this.holdingCount = 0;
 
