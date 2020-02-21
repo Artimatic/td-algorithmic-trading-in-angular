@@ -283,13 +283,13 @@ export class BacktestService {
     return this.http.get(`${BASE_URL}api/machine-learning/test-model`, options);
   }
 
-  activateLstmV2(symbol: string, date: string): Observable<any> {
+  activateLstmV2(symbol: string, startDate: string): Observable<any> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     const options = {
       headers: headers,
       params: {
         symbol,
-        startDate: date
+        startDate
       }
     };
 
