@@ -283,16 +283,17 @@ export class BacktestService {
     return this.http.get(`${BASE_URL}api/machine-learning/test-model`, options);
   }
 
-  activateLstmV2(symbol: string): Observable<any> {
+  activateLstmV2(symbol: string, date: string): Observable<any> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     const options = {
       headers: headers,
       params: {
-        symbol
+        symbol,
+        startDate: date
       }
     };
 
-    return this.http.get(`${BASE_URL}api/machine-learning/guess-activate`, options);
+    return this.http.get(`${BASE_URL}api/machine-learning/activate`, options);
   }
 
   getDaytradeIndicators(quotes: any, period: number, stddev: number, mfiPeriod: number,

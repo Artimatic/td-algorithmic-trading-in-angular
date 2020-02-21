@@ -54,8 +54,8 @@ export class NeuroCardComponent implements OnInit {
     public dialog: MatDialog) { }
 
   ngOnInit() {
-    this.startTime = moment.tz('3:50pm', 'h:mma', 'America/New_York');
-    this.stopTime = moment.tz('4:00pm', 'h:mma', 'America/New_York');
+    this.startTime = moment.tz('5:01pm', 'h:mma', 'America/New_York');
+    this.stopTime = moment.tz('6:00pm', 'h:mma', 'America/New_York');
 
     this.interval = 600000;
 
@@ -128,7 +128,7 @@ export class NeuroCardComponent implements OnInit {
           if (momentInst.isAfter(this.startTime) &&
             momentInst.isBefore(this.stopTime) || this.testing.value) {
             this.alive = false;
-            this.backtestService.activateLstmV2(this.stockFormControl.value)
+            this.backtestService.activateLstmV2(this.stockFormControl.value, this.getTradeDay())
               .subscribe((data) => {
                 if (data) {
                   this.makeDecision(data);
