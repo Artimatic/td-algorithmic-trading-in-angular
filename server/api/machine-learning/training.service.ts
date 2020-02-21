@@ -77,7 +77,7 @@ class TrainingService {
   }
 
   trainWithIntraday(symbol) {
-    const stocks = [symbol, 'SPY', 'QQQ', 'TLT', 'GLD'];
+    const stocks = ['SPY', 'QQQ', 'TLT', 'GLD', symbol];
     const intradayQuotesPromises = [];
     const quotesPromises = [];
     const endDate = moment().subtract({ day: 1 });
@@ -95,9 +95,9 @@ class TrainingService {
       .then(quotes => {
         return Promise.all(intradayQuotesPromises)
           .then(intradayQuotes => {
-            let input = [];
+            let input = [new Date().getUTCDay()];
             quotes.forEach((val, idx) => {
-              const quote = val[val.length - 1];
+              const quote = val[val.length - 2]; // TODO CHANGE TO -1
               const intraday = intradayQuotes[idx].candles;
               input = input.concat(this.buildTrainingData(quote, intraday));
             });
@@ -128,7 +128,7 @@ class TrainingService {
     const accumulator = {
       volume: 0,
       open: null,
-      close: intradayQuotes[intradayQuotes.length - 1].close,
+      close: intradayQuotes[intradayQuotes.length - 2].close,
       high: null,
       low: null,
     };
