@@ -1,0 +1,40 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>LSTM Model</mat-card-title>
+    <mat-card-subtitle>Train and activate LSTM model</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <mat-card-actions>
+      <mat-grid-list cols="3" rowHeight="76px">
+        <mat-grid-tile>
+          <form [formGroup]="form" novalidate>
+            <mat-form-field>
+              <input matInput formControlName="query" placeholder="Enter ticker symbol" />
+            </mat-form-field>
+          </form>
+        </mat-grid-tile>
+        <mat-grid-tile>
+          <div>
+            Start
+            <input type="date" [ngModel]="startDate | date:'yyyy-MM-dd'" (ngModelChange)="startDate = $event">
+          </div>
+        </mat-grid-tile>
+        <mat-grid-tile>
+          <div>
+            End
+            <input type="date" [ngModel]="endDate | date:'yyyy-MM-dd'" (ngModelChange)="endDate = $event">
+          </div>
+        </mat-grid-tile>
+        <mat-grid-tile>
+          <div *ngIf="isLoading">
+            <mat-spinner></mat-spinner>
+          </div>
+          <span *ngIf="!isLoading">
+            <button pButton type="button" label="Train" class="ui-button-secondary"></button>
+            <button pButton type="button" label="Activate"></button>
+          </span>
+        </mat-grid-tile>
+      </mat-grid-list>
+    </mat-card-actions>
+  </mat-card-content>
+</mat-card>

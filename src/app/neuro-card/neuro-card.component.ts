@@ -75,7 +75,8 @@ export class NeuroCardComponent implements OnInit {
   }
 
   stop() {
-
+    this.live = false;
+    this.alive = false;
   }
 
   confirm(cb) {

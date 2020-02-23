@@ -8,11 +8,13 @@ import { ChartModule } from 'angular-highcharts';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Routes, RouterModule } from '@angular/router';
 import { TimelineViewComponent } from './timeline-view/timeline-view.component';
+import { AskModelComponent } from './ask-model/ask-model.component';
+import { ButtonModule } from 'primeng/button';
 
 const routes: Routes =
   [
     {
-      path: 'timeline', component: TimelineViewComponent
+      path: 'machine-learning', component: MachineLearningPageComponent
     }
   ];
 
@@ -29,12 +31,14 @@ const routes: Routes =
     MatInputModule,
     MatGridListModule,
     MatProgressSpinnerModule,
-    MatExpansionModule
+    MatExpansionModule,
+    ButtonModule
   ],
   declarations: [
     TimelineViewComponent,
     PrecogComponent,
-    MachineLearningPageComponent
+    MachineLearningPageComponent,
+    AskModelComponent
   ],
   exports: [
     MachineLearningPageComponent
