@@ -78,7 +78,7 @@ export class MlCardComponent implements OnInit {
 
     this.holdingCount = 0;
 
-    this.interval = 600000;
+    this.interval = 300000;
     this.reportWaitInterval = 180000;
 
     this.live = false;

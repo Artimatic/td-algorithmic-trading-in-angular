@@ -54,10 +54,10 @@ export class NeuroCardComponent implements OnInit {
     public dialog: MatDialog) { }
 
   ngOnInit() {
-    this.startTime = moment.tz('3:53pm', 'h:mma', 'America/New_York');
+    this.startTime = moment.tz('3:52pm', 'h:mma', 'America/New_York');
     this.stopTime = moment.tz('6:00pm', 'h:mma', 'America/New_York');
 
-    this.interval = 600000;
+    this.interval = 300000;
 
     this.live = false;
     this.alive = true;

@@ -10,6 +10,7 @@ import { Routes, RouterModule } from '@angular/router';
 import { TimelineViewComponent } from './timeline-view/timeline-view.component';
 import { AskModelComponent } from './ask-model/ask-model.component';
 import { ButtonModule } from 'primeng/button';
+import { DropdownModule } from 'primeng/dropdown';
 
 const routes: Routes =
   [
@@ -32,7 +33,8 @@ const routes: Routes =
     MatGridListModule,
     MatProgressSpinnerModule,
     MatExpansionModule,
-    ButtonModule
+    ButtonModule,
+    DropdownModule
   ],
   declarations: [
     TimelineViewComponent,
