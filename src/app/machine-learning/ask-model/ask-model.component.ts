@@ -32,7 +32,8 @@ export class AskModelComponent implements OnInit {
     });
 
     this.models = [
-      { name: 'Open Price Up', code: 'open_price_up' }
+      { name: 'Open Price Up', code: 'open_price_up' },
+      { name: 'Test', code: 'test' }
     ];
 
     this.isLoading = false;

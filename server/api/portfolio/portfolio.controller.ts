@@ -96,11 +96,16 @@ class PortfolioController extends BaseController {
   }
 
   getInstruments(request, response) {
-    console.log('body: ', request.body);
     if (_.isEmpty(request.body)) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     } else {
-      PortfolioService.getInstruments(request.body.symbol, response);
+      response.status(200).send({
+        results: [{
+          instrument: '',
+          symbol: request.body.symbol,
+          name: null
+        }]
+      });
     }
   }
 
@@ -134,22 +139,22 @@ class PortfolioController extends BaseController {
 
   tdBuy(request, response) {
     PortfolioService.sendTdBuyOrder(request.body.symbol,
-                                    request.body.quantity,
-                                    request.body.price,
-                                    request.body.type,
-                                    request.body.extendedHours,
-                                    request.body.accountId)
+      request.body.quantity,
+      request.body.price,
+      request.body.type,
+      request.body.extendedHours,
+      request.body.accountId)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
   tdSell(request, response) {
     PortfolioService.sendTdSellOrder(request.body.symbol,
-                                     request.body.quantity,
-                                     request.body.price,
-                                     request.body.type,
-                                     request.body.extendedHours,
-                                     request.body.accountId)
+      request.body.quantity,
+      request.body.price,
+      request.body.type,
+      request.body.extendedHours,
+      request.body.accountId)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
@@ -168,9 +173,9 @@ class PortfolioController extends BaseController {
 
   setCredentials(request, response) {
     PortfolioService.setCredentials(request.body.accountId,
-                                    request.body.key,
-                                    request.body.refreshToken,
-                                    response);
+      request.body.key,
+      request.body.refreshToken,
+      response);
   }
 
   checkForCredentials(request, response) {

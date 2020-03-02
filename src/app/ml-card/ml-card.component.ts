@@ -190,70 +190,37 @@ export class MlCardComponent implements OnInit {
   }
 
   getOrder(symbol: string) {
-    return this.portfolioService.getInstruments(symbol).map((response) => {
-      const instruments = response.results[0];
-      const newHolding: Holding = {
-        instrument: instruments.url,
-        symbol: instruments.symbol,
-        name: instruments.name
-      };
+    const newHolding: Holding = {
+      instrument: null,
+      symbol,
+    };
 
-      const order: SmartOrder = {
-        holding: newHolding,
-        quantity: 0,
-        price: 0,
-        submitted: false,
-        pending: false,
-        side: 'DayTrade',
-      };
-
-      return order;
-    });
+    const order: SmartOrder = {
+      holding: newHolding,
+      quantity: 0,
+      price: 0,
+      submitted: false,
+      pending: false,
+      side: 'DayTrade',
+    };
+    return order;
   }
 
   placeBet(bet: Bet) {
     switch (bet.summary) {
       case Sentiment.Bullish:
         if (this.settings.value === 'closePositions') {
-          this.getOrder(this.bearishPlay.value).subscribe((order) => {
-            this.sellAll(order);
-          },
-            (error) => {
-              this.snackBar.open(`Error getting instruments for ${this.bearishPlay}`, 'Dismiss', {
-                duration: 2000,
-              });
-            });
+          this.sellAll(this.getOrder(this.bearishPlay.value));
         } else if (this.settings.value === 'openPositions') {
-          this.getOrder(this.bullishPlay.value).subscribe((order) => {
-            this.buy(order, _.divide(bet.bullishOpen, bet.total));
-          },
-            (error) => {
-              this.snackBar.open(`Error getting instruments for ${this.bullishPlay}`, 'Dismiss', {
-                duration: 2000,
-              });
-            });
+          this.buy(this.getOrder(this.bullishPlay.value), _.divide(bet.bullishOpen, bet.total));
         }
 
         break;
       case Sentiment.Bearish:
         if (this.settings.value === 'closePositions') {
-          this.getOrder(this.bullishPlay.value).subscribe((order) => {
-            this.sellAll(order);
-          },
-            (error) => {
-              this.snackBar.open(`Error getting instruments for ${this.bullishPlay}`, 'Dismiss', {
-                duration: 2000,
-              });
-            });
+          this.sellAll(this.getOrder(this.bullishPlay.value));
         } else if (this.settings.value === 'openPositions' && !this.longOnly.value) {
-          this.getOrder(this.bearishPlay.value).subscribe((order) => {
-            this.buy(order, _.divide(bet.bearishOpen, bet.total));
-          },
-            (error) => {
-              this.snackBar.open(`Error getting instruments for ${this.bearishPlay}`, 'Dismiss', {
-                duration: 2000,
-              });
-            });
+          this.buy(this.bearishPlay.value, _.divide(bet.bearishOpen, bet.total));
         }
         break;
       default:

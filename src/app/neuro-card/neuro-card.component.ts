@@ -146,25 +146,21 @@ export class NeuroCardComponent implements OnInit {
   }
 
   getOrder(symbol: string) {
-    return this.portfolioService.getInstruments(symbol).map((response) => {
-      const instruments = response.results[0];
-      const newHolding: Holding = {
-        instrument: instruments.url,
-        symbol: instruments.symbol,
-        name: instruments.name
-      };
+    const newHolding: Holding = {
+      instrument: null,
+      symbol
+    };
 
-      const order: SmartOrder = {
-        holding: newHolding,
-        quantity: 0,
-        price: 0,
-        submitted: false,
-        pending: false,
-        side: 'DayTrade',
-      };
+    const order: SmartOrder = {
+      holding: newHolding,
+      quantity: 0,
+      price: 0,
+      submitted: false,
+      pending: false,
+      side: 'DayTrade',
+    };
 
-      return order;
-    });
+    return order;
   }
 
   getQuote(symbol: string) {
@@ -206,14 +202,8 @@ export class NeuroCardComponent implements OnInit {
 
   makeDecision(predictionResults) {
     if (predictionResults.nextOutput < 0.4) {
-      this.getOrder(this.stockFormControl.value).subscribe((order) => {
-        this.sellAll(order);
-      },
-        (error) => {
-          this.snackBar.open(`Error getting instruments for ${this.stockFormControl.value}`, 'Dismiss', {
-            duration: 2000,
-          });
-        });
+      const order = this.getOrder(this.stockFormControl.value);
+      this.sellAll(order);
     }
   }
 

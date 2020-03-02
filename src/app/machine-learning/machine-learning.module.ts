@@ -11,6 +11,7 @@ import { TimelineViewComponent } from './timeline-view/timeline-view.component';
 import { AskModelComponent } from './ask-model/ask-model.component';
 import { ButtonModule } from 'primeng/button';
 import { DropdownModule } from 'primeng/dropdown';
+import { CardModule } from 'primeng/card';
 
 const routes: Routes =
   [
@@ -34,7 +35,8 @@ const routes: Routes =
     MatProgressSpinnerModule,
     MatExpansionModule,
     ButtonModule,
-    DropdownModule
+    DropdownModule,
+    CardModule
   ],
   declarations: [
     TimelineViewComponent,
