@@ -12,9 +12,6 @@
           <button mat-button (click)="openChartDialog(selectedStock, endDate)" [disabled]="!selectedStock">
             Chart
           </button>
-          <button mat-button (click)="getImpliedMovement(selectedStock)" [disabled]="!selectedStock">
-            Get Implied Movement
-          </button>
           <button mat-button color="primary" (click)=runDefaultBacktest() *ngIf="progress>=totalStocks">Run Default
             Backtest
           </button>
@@ -23,8 +20,9 @@
       <div class="ui-g-4">
         <div class="table-settings">
           <div class="global-filter">
-              <i class="fa fa-search" style="margin:4px 4px 0 0"></i>
-              <input type="text" pInputText size="50" placeholder="Global Filter" (input)="dt.filterGlobal($event.target.value, 'contains')" style="width:auto">
+            <i class="fa fa-search" style="margin:4px 4px 0 0"></i>
+            <input type="text" pInputText size="50" placeholder="Global Filter"
+              (input)="dt.filterGlobal($event.target.value, 'contains')" style="width:auto">
           </div>
           <div class="date-picker">
             End Date
@@ -44,7 +42,8 @@
       <div class="ui-g-4">
         <div class="table-filters">
           <p-multiSelect class="filter" [options]="recommendations" [(ngModel)]="selectedRecommendation"
-            defaultLabel="All Recommendations" (onChange)="filter()" selectedItemsLabel="{0} recommendations selected"></p-multiSelect>
+            defaultLabel="All Recommendations" (onChange)="filter()" selectedItemsLabel="{0} recommendations selected">
+          </p-multiSelect>
           <p-multiSelect class="filter" [options]="cols" [(ngModel)]="selectedColumns" optionLabel="header"
             selectedItemsLabel="{0} columns selected" [style]="{minWidth: '200px'}" defaultLabel="Choose Columns">
           </p-multiSelect>
@@ -61,6 +60,7 @@
         {{col.header}}
         <p-sortIcon [field]="col.field"></p-sortIcon>
       </th>
+      <th>Actions</th>
     </tr>
   </ng-template>
   <ng-template pTemplate="body" let-element let-columns="columns">
@@ -82,11 +82,16 @@
           {{element[col.field]}}
         </span>
       </td>
+      <td>
+        <button pButton (click)="getImpliedMovement(selectedStock)" [disabled]="!selectedStock">
+          Get Implied Movement
+        </button>
+      </td>
     </tr>
   </ng-template>
   <ng-template pTemplate="emptymessage" let-columns>
     <tr class="empty-table">
-      <td [attr.colspan]="columns.length">
+      <td [attr.colspan]="columns.length + 1">
         No stocks found
       </td>
     </tr>
