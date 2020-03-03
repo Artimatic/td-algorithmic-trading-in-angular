@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 
 import { Validators, FormControl, FormGroupDirective, NgForm } from '@angular/forms';
 
@@ -26,6 +26,8 @@ export class MyErrorStateMatcher implements ErrorStateMatcher {
   styleUrls: ['./neuro-card.component.css']
 })
 export class NeuroCardComponent implements OnInit {
+  @Input() order: SmartOrder;
+
   alive: boolean;
   live: boolean;
   pendingResults: boolean;
@@ -63,7 +65,7 @@ export class NeuroCardComponent implements OnInit {
     this.alive = true;
     this.testing.setValue(false);
 
-    this.stockFormControl = new FormControl('', [
+    this.stockFormControl = new FormControl(this.order.holding.symbol, [
       Validators.required
     ]);
 

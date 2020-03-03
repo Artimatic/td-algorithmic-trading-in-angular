@@ -46,17 +46,37 @@
   <hr>
   <h1 matTooltip="Disregards global settings.">Default Orders</h1>
   <label>Last Checked Time</label> {{this.lastCheckedTime}}
-  <span *ngIf="spy">
-    <app-simple-card [order]="spy" class="order-card">
+  <mat-grid-list cols="4" rowHeight="25px">
+    <mat-grid-tile [colspan]="2" [rowspan]="2">
+      <mat-form-field>
+        <mat-label>Stock</mat-label>
+        <input matInput [formControl]="simpleCardForm" placeholder="Ex. MSFT">
+      </mat-form-field>
+    </mat-grid-tile>
+    <mat-grid-tile [colspan]="2" [rowspan]="1">
+      <button mat-raised-button color="primary" (click)="addSimpleCard()">Add Simple Card</button>
+    </mat-grid-tile>
+  </mat-grid-list>
+
+  <div *ngFor="let simpleCard of simpleCards" class="order-card">
+    <app-simple-card [order]="simpleCard">
     </app-simple-card>
-  </span>
-  <span *ngIf="tlt">
-    <app-simple-card [order]="tlt" class="order-card">
-    </app-simple-card>
-  </span>
+  </div>
+
   <h1 matTooltip="Requires Machine Learning Service">Machine Learning Order</h1>
-  <div class="order-card">
-    <app-neuro-card></app-neuro-card>
+  <mat-grid-list cols="4" rowHeight="25px">
+    <mat-grid-tile [colspan]="2" [rowspan]="2">
+      <mat-form-field>
+        <mat-label>Stock</mat-label>
+        <input matInput [formControl]="mlCardForm" placeholder="Ex. MSFT">
+      </mat-form-field>
+    </mat-grid-tile>
+    <mat-grid-tile [colspan]="2" [rowspan]="1">
+      <button mat-raised-button color="primary" (click)="addMlCard()">Add Machine Learning Card</button>
+    </mat-grid-tile>
+  </mat-grid-list>
+  <div *ngFor="let mlCard of mlCards" class="order-card">
+    <app-neuro-card [order]="mlCard"></app-neuro-card>
   </div>
   <div class="order-card">
     <app-ml-card></app-ml-card>

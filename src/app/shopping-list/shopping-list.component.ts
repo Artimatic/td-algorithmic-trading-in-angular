@@ -13,6 +13,7 @@ import { Holding } from '../shared/models';
 import { GlobalSettingsService } from '../settings/global-settings.service';
 import { TradeService } from '../shared/services/trade.service';
 import { OrderRow } from '../shared/models/order-row';
+import { FormControl, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-shopping-list',
@@ -33,6 +34,12 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
 
   lastCheckedTime: string;
 
+  simpleCardForm: FormControl;
+  mlCardForm: FormControl;
+
+  simpleCards: SmartOrder[];
+  mlCards: SmartOrder[];
+
   constructor(public cartService: CartService,
     public scoreKeeperService: ScoreKeeperService,
     public dialog: MatDialog,
@@ -45,6 +52,37 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.interval = this.defaultInterval;
+
+    this.simpleCardForm = new FormControl('', [
+      Validators.required
+    ]);
+
+    this.mlCardForm = new FormControl('', [
+      Validators.required
+    ]);
+
+    this.simpleCards = [{
+      holding: {
+        instrument: null,
+        symbol: 'TLT'
+      },
+      quantity: 0,
+      price: 0,
+      submitted: false,
+      pending: false,
+      side: 'DayTrade',
+    },
+    {
+      holding: {
+        instrument: null,
+        symbol: 'SPY'
+      },
+      quantity: 0,
+      price: 0,
+      submitted: false,
+      pending: false,
+      side: 'DayTrade',
+    }];
 
     this.ordersStarted = 0;
     this.portfolioService.getInstruments('SPY').subscribe((response) => {
@@ -173,7 +211,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
           }
         }
         if (moment().isAfter(moment(this.globalSettingsService.stopTime)) &&
-            moment().isBefore(moment(this.globalSettingsService.stopTime).add(2, 'minutes'))) {
+          moment().isBefore(moment(this.globalSettingsService.stopTime).add(2, 'minutes'))) {
           if (this.reportingService.logs.length > 0) {
             const log = `Profit ${this.scoreKeeperService.total}`;
             this.reportingService.addAuditLog(null, log);
@@ -266,4 +304,53 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
     });
   }
 
+  addSimpleCard() {
+    this.portfolioService.getInstruments(this.simpleCardForm.value).subscribe((response) => {
+      const instruments = response.results[0];
+      const newHolding: Holding = {
+        instrument: null,
+        symbol: instruments.symbol
+      };
+
+      const order: SmartOrder = {
+        holding: newHolding,
+        quantity: 0,
+        price: 0,
+        submitted: false,
+        pending: false,
+        side: 'DayTrade',
+      };
+      this.simpleCards.push(order);
+    },
+      (error) => {
+        this.snackBar.open(`Error getting instruments for ${this.simpleCardForm.value}`, 'Dismiss', {
+          duration: 2000,
+        });
+      });
+  }
+
+  addMlCard() {
+    this.portfolioService.getInstruments(this.mlCardForm.value).subscribe((response) => {
+      const instruments = response.results[0];
+      const newHolding: Holding = {
+        instrument: null,
+        symbol: instruments.symbol
+      };
+
+      const order: SmartOrder = {
+        holding: newHolding,
+        quantity: 0,
+        price: 0,
+        submitted: false,
+        pending: false,
+        side: 'DayTrade',
+      };
+      this.mlCards.push(order);
+    },
+      (error) => {
+        this.snackBar.open(`Error getting instruments for ${this.simpleCardForm.value}`, 'Dismiss', {
+          duration: 2000,
+        });
+      });
+  }
 }
