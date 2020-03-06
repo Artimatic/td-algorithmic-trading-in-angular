@@ -462,7 +462,10 @@ const stockList = [
   'LYFT',
   'UBER',
   'WORK',
-  'PINS'
+  'PINS',
+  'KMB',
+  'CLX',
+  'CL'
 ];
 
 const Stocks: AlgoParam[] = [];

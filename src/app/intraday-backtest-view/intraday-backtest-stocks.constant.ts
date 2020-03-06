@@ -435,7 +435,10 @@ const stockList = [
   'LYFT',
   'UBER',
   'WORK',
-  'PINS'
+  'PINS',
+  'KMB',
+  'CLX',
+  'CL'
 ];
 
 function createRow(ticker: string): OrderRow {
