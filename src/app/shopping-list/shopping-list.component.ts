@@ -192,8 +192,6 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
       .takeWhile(() => this.alive)
       .subscribe(() => {
         this.lastCheckedTime = moment().format('hh:mm');
-        console.log('interval check: ', moment(), this.globalSettingsService.startTime, moment().isAfter(moment(this.globalSettingsService.startTime)) &&
-          moment().isBefore(moment(this.globalSettingsService.stopTime)));
         if (this.interval !== this.defaultInterval) {
           this.interval = this.defaultInterval;
         }

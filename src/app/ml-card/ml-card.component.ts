@@ -220,7 +220,7 @@ export class MlCardComponent implements OnInit {
         if (this.settings.value === 'closePositions') {
           this.sellAll(this.getOrder(this.bullishPlay.value));
         } else if (this.settings.value === 'openPositions' && !this.longOnly.value) {
-          this.buy(this.bearishPlay.value, _.divide(bet.bearishOpen, bet.total));
+          this.buy(this.getOrder(this.bearishPlay.value), _.divide(bet.bearishOpen, bet.total));
         }
         break;
       default:

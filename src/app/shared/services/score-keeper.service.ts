@@ -99,24 +99,34 @@ export class ScoreKeeperService {
   }
 
   determineLossTallyModifier(stock: string) {
-    switch (this.lossTally[stock]) {
-      case 1:
-        return 0.8;
-      case 2:
-        return 0.6;
-      case 3:
-        return 0.3;
-      case 4:
-        return 0.25;
-      case 5:
-        return 0.2;
-      default:
-        if (this.lossTally[stock] > 5) {
-          return 0.10;
-        } else {
+    if (this.lossTally[stock]) {
+      switch (this.lossTally[stock]) {
+        case 1:
+          return 0.75;
+        case 2:
           return 0.5;
-        }
+        case 3:
+          return 0.25;
+        case 4:
+          return 0.18;
+        case 5:
+          return 0.15;
+        default:
+          if (this.lossTally[stock] > 5) {
+            return 0.1;
+          }
+      }
     }
+
+    if (this.winlossHash[stock]) {
+      const difference = this.winlossHash[stock].wins - this.winlossHash[stock].losses;
+      if (difference > 3) {
+        return 1;
+      } else if (difference > 1) {
+        return 0.8;
+      }
+    }
+    return 0.7;
   }
 
   determineExistingPositionModifier(existingPositionSize: number, sizeLimit: number): number {
