@@ -314,7 +314,9 @@ class BacktestService {
       buy: [],
       history: [],
       net: 0,
-      total: 0
+      total: 0,
+      profitableTrades: 0,
+      returns: 0
     };
 
     _.forEach(indicators, (indicator) => {
@@ -345,9 +347,10 @@ class BacktestService {
       algo: '',
       orderHistory: orders.history,
       net: orders.net,
-      returns: (orders.net / orders.total),
+      returns: orders.returns,
       total: orders.total,
       invested: orders.total,
+      profitableTrades: orders.profitableTrades,
       totalTrades: orders.trades,
       recommendation: lastRecommendation
     };
@@ -652,7 +655,8 @@ class BacktestService {
       buy: [],
       history: [],
       net: 0,
-      total: 0
+      total: 0,
+      returns: 0
     };
 
     _.forEach(indicators, (indicator) => {
@@ -782,20 +786,25 @@ class BacktestService {
 
   calcTrade(orders, dayQuote, orderType, avgPrice) {
     if (orderType && orderType.toLowerCase() === 'sell') {
-      // Sell
-      orders.trades++;
       if (orders.buy.length > 0) {
+        orders.trades++;
         const len = orders.buy.length;
         const profit = (dayQuote.close - avgPrice) * len;
-
+        if (profit > 0) {
+          if (orders.profitableTrades) {
+            orders.profitableTrades++;
+          } else {
+            orders.profitableTrades = 1;
+          }
+        }
         orders.total += (avgPrice * len);
         orders.net += profit;
+        orders.returns += profit / (avgPrice * len);
         dayQuote.signal = 'sell';
         orders.history.push(dayQuote);
         orders.buy = [];
       }
     } else if (orderType && orderType.toLowerCase() === 'buy') {
-      // Buy
       orders.buy.push(dayQuote.close);
       dayQuote.signal = 'buy';
       orders.history.push(dayQuote);

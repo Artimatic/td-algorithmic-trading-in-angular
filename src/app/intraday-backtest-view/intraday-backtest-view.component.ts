@@ -49,7 +49,7 @@ export class IntradayBacktestViewComponent implements OnInit {
     const result = {
       symbol,
       price,
-      result: this.scoreKeeperService.profitLossHash[symbol]
+      result: this.scoreKeeperService.percentReturns[symbol]
     };
     this.stocks.push(result);
   }

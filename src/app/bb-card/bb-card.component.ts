@@ -263,9 +263,17 @@ export class BbCardComponent implements OnInit, OnChanges {
         //   }
         // });
 
-        if (results.net) {
+        if (results.returns) {
           this.scoringService.resetProfitLoss(this.order.holding.symbol);
-          this.scoringService.addProfitLoss(this.order.holding.symbol, results.net);
+          this.scoringService.addProfitLoss(this.order.holding.symbol, results.returns * 100);
+        }
+
+        if (results.profitableTrades && results.totalTrades) {
+          this.scoringService.winlossHash[this.order.holding.symbol] = {
+            wins: results.profitableTrades,
+            losses: null,
+            total: results.totalTrades
+          };
         }
 
         if (results.signals) {
@@ -831,8 +839,8 @@ export class BbCardComponent implements OnInit, OnChanges {
           this.buyCount,
           this.positionCount), this.positionCount, this.order.quantity);
 
-          const modifier = await this.globalSettingsService.globalModifier();
-          orderQuantity = _.round(_.multiply(modifier, orderQuantity), 0);
+        const modifier = await this.globalSettingsService.globalModifier();
+        orderQuantity = _.round(_.multiply(modifier, orderQuantity), 0);
 
         if (this.indicators.vwma < quote) {
           orderQuantity = _.round(_.multiply(orderQuantity, 0.5), 0);

@@ -32,17 +32,19 @@
         <ng-template pTemplate="header">
           <tr>
             <th>symbol</th>
-            <th>
-              result
-            </th>
+            <th>result</th>
             <th>price</th>
+            <th>wins</th>
+            <th>trades</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-stock>
           <tr>
             <td>{{stock.symbol}}</td>
-            <td>{{scoreKeeperService.profitLossHash[stock.symbol]}}</td>
-            <td>{{stock.price}}</td>
+            <td>{{scoreKeeperService.profitLossHash[stock.symbol]}}%</td>
+            <td>{{stock.price | currency}}</td>
+            <td>{{scoreKeeperService.winlossHash[stock.symbol]?.wins}}</td>
+            <td>{{scoreKeeperService.winlossHash[stock.symbol]?.total}}</td>
           </tr>
         </ng-template>
       </p-table>

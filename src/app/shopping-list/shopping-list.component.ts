@@ -51,6 +51,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
     private tradeService: TradeService) { }
 
   ngOnInit() {
+    this.mlCards = [];
     this.interval = this.defaultInterval;
 
     this.simpleCardForm = new FormControl('', [
