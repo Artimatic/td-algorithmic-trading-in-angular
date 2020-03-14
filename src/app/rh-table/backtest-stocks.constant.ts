@@ -12,7 +12,8 @@ function createParam(ticker: string): AlgoParam {
   };
 }
 
-const stockList = [
+export const stockList = [
+  'MET',
   'AA',
   'GOLD',
   'AAPL',
@@ -30,6 +31,7 @@ const stockList = [
   'BAC',
   'BDN',
   'BIG',
+  'BDX',
   'BK',
   'DOCU',
   'BMY',
@@ -116,6 +118,7 @@ const stockList = [
   'AMAT',
   'MCO',
   'MDY',
+  'MDT',
   'PG',
   'MKC',
   'RYN',
@@ -138,6 +141,7 @@ const stockList = [
   'PBYI',
   'PEP',
   'PFE',
+  'PFG',
   'PGR',
   'PLD',
   'PM',
@@ -190,6 +194,7 @@ const stockList = [
   'VNQ',
   'VOO',
   'VTI',
+  'VOYA',
   'VTV',
   'VWO',
   'WBA',
@@ -457,6 +462,7 @@ const stockList = [
   'SHOP',
   'VEEV',
   'HUBS',
+  'BSX',
   'FSLY',
   'SOHU',
   'LYFT',
@@ -465,7 +471,8 @@ const stockList = [
   'PINS',
   'KMB',
   'CLX',
-  'CL'
+  'CL',
+  'PRU'
 ];
 
 const Stocks: AlgoParam[] = [];
