@@ -3,6 +3,5 @@ import TechnicalAnalysisService from '../technical-analysis/technical-analysis.s
 
 describe('Add functionality', () => {
   it('test', () => {
-    TechnicalAnalysisService.test();
   });
 });
