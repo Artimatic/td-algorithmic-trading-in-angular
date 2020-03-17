@@ -116,6 +116,10 @@ class BacktestService {
     return tulind.indicators.vwma.indicator([close, volume], [period]);
   }
 
+  getRsi(real, period) {
+    return tulind.indicators.rsi.indicator([real], [period]);
+  }
+
   getDaytradeIndicators(quotes, period,
     stddev, mfiPeriod, vwmaPeriod) {
     let indicators: Indicators = {

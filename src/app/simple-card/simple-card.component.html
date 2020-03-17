@@ -99,6 +99,9 @@
           <button mat-button color="warn" (click)="openDialog()">GO LIVE</button>
           <button mat-button color="primary" (click)="buy()">Buy</button>
           <button mat-button color="accent" (click)="sell()">Sell</button>
+          <mat-slide-toggle [formControl]="testing" (change)="setTest()">
+            Test Mode
+          </mat-slide-toggle>
         </mat-card-actions>
       </mat-card>
     </mat-step>

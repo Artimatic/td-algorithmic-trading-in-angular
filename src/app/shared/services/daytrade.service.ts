@@ -173,6 +173,23 @@ export class DaytradeService {
     }
   }
 
+  sellAll(sellOrder: SmartOrder, type: string, resolve: Function, reject: Function, handleNotFound: Function) {
+    return this.portfolioService.getQuote(sellOrder.holding.symbol)
+      .map((quote) => {
+        let bid: number = quote.price;
+
+        if (_.round(_.divide(quote.askPrice, quote.bidPrice), 3) < 1.005) {
+          bid = quote.askPrice;
+        } else {
+          bid = quote.price;
+        }
+
+        return bid;
+      }).subscribe((bid) => {
+        sellOrder.price = bid;
+        this.closePosition(sellOrder, 'limit', resolve, reject, handleNotFound);
+      });
+  }
   sendTdSell(sellOrder: SmartOrder, type: string, resolve: Function, reject: Function, handleNotFound: Function): SmartOrder {
     this.portfolioService.getTdPortfolio()
       .subscribe(result => {

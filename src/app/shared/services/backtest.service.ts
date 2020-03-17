@@ -204,11 +204,6 @@ export class BacktestService {
     return this.http.get(`${BASE_URL}api/quote/historical-intraday`, options);
   }
 
-
-  getQuote(data: any): Observable<any> {
-    return this.http.post(`${BASE_URL}api/quote`, data, {});
-  }
-
   getOptionChain(symbol: String): Observable<any> {
     const body = { symbol: symbol };
     return this.http.post(`${BASE_URL}api/quote/optionchain`, body, {});
@@ -224,6 +219,11 @@ export class BacktestService {
 
   getMFI(data: any): Observable<any> {
     return this.http.post(`${BASE_URL}api/backtest/mfi`, data, {});
+  }
+
+  getRsi(real: number[], period = 14): Observable<any> {
+    const body = { real, period };
+    return this.http.post(`${BASE_URL}api/backtest/rsi`, body, {});
   }
 
   getROC(data: any): Observable<any> {

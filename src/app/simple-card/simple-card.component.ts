@@ -7,11 +7,15 @@ import { CartService } from '../shared/services/cart.service';
 import { MatDialog, MatSnackBar } from '@angular/material';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import * as moment from 'moment-timezone';
-import { DaytradeService, PortfolioService, ReportingService } from '../shared';
+import { DaytradeService, PortfolioService, ReportingService, BacktestService } from '../shared';
 import { OrderPref } from '../shared/enums/order-pref.enum';
 
 import * as _ from 'lodash';
 import { Holding } from '../shared/models';
+
+interface BuyAt3Algo {
+  purchaseSent: boolean;
+}
 
 @Component({
   selector: 'app-simple-card',
@@ -37,6 +41,7 @@ export class SimpleCardComponent implements OnInit, OnChanges {
 
   firstFormGroup: FormGroup;
   secondFormGroup: FormGroup;
+  testing = new FormControl();
 
   marketOpenTime: moment.Moment;
   startTime: moment.Moment;
@@ -48,6 +53,8 @@ export class SimpleCardComponent implements OnInit, OnChanges {
 
   preferences: FormControl;
 
+  buyAt3Algo: BuyAt3Algo;
+
   tiles;
 
   constructor(private _formBuilder: FormBuilder,
@@ -55,10 +62,13 @@ export class SimpleCardComponent implements OnInit, OnChanges {
     private reportingService: ReportingService,
     public cartService: CartService,
     private portfolioService: PortfolioService,
+    private backtestService: BacktestService,
     public snackBar: MatSnackBar,
     public dialog: MatDialog) { }
 
   ngOnInit() {
+    this.testing.setValue(false);
+
     this.marketOpenTime = moment.tz('9:30am', 'h:mma', 'America/New_York');
     this.startTime = moment.tz('9:36am', 'h:mma', 'America/New_York');
 
@@ -67,7 +77,8 @@ export class SimpleCardComponent implements OnInit, OnChanges {
 
     this.preferenceList = [
       OrderPref.BuyCloseSellOpen,
-      OrderPref.SellAtOpen
+      OrderPref.SellAtOpen,
+      OrderPref.BuyAt3SellBeforeClose
     ];
 
     this.holdingCount = 0;
@@ -116,11 +127,60 @@ export class SimpleCardComponent implements OnInit, OnChanges {
         } else if (momentInst.isAfter(this.marketOpenTime) &&
           momentInst.isBefore(this.startTime)) {
           if (this.preferences.value === OrderPref.BuyCloseSellOpen ||
-              this.preferences.value === OrderPref.SellAtOpen) {
+            this.preferences.value === OrderPref.SellAtOpen) {
             this.sell();
+          }
+        } else {
+          const buyTime = moment.tz('3:00pm', 'h:mma', 'America/New_York');
+          const sellTime = moment.tz('3:55pm', 'h:mma', 'America/New_York');
+          if (this.preferences.value === OrderPref.BuyAt3SellBeforeClose) {
+            if ((momentInst.isAfter(buyTime) &&
+              momentInst.isBefore(this.marketCloseTime)) || this.testing.value) {
+              if (this.buyAt3Algo.purchaseSent && momentInst.isAfter(sellTime) &&
+              momentInst.isBefore(this.marketCloseTime)) {
+                const resolve = () => {
+                  this.stop();
+                };
+
+                const reject = () => {
+                  this.stop();
+                };
+
+                const notFound = () => {
+                  this.stop();
+                };
+                this.daytradeService.sellAll(this.order,
+                  'market',
+                  resolve,
+                  reject,
+                  notFound);
+              } else {
+                this.backtestService.getTdIntraday(this.order.holding.symbol)
+                  .subscribe((quotes) => {
+                    const closeArr = this.prepareQuotes(quotes);
+                    this.backtestService.getRsi(closeArr)
+                      .subscribe((data) => {
+                        const rsi = data[0][0];
+                        if (rsi < 20 || (rsi > 33 && rsi < 38)) {
+                          this.buy()
+                            .then(() => {
+                              this.buyAt3Algo.purchaseSent = true;
+                            });
+                        }
+                      });
+                  });
+              }
+
+            }
           }
         }
       });
+  }
+
+  prepareQuotes(quotes) {
+    const closeArr = quotes.chart.result[0].indicators.quote[0].close;
+    const closeSubArr = closeArr.slice(closeArr.length - 15);
+    return closeSubArr;
   }
 
   buy() {
@@ -222,6 +282,7 @@ export class SimpleCardComponent implements OnInit, OnChanges {
   setup() {
     this.holdingCount = 0;
     this.warning = '';
+    this.buyAt3Algo = { purchaseSent: false };
   }
 
   selectStock(event) {
@@ -248,5 +309,11 @@ export class SimpleCardComponent implements OnInit, OnChanges {
           duration: 2000,
         });
       });
+  }
+
+  setTest() {
+    if (this.testing.value) {
+      this.interval = 1000;
+    }
   }
 }
