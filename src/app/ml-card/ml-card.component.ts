@@ -55,6 +55,7 @@ export class MlCardComponent implements OnInit {
   secondFormGroup: FormGroup;
   longOnly = new FormControl();
   allIn = new FormControl();
+  inverse = new FormControl();
 
   startTime: moment.Moment;
   stopTime: moment.Moment;
@@ -85,6 +86,7 @@ export class MlCardComponent implements OnInit {
     this.alive = true;
     this.longOnly.setValue(false);
     this.allIn.setValue(false);
+    this.inverse.setValue(false);
     this.testing.setValue(false);
 
     this.firstFormGroup = this._formBuilder.group({
@@ -210,17 +212,17 @@ export class MlCardComponent implements OnInit {
     switch (bet.summary) {
       case Sentiment.Bullish:
         if (this.settings.value === 'closePositions') {
-          this.sellAll(this.getOrder(this.bearishPlay.value));
+          this.sellAll(this.getOrder(this.inverse.value ? this.bullishPlay.value :  this.bearishPlay.value));
         } else if (this.settings.value === 'openPositions') {
-          this.buy(this.getOrder(this.bullishPlay.value), _.divide(bet.bullishOpen, bet.total));
+          this.buy(this.getOrder(this.inverse.value ? this.bearishPlay.value : this.bullishPlay.value), _.divide(bet.bullishOpen, bet.total));
         }
 
         break;
       case Sentiment.Bearish:
         if (this.settings.value === 'closePositions') {
-          this.sellAll(this.getOrder(this.bullishPlay.value));
+          this.sellAll(this.getOrder(this.inverse.value ? this.bearishPlay.value : this.bullishPlay.value));
         } else if (this.settings.value === 'openPositions' && !this.longOnly.value) {
-          this.buy(this.getOrder(this.bearishPlay.value), _.divide(bet.bearishOpen, bet.total));
+          this.buy(this.getOrder(this.inverse.value ? this.bullishPlay.value : this.bearishPlay.value), _.divide(bet.bearishOpen, bet.total));
         }
         break;
       default:
