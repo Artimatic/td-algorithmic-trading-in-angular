@@ -131,47 +131,47 @@ export class SimpleCardComponent implements OnInit, OnChanges {
             this.sell();
           }
         } else {
-          const buyTime = moment.tz('3:00pm', 'h:mma', 'America/New_York');
-          const sellTime = moment.tz('3:55pm', 'h:mma', 'America/New_York');
           if (this.preferences.value === OrderPref.BuyAt3SellBeforeClose) {
-            if ((momentInst.isAfter(buyTime) &&
-              momentInst.isBefore(this.marketCloseTime)) || this.testing.value) {
-              if (this.buyAt3Algo.purchaseSent && momentInst.isAfter(sellTime) &&
+            const buyTime = moment.tz('3:00pm', 'h:mma', 'America/New_York');
+            const sellTime = moment.tz('3:50pm', 'h:mma', 'America/New_York');
+
+            if (this.buyAt3Algo.purchaseSent && momentInst.isAfter(sellTime) &&
               momentInst.isBefore(this.marketCloseTime)) {
-                const resolve = () => {
-                  this.stop();
-                };
+              const resolve = () => {
+                this.stop();
+              };
 
-                const reject = () => {
-                  this.stop();
-                };
+              const reject = () => {
+                this.stop();
+              };
 
-                const notFound = () => {
-                  this.stop();
-                };
-                this.daytradeService.sellAll(this.order,
-                  'market',
-                  resolve,
-                  reject,
-                  notFound);
-              } else {
-                this.backtestService.getTdIntraday(this.order.holding.symbol)
-                  .subscribe((quotes) => {
-                    const closeArr = this.prepareQuotes(quotes);
-                    this.backtestService.getRsi(closeArr)
-                      .subscribe((data) => {
-                        const rsi = data[0][0];
-                        if (rsi < 20 || (rsi > 33 && rsi < 38)) {
-                          this.buy()
-                            .then(() => {
-                              this.buyAt3Algo.purchaseSent = true;
-                            });
-                        }
-                      });
-                  });
-              }
-
+              const notFound = () => {
+                this.stop();
+              };
+              this.daytradeService.sellAll(this.order,
+                'market',
+                resolve,
+                reject,
+                notFound);
+            } else if ((momentInst.isAfter(buyTime) &&
+              momentInst.isBefore(sellTime) && !this.buyAt3Algo.purchaseSent) || this.testing.value) {
+              this.backtestService.getTdIntraday(this.order.holding.symbol)
+                .subscribe((quotes) => {
+                  const closeArr = this.prepareQuotes(quotes);
+                  this.backtestService.getRsi(closeArr)
+                    .subscribe((data) => {
+                      const rsi = data[0][0];
+                      if (rsi < 20 || (rsi > 33 && rsi < 38)) {
+                        this.buy()
+                          .then(() => {
+                            this.buyAt3Algo.purchaseSent = true;
+                          });
+                      }
+                    });
+                });
             }
+
+
           }
         }
       });
