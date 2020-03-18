@@ -99,6 +99,11 @@ class TrainingService {
             quotes.forEach((val, idx) => {
               const quote = val[val.length - 2]; // TODO CHANGE TO -1
               const intraday = intradayQuotes[idx].candles;
+              const datetime =  intraday[intraday.length - 2].datetime;
+              if (moment(datetime).diff(moment(quote.date), 'days') !== 1) {
+                console.log(moment(quote.date).diff(moment(datetime), 'days'), quote.date, moment(datetime));
+                throw `The current date ${moment(datetime).format()} is incorrect`;
+              }
               input = input.concat(this.buildTrainingData(quote, intraday));
             });
 
@@ -113,6 +118,8 @@ class TrainingService {
   buildTrainingData(quote, intradayQuotes) {
     const currentQuote = this.processIntraday(intradayQuotes);
     console.log('intraday quote: ', currentQuote);
+    console.log('previous quote: ', quote);
+
     const input = [
       quote.open > currentQuote.open ? 0 : 1,
       quote.close > currentQuote.close ? 0 : 1,
