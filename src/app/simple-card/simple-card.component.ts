@@ -161,6 +161,7 @@ export class SimpleCardComponent implements OnInit, OnChanges {
                   this.backtestService.getRsi(closeArr)
                     .subscribe((data) => {
                       const rsi = data[0][0];
+                      console.log(`${this.order.holding.symbol} RSI: ${rsi}`);
                       if (rsi < 20 || (rsi > 33 && rsi < 38)) {
                         this.buy()
                           .then(() => {

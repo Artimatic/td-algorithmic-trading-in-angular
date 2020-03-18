@@ -101,8 +101,8 @@ class TrainingService {
               const intraday = intradayQuotes[idx].candles;
               const datetime =  intraday[intraday.length - 2].datetime;
               if (moment(datetime).diff(moment(quote.date), 'days') !== 1) {
-                console.log(moment(quote.date).diff(moment(datetime), 'days'), quote.date, moment(datetime));
-                throw new Error(`The current date ${moment(datetime).format()} is incorrect`);
+                console.log(moment(quote.date).diff(moment(datetime), 'days'), quote.date, moment(datetime).format());
+                console.log(`The dates ${moment(quote.date).format()} ${moment(datetime).format()} are incorrect`);
               }
               input = input.concat(this.buildTrainingData(quote, intraday));
             });
