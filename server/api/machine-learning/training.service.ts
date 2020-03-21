@@ -16,6 +16,9 @@ class TrainingService {
     let qqqDataSet: TrainingData[];
     let tltDataSet: TrainingData[];
     let gldDataSet: TrainingData[];
+    let usoDataSet: TrainingData[];
+    let iwmDataSet: TrainingData[];
+    let hygDataSet: TrainingData[];
 
     return BacktestService.getTrainingData('SPY', endDate, startDate, false)
       .then(spyData => {
@@ -32,6 +35,18 @@ class TrainingService {
       })
       .then(gldData => {
         gldDataSet = gldData;
+        return BacktestService.getTrainingData('USO', endDate, startDate, false);
+      })
+      .then(usoData => {
+        usoDataSet = usoData;
+        return BacktestService.getTrainingData('IWM', endDate, startDate, false);
+      })
+      .then(iwmData => {
+        iwmDataSet = iwmData;
+        return BacktestService.getTrainingData('HYG', endDate, startDate, false);
+      })
+      .then(hygData => {
+        hygDataSet = hygData;
         return BacktestService.getTrainingData(symbol, endDate, startDate, false);
       })
       .then((targetData: any[]) => {
@@ -41,11 +56,17 @@ class TrainingService {
           const qqq = qqqDataSet[idx];
           const tlt = tltDataSet[idx];
           const gld = gldDataSet[idx];
+          const uso = usoDataSet[idx];
+          const iwm = iwmDataSet[idx];
+          const hyg = hygDataSet[idx];
 
           if (spyData.date === target.date &&
             qqq.date === target.date &&
             tlt.date === target.date &&
-            gld.date === target.date) {
+            gld.date === target.date &&
+            uso.date === target.date &&
+            iwm.date === target.date &&
+            hyg.date === target.date) {
             const dataSetObj = {
               date: null,
               input: null,
@@ -59,29 +80,29 @@ class TrainingService {
               .concat(qqq.input.slice(1))
               .concat(tlt.input.slice(1))
               .concat(gld.input.slice(1))
+              .concat(uso.input.slice(1))
+              .concat(iwm.input.slice(1))
+              .concat(hyg.input.slice(1))
               .concat(target.input.slice(1));
 
             dataSetObj.output = target.output;
 
             finalDataSet.push(dataSetObj);
           } else {
-            console.log(spyData.date, qqq.date, tlt.date, gld.date, ' does not match ', target.date);
+            console.log(spyData.date, qqq.date, tlt.date, gld.date, uso.date, iwm.date, hyg.date, ' does not match ', target.date);
           }
         });
-        // } else {
-        //   throw Error('SPY data history size does not match the target history size.');
-        // }
 
         return finalDataSet;
       });
   }
 
   trainWithIntraday(symbol) {
-    const stocks = ['SPY', 'QQQ', 'TLT', 'GLD', symbol];
+    const stocks = ['SPY', 'QQQ', 'TLT', 'GLD', 'USO', 'IWM', 'HYG', symbol];
     const intradayQuotesPromises = [];
     const quotesPromises = [];
-    const endDate = moment().subtract({ day: 1 });
-    const startDate = moment().subtract({ day: 2 });
+    const endDate = moment();
+    const startDate = moment().subtract({ day: 1 });
 
     for (const stock of stocks) {
       intradayQuotesPromises.push(PortfolioService.getIntradayV2(stock));
