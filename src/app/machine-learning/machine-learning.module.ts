@@ -12,6 +12,7 @@ import { AskModelComponent } from './ask-model/ask-model.component';
 import { ButtonModule } from 'primeng/button';
 import { DropdownModule } from 'primeng/dropdown';
 import { CardModule } from 'primeng/card';
+import { TableModule } from 'primeng/table';
 
 const routes: Routes =
   [
@@ -36,7 +37,8 @@ const routes: Routes =
     MatExpansionModule,
     ButtonModule,
     DropdownModule,
-    CardModule
+    CardModule,
+    TableModule
   ],
   declarations: [
     TimelineViewComponent,

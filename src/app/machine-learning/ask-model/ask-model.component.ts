@@ -4,6 +4,14 @@ import { MatSnackBar } from '@angular/material';
 import { FormGroup, FormBuilder } from '@angular/forms';
 import { BacktestService } from '../../shared';
 
+export interface TrainingResults {
+  algorithm?: string;
+  guesses: number;
+  correct: number;
+  score: number;
+  nextOutput:number;
+}
+
 @Component({
   selector: 'app-ask-model',
   templateUrl: './ask-model.component.html',
@@ -17,6 +25,8 @@ export class AskModelComponent implements OnInit {
   isLoading: boolean;
   selectedModel: any;
   models: any[];
+  cols: any[];
+  modelResults: TrainingResults[];
 
   constructor(
     private _formBuilder: FormBuilder,
@@ -36,11 +46,20 @@ export class AskModelComponent implements OnInit {
       { name: 'Test', code: 'test' }
     ];
 
+    this.cols = [
+      { field: 'algorithm', header: 'Algorithm' },
+      { field: 'guesses', header: 'Guesses' },
+      { field: 'correct', header: 'Correct' },
+      { field: 'score', header: 'Score' },
+      { field: 'nextOutput', header: 'Next Output' }
+    ];
+
+    this.modelResults = [];
     this.isLoading = false;
   }
 
   train() {
-    switch (this.selectedModel) {
+    switch (this.selectedModel.code) {
       case 'open_price_up': {
         this.trainOpenUp();
       }
@@ -48,7 +67,7 @@ export class AskModelComponent implements OnInit {
   }
 
   activate() {
-    switch (this.selectedModel) {
+    switch (this.selectedModel.code) {
       case 'open_price_up': {
         this.activateOpenUp();
       }
@@ -61,13 +80,13 @@ export class AskModelComponent implements OnInit {
       .runLstmV2(this.form.value.query,
         moment(this.endDate).format('YYYY-MM-DD'),
         moment(this.startDate).format('YYYY-MM-DD')
-      ).subscribe((data) => {
+      ).subscribe((data: TrainingResults[]) => {
         this.isLoading = false;
-
+        data[0].algorithm = 'Open Price Up';
+        this.modelResults.push(data[0]);
       }, error => {
         console.log('error: ', error);
         this.isLoading = false;
-
       });
   }
 
@@ -77,11 +96,11 @@ export class AskModelComponent implements OnInit {
     this.backtestService.activateLstmV2(this.form.value.query)
       .subscribe((data) => {
         this.isLoading = false;
-
+        data[0].algorithm = 'Open Price Up';
+        this.modelResults.push(data[0]);
       }, error => {
         console.log('error: ', error);
         this.isLoading = false;
-
       });
   }
 }

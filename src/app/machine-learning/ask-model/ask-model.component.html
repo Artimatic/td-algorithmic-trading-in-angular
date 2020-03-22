@@ -23,7 +23,7 @@
       </p-dropdown>
     </div>
     <div>
-      <div *ngIf="isLoading">
+      <div class="load-spinner" *ngIf="isLoading">
         <mat-spinner></mat-spinner>
       </div>
       <span *ngIf="!isLoading">
@@ -32,4 +32,20 @@
       </span>
     </div>
   </div>
+  <p-table [columns]="cols" [value]="modelResults">
+    <ng-template pTemplate="header" let-columns>
+      <tr>
+        <th *ngFor="let col of columns">
+          {{col.header}}
+        </th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-rowData let-columns="columns">
+      <tr>
+        <td *ngFor="let col of columns">
+          {{rowData[col.field]}}
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
 </p-card>

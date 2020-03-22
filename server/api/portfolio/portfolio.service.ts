@@ -1,6 +1,8 @@
 import * as request from 'request-promise';
 import * as Robinhood from 'robinhood';
 import * as _ from 'lodash';
+import * as moment from 'moment';
+
 const RobinHoodApi = require('robinhood-api');
 const robinhood = new RobinHoodApi();
 
@@ -306,6 +308,38 @@ class PortfolioService {
         frequency: 1,
         endDate: Date.now(),
         needExtendedHoursData: true
+      },
+      headers: {
+        Authorization: `Bearer ${this.access_token[accountId]}`
+      }
+    };
+
+    return request.get(options)
+      .then((data) => {
+        return this.processTDData(data);
+      });
+  }
+
+  getIntradayV3(symbol, startDate, endDate = moment().format()) {
+    return this.renewTDAuth(null)
+      .then(() => this.getTDIntradayV3(symbol, moment(startDate).valueOf(), moment(endDate).valueOf()));
+  }
+
+  getTDIntradayV3(symbol, startDate, endDate) {
+    const accountId = configurations.tdameritrade.accountId;
+
+    const query = `${tdaUrl}marketdata/${symbol}/pricehistory`;
+    const options = {
+      uri: query,
+      qs: {
+        apikey: this.tdaKey[accountId],
+        periodType: 'day',
+        period: 2,
+        frequencyType: 'minute',
+        frequency: 1,
+        startDate: startDate,
+        endDate: endDate,
+        needExtendedHoursData: false
       },
       headers: {
         Authorization: `Bearer ${this.access_token[accountId]}`
