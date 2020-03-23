@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { PrecogComponent } from './precog/precog.component';
 import { MachineLearningPageComponent } from './machine-learning-page/machine-learning-page.component';
 import { BacktestService } from '../shared';
-import { MatSnackBarModule, MatCardModule, MatFormFieldModule, MatGridListModule, MatProgressSpinnerModule, MatInputModule, MatExpansionModule } from '@angular/material';
+import { MatSnackBarModule, MatCardModule, MatFormFieldModule, MatGridListModule, MatInputModule, MatExpansionModule } from '@angular/material';
 import { ChartModule } from 'angular-highcharts';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Routes, RouterModule } from '@angular/router';
@@ -13,6 +13,7 @@ import { ButtonModule } from 'primeng/button';
 import { DropdownModule } from 'primeng/dropdown';
 import { CardModule } from 'primeng/card';
 import { TableModule } from 'primeng/table';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
 const routes: Routes =
   [
@@ -33,12 +34,12 @@ const routes: Routes =
     MatFormFieldModule,
     MatInputModule,
     MatGridListModule,
-    MatProgressSpinnerModule,
     MatExpansionModule,
     ButtonModule,
     DropdownModule,
     CardModule,
-    TableModule
+    TableModule,
+    ProgressSpinnerModule
   ],
   declarations: [
     TimelineViewComponent,

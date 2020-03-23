@@ -228,36 +228,38 @@ class BacktestController extends BaseController {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     }
     BacktestService.runDaytradeBacktest(request.body.symbol,
-                                        request.body.currentDate,
-                                        request.body.startDate,
-                                        request.body.parameters, response);
+      request.body.currentDate,
+      request.body.startDate,
+      request.body.parameters)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
 
   }
 
   getDaytrade(request, response) {
     if (_.isEmpty(request.body) ||
-        !request.body.indicators ||
-        !request.body.parameters) {
+      !request.body.indicators ||
+      !request.body.parameters) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     }
     BacktestService.getDaytrade(request.body.price,
-                                request.body.paidPrice,
-                                request.body.indicators,
-                                request.body.parameters, response);
+      request.body.paidPrice,
+      request.body.indicators,
+      request.body.parameters, response);
 
   }
 
   calibrateDaytrade(request, response) {
     if (_.isEmpty(request.body) ||
-        !request.body.symbols ||
-        !request.body.currentDate ||
-        !request.body.startDate) {
+      !request.body.symbols ||
+      !request.body.currentDate ||
+      !request.body.startDate) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     }
     BacktestService.calibrateDaytrade(request.body.symbols,
-                                      request.body.currentDate,
-                                      request.body.startDate,
-                                      response);
+      request.body.currentDate,
+      request.body.startDate,
+      response);
 
   }
 }

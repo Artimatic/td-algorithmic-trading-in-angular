@@ -141,13 +141,16 @@ class TrainingService {
     console.log('intraday quote: ', currentQuote);
     console.log('previous quote: ', quote);
 
+    return this.compareQuotes(quote, currentQuote);
+  }
+
+  compareQuotes(previousQuote, currentQuote) {
     const input = [
-      quote.open > currentQuote.open ? 0 : 1,
-      quote.close > currentQuote.close ? 0 : 1,
-      quote.high > currentQuote.high ? 0 : 1,
-      quote.low > currentQuote.low ? 0 : 1,
+      previousQuote.open > currentQuote.open ? 0 : 1,
+      previousQuote.close > currentQuote.close ? 0 : 1,
+      previousQuote.high > currentQuote.high ? 0 : 1,
+      previousQuote.low > currentQuote.low ? 0 : 1,
     ];
-    console.log('processed: ', input);
 
     return input;
   }

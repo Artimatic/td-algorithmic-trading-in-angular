@@ -337,8 +337,8 @@ class PortfolioService {
         period: 2,
         frequencyType: 'minute',
         frequency: 1,
-        startDate: startDate,
-        endDate: endDate,
+        startDate,
+        endDate,
         needExtendedHoursData: false
       },
       headers: {
@@ -348,7 +348,8 @@ class PortfolioService {
 
     return request.get(options)
       .then((data) => {
-        return this.processTDData(data);
+        const response = this.processTDData(data);
+        return QuoteService.convertTdIntraday(response.candles);
       });
   }
 

@@ -12,3 +12,4 @@ export {
 } from './services';
 export { AlgoParam } from './algo-param.interface';
 export { Row } from './row.interface';
+export { MachineLearningService } from './services/machine-learning/machine-learning.service';

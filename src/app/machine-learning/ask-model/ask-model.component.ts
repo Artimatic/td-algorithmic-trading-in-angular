@@ -2,14 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import * as moment from 'moment';
 import { MatSnackBar } from '@angular/material';
 import { FormGroup, FormBuilder } from '@angular/forms';
-import { BacktestService } from '../../shared';
+import { BacktestService, MachineLearningService } from '../../shared/index';
 
 export interface TrainingResults {
   algorithm?: string;
   guesses: number;
   correct: number;
   score: number;
-  nextOutput:number;
+  nextOutput: number;
 }
 
 @Component({
@@ -31,11 +31,18 @@ export class AskModelComponent implements OnInit {
   constructor(
     private _formBuilder: FormBuilder,
     private backtestService: BacktestService,
+    private machineLearningService: MachineLearningService,
     public snackBar: MatSnackBar) { }
 
   ngOnInit() {
     this.endDate = new Date();
-    this.startDate = moment().subtract({ day: 500 }).toDate();
+    const start = moment().subtract({ day: 30 });
+    const day = start.day();
+    if (day === 0 || day === 6) {
+      this.startDate = moment().subtract({ day: 33 }).toDate();
+    } else {
+      this.startDate = start.toDate();
+    }
 
     this.form = this._formBuilder.group({
       query: this.symbol
@@ -43,7 +50,7 @@ export class AskModelComponent implements OnInit {
 
     this.models = [
       { name: 'Open Price Up', code: 'open_price_up' },
-      { name: 'Test', code: 'test' }
+      { name: 'Predict Next 30 minutes', code: 'predict_30' }
     ];
 
     this.cols = [
@@ -62,6 +69,11 @@ export class AskModelComponent implements OnInit {
     switch (this.selectedModel.code) {
       case 'open_price_up': {
         this.trainOpenUp();
+        break;
+      }
+      case 'predict_30': {
+        this.trainPredict30();
+        break;
       }
     }
   }
@@ -70,6 +82,7 @@ export class AskModelComponent implements OnInit {
     switch (this.selectedModel.code) {
       case 'open_price_up': {
         this.activateOpenUp();
+        break;
       }
     }
   }
@@ -102,5 +115,24 @@ export class AskModelComponent implements OnInit {
         console.log('error: ', error);
         this.isLoading = false;
       });
+  }
+
+  trainPredict30() {
+    this.isLoading = true;
+    this.machineLearningService
+      .trainPredictNext30(this.form.value.query,
+        moment(this.endDate).format('YYYY-MM-DD'),
+        moment(this.startDate).format('YYYY-MM-DD')
+      ).subscribe((data: TrainingResults[]) => {
+        this.isLoading = false;
+        this.addTableItem(data);
+      }, error => {
+        console.log('error: ', error);
+        this.isLoading = false;
+      });
+  }
+
+  addTableItem(item: TrainingResults[]) {
+    this.modelResults = this.modelResults.concat(item);
   }
 }

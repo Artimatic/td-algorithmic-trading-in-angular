@@ -32,7 +32,7 @@ export interface DaytradeParameters {
 export interface Indicators {
   vwma: number;
   mfiLeft: number;
-  bband80: number;
+  bband80: any[];
   mfiPrevious?: number;
   roc10?: number;
   roc10Previous?: number;
@@ -41,6 +41,7 @@ export interface Indicators {
   close?: number;
   recommendation?: Recommendation;
   action?: string;
+  date?: string;
 }
 
 export interface DaytradeAlgos {
@@ -226,14 +227,14 @@ class BacktestService {
       });
   }
 
-  runDaytradeBacktest(symbol, currentDate, startDate, parameters, response) {
-    this.initDaytradeStrategy(symbol, startDate, currentDate, parameters)
+  runDaytradeBacktest(symbol, currentDate, startDate, parameters) {
+    return this.initDaytradeStrategy(symbol, startDate, currentDate, parameters)
       .then(indicators => {
         const testResults = this.backtestIndicators(this.getDaytradeRecommendation,
           indicators,
           parameters);
 
-        response.status(200).send(testResults);
+        return testResults;
       });
   }
 
@@ -1467,6 +1468,26 @@ class BacktestService {
       }
     };
 
+    return RequestPromise(options)
+      .catch((error) => {
+        console.log('Error: ', error);
+      });
+  }
+
+  trainCustomModel(symbol, modelName, trainingData) {
+    const URI = `${mlServiceUrl}api/train-custom?`;
+
+    const options = {
+      method: 'POST',
+      uri: URI,
+      body: {
+        symbol,
+        modelName,
+        trainingData
+      },
+    };
+
+    console.log('body: ', options.body);
     return RequestPromise(options)
       .catch((error) => {
         console.log('Error: ', error);

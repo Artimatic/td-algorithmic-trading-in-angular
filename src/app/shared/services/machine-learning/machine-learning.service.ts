@@ -15,7 +15,7 @@ export class MachineLearningService {
 
   constructor(private http: HttpClient) { }
 
-  runLstmV3(symbol: string, endDate: string = null, startDate: string = null): Observable<any> {
+  trainPredictNext30(symbol: string, endDate: string = null, startDate: string = null): Observable<any> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     const options = {
       headers: headers,
