@@ -349,7 +349,7 @@ class PortfolioService {
     return request.get(options)
       .then((data) => {
         const response = this.processTDData(data);
-        return QuoteService.convertTdIntraday(response.candles);
+        return QuoteService.convertTdIntradayV2(symbol, response.candles);
       });
   }
 

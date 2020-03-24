@@ -252,6 +252,15 @@ class QuoteService {
     return data;
   }
 
+  convertTdIntradayV2(symbol, quotes) {
+    _.forEach(quotes, (quote) => {
+      quote.date = moment(quote.datetime).toISOString();
+      quote.symbol = symbol;
+    });
+
+    return quotes;
+  }
+
   getOptionChain(symbol) {
     return api.optionChain(symbol);
   }

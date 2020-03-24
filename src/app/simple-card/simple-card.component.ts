@@ -132,7 +132,7 @@ export class SimpleCardComponent implements OnInit, OnChanges {
           }
         } else {
           if (this.preferences.value === OrderPref.BuyAt3SellBeforeClose) {
-            const buyTime = moment.tz('3:00pm', 'h:mma', 'America/New_York');
+            const buyTime = moment.tz('3:28pm', 'h:mma', 'America/New_York');
             const sellTime = moment.tz('3:45pm', 'h:mma', 'America/New_York');
             console.log('Buy at 3', this.buyAt3Algo.purchaseSent, momentInst.isAfter(sellTime));
 

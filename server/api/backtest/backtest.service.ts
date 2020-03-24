@@ -438,7 +438,6 @@ class BacktestService {
 
     return QuoteService.queryForIntraday(symbol, startDate, currentDate)
       .then(quotes => {
-        console.log('quotes ', quotes.length);
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);
           if (idx > minQuotes) {
@@ -1485,12 +1484,12 @@ class BacktestService {
         modelName,
         trainingData
       },
+      json: true
     };
 
-    console.log('body: ', options.body);
     return RequestPromise(options)
       .catch((error) => {
-        console.log('Error: ', error);
+        console.log('train-custom error: ', error.message);
       });
   }
 

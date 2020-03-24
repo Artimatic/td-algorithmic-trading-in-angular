@@ -76,7 +76,7 @@
           {{element.lastVolume | currency}}
         </span>
         <span *ngSwitchCase="'impliedMovement'">
-          {{element.impliedMovement | percent}}
+          {{element?.impliedMovement | percent}}
         </span>
         <span *ngSwitchDefault>
           {{element[col.field]}}
