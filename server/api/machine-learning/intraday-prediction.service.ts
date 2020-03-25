@@ -46,11 +46,13 @@ class IntradayPredicationService {
 
   activate(symbol) {
     let price = null;
+    let previousClose = null;
     let indicator = null;
     return PortfolioService.getIntradayV3(symbol, moment().subtract({ days: 1 }).valueOf(), moment().valueOf())
       .then((quotes) => {
         const subQuotes = quotes.slice(quotes.length - 80, quotes.length);
         price = quotes[quotes.length - 1].close;
+        previousClose = quotes[quotes.length - 15].close;
         return BacktestService.initStrategy(subQuotes);
       })
       .then((indicators) => {
@@ -63,14 +65,14 @@ class IntradayPredicationService {
         return indicator;
       })
       .then((signal) => {
-        const inputData = this.buildInputSet(price, signal);
+        const inputData = this.buildInputSet(previousClose, signal);
         console.log('input data: ', inputData);
         return BacktestService.activateCustomModel(symbol, 'New Model', inputData.input);
       });
   }
 
   withinBounds(index, totalLength) {
-    return index > 0 && (index + 30 < totalLength);
+    return index > 15 && (index + 30 < totalLength);
   }
 
   comparePrices(price, close) {
@@ -160,16 +162,15 @@ class IntradayPredicationService {
 
   buildFeatureSet(signals, currentSignal, currentIndex) {
     const futureClose = signals[currentIndex + 15].close;
-    const openPrice = signals[0].close;
     const closePrice = currentSignal.close;
 
-    const dataSetObj = this.buildInputSet(openPrice, currentSignal);
+    const dataSetObj = this.buildInputSet(signals[currentIndex - 15].close, currentSignal);
 
     dataSetObj.output = [this.getOutput(closePrice, futureClose)];
     return dataSetObj;
   }
 
-  buildInputSet(openPrice, currentSignal) {
+  buildInputSet(previousClose, currentSignal) {
     const dataSetObj = {
       date: null,
       input: null,
@@ -177,20 +178,19 @@ class IntradayPredicationService {
     };
 
     const close = currentSignal.close;
-    const day = new Date(currentSignal.date).getUTCDay();
     const hour = Number(moment(currentSignal.date).format('HH'));
 
     dataSetObj.date = currentSignal.date;
-    dataSetObj.input = [day, hour, _.round(DecisionService.getPercentChange(close, openPrice) * 100, 3)]
+    dataSetObj.input = [hour, _.round(DecisionService.getPercentChange(previousClose, currentSignal.low) * 1000, 0)]
       .concat(this.convertBBand(currentSignal))
       .concat(this.comparePrices(currentSignal.vwma, close))
       .concat(this.comparePrices(currentSignal.high, close))
       .concat(this.comparePrices(currentSignal.low, close))
       .concat(this.convertRecommendations(currentSignal))
-      .concat([_.round(DecisionService.getPercentChange(close, currentSignal.vwma) * 100, 3)])
-      .concat([_.round(DecisionService.getPercentChange(close, currentSignal.high) * 100, 3)])
-      .concat([_.round(DecisionService.getPercentChange(close, currentSignal.low) * 100, 3)])
-      .concat([_.round(currentSignal.mfiLeft, 2)]);
+      .concat([_.round(DecisionService.getPercentChange(close, currentSignal.vwma) * 1000, 0)])
+      .concat([_.round(DecisionService.getPercentChange(close, currentSignal.high) * 1000, 0)])
+      .concat([_.round(DecisionService.getPercentChange(close, currentSignal.low) * 1000, 0)])
+      .concat([_.round(currentSignal.mfiLeft, 0)]);
 
     return dataSetObj;
   }

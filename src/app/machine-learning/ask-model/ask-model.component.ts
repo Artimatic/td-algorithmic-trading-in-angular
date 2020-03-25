@@ -3,6 +3,7 @@ import * as moment from 'moment';
 import { MatSnackBar } from '@angular/material';
 import { FormGroup, FormBuilder } from '@angular/forms';
 import { BacktestService, MachineLearningService } from '../../shared/index';
+import IntradayStocks from '../../intraday-backtest-view/intraday-backtest-stocks.constant';
 
 export interface TrainingResults {
   algorithm?: string;
@@ -36,10 +37,10 @@ export class AskModelComponent implements OnInit {
 
   ngOnInit() {
     this.endDate = new Date();
-    const start = moment().subtract({ day: 30 });
+    const start = moment().subtract({ day: 2 });
     const day = start.day();
     if (day === 0 || day === 6) {
-      this.startDate = moment().subtract({ day: 33 }).toDate();
+      this.startDate = moment().subtract({ day: 3 }).toDate();
     } else {
       this.startDate = start.toDate();
     }
@@ -135,4 +136,38 @@ export class AskModelComponent implements OnInit {
   addTableItem(item: TrainingResults[]) {
     this.modelResults = this.modelResults.concat(item);
   }
+
+  importRandom() {
+    const stockList = [];
+    const uniqueCheck = {};
+    for (let i = 0; i < 25; i++) {
+      let rand;
+      do {
+        rand = Math.floor(Math.random() * IntradayStocks.length);
+      } while (uniqueCheck[rand]);
+      stockList.push(IntradayStocks[rand]);
+      uniqueCheck[rand] = true;
+    }
+    return stockList;
+  }
+
+  random() {
+    const stocks = this.importRandom();
+    for (const stock of stocks) {
+      setTimeout(() => {
+        this.machineLearningService
+          .trainPredictNext30(stock.symbol,
+            moment(this.endDate).format('YYYY-MM-DD'),
+            moment(this.startDate).format('YYYY-MM-DD')
+          ).subscribe((data: TrainingResults[]) => {
+            this.isLoading = false;
+            this.addTableItem(data);
+          }, error => {
+            console.log('error: ', error);
+            this.isLoading = false;
+          });
+      }, 18000);
+    }
+  }
+
 }
