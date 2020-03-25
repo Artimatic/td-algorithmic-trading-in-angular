@@ -47,26 +47,26 @@ class IntradayPredicationService {
   activate(symbol) {
     let price = null;
     let indicator = null;
-    return PortfolioService.getIntradayV3(symbol, moment().subtract({days: 1}).valueOf(), moment().valueOf())
-    .then((quotes) => {
-      const subQuotes = quotes.slice(quotes.length - 80, quotes.length);
-      price = quotes[quotes.length - 1].close;
-      return BacktestService.initStrategy(subQuotes);
-    })
-    .then((indicators) => {
-      indicator = indicators;
+    return PortfolioService.getIntradayV3(symbol, moment().subtract({ days: 1 }).valueOf(), moment().valueOf())
+      .then((quotes) => {
+        const subQuotes = quotes.slice(quotes.length - 80, quotes.length);
+        price = quotes[quotes.length - 1].close;
+        return BacktestService.initStrategy(subQuotes);
+      })
+      .then((indicators) => {
+        indicator = indicators;
 
-      return BacktestService.getDaytradeRecommendation(price, indicator);
-    })
-    .then((recommendation) => {
-      indicator.recommendation = recommendation;
-      return indicator;
-    })
-    .then((signal) => {
-      const inputData = this.buildInputSet(price, signal);
-      console.log('input data: ', inputData);
-      return BacktestService.activateCustomModel(symbol, 'New Model', inputData.input);
-    });
+        return BacktestService.getDaytradeRecommendation(price, indicator);
+      })
+      .then((recommendation) => {
+        indicator.recommendation = recommendation;
+        return indicator;
+      })
+      .then((signal) => {
+        const inputData = this.buildInputSet(price, signal);
+        console.log('input data: ', inputData);
+        return BacktestService.activateCustomModel(symbol, 'New Model', inputData.input);
+      });
   }
 
   withinBounds(index, totalLength) {
@@ -102,7 +102,7 @@ class IntradayPredicationService {
   }
 
   getOutput(currentClose, futureClose) {
-    if (currentClose > futureClose) {
+    if (DecisionService.getPercentChange(currentClose, futureClose) > 0.005) {
       return 1;
     }
 
@@ -181,7 +181,7 @@ class IntradayPredicationService {
     const hour = Number(moment(currentSignal.date).format('HH'));
 
     dataSetObj.date = currentSignal.date;
-    dataSetObj.input = [day, hour, _.round(DecisionService.getPercentChange(close, openPrice)* 100, 3)]
+    dataSetObj.input = [day, hour, _.round(DecisionService.getPercentChange(close, openPrice) * 100, 3)]
       .concat(this.convertBBand(currentSignal))
       .concat(this.comparePrices(currentSignal.vwma, close))
       .concat(this.comparePrices(currentSignal.high, close))
