@@ -15,7 +15,8 @@ import {
   DaytradeService,
   ReportingService,
   ScoreKeeperService,
-  PortfolioService
+  PortfolioService,
+  MachineLearningService
 } from '../shared';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import { SmartOrder } from '../shared/models/smart-order';
@@ -78,6 +79,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     public cartService: CartService,
     private globalSettingsService: GlobalSettingsService,
     private tradeService: TradeService,
+    private machineLearningService: MachineLearningService,
     public dialog: MatDialog) { }
 
   ngOnInit() {
@@ -795,6 +797,7 @@ export class BbCardComponent implements OnInit, OnChanges {
             analysis);
           this.sendBuy(buyOrder);
         }
+
       }
     } else if (daytradeType === 'sell') {
       if (this.sellCount >= this.firstFormGroup.value.quantity) {
@@ -842,18 +845,19 @@ export class BbCardComponent implements OnInit, OnChanges {
         const modifier = await this.globalSettingsService.globalModifier();
         orderQuantity = _.round(_.multiply(modifier, orderQuantity), 0);
 
-        if (this.indicators.vwma < quote) {
-          orderQuantity = _.round(_.multiply(orderQuantity, 0.5), 0);
-        }
+        this.machineLearningService.activate(this.order.holding.symbol)
+        .subscribe((machineResult: {nextOutput: number}) => {
+          if (machineResult.nextOutput > 0.6) {
+            if (orderQuantity > 0) {
+              const buyOrder = this.buildBuyOrder(orderQuantity,
+                quote,
+                timestamp,
+                analysis);
 
-        if (orderQuantity > 0) {
-          const buyOrder = this.buildBuyOrder(orderQuantity,
-            quote,
-            timestamp,
-            analysis);
-
-          this.sendBuy(buyOrder);
-        }
+              this.sendBuy(buyOrder);
+            }
+          }
+        });
       }
     }
   }
