@@ -371,9 +371,9 @@ export class BbCardComponent implements OnInit, OnChanges {
           });
       });
 
-    const timestamps = _.get(data, 'chart.result[0].timestamp'),
-      dataLength = timestamps.length,
-      quotes = _.get(data, 'chart.result[0].indicators.quote[0]');
+    const timestamps = _.get(data, 'chart.result[0].timestamp');
+    const dataLength = timestamps.length;
+    const quotes = _.get(data, 'chart.result[0].indicators.quote[0]');
 
     if (dataLength > this.bbandPeriod) {
       const lastIndex = dataLength - 1;

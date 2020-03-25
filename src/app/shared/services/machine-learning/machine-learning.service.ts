@@ -27,4 +27,15 @@ export class MachineLearningService {
     };
     return this.http.get(`${BASE_URL}api/machine-learning/v3/train`, options);
   }
+
+  trainActivate(symbol: string): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const options = {
+      headers: headers,
+      params: {
+        symbol
+      }
+    };
+    return this.http.get(`${BASE_URL}api/machine-learning/v3/activate`, options);
+  }
 }

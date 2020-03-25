@@ -8,5 +8,6 @@ router.get('/guess-activate', MachineLearningController.activateWithIntradayData
 router.get('/test-model', MachineLearningController.testV2Model);
 router.get('/activate', MachineLearningController.activateV2Model);
 router.get('/v3/train', MachineLearningController.trainV3);
+router.get('/v3/activate', MachineLearningController.activateV3);
 
 module.exports = router;

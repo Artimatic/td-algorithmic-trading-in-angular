@@ -35,8 +35,14 @@ class MachineLearningController extends BaseController {
 
   trainV3(request, response) {
     IntradayPredicationService.train(request.query.symbol, request.query.startDate, request.query.endDate)
-    .then((data) => BaseController.requestGetSuccessHandler(response, data))
-    .catch((err) => BaseController.requestErrorHandler(response, err));
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+  activateV3(request, response) {
+    IntradayPredicationService.activate(request.query.symbol)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 }
 

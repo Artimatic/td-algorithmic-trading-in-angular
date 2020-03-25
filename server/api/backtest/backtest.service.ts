@@ -121,8 +121,7 @@ class BacktestService {
     return tulind.indicators.rsi.indicator([real], [period]);
   }
 
-  getDaytradeIndicators(quotes, period,
-    stddev, mfiPeriod, vwmaPeriod) {
+  getDaytradeIndicators(quotes, period) {
     let indicators: Indicators = {
       vwma: null,
       mfiLeft: null,
@@ -1506,6 +1505,27 @@ class BacktestService {
         input: trainingData[trainingData.length - 1].input,
         round: false,
         to: today
+      },
+      json: true
+    };
+
+    return RequestPromise(options)
+      .catch((error) => {
+        console.log('Error: ', error);
+      });
+  }
+
+  activateCustomModel(symbol, modelName: string, input) {
+    const URI = `${mlServiceUrl}api/activate-custom`;
+
+    const options = {
+      method: 'POST',
+      uri: URI,
+      body: {
+        symbol,
+        modelName,
+        input,
+        round: false
       },
       json: true
     };

@@ -5,12 +5,11 @@ import DecisionService from '../mean-reversion/reversion-decision.service';
 import QuoteService from '../quote/quote.service';
 import BacktestService from '../backtest/backtest.service';
 import { BacktestResults, Indicators } from '../backtest/backtest.service';
-import TrainingService from './training.service';
 import PortfolioService from '../portfolio/portfolio.service';
 
 class IntradayPredicationService {
   train(symbol, startDate, endDate) {
-    return PortfolioService.getIntradayV3(symbol, startDate, endDate)
+    return PortfolioService.getIntradayV3(symbol, moment(startDate).valueOf(), moment(endDate).valueOf())
       .then((data) => {
         console.log('Got quotes ', data[0].date, data[data.length - 1].date);
         return QuoteService.postIntradayData(data);
@@ -39,10 +38,35 @@ class IntradayPredicationService {
           }
         });
         console.log('Data set size: ', finalDataSet.length);
-        BacktestService.trainCustomModel(symbol, 'New Model' + moment().valueOf(), finalDataSet);
+        BacktestService.trainCustomModel(symbol, 'New Model', finalDataSet);
 
         return finalDataSet;
       });
+  }
+
+  activate(symbol) {
+    let price = null;
+    let indicator = null;
+    return PortfolioService.getIntradayV3(symbol, moment().subtract({days: 1}).valueOf(), moment().valueOf())
+    .then((quotes) => {
+      const subQuotes = quotes.slice(quotes.length - 80, quotes.length);
+      price = quotes[quotes.length - 1].close;
+      return BacktestService.initStrategy(subQuotes);
+    })
+    .then((indicators) => {
+      indicator = indicators;
+
+      return BacktestService.getDaytradeRecommendation(price, indicator);
+    })
+    .then((recommendation) => {
+      indicator.recommendation = recommendation;
+      return indicator;
+    })
+    .then((signal) => {
+      const inputData = this.buildInputSet(price, signal);
+      console.log('input data: ', inputData);
+      return BacktestService.activateCustomModel(symbol, 'New Model', inputData.input);
+    });
   }
 
   withinBounds(index, totalLength) {
@@ -135,31 +159,39 @@ class IntradayPredicationService {
   }
 
   buildFeatureSet(signals, currentSignal, currentIndex) {
+    const futureClose = signals[currentIndex + 15].close;
+    const openPrice = signals[0].close;
+    const closePrice = currentSignal.close;
+
+    const dataSetObj = this.buildInputSet(openPrice, currentSignal);
+
+    dataSetObj.output = [this.getOutput(closePrice, futureClose)];
+    return dataSetObj;
+  }
+
+  buildInputSet(openPrice, currentSignal) {
     const dataSetObj = {
       date: null,
       input: null,
       output: null
     };
+
+    const close = currentSignal.close;
     const day = new Date(currentSignal.date).getUTCDay();
     const hour = Number(moment(currentSignal.date).format('HH'));
-    const close = currentSignal.close;
-    const futureClose = signals[currentIndex + 15].close;
-    const openPrice = signals[0].close;
 
     dataSetObj.date = currentSignal.date;
-    dataSetObj.input = [day, hour, _.round(DecisionService.getPercentChange(close, openPrice), 3) * 100]
-      .concat(TrainingService.compareQuotes(signals[currentIndex - 1], currentSignal))
+    dataSetObj.input = [day, hour, _.round(DecisionService.getPercentChange(close, openPrice)* 100, 3)]
       .concat(this.convertBBand(currentSignal))
       .concat(this.comparePrices(currentSignal.vwma, close))
       .concat(this.comparePrices(currentSignal.high, close))
       .concat(this.comparePrices(currentSignal.low, close))
       .concat(this.convertRecommendations(currentSignal))
-      .concat([_.round(DecisionService.getPercentChange(close, currentSignal.vwma), 3) * 100])
-      .concat([_.round(DecisionService.getPercentChange(close, currentSignal.high), 3) * 100])
-      .concat([_.round(DecisionService.getPercentChange(close, currentSignal.low), 3) * 100])
+      .concat([_.round(DecisionService.getPercentChange(close, currentSignal.vwma) * 100, 3)])
+      .concat([_.round(DecisionService.getPercentChange(close, currentSignal.high) * 100, 3)])
+      .concat([_.round(DecisionService.getPercentChange(close, currentSignal.low) * 100, 3)])
       .concat([_.round(currentSignal.mfiLeft, 2)]);
 
-    dataSetObj.output = [this.getOutput(close, futureClose)];
     return dataSetObj;
   }
 }

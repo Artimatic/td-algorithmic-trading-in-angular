@@ -320,7 +320,7 @@ class PortfolioService {
       });
   }
 
-  getIntradayV3(symbol, startDate, endDate = moment().format()) {
+  getIntradayV3(symbol, startDate = moment().subtract({days: 1}).valueOf(), endDate = moment().valueOf()) {
     return this.renewTDAuth(null)
       .then(() => this.getTDIntradayV3(symbol, moment(startDate).valueOf(), moment(endDate).valueOf()));
   }

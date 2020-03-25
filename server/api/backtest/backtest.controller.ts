@@ -213,8 +213,7 @@ class BacktestController extends BaseController {
   }
 
   getDaytradeIndicators(request, response) {
-    BacktestService.getDaytradeIndicators(request.body.quotes, request.body.period, request.body.stddev,
-      request.body.mfiPeriod, request.body.vwmaPeriod)
+    BacktestService.getDaytradeIndicators(request.body.quotes, request.body.period)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
