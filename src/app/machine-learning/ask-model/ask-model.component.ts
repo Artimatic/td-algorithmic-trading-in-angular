@@ -153,7 +153,7 @@ export class AskModelComponent implements OnInit {
 
   random() {
     const stocks = this.importRandom();
-    for (const i = 0; i < stocks.length; i++) {
+    for (let i = 0; i < stocks.length; i++) {
       const stock = stocks[i];
       setTimeout(() => {
         this.machineLearningService
