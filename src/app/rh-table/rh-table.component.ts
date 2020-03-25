@@ -318,8 +318,8 @@ export class RhTableComponent implements OnInit, OnChanges {
   }
 
   iterateAlgoParams(algoParams: any[], callback: Function) {
-    algoParams.forEach((param) => {
-      this.interval += (this.progress) * 10 + this.totalStocks + 100;
+    algoParams.forEach((param, idx) => {
+      this.interval += (this.totalStocks + 100) * idx - (this.progress) * 10;
       setTimeout(() => {
         callback(param);
       }, this.interval);
