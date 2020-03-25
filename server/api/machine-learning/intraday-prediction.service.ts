@@ -181,7 +181,10 @@ class IntradayPredicationService {
     const hour = Number(moment(currentSignal.date).format('HH'));
 
     dataSetObj.date = currentSignal.date;
-    dataSetObj.input = [hour, _.round(DecisionService.getPercentChange(previousClose, currentSignal.low) * 1000, 0)]
+    dataSetObj.input = [
+      hour,
+      _.round(DecisionService.getPercentChange(previousClose, currentSignal.low) * 1000, 0)
+    ]
       .concat(this.convertBBand(currentSignal))
       .concat(this.comparePrices(currentSignal.vwma, close))
       .concat(this.comparePrices(currentSignal.high, close))

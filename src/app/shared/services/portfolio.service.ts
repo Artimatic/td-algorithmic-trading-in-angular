@@ -184,7 +184,7 @@ export class PortfolioService {
       symbol: holding.symbol,
       quantity: quantity,
       price: price,
-      type: 'LIMIT',
+      type: 'MARKET',
       extendedHours: extended,
       accountId: this.authenticationService.selectedTdaAccount.accountId
     };
