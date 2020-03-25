@@ -153,7 +153,8 @@ export class AskModelComponent implements OnInit {
 
   random() {
     const stocks = this.importRandom();
-    for (const stock of stocks) {
+    for (const i = 0; i < stocks.length; i++) {
+      const stock = stocks[i];
       setTimeout(() => {
         this.machineLearningService
           .trainPredictNext30(stock.symbol,
@@ -166,7 +167,7 @@ export class AskModelComponent implements OnInit {
             console.log('error: ', error);
             this.isLoading = false;
           });
-      }, 100000);
+      }, 100000 * i);
     }
   }
 
