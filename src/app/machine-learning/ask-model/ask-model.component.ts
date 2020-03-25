@@ -166,7 +166,7 @@ export class AskModelComponent implements OnInit {
             console.log('error: ', error);
             this.isLoading = false;
           });
-      }, 18000);
+      }, 100000);
     }
   }
 
