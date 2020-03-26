@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import 'rxjs/add/observable/of';
 import 'rxjs/add/observable/merge';
 import 'rxjs/add/operator/finally';
@@ -52,7 +52,7 @@ export interface BacktestResponse extends Stock {
   templateUrl: './rh-table.component.html',
   styleUrls: ['./rh-table.component.scss']
 })
-export class RhTableComponent implements OnInit, OnChanges {
+export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   @Input() data: AlgoParam[];
   @Input() displayedColumns: string[];
 
