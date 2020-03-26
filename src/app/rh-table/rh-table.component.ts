@@ -15,6 +15,8 @@ import { ChartDialogComponent } from '../chart-dialog/chart-dialog.component';
 import { ChartParam } from '../shared/services/backtest.service';
 import { GlobalSettingsService } from '../settings/global-settings.service';
 import { OptionsDataService } from '../shared/options-data.service';
+import { Subscription, Observable, Subject } from 'rxjs';
+
 export interface Algo {
   value: string;
   viewValue: string;
@@ -96,6 +98,9 @@ export class RhTableComponent implements OnInit, OnChanges {
   selectedColumns: any[];
   selectedStock: any;
   twoOrMoreSignalsOnly: boolean;
+  private callChainSub: Subscription;
+  private backtestBuffer: { stock: string; sub: Observable<any>; }[];
+  private bufferSubject: Subject<void>;
 
   constructor(
     public snackBar: MatSnackBar,
@@ -106,6 +111,9 @@ export class RhTableComponent implements OnInit, OnChanges {
     private optionsDataService: OptionsDataService) { }
 
   ngOnInit() {
+    this.bufferSubject = new Subject();
+    this.backtestBuffer = [];
+    this.callChainSub = new Subscription();
     this.recommendations = [
       { value: 'strongbuy', label: 'Strong Buy' },
       { value: 'buy', label: 'Buy' },
@@ -125,7 +133,7 @@ export class RhTableComponent implements OnInit, OnChanges {
       { field: 'strongsellSignals', header: 'Strong Sell' },
       { field: 'upperResistance', header: 'Upper Resistance' },
       { field: 'lowerResistance', header: 'Lower Resistance' },
-      { field: 'impliedMovement', header: 'Implied Movement'}
+      { field: 'impliedMovement', header: 'Implied Movement' }
     ];
 
     this.selectedColumns = [
@@ -194,22 +202,19 @@ export class RhTableComponent implements OnInit, OnChanges {
         break;
       case 'v2':
         const bbCb = (param) => {
-          this.algo.getInfoV2(param.ticker, currentDate, startDate).subscribe(
-            result => {
-              if (result) {
-                result.stock = param.ticker;
-                this.addToList(result);
-                this.incrementProgress();
-                this.updateAlgoReport(result);
-              } else {
-                this.snackBar.open(`No results for ${param.ticker}`, 'Dismiss');
-                console.log(`No results for ${param.ticker}`);
-              }
-            }, error => {
-              this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
-              console.log(`Error on ${param.ticker}`, error);
-              this.incrementProgress();
-            });
+          return this.algo.getInfoV2(param.ticker, currentDate, startDate)
+            .map(
+              result => {
+                if (result) {
+                  result.stock = param.ticker;
+                  this.addToList(result);
+                  this.incrementProgress();
+                  this.updateAlgoReport(result);
+                } else {
+                  this.snackBar.open(`No results for ${param.ticker}`, 'Dismiss');
+                  console.log(`No results for ${param.ticker}`);
+                }
+              });
         };
 
         this.iterateAlgoParams(algoParams, bbCb);
@@ -259,7 +264,7 @@ export class RhTableComponent implements OnInit, OnChanges {
       case 'v5':
         algo = 'daily-mfi';
         const mfiCb = (param) => {
-          this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, algo).subscribe(
+          return this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, algo).map(
             (testResults: any[]) => {
               if (testResults.length > 0) {
                 const result = testResults[testResults.length - 1];
@@ -268,10 +273,6 @@ export class RhTableComponent implements OnInit, OnChanges {
                 this.updateAlgoReport(result);
               }
               this.incrementProgress();
-            }, error => {
-              this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
-              this.incrementProgress();
-              console.log(`Error on ${param.ticker} ${algo}`, error);
             });
         };
         this.iterateAlgoParams(algoParams, mfiCb);
@@ -280,265 +281,276 @@ export class RhTableComponent implements OnInit, OnChanges {
       case 'daily-roc':
         algo = 'daily-roc';
         const rocCb = (param) => {
-          this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, algo).subscribe(
-            (testResults: BacktestResponse) => {
-              if (testResults) {
-                testResults.stock = param.ticker;
-                this.addToList(testResults);
-                this.updateAlgoReport(testResults);
-              }
-              this.incrementProgress();
-            }, error => {
-              this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
-              this.incrementProgress();
-              console.log(`Error on ${param.ticker} ${algo}`, error);
-            });
-        };
-        this.iterateAlgoParams(algoParams, rocCb);
+          return this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, algo)
+            .map(
+              (testResults: BacktestResponse) => {
+                if (testResults) {
+                  testResults.stock = param.ticker;
+                  this.addToList(testResults);
+                  this.updateAlgoReport(testResults);
+                }
+                this.incrementProgress();
+              });
+    };
+    this.iterateAlgoParams(algoParams, rocCb);
 
-        break;
+    break;
       case 'moving_average_resistance':
-        const callback = (param) => {
-          this.algo.getResistanceChart(param.ticker, startDate, currentDate).subscribe(
-            (result: any) => {
-              result.stock = param.ticker;
-              this.addToList(result);
-              this.updateAlgoReport(result);
-              this.incrementProgress();
-            }, error => {
-              this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
-              this.incrementProgress();
-              console.log(`Error on ${param.ticker} ${algo}`, error);
-            });
-        };
-
-        this.iterateAlgoParams(algoParams, callback);
-        break;
-    }
-  }
-
-  iterateAlgoParams(algoParams: any[], callback: Function) {
-    algoParams.forEach((param, idx) => {
-      this.interval += _.round(((this.progress) * 50 + this.totalStocks + 100) * idx * 0.25, 0);
-      setTimeout(() => {
-        callback(param);
-      }, this.interval);
-    });
-  }
-
-  incrementProgress() {
-    this.progress++;
-    this.progressPct = this.convertToPercent(this.progress, this.totalStocks);
-  }
-
-  convertToPercent(firstVal, secondVal) {
-    return +(Math.round(firstVal / secondVal).toFixed(2)) * 100;
-  }
-
-  updateAlgoReport(result: Stock) {
-    this.algoReport.totalReturns += result.returns;
-    this.algoReport.totalTrades += result.totalTrades;
-    this.algoReport.averageReturns = +((this.algoReport.totalReturns / this.totalStocks).toFixed(5));
-    this.algoReport.averageTrades = +((this.algoReport.totalTrades / this.totalStocks).toFixed(5));
-  }
-
-  filter() {
-    this.filterRecommendation();
-    if (this.twoOrMoreSignalsOnly) {
-      this.filterTwoOrMoreSignalsOnly();
-    }
-  }
-
-  filterTwoOrMoreSignalsOnly() {
-    this.currentList = _.filter(this.currentList, (stock: Stock) => {
-      return (stock.strongbuySignals.length + stock.buySignals.length +
-        stock.strongsellSignals.length + stock.sellSignals.length) > 1;
-    });
-  }
-
-  filterRecommendation() {
-    this.currentList = [];
-    if (this.selectedRecommendation.length === 0) {
-      this.currentList = _.clone(this.stockList);
-    } else {
-      this.currentList = _.filter(this.stockList, (stock: Stock) => {
-        for (const recommendation of this.selectedRecommendation) {
-          if (this.hasRecommendation(stock, recommendation)) {
-            return true;
-          }
-        }
-      });
-    }
-  }
-
-  hasRecommendation(stock: Stock, recommendation) {
-    switch (recommendation) {
-      case 'strongbuy':
-        return stock.strongbuySignals.length > 0;
-      case 'buy':
-        return stock.buySignals.length > 0;
-      case 'strongsell':
-        return stock.strongsellSignals.length > 0;
-      case 'sell':
-        return stock.sellSignals.length > 0;
-    }
-  }
-
-  addToList(stock: Stock) {
-    this.stockList = this.findAndUpdate(stock, this.stockList);
-    this.filter();
-  }
-
-  /*
-  * Find matching stock in current list and update with new data
-  */
-  findAndUpdate(stock: Stock, tableList: any[]): Stock[] {
-    const idx = _.findIndex(tableList, (s) => s.stock === stock.stock);
-    let updateStock;
-    if (idx > -1) {
-      updateStock = this.updateRecommendationCount(tableList[idx], stock);
-      tableList[idx] = updateStock;
-    } else {
-      updateStock = this.updateRecommendationCount(null, stock);
-      tableList.push(updateStock);
-    }
-    return tableList;
-  }
-
-  findStock(symbol, tableList: any[]): Stock {
-    return _.find(tableList, (s) => s.stock === symbol);
-  }
-
-  updateRecommendationCount(current: Stock, incomingStock: Stock): Stock {
-    if (!current) {
-      current = incomingStock;
-    }
-    if (!current.strongbuySignals) {
-      current.strongbuySignals = [];
-    }
-    if (!current.buySignals) {
-      current.buySignals = [];
-    }
-    if (!current.strongsellSignals) {
-      current.strongsellSignals = [];
-    }
-    if (!current.sellSignals) {
-      current.sellSignals = [];
-    }
-
-    switch (incomingStock.recommendation.toLowerCase()) {
-      case 'strongbuy':
-        current.strongbuySignals.push(incomingStock.algo);
-        current.strongbuySignals = current.strongbuySignals.slice();
-        break;
-      case 'buy':
-        current.buySignals.push(incomingStock.algo);
-        current.buySignals = current.buySignals.slice();
-        break;
-      case 'strongsell':
-        current.strongsellSignals.push(incomingStock.algo);
-        current.strongsellSignals = current.strongsellSignals.slice();
-        break;
-      case 'sell':
-        current.sellSignals.push(incomingStock.algo);
-        current.sellSignals = current.sellSignals.slice();
-        break;
-    }
-
-    return current;
-  }
-
-  sell(row: Stock): void {
-    this.order(row, 'Sell');
-  }
-
-  buy(row: Stock): void {
-    this.order(row, 'Buy');
-  }
-
-  order(row: Stock, side: string): void {
-    this.portfolioService.getInstruments(row.stock).subscribe((response) => {
-      const instruments = response.results[0];
-      const newHolding: Holding = {
-        instrument: instruments.url,
-        symbol: instruments.symbol,
-        name: instruments.name,
-        realtime_price: row.lastPrice
-      };
-
-      const dialogRef = this.dialog.open(OrderDialogComponent, {
-        width: '500px',
-        height: '500px',
-        data: { holding: newHolding, side: side }
-      });
-
-      dialogRef.afterClosed().subscribe(result => {
-        console.log('Closed dialog', result);
-      });
-    });
-  }
-
-  runDefaultBacktest() {
-    this.interval = 0;
-    const currentSelected = this.selectedAlgo;
-
-    this.selectedAlgo = 'v2';
-    this.getData(Stocks);
-
-    setTimeout(() => {
-      this.selectedAlgo = 'v5';
-      this.getData(Stocks);
-    }, Stocks.length * 10);
-
-    setTimeout(() => {
-      this.selectedAlgo = 'daily-roc';
-      this.getData(Stocks);
-    }, Stocks.length * 50);
-
-    this.progress = 0;
-    this.selectedAlgo = currentSelected;
-  }
-
-  openChartDialog(element: Stock, endDate) {
-    const params: ChartParam = {
-      algorithm: this.globalSettingsService.selectedAlgo,
-      symbol: element.stock,
-      date: endDate,
-      params: {
-        deviation: this.globalSettingsService.deviation,
-        fastAvg: this.globalSettingsService.fastAvg,
-        slowAvg: this.globalSettingsService.slowAvg
-      }
+    const callback = (param) => {
+      return this.algo.getResistanceChart(param.ticker, startDate, currentDate).map(
+        (result: any) => {
+          result.stock = param.ticker;
+          this.addToList(result);
+          this.updateAlgoReport(result);
+          this.incrementProgress();
+        });
     };
 
-    const dialogRef = this.dialog.open(ChartDialogComponent, {
+    this.iterateAlgoParams(algoParams, callback);
+    break;
+  }
+}
+
+async iterateAlgoParams(algoParams: any[], callback: Function) {
+  for (let i = 0; i < algoParams.length; i++) {
+    this.backtestBuffer.push({ stock: algoParams[i], sub: callback(algoParams[i]) });
+  }
+}
+
+incrementProgress() {
+  this.progress++;
+  this.progressPct = this.convertToPercent(this.progress, this.totalStocks);
+}
+
+convertToPercent(firstVal, secondVal) {
+  return +(Math.round(firstVal / secondVal).toFixed(2)) * 100;
+}
+
+updateAlgoReport(result: Stock) {
+  this.algoReport.totalReturns += result.returns;
+  this.algoReport.totalTrades += result.totalTrades;
+  this.algoReport.averageReturns = +((this.algoReport.totalReturns / this.totalStocks).toFixed(5));
+  this.algoReport.averageTrades = +((this.algoReport.totalTrades / this.totalStocks).toFixed(5));
+}
+
+filter() {
+  this.filterRecommendation();
+  if (this.twoOrMoreSignalsOnly) {
+    this.filterTwoOrMoreSignalsOnly();
+  }
+}
+
+filterTwoOrMoreSignalsOnly() {
+  this.currentList = _.filter(this.currentList, (stock: Stock) => {
+    return (stock.strongbuySignals.length + stock.buySignals.length +
+      stock.strongsellSignals.length + stock.sellSignals.length) > 1;
+  });
+}
+
+filterRecommendation() {
+  this.currentList = [];
+  if (this.selectedRecommendation.length === 0) {
+    this.currentList = _.clone(this.stockList);
+  } else {
+    this.currentList = _.filter(this.stockList, (stock: Stock) => {
+      for (const recommendation of this.selectedRecommendation) {
+        if (this.hasRecommendation(stock, recommendation)) {
+          return true;
+        }
+      }
+    });
+  }
+}
+
+hasRecommendation(stock: Stock, recommendation) {
+  switch (recommendation) {
+    case 'strongbuy':
+      return stock.strongbuySignals.length > 0;
+    case 'buy':
+      return stock.buySignals.length > 0;
+    case 'strongsell':
+      return stock.strongsellSignals.length > 0;
+    case 'sell':
+      return stock.sellSignals.length > 0;
+  }
+}
+
+addToList(stock: Stock) {
+  this.stockList = this.findAndUpdate(stock, this.stockList);
+  this.filter();
+}
+
+/*
+* Find matching stock in current list and update with new data
+*/
+findAndUpdate(stock: Stock, tableList: any[]): Stock[] {
+  const idx = _.findIndex(tableList, (s) => s.stock === stock.stock);
+  let updateStock;
+  if (idx > -1) {
+    updateStock = this.updateRecommendationCount(tableList[idx], stock);
+    tableList[idx] = updateStock;
+  } else {
+    updateStock = this.updateRecommendationCount(null, stock);
+    tableList.push(updateStock);
+  }
+  return tableList;
+}
+
+findStock(symbol, tableList: any[]): Stock {
+  return _.find(tableList, (s) => s.stock === symbol);
+}
+
+updateRecommendationCount(current: Stock, incomingStock: Stock): Stock {
+  if (!current) {
+    current = incomingStock;
+  }
+  if (!current.strongbuySignals) {
+    current.strongbuySignals = [];
+  }
+  if (!current.buySignals) {
+    current.buySignals = [];
+  }
+  if (!current.strongsellSignals) {
+    current.strongsellSignals = [];
+  }
+  if (!current.sellSignals) {
+    current.sellSignals = [];
+  }
+
+  switch (incomingStock.recommendation.toLowerCase()) {
+    case 'strongbuy':
+      current.strongbuySignals.push(incomingStock.algo);
+      current.strongbuySignals = current.strongbuySignals.slice();
+      break;
+    case 'buy':
+      current.buySignals.push(incomingStock.algo);
+      current.buySignals = current.buySignals.slice();
+      break;
+    case 'strongsell':
+      current.strongsellSignals.push(incomingStock.algo);
+      current.strongsellSignals = current.strongsellSignals.slice();
+      break;
+    case 'sell':
+      current.sellSignals.push(incomingStock.algo);
+      current.sellSignals = current.sellSignals.slice();
+      break;
+  }
+
+  return current;
+}
+
+sell(row: Stock): void {
+  this.order(row, 'Sell');
+}
+
+buy(row: Stock): void {
+  this.order(row, 'Buy');
+}
+
+order(row: Stock, side: string): void {
+  this.portfolioService.getInstruments(row.stock).subscribe((response) => {
+    const instruments = response.results[0];
+    const newHolding: Holding = {
+      instrument: instruments.url,
+      symbol: instruments.symbol,
+      name: instruments.name,
+      realtime_price: row.lastPrice
+    };
+
+    const dialogRef = this.dialog.open(OrderDialogComponent, {
       width: '500px',
       height: '500px',
-      data: { chartData: params }
+      data: { holding: newHolding, side: side }
     });
 
     dialogRef.afterClosed().subscribe(result => {
       console.log('Closed dialog', result);
-      if (result.algorithm === 'sma' || result.algorithm === 'macrossover') {
-        this.globalSettingsService.deviation = result.params.deviation;
-        this.globalSettingsService.fastAvg = result.params.fastAvg;
-        this.globalSettingsService.slowAvg = result.params.slowAvg;
-      }
-      this.globalSettingsService.selectedAlgo = result.algorithm;
-
-      this.algo.currentChart.next(result);
     });
-  }
+  });
+}
 
-  getImpliedMovement(stock: Stock) {
-    const symbol = stock.stock;
-    const foundStock = this.findStock(symbol, this.stockList);
-    this.optionsDataService.getImpliedMove(symbol)
-      .subscribe({
-        next: data => {
-          foundStock.impliedMovement = data.move;
-          this.addToList(foundStock);
-        }
-      });
+runDefaultBacktest() {
+  this.interval = 0;
+  const currentSelected = this.selectedAlgo;
+
+  this.selectedAlgo = 'v2';
+  this.getData(Stocks);
+
+  this.selectedAlgo = 'v5';
+  this.getData(Stocks);
+
+  this.selectedAlgo = 'daily-roc';
+  this.getData(Stocks);
+
+
+  this.progress = 0;
+  this.selectedAlgo = currentSelected;
+  this.executeBacktests();
+}
+
+openChartDialog(element: Stock, endDate) {
+  const params: ChartParam = {
+    algorithm: this.globalSettingsService.selectedAlgo,
+    symbol: element.stock,
+    date: endDate,
+    params: {
+      deviation: this.globalSettingsService.deviation,
+      fastAvg: this.globalSettingsService.fastAvg,
+      slowAvg: this.globalSettingsService.slowAvg
+    }
+  };
+
+  const dialogRef = this.dialog.open(ChartDialogComponent, {
+    width: '500px',
+    height: '500px',
+    data: { chartData: params }
+  });
+
+  dialogRef.afterClosed().subscribe(result => {
+    console.log('Closed dialog', result);
+    if (result.algorithm === 'sma' || result.algorithm === 'macrossover') {
+      this.globalSettingsService.deviation = result.params.deviation;
+      this.globalSettingsService.fastAvg = result.params.fastAvg;
+      this.globalSettingsService.slowAvg = result.params.slowAvg;
+    }
+    this.globalSettingsService.selectedAlgo = result.algorithm;
+
+    this.algo.currentChart.next(result);
+  });
+}
+
+getImpliedMovement(stock: Stock) {
+  const symbol = stock.stock;
+  const foundStock = this.findStock(symbol, this.stockList);
+  this.optionsDataService.getImpliedMove(symbol)
+    .subscribe({
+      next: data => {
+        foundStock.impliedMovement = data.move;
+        this.addToList(foundStock);
+      }
+    });
+}
+
+executeBacktests() {
+  this.bufferSubject.subscribe(() => {
+    const backtest = this.backtestBuffer.pop();
+    this.callChainSub.add(backtest.sub.subscribe(() => {
+      if (this.backtestBuffer.length > 0) {
+        this.bufferSubject.next();
+      }
+    }, error => {
+      this.snackBar.open(`Error on ${backtest.stock}`, 'Dismiss');
+      console.log(`Error on ${backtest.stock}`, error);
+      this.incrementProgress();
+    }));
+  });
+
+  if (this.backtestBuffer.length > 0) {
+    this.bufferSubject.next();
   }
+}
+
+ngOnDestroy() {
+  this.callChainSub.unsubscribe();
+}
 }
