@@ -126,7 +126,7 @@ export class AskModelComponent implements OnInit {
         moment(this.startDate).format('YYYY-MM-DD')
       ).subscribe((data: TrainingResults[]) => {
         this.isLoading = false;
-        this.addTableItem(data);
+        // this.addTableItem(data);
       }, error => {
         console.log('error: ', error);
         this.isLoading = false;
