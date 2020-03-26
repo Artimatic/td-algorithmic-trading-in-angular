@@ -320,7 +320,7 @@ class PortfolioService {
       });
   }
 
-  getIntradayV3(symbol, startDate = moment().subtract({days: 1}).valueOf(), endDate = moment().valueOf()) {
+  getIntradayV3(symbol, startDate = moment().subtract({ days: 1 }).valueOf(), endDate = moment().valueOf()) {
     return this.renewTDAuth(null)
       .then(() => this.getTDIntradayV3(symbol, moment(startDate).valueOf(), moment(endDate).valueOf()));
   }
@@ -552,7 +552,6 @@ class PortfolioService {
         session: extendedHours ? 'SEAMLESS' : 'NORMAL',
         duration: 'DAY',
         orderStrategyType: 'SINGLE',
-        price: price,
         taxLotMethod: 'LIFO',
         orderLegCollection: [
           {
@@ -566,6 +565,10 @@ class PortfolioService {
         ]
       }
     };
+
+    if (type === 'limit') {
+      options.body['price'] = price;
+    }
 
     return request.post(options);
   }
@@ -653,12 +656,12 @@ class PortfolioService {
     };
 
     return this.renewTDAuth(accountId)
-    .then(() => {
-      return request.get(options)
-      .then((data) => {
-        return this.processTDData(data);
+      .then(() => {
+        return request.get(options)
+          .then((data) => {
+            return this.processTDData(data);
+          });
       });
-    });
   }
 }
 
