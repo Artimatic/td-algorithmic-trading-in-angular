@@ -313,7 +313,7 @@ export class RhTableComponent implements OnInit, OnChanges {
 
   async iterateAlgoParams(algoParams: any[], callback: Function) {
     for (let i = 0; i < algoParams.length; i++) {
-      this.backtestBuffer.push({ stock: algoParams[i], sub: callback(algoParams[i]) });
+      this.backtestBuffer.push({ stock: algoParams[i].ticker, sub: callback(algoParams[i]) });
     }
   }
 
