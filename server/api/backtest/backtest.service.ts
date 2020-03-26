@@ -903,6 +903,10 @@ class BacktestService {
         const vwmaLen = vwma[0].length - 1;
         currentQuote.vwma = _.round(vwma[0][vwmaLen], 3);
 
+        return this.getRsi(this.getSubArray(indicators.reals, 14), 14);
+      })
+      .then(rsi => {
+        currentQuote.rsi = rsi;
         return currentQuote;
       });
   }

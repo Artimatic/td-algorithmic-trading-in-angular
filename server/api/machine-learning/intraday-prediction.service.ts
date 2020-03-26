@@ -72,7 +72,7 @@ class IntradayPredicationService {
   }
 
   withinBounds(index, totalLength) {
-    return index > 15 && (index + 30 < totalLength);
+    return index > 15 && (index + 16 < totalLength);
   }
 
   comparePrices(price, close) {
@@ -183,9 +183,8 @@ class IntradayPredicationService {
     dataSetObj.date = currentSignal.date;
     dataSetObj.input = [
       hour,
-      _.round(DecisionService.getPercentChange(previousClose, currentSignal.low) * 1000, 0)
+      _.round(DecisionService.getPercentChange(previousClose, currentSignal.close) * 1000, 0)
     ]
-      .concat(this.convertBBand(currentSignal))
       .concat(this.comparePrices(currentSignal.vwma, close))
       .concat(this.comparePrices(currentSignal.high, close))
       .concat(this.comparePrices(currentSignal.low, close))
@@ -193,7 +192,8 @@ class IntradayPredicationService {
       .concat([_.round(DecisionService.getPercentChange(close, currentSignal.vwma) * 1000, 0)])
       .concat([_.round(DecisionService.getPercentChange(close, currentSignal.high) * 1000, 0)])
       .concat([_.round(DecisionService.getPercentChange(close, currentSignal.low) * 1000, 0)])
-      .concat([_.round(currentSignal.mfiLeft, 0)]);
+      .concat([_.round(currentSignal.mfiLeft, 0)])
+      .concat([_.round(currentSignal.rsi, 0)]);
 
     return dataSetObj;
   }
