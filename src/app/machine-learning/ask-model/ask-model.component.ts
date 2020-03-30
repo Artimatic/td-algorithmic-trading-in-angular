@@ -229,8 +229,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
               this.isLoading = false;
               this.addTableItem(data);
               this.triggerNextBacktest();
-            }, error => {
-              console.log('error: ', error);
+            }, () => {
               this.isLoading = false;
               this.triggerNextBacktest();
             });
