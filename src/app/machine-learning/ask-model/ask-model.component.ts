@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import * as moment from 'moment';
 import { MatSnackBar } from '@angular/material';
 import { FormGroup, FormBuilder } from '@angular/forms';
 import { BacktestService, MachineLearningService } from '../../shared/index';
 import IntradayStocks from '../../intraday-backtest-view/intraday-backtest-stocks.constant';
+import { Subscription, Subject } from 'rxjs';
 
 export interface TrainingResults {
   algorithm?: string;
@@ -18,7 +19,7 @@ export interface TrainingResults {
   templateUrl: './ask-model.component.html',
   styleUrls: ['./ask-model.component.css']
 })
-export class AskModelComponent implements OnInit {
+export class AskModelComponent implements OnInit, OnDestroy {
   public startDate: Date;
   public endDate: Date;
   form: FormGroup;
@@ -28,6 +29,9 @@ export class AskModelComponent implements OnInit {
   models: any[];
   cols: any[];
   modelResults: TrainingResults[];
+  private callChainSub: Subscription;
+  private backtestBuffer: { stock: string }[];
+  private bufferSubject: Subject<void>;
 
   constructor(
     private _formBuilder: FormBuilder,
@@ -36,14 +40,11 @@ export class AskModelComponent implements OnInit {
     public snackBar: MatSnackBar) { }
 
   ngOnInit() {
+    this.bufferSubject = new Subject();
+    this.backtestBuffer = [];
+    this.callChainSub = new Subscription();
+
     this.endDate = new Date();
-    const start = moment().subtract({ day: 2 });
-    const day = start.day();
-    if (day === 0 || day === 6) {
-      this.startDate = moment().subtract({ day: 3 }).toDate();
-    } else {
-      this.startDate = start.toDate();
-    }
 
     this.form = this._formBuilder.group({
       query: this.symbol
@@ -55,6 +56,7 @@ export class AskModelComponent implements OnInit {
     ];
 
     this.cols = [
+      { field: 'symbol', header: 'Stock' },
       { field: 'algorithm', header: 'Algorithm' },
       { field: 'guesses', header: 'Guesses' },
       { field: 'correct', header: 'Correct' },
@@ -64,9 +66,27 @@ export class AskModelComponent implements OnInit {
 
     this.modelResults = [];
     this.isLoading = false;
+    this.setStartDate();
+    this.selectedModel = this.models[1];
+  }
+
+  setStartDate() {
+    const start = moment(this.endDate).subtract({ day: 1 });
+    const day = start.day();
+    if (day === 6) {
+      this.startDate = start.subtract({ day: 1 }).toDate();
+    } else if (day === 7) {
+      this.startDate = start.subtract({ day: 1 }).toDate();
+    } else if (day === 0) {
+      this.startDate = start.subtract({ day: 2 }).toDate();
+    } else {
+      this.startDate = start.toDate();
+    }
+    console.log('start date: ', this.startDate);
   }
 
   train() {
+    this.setStartDate();
     switch (this.selectedModel.code) {
       case 'open_price_up': {
         this.trainOpenUp();
@@ -80,6 +100,8 @@ export class AskModelComponent implements OnInit {
   }
 
   activate() {
+    this.setStartDate();
+
     switch (this.selectedModel.code) {
       case 'open_price_up': {
         this.activateOpenUp();
@@ -92,7 +114,7 @@ export class AskModelComponent implements OnInit {
     this.isLoading = true;
     this.backtestService
       .runLstmV2(this.form.value.query,
-        moment(this.endDate).format('YYYY-MM-DD'),
+        moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD'),
         moment(this.startDate).format('YYYY-MM-DD')
       ).subscribe((data: TrainingResults[]) => {
         this.isLoading = false;
@@ -122,11 +144,30 @@ export class AskModelComponent implements OnInit {
     this.isLoading = true;
     this.machineLearningService
       .trainPredictNext30(this.form.value.query,
-        moment(this.endDate).format('YYYY-MM-DD'),
-        moment(this.startDate).format('YYYY-MM-DD')
+        moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD'),
+        moment(this.startDate).format('YYYY-MM-DD'),
+        1
       ).subscribe((data: TrainingResults[]) => {
         this.isLoading = false;
-        // this.addTableItem(data);
+        this.addTableItem(data);
+      }, error => {
+        console.log('error: ', error);
+        this.isLoading = false;
+      });
+  }
+
+  score() {
+    this.setStartDate();
+
+    this.isLoading = true;
+    this.machineLearningService
+      .trainPredictNext30(this.form.value.query,
+        moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD'),
+        moment(this.startDate).format('YYYY-MM-DD'),
+        0
+      ).subscribe((data: TrainingResults[]) => {
+        this.isLoading = false;
+        this.addTableItem(data);
       }, error => {
         console.log('error: ', error);
         this.isLoading = false;
@@ -152,23 +193,64 @@ export class AskModelComponent implements OnInit {
   }
 
   random() {
+    this.setStartDate();
+
     const stocks = this.importRandom();
     for (let i = 0; i < stocks.length; i++) {
       const stock = stocks[i];
-      setTimeout(() => {
-        this.machineLearningService
-          .trainPredictNext30(stock.symbol,
-            moment(this.endDate).format('YYYY-MM-DD'),
-            moment(this.startDate).format('YYYY-MM-DD')
-          ).subscribe((data: TrainingResults[]) => {
-            this.isLoading = false;
-            this.addTableItem(data);
-          }, error => {
-            console.log('error: ', error);
-            this.isLoading = false;
-          });
-      }, 100000 * i);
+      this.backtestBuffer.push({ stock: stock.symbol });
+    }
+
+    this.executeBacktests();
+  }
+
+  executeBacktests() {
+    this.bufferSubject.subscribe(() => {
+      const backtest = this.backtestBuffer.pop();
+      this.callChainSub.add(this.machineLearningService
+        .trainPredictNext30(backtest.stock,
+          moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD'),
+          moment(this.startDate).format('YYYY-MM-DD'),
+          1
+        ).subscribe((data: TrainingResults[]) => {
+          this.isLoading = false;
+          this.addTableItem(data);
+          this.triggerNextBacktest();
+        }, error => {
+          console.log('model error: ', error);
+          this.isLoading = false;
+          setTimeout(() => {
+            this.machineLearningService
+            .trainPredictNext30(backtest.stock,
+              moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD'),
+              moment(this.startDate).format('YYYY-MM-DD'),
+              0
+            ).subscribe((data: TrainingResults[]) => {
+              this.isLoading = false;
+              this.addTableItem(data);
+              this.triggerNextBacktest();
+            }, error => {
+              console.log('error: ', error);
+              this.isLoading = false;
+              this.triggerNextBacktest();
+            });
+
+          }, 200000);
+
+        }));
+    });
+
+    this.triggerNextBacktest();
+  }
+
+
+  triggerNextBacktest() {
+    if (this.backtestBuffer.length > 0) {
+      this.bufferSubject.next();
     }
   }
 
+  ngOnDestroy() {
+    this.callChainSub.unsubscribe();
+  }
 }

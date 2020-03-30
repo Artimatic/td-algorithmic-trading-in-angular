@@ -1476,7 +1476,7 @@ class BacktestService {
       });
   }
 
-  trainCustomModel(symbol, modelName, trainingData) {
+  trainCustomModel(symbol, modelName, trainingData, trainingSize) {
     const URI = `${mlServiceUrl}api/train-custom?`;
 
     const options = {
@@ -1485,7 +1485,8 @@ class BacktestService {
       body: {
         symbol,
         modelName,
-        trainingData
+        trainingData,
+        trainingSize
       },
       json: true
     };

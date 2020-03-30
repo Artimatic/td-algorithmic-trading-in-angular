@@ -34,7 +34,10 @@ class MachineLearningController extends BaseController {
   }
 
   trainV3(request, response) {
-    IntradayPredicationService.train(request.query.symbol, request.query.startDate, request.query.endDate)
+    IntradayPredicationService.train(request.query.symbol,
+      request.query.startDate,
+      request.query.endDate,
+      request.query.trainingSize)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }

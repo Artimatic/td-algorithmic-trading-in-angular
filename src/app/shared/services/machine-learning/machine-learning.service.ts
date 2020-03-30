@@ -15,17 +15,22 @@ export class MachineLearningService {
 
   constructor(private http: HttpClient) { }
 
-  trainPredictNext30(symbol: string, endDate: string = null, startDate: string = null): Observable<any> {
+  trainPredictNext30(symbol: string,
+    endDate: string = null,
+    startDate: string = null,
+    trainingSize: number): Observable<any> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     const options = {
       headers: headers,
       params: {
         symbol,
         startDate,
-        endDate
+        endDate,
+        trainingSize: String(trainingSize)
       }
     };
-    return this.http.get(`${BASE_URL}api/machine-learning/v3/train`, options);
+    return this.http.get(`${BASE_URL}api/machine-learning/v3/train`,
+      options);
   }
 
   activate(symbol: string): Observable<any> {

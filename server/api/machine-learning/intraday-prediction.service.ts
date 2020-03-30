@@ -8,7 +8,10 @@ import { BacktestResults, Indicators } from '../backtest/backtest.service';
 import PortfolioService from '../portfolio/portfolio.service';
 
 class IntradayPredicationService {
-  train(symbol, startDate, endDate) {
+
+  modelName = 'model3';
+
+  train(symbol, startDate, endDate, trainingSize) {
     return PortfolioService.getIntradayV3(symbol, moment(startDate).valueOf(), moment(endDate).valueOf())
       .then((data) => {
         console.log('Got quotes ', data[0].date, data[data.length - 1].date);
@@ -38,9 +41,7 @@ class IntradayPredicationService {
           }
         });
         console.log('Data set size: ', finalDataSet.length);
-        BacktestService.trainCustomModel(symbol, 'New Model', finalDataSet);
-
-        return finalDataSet;
+        return BacktestService.trainCustomModel(symbol, this.modelName, finalDataSet, trainingSize);
       });
   }
 
@@ -67,7 +68,7 @@ class IntradayPredicationService {
       .then((signal) => {
         const inputData = this.buildInputSet(previousClose, signal);
         console.log('input data: ', inputData);
-        return BacktestService.activateCustomModel(symbol, 'New Model', inputData.input);
+        return BacktestService.activateCustomModel(symbol, this.modelName, inputData.input);
       });
   }
 
@@ -164,7 +165,7 @@ class IntradayPredicationService {
     const futureClose = signals[currentIndex + 15].close;
     const closePrice = currentSignal.close;
 
-    const dataSetObj = this.buildInputSet(signals[currentIndex - 15].close, currentSignal);
+    const dataSetObj = this.buildInputSet(signals[0].close, currentSignal);
 
     dataSetObj.output = [this.getOutput(closePrice, futureClose)];
     return dataSetObj;
