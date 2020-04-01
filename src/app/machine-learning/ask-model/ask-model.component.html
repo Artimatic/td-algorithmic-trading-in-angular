@@ -25,10 +25,6 @@
       <button pButton type="button" label="Random" (click)="random()"></button>
     </div>
   </div>
-  <div class="load-spinner" *ngIf="isLoading">
-    <p-progressSpinner [style]="{width: '50px', height: '50px'}" strokeWidth="8" fill="#EEEEEE" animationDuration=".5s">
-    </p-progressSpinner>
-  </div>
   <p-table [columns]="cols" [value]="modelResults">
     <ng-template pTemplate="header" let-columns>
       <tr>
