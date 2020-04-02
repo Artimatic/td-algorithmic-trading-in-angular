@@ -41,7 +41,7 @@ class IntradayPredicationService {
           }
         });
         console.log('Data set size: ', finalDataSet.length);
-        const modelName = featureUse ? featureUse.join() : _.round(Math.random() * 100, 0);
+        const modelName = featureUse ? featureUse.join() : 'DEFAULT';
         return BacktestService.trainCustomModel(symbol, this.modelName + modelName, finalDataSet, trainingSize);
       });
   }
@@ -70,7 +70,9 @@ class IntradayPredicationService {
       })
       .then((signal) => {
         const inputData = this.buildInputSet(openingPrice, previousClose, signal, featureUse);
-        return BacktestService.activateCustomModel(symbol, this.modelName, inputData.input);
+        const modelName = featureUse ? featureUse.join() : 'DEFAULT';
+
+        return BacktestService.activateCustomModel(symbol, modelName, inputData.input);
       });
   }
 
