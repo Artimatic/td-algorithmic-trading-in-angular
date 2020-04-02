@@ -34,7 +34,7 @@ class IntradayPredicationService {
         const signals = results.signals;
         console.log('Got backtest: ', signals[0].date, signals[signals.length - 1].date);
 
-        const finalDataSet = [];
+        let finalDataSet = [];
         signals.forEach((signal, idx) => {
           if (this.withinBounds(idx, signals.length)) {
             finalDataSet.push(this.buildFeatureSet(signals, signal, idx, featureUse));
@@ -42,6 +42,10 @@ class IntradayPredicationService {
         });
         console.log('Data set size: ', finalDataSet.length);
         const modelName = featureUse ? featureUse.join() : this.modelName;
+        if (finalDataSet.length > 1025) {
+          console.log('Data set too large. Trimming');
+          finalDataSet = finalDataSet.slice(finalDataSet.length - 1000, finalDataSet.length);
+        }
         return BacktestService.trainCustomModel(symbol, modelName, finalDataSet, trainingSize);
       });
   }

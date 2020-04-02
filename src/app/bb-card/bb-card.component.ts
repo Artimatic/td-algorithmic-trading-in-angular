@@ -836,7 +836,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         this.scoringService.total < 0 &&
         this.scoringService.total < this.globalSettingsService.maxLoss * -1) {
          this.warning = 'Global stop loss exceeded. Buying paused.';
-      } else {
+      } else if (analysis.recommendation.toLowerCase() === 'buy') {
         let orderQuantity: number = this.scoringService.determineBetSize(this.order.holding.symbol, this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
           this.firstFormGroup.value.orderSize,
           this.buyCount,
