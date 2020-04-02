@@ -296,8 +296,8 @@ export class AskModelComponent implements OnInit, OnDestroy {
       const bufferItem = this.calibrationBuffer.pop();
       this.callChainSub.add(this.machineLearningService
         .trainPredictNext30(this.form.value.query,
-          moment(this.endDate).format('YYYY-MM-DD'),
-          moment(this.startDate).format('YYYY-MM-DD'),
+          moment(this.endDate).add({ days: 1 }).format('YYYY-MM-DD'),
+          moment(this.startDate).subtract({ days: 1 }).format('YYYY-MM-DD'),
           0.7,
           bufferItem.features
         ).subscribe((data: TrainingResults[]) => {
