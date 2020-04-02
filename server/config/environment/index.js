@@ -1,5 +1,5 @@
-import * as path from 'path';
-import * as _ from 'lodash';
+const path = require('path');
+const _ = require('lodash');
 let credentials;
 try {
   credentials = require('./credentials');
@@ -11,7 +11,7 @@ try {
 // ============================================
 
 const defaultPort = _.get(credentials, 'default.port', _.get(credentials, 'port', null)) || 9000;
-export default {
+module.exports = {
   env: process.env.NODE_ENV,
 
   // Root path of server

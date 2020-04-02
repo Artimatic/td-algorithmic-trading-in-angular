@@ -95,7 +95,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
         this.trainOpenUp();
         break;
       }
-      case 'findFeatures': {
+      case 'predict_30': {
         this.trainPredict30();
         break;
       }
@@ -262,31 +262,35 @@ export class AskModelComponent implements OnInit, OnDestroy {
   }
 
   calibrate() {
-    const featureList = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    // [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0]
+    const featureList = [0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0];
     for (let i = 0; i < featureList.length - 1; i++) {
       featureList[i] = featureList[i] ? 0 : 1;
       for (let j = i + 1; j < featureList.length; j++) {
         featureList[j] = featureList[j] ? 0 : 1;
-        this.calibrationBuffer.push({ features: featureList });
+        this.calibrationBuffer.push({ features: featureList.slice() });
       }
     }
 
-    console.log('combinations: ', this.calibrationBuffer.length);
+    console.log('combinations1: ', this.calibrationBuffer.length);
     this.setStartDate();
 
     this.bufferSubject.subscribe(() => {
       const bufferItem = this.calibrationBuffer.pop();
       this.callChainSub.add(this.machineLearningService
         .trainPredictNext30(this.form.value.query,
-          moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD'),
-          moment(this.startDate).subtract({ day: 3 }).format('YYYY-MM-DD'),
+          moment(this.endDate).format('YYYY-MM-DD'),
+          moment(this.startDate).format('YYYY-MM-DD'),
           0.7,
           bufferItem.features
         ).subscribe((data: TrainingResults[]) => {
           this.isLoading = false;
-          this.addTableItem(data);
-          console.log('results: ', data[0].algorithm,
-            data[0].guesses, data[0].correct, data[0].score, bufferItem.features);
+          if (data) {
+            this.addTableItem(data);
+            console.log('results: ', data[0].algorithm,
+              data[0].guesses, data[0].correct, data[0].score, bufferItem.features);
+          }
+
           this.triggerNextCalibration();
         }, error => {
           console.log('model error: ', error);

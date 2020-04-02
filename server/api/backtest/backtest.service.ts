@@ -10,7 +10,7 @@ import ReversionService from '../mean-reversion/reversion.service';
 import DecisionService from '../mean-reversion/reversion-decision.service';
 import BaseErrors from '../../components/errors/baseErrors';
 import * as tulind from 'tulind';
-import configurations from '../../config/environment';
+import * as configurations from '../../config/environment';
 import AlgoService from './algo.service';
 
 const dataServiceUrl = configurations.apps.goliath;

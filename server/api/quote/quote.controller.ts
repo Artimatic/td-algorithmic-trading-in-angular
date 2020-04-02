@@ -2,6 +2,7 @@ import * as _ from 'lodash';
 import * as Boom from 'boom';
 
 import BaseController from '../templates/base.controller';
+
 import QuoteService from './quote.service';
 
 
@@ -26,16 +27,6 @@ class QuoteController extends BaseController {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     } else {
       QuoteService.getLastPrice(request.body.symbol)
-        .then((data) => BaseController.requestGetSuccessHandler(response, data))
-        .catch((e) => BaseController.requestErrorHandler(response, e));
-    }
-  }
-
-  getIEXIntraday(request, response) {
-    if (_.isEmpty(request.body)) {
-      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
-    } else {
-      QuoteService.getIEXIntradayPrices(request.body.symbol)
         .then((data) => BaseController.requestGetSuccessHandler(response, data))
         .catch((e) => BaseController.requestErrorHandler(response, e));
     }

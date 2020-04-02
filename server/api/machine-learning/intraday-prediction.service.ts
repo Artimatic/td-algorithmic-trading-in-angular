@@ -9,7 +9,7 @@ import PortfolioService from '../portfolio/portfolio.service';
 
 class IntradayPredicationService {
 
-  modelName = 'model033020' + moment().valueOf() + Math.random() * 100;
+  modelName = 'model033020' + String(moment().valueOf()).slice(6) + _.round(Math.random() * 100, 0);
 
   train(symbol, startDate, endDate, trainingSize, featureUse) {
     return PortfolioService.getIntradayV3(symbol, moment(startDate).valueOf(), moment(endDate).valueOf())
@@ -41,7 +41,8 @@ class IntradayPredicationService {
           }
         });
         console.log('Data set size: ', finalDataSet.length);
-        return BacktestService.trainCustomModel(symbol, this.modelName, finalDataSet, trainingSize);
+        const modelName = featureUse ? featureUse.join() : _.round(Math.random() * 100, 0);
+        return BacktestService.trainCustomModel(symbol, this.modelName + modelName, finalDataSet, trainingSize);
       });
   }
 
@@ -206,7 +207,7 @@ class IntradayPredicationService {
     dataSetObj.input = [];
 
     featureUse.forEach((value, idx) => {
-      if (value === '1') {
+      if (value === '1' || value === 1) {
         dataSetObj.input.push(input[idx]);
       }
     });

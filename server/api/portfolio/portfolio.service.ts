@@ -7,7 +7,7 @@ const RobinHoodApi = require('robinhood-api');
 const robinhood = new RobinHoodApi();
 
 import QuoteService from '../quote/quote.service';
-import configurations from '../../config/environment';
+import * as configurations from '../../config/environment';
 
 const robinhoodDevice = {
   deviceToken: configurations.robinhood.deviceId

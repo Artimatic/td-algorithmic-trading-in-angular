@@ -1,4 +1,4 @@
-import * as express from 'express';
+const express = require('express');
 import * as handler from './backtest.router';
 import BacktestController from './backtest.controller';
 

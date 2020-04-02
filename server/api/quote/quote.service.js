@@ -5,7 +5,7 @@ const YahooFinanceAPI = require('yahoo-finance-data');
 import * as algotrader from 'algotrader';
 import PortfolioService from '../portfolio/portfolio.service';
 
-import configurations from '../../config/environment';
+import * as configurations from '../../config/environment';
 
 const yahoo = {
   key: configurations.yahoo.key,
