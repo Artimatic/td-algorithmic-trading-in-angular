@@ -39,14 +39,21 @@ export class MachineLearningService {
       options);
   }
 
-  activate(symbol: string): Observable<any> {
+  activate(symbol: string,
+    features: number[] = []): Observable<any> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     const options = {
       headers: headers,
       params: {
-        symbol
+        symbol,
+        features: null
       }
     };
+
+    if (features) {
+      options.params.features = String(features);
+    }
+
     return this.http.get(`${BASE_URL}api/machine-learning/v3/activate`, options);
   }
 }

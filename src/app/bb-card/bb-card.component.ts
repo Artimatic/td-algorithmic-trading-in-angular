@@ -845,7 +845,8 @@ export class BbCardComponent implements OnInit, OnChanges {
         const modifier = await this.globalSettingsService.globalModifier();
         orderQuantity = _.round(_.multiply(modifier, orderQuantity), 0);
 
-        this.machineLearningService.activate(this.order.holding.symbol)
+        this.machineLearningService.activate(this.order.holding.symbol,
+          [1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0])
         .subscribe((machineResult: {nextOutput: number}) => {
           if (machineResult.nextOutput > 0.6) {
             if (orderQuantity > 0) {

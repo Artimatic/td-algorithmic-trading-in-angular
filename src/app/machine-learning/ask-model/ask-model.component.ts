@@ -228,18 +228,18 @@ export class AskModelComponent implements OnInit, OnDestroy {
           this.isLoading = false;
           setTimeout(() => {
             this.machineLearningService
-            .trainPredictNext30(backtest.stock,
-              moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD'),
-              moment(this.startDate).format('YYYY-MM-DD'),
-              0
-            ).subscribe((data: TrainingResults[]) => {
-              this.isLoading = false;
-              this.addTableItem(data);
-              this.triggerNextBacktest();
-            }, () => {
-              this.isLoading = false;
-              this.triggerNextBacktest();
-            });
+              .trainPredictNext30(backtest.stock,
+                moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD'),
+                moment(this.startDate).format('YYYY-MM-DD'),
+                0
+              ).subscribe((data: TrainingResults[]) => {
+                this.isLoading = false;
+                this.addTableItem(data);
+                this.triggerNextBacktest();
+              }, () => {
+                this.isLoading = false;
+                this.triggerNextBacktest();
+              });
 
           }, 200000);
 
@@ -263,14 +263,31 @@ export class AskModelComponent implements OnInit, OnDestroy {
 
   calibrate() {
     // [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0]
-    const featureList = [0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0];
-    for (let i = 0; i < featureList.length - 1; i++) {
-      featureList[i] = featureList[i] ? 0 : 1;
-      for (let j = i + 1; j < featureList.length; j++) {
-        featureList[j] = featureList[j] ? 0 : 1;
-        this.calibrationBuffer.push({ features: featureList.slice() });
-      }
-    }
+    // const featureList = [0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0];
+    // for (let i = 0; i < featureList.length - 1; i++) {
+    //   featureList[i] = featureList[i] ? 0 : 1;
+    //   for (let j = i + 1; j < featureList.length; j++) {
+    //     featureList[j] = featureList[j] ? 0 : 1;
+    //     this.calibrationBuffer.push({ features: featureList.slice() });
+    //   }
+    // }
+
+    const defaultFeatureList = [
+      [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0],
+      [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0],
+      [1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0],
+      [1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
+      [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+      [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0],
+      [1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0],
+      [1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+    ];
+
+    defaultFeatureList.forEach((value) => {
+      this.calibrationBuffer.push({ features: value });
+    });
 
     console.log('combinations1: ', this.calibrationBuffer.length);
     this.setStartDate();
@@ -295,6 +312,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
         }, error => {
           console.log('model error: ', error);
           this.isLoading = false;
+          this.triggerNextCalibration();
         }));
     });
 

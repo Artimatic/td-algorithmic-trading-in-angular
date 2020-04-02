@@ -9,7 +9,7 @@ import PortfolioService from '../portfolio/portfolio.service';
 
 class IntradayPredicationService {
 
-  modelName = 'model033020' + String(moment().valueOf()).slice(6) + _.round(Math.random() * 100, 0);
+  modelName = 'model' + moment().format('YYYY-MM-DD');
 
   train(symbol, startDate, endDate, trainingSize, featureUse) {
     return PortfolioService.getIntradayV3(symbol, moment(startDate).valueOf(), moment(endDate).valueOf())
