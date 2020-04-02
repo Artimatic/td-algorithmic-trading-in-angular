@@ -9,9 +9,9 @@ import PortfolioService from '../portfolio/portfolio.service';
 
 class IntradayPredicationService {
 
-  modelName = 'model033020';
+  modelName = 'model033020' + moment().valueOf() + Math.random() * 100;
 
-  train(symbol, startDate, endDate, trainingSize) {
+  train(symbol, startDate, endDate, trainingSize, featureUse) {
     return PortfolioService.getIntradayV3(symbol, moment(startDate).valueOf(), moment(endDate).valueOf())
       .then((data) => {
         console.log('Got quotes ', data[0].date, data[data.length - 1].date);
@@ -37,7 +37,7 @@ class IntradayPredicationService {
         const finalDataSet = [];
         signals.forEach((signal, idx) => {
           if (this.withinBounds(idx, signals.length)) {
-            finalDataSet.push(this.buildFeatureSet(signals, signal, idx));
+            finalDataSet.push(this.buildFeatureSet(signals, signal, idx, featureUse));
           }
         });
         console.log('Data set size: ', finalDataSet.length);
@@ -45,7 +45,7 @@ class IntradayPredicationService {
       });
   }
 
-  activate(symbol) {
+  activate(symbol, featureUse) {
     let price = null;
     let openingPrice = null;
     let previousClose = null;
@@ -68,8 +68,7 @@ class IntradayPredicationService {
         return indicator;
       })
       .then((signal) => {
-        const inputData = this.buildInputSet(openingPrice, previousClose, signal);
-        console.log('input data: ', inputData);
+        const inputData = this.buildInputSet(openingPrice, previousClose, signal, featureUse);
         return BacktestService.activateCustomModel(symbol, this.modelName, inputData.input);
       });
   }
@@ -163,17 +162,21 @@ class IntradayPredicationService {
     return input;
   }
 
-  buildFeatureSet(signals, currentSignal, currentIndex) {
+  buildFeatureSet(signals, currentSignal, currentIndex, featureUse) {
     const futureClose = signals[currentIndex + 15].close;
     const closePrice = currentSignal.close;
 
-    const dataSetObj = this.buildInputSet(signals[0].close, signals[currentIndex - 5].close, currentSignal);
+    const dataSetObj = this.buildInputSet(signals[0].close, signals[currentIndex - 5].close, currentSignal, featureUse);
 
     dataSetObj.output = [this.getOutput(closePrice, futureClose)];
     return dataSetObj;
   }
 
-  buildInputSet(openingPrice, previousClose, currentSignal) {
+  buildInputSet(openingPrice, previousClose, currentSignal, featureUse) {
+    if (!featureUse) {
+      featureUse = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+    }
+
     const dataSetObj = {
       date: null,
       input: null,
@@ -184,7 +187,8 @@ class IntradayPredicationService {
     // const hour = Number(moment(currentSignal.date).format('HH'));
 
     dataSetObj.date = currentSignal.date;
-    dataSetObj.input = [
+
+    const input = [
       _.round(DecisionService.getPercentChange(openingPrice, close) * 1000, 0),
       _.round(DecisionService.getPercentChange(previousClose, close) * 1000, 0)
     ]
@@ -199,6 +203,13 @@ class IntradayPredicationService {
       .concat([_.round(currentSignal.mfiLeft, 0)])
       .concat([_.round(currentSignal.rsi, 0)]);
 
+    dataSetObj.input = [];
+
+    featureUse.forEach((value, idx) => {
+      if (value === '1') {
+        dataSetObj.input.push(input[idx]);
+      }
+    });
     return dataSetObj;
   }
 }

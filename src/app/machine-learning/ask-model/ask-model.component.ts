@@ -32,6 +32,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
   private callChainSub: Subscription;
   private backtestBuffer: { stock: string }[];
   private bufferSubject: Subject<void>;
+  private calibrationBuffer: { features: number[] }[];
 
   constructor(
     private _formBuilder: FormBuilder,
@@ -40,9 +41,10 @@ export class AskModelComponent implements OnInit, OnDestroy {
     public snackBar: MatSnackBar) { }
 
   ngOnInit() {
+    this.callChainSub = new Subscription();
     this.bufferSubject = new Subject();
     this.backtestBuffer = [];
-    this.callChainSub = new Subscription();
+    this.calibrationBuffer = [];
 
     this.endDate = new Date();
 
@@ -52,7 +54,8 @@ export class AskModelComponent implements OnInit, OnDestroy {
 
     this.models = [
       { name: 'Open Price Up', code: 'open_price_up' },
-      { name: 'Predict Next 30 minutes', code: 'predict_30' }
+      { name: 'Predict Next 30 minutes', code: 'predict_30' },
+      { name: 'Calibrate model', code: 'calibrate' }
     ];
 
     this.cols = [
@@ -92,8 +95,12 @@ export class AskModelComponent implements OnInit, OnDestroy {
         this.trainOpenUp();
         break;
       }
-      case 'predict_30': {
+      case 'findFeatures': {
         this.trainPredict30();
+        break;
+      }
+      case 'calibrate': {
+        this.calibrate();
         break;
       }
     }
@@ -242,11 +249,52 @@ export class AskModelComponent implements OnInit, OnDestroy {
     this.triggerNextBacktest();
   }
 
+  triggerNextCalibration() {
+    if (this.calibrationBuffer.length > 0) {
+      this.bufferSubject.next();
+    }
+  }
 
   triggerNextBacktest() {
     if (this.backtestBuffer.length > 0) {
       this.bufferSubject.next();
     }
+  }
+
+  calibrate() {
+    const featureList = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    for (let i = 0; i < featureList.length - 1; i++) {
+      featureList[i] = featureList[i] ? 0 : 1;
+      for (let j = i + 1; j < featureList.length; j++) {
+        featureList[j] = featureList[j] ? 0 : 1;
+        this.calibrationBuffer.push({ features: featureList });
+      }
+    }
+
+    console.log('combinations: ', this.calibrationBuffer.length);
+    this.setStartDate();
+
+    this.bufferSubject.subscribe(() => {
+      const bufferItem = this.calibrationBuffer.pop();
+      this.callChainSub.add(this.machineLearningService
+        .trainPredictNext30(this.form.value.query,
+          moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD'),
+          moment(this.startDate).subtract({ day: 3 }).format('YYYY-MM-DD'),
+          0.7,
+          bufferItem.features
+        ).subscribe((data: TrainingResults[]) => {
+          this.isLoading = false;
+          this.addTableItem(data);
+          console.log('results: ', data[0].algorithm,
+            data[0].guesses, data[0].correct, data[0].score, bufferItem.features);
+          this.triggerNextCalibration();
+        }, error => {
+          console.log('model error: ', error);
+          this.isLoading = false;
+        }));
+    });
+
+    this.triggerNextCalibration();
   }
 
   ngOnDestroy() {

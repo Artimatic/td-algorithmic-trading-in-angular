@@ -34,16 +34,21 @@ class MachineLearningController extends BaseController {
   }
 
   trainV3(request, response) {
+    const features = request.query.features ? request.query.features.split(',') : null;
+
     IntradayPredicationService.train(request.query.symbol,
       request.query.startDate,
       request.query.endDate,
-      request.query.trainingSize)
+      request.query.trainingSize,
+      features)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
   activateV3(request, response) {
-    IntradayPredicationService.activate(request.query.symbol)
+    const features = request.query.features ? request.query.features.split(',') : null;
+
+    IntradayPredicationService.activate(request.query.symbol, features)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
