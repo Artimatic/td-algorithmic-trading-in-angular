@@ -9,7 +9,7 @@ import PortfolioService from '../portfolio/portfolio.service';
 
 class IntradayPredicationService {
 
-  modelName = 'model' + moment().format('YYYY-MM-DD');
+  modelName = 'model2020-04-02';
 
   train(symbol, startDate, endDate, trainingSize, featureUse) {
     return PortfolioService.getIntradayV3(symbol, moment(startDate).valueOf(), moment(endDate).valueOf())
@@ -41,8 +41,8 @@ class IntradayPredicationService {
           }
         });
         console.log('Data set size: ', finalDataSet.length);
-        const modelName = featureUse ? featureUse.join() : 'DEFAULT';
-        return BacktestService.trainCustomModel(symbol, this.modelName + modelName, finalDataSet, trainingSize);
+        const modelName = featureUse ? featureUse.join() : this.modelName;
+        return BacktestService.trainCustomModel(symbol, modelName, finalDataSet, trainingSize);
       });
   }
 
@@ -70,7 +70,7 @@ class IntradayPredicationService {
       })
       .then((signal) => {
         const inputData = this.buildInputSet(openingPrice, previousClose, signal, featureUse);
-        const modelName = featureUse ? featureUse.join() : 'DEFAULT';
+        const modelName = featureUse ? featureUse.join() : this.modelName;
 
         return BacktestService.activateCustomModel(symbol, modelName, inputData.input);
       });
