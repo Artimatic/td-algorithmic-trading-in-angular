@@ -113,7 +113,7 @@ export class MlCardComponent implements OnInit {
   }
 
   trainModel() {
-    this.backtestService.runLstmV2('VTI', moment().subtract({ day: 1 }).format('YYYY-MM-DD'), moment().subtract({ day: 300 }).format('YYYY-MM-DD')).subscribe();
+    this.backtestService.runLstmV2('VTI', moment().subtract({ day: 1 }).format('YYYY-MM-DD'), moment().subtract({ day: 50 }).format('YYYY-MM-DD')).subscribe();
   }
 
   getTradeDay() {

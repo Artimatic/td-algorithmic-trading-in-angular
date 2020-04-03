@@ -1,5 +1,4 @@
-const QuoteController = require('./quote.controller');
-
+import QuoteController from './quote.controller';
 /**
  * Get quotes
  */
