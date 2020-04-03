@@ -282,7 +282,7 @@ class BacktestService {
     counter = AlgoService.countRecommendation(rocMomentumRecommendation, counter);
     counter = AlgoService.countRecommendation(bbandRecommendation, counter);
 
-    if (counter.bearishCounter === 0 && counter.bullishCounter > 0) {
+    if (counter.bullishCounter > counter.bearishCounter) {
       if (vwmaRecommendation !== DaytradeRecommendation.Bearish) {
         recommendations.recommendation = OrderType.Buy;
       } else {
@@ -869,7 +869,7 @@ class BacktestService {
         const rocLen = roc10[0].length - 1;
         currentQuote.roc10 = _.round(roc10[0][rocLen], 4);
 
-        return this.getRateOfChange(this.getSubArrayShift(indicators.reals, 10, -2), 10);
+        return this.getRateOfChange(this.getSubArrayShift(indicators.reals, 24, -2), 24);
       })
       .then((roc10Previous) => {
         const rocLen = roc10Previous[0].length - 1;

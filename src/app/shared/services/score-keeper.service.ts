@@ -103,14 +103,14 @@ export class ScoreKeeperService {
     if (this.lossTally[stock]) {
       switch (this.lossTally[stock]) {
         case 1:
-          return 0.75;
-        case 2:
           return 0.5;
+        case 2:
+          return 0.75;
         case 3:
-          return 0.25;
+          return 0.95;
         default:
           if (this.lossTally[stock] > 3) {
-            return 0.1;
+            return 0.25;
           }
       }
     }
