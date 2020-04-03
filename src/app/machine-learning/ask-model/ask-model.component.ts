@@ -268,32 +268,37 @@ export class AskModelComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.isLoading = false;
     }, 5000);
-    // [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0]
-    const featureList = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    for (let i = 0; i < featureList.length - 1; i++) {
-      featureList[i] = featureList[i] ? 0 : 1;
-      for (let j = i + 1; j < featureList.length; j++) {
-        featureList[j] = featureList[j] ? 0 : 1;
-        this.calibrationBuffer.push({ features: featureList.slice() });
-      }
-    }
 
-    // const defaultFeatureList = [
-    //   [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0],
-    //   [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0],
-    //   [1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0],
-    //   [1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0],
-    //   [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
-    //   [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
-    //   [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0],
-    //   [1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0],
-    //   [1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0],
-    //   [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-    // ];
+    // const featureList = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    // for (let i = 0; i < featureList.length - 1; i++) {
+    //   featureList[i] = featureList[i] ? 0 : 1;
+    //   for (let j = i + 1; j < featureList.length; j++) {
+    //     featureList[j] = featureList[j] ? 0 : 1;
+    //     this.calibrationBuffer.push({ features: featureList.slice() });
+    //   }
+    // }
 
-    // defaultFeatureList.forEach((value) => {
-    //   this.calibrationBuffer.push({ features: value });
-    // });
+    const defaultFeatureList = [
+      [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0],
+      [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0],
+      [1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0],
+      [1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
+      [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+      [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0],
+      [1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0],
+      [1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+      [1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0],
+      [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1],
+      [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1],
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0],
+      [1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0]
+    ];
+
+    defaultFeatureList.forEach((value) => {
+      this.calibrationBuffer.push({ features: value });
+    });
 
     console.log('combinations1: ', this.calibrationBuffer.length);
     this.setStartDate();

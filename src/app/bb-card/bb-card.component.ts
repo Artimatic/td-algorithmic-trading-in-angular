@@ -835,7 +835,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         !this.isBacktest) &&
         this.scoringService.total < 0 &&
         this.scoringService.total < this.globalSettingsService.maxLoss * -1) {
-         this.warning = 'Global stop loss exceeded. Buying paused.';
+        this.warning = 'Global stop loss exceeded. Buying paused.';
       } else if (analysis.recommendation.toLowerCase() === 'buy') {
         console.log('Received buy recommendation. ', this.order.holding.symbol);
         let orderQuantity: number = this.scoringService.determineBetSize(this.order.holding.symbol, this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
@@ -847,21 +847,21 @@ export class BbCardComponent implements OnInit, OnChanges {
         orderQuantity = _.round(_.multiply(modifier, orderQuantity), 0);
 
         this.machineLearningService.activate(this.order.holding.symbol,
-          [1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0])
-        .subscribe((machineResult: {nextOutput: number}) => {
-          console.log('ML result ', this.order.holding.symbol, machineResult.nextOutput);
+          [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0])
+          .subscribe((machineResult: { nextOutput: number }) => {
+            console.log('ML result ', this.order.holding.symbol, machineResult.nextOutput);
 
-          if (machineResult.nextOutput > 0.6) {
-            if (orderQuantity > 0) {
-              const buyOrder = this.buildBuyOrder(orderQuantity,
-                quote,
-                timestamp,
-                analysis);
+            if (machineResult.nextOutput > 0.6) {
+              if (orderQuantity > 0) {
+                const buyOrder = this.buildBuyOrder(orderQuantity,
+                  quote,
+                  timestamp,
+                  analysis);
 
-              this.sendBuy(buyOrder);
+                this.sendBuy(buyOrder);
+              }
             }
-          }
-        });
+          });
       }
     }
   }
