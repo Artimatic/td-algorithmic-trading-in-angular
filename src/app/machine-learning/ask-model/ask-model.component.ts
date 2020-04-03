@@ -5,8 +5,10 @@ import { FormGroup, FormBuilder } from '@angular/forms';
 import { BacktestService, MachineLearningService } from '../../shared/index';
 import IntradayStocks from '../../intraday-backtest-view/intraday-backtest-stocks.constant';
 import { Subscription, Subject } from 'rxjs';
+import { TimerObservable } from 'rxjs/observable/TimerObservable';
 
 export interface TrainingResults {
+  symbol?: string;
   algorithm?: string;
   guesses: number;
   correct: number;
@@ -262,32 +264,36 @@ export class AskModelComponent implements OnInit, OnDestroy {
   }
 
   calibrate() {
+    this.isLoading = true;
+    setTimeout(() => {
+      this.isLoading = false;
+    }, 5000);
     // [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0]
-    // const featureList = [0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0];
-    // for (let i = 0; i < featureList.length - 1; i++) {
-    //   featureList[i] = featureList[i] ? 0 : 1;
-    //   for (let j = i + 1; j < featureList.length; j++) {
-    //     featureList[j] = featureList[j] ? 0 : 1;
-    //     this.calibrationBuffer.push({ features: featureList.slice() });
-    //   }
-    // }
+    const featureList = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    for (let i = 0; i < featureList.length - 1; i++) {
+      featureList[i] = featureList[i] ? 0 : 1;
+      for (let j = i + 1; j < featureList.length; j++) {
+        featureList[j] = featureList[j] ? 0 : 1;
+        this.calibrationBuffer.push({ features: featureList.slice() });
+      }
+    }
 
-    const defaultFeatureList = [
-      [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0],
-      [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0],
-      [1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0],
-      [1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0],
-      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
-      [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
-      [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0],
-      [1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0],
-      [1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0],
-      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-    ];
+    // const defaultFeatureList = [
+    //   [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0],
+    //   [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0],
+    //   [1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0],
+    //   [1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0],
+    //   [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
+    //   [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+    //   [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0],
+    //   [1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0],
+    //   [1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+    //   [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+    // ];
 
-    defaultFeatureList.forEach((value) => {
-      this.calibrationBuffer.push({ features: value });
-    });
+    // defaultFeatureList.forEach((value) => {
+    //   this.calibrationBuffer.push({ features: value });
+    // });
 
     console.log('combinations1: ', this.calibrationBuffer.length);
     this.setStartDate();
@@ -300,7 +306,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
           moment(this.startDate).subtract({ days: 1 }).format('YYYY-MM-DD'),
           0.7,
           bufferItem.features
-        ).subscribe((data: TrainingResults[]) => {
+        ).subscribe((data: any[]) => {
           this.isLoading = false;
           if (data) {
             this.addTableItem(data);
@@ -312,7 +318,35 @@ export class AskModelComponent implements OnInit, OnDestroy {
         }, error => {
           console.log('model error: ', error);
           this.isLoading = false;
-          this.triggerNextCalibration();
+
+          let pendingResults = true;
+
+          TimerObservable.create(0, 60000)
+            .takeWhile(() => pendingResults)
+            .subscribe(() => {
+              this.backtestService.getRnn(this.form.value.query,
+                moment().format('YYYY-MM-DD'),
+                bufferItem.features)
+                .subscribe((data: any) => {
+                  console.log('rnn data: ', data);
+                  if (data) {
+                    const converted = [{
+                      symbol: data[0].symbol,
+                      algorithm: data[0].modelName,
+                      guesses: data[0].results[0].guesses,
+                      correct: data[0].results[0].correct,
+                      score: data[0].results[0].score,
+                      nextOutput: data[0].results[0].nextOutput
+                    }];
+                    this.addTableItem(converted);
+                    pendingResults = false;
+                    this.triggerNextCalibration();
+                  }
+                }, timerError => {
+                  console.log('error: ', timerError);
+                  pendingResults = false;
+                });
+            });
         }));
     });
 

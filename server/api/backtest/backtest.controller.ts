@@ -185,7 +185,7 @@ class BacktestController extends BaseController {
   }
 
   getRNNPrediction(request, response) {
-    BacktestService.checkRNNStatus(request.body.symbol, request.body.to)
+    BacktestService.checkRNNStatus(request.body.symbol, request.body.to, request.body.modelName)
       .then((data) => { response.json(data); })
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }

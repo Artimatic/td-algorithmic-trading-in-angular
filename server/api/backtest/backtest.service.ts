@@ -1138,11 +1138,11 @@ class BacktestService {
     response.status(200).send();
   }
 
-  checkRNNStatus(symbol, endDate) {
+  checkRNNStatus(symbol, endDate, modelName) {
     const to = moment(endDate).format('YYYY-MM-DD');
 
     const URI = `${dataServiceUrl}precog/prediction?` +
-      `symbol=${symbol}&date=${to}`;
+      `symbol=${symbol}&date=${to}&modelName=${modelName}`;
 
     const options = {
       method: 'GET',
@@ -1476,7 +1476,7 @@ class BacktestService {
       });
   }
 
-  trainCustomModel(symbol, modelName, trainingData, trainingSize) {
+  trainCustomModel(symbol, modelName, trainingData, trainingSize, date) {
     const URI = `${mlServiceUrl}api/train-custom?`;
 
     const options = {
@@ -1486,7 +1486,8 @@ class BacktestService {
         symbol,
         modelName,
         trainingData,
-        trainingSize
+        trainingSize,
+        to: date
       },
       json: true
     };
@@ -1520,7 +1521,7 @@ class BacktestService {
       });
   }
 
-  activateCustomModel(symbol, modelName: string, input) {
+  activateCustomModel(symbol, modelName: string, input, to) {
     const URI = `${mlServiceUrl}api/activate-custom`;
 
     const options = {
@@ -1530,6 +1531,7 @@ class BacktestService {
         symbol,
         modelName,
         input,
+        to,
         round: false
       },
       json: true
