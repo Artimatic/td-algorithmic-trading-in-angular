@@ -34,7 +34,8 @@ export class AskModelComponent implements OnInit, OnDestroy {
   private callChainSub: Subscription;
   private backtestBuffer: { stock: string }[];
   private bufferSubject: Subject<void>;
-  private calibrationBuffer: { features: number[] }[];
+  private calibrationBuffer: { stock: string; features: number[]; }[];
+  private featureListScoring;
 
   constructor(
     private _formBuilder: FormBuilder,
@@ -47,6 +48,8 @@ export class AskModelComponent implements OnInit, OnDestroy {
     this.bufferSubject = new Subject();
     this.backtestBuffer = [];
     this.calibrationBuffer = [];
+
+    this.featureListScoring = {};
 
     this.endDate = new Date();
 
@@ -155,7 +158,8 @@ export class AskModelComponent implements OnInit, OnDestroy {
       .trainPredictNext30(this.form.value.query,
         moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD'),
         moment(this.startDate).format('YYYY-MM-DD'),
-        1
+        1,
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0]
       ).subscribe((data: TrainingResults[]) => {
         this.isLoading = false;
         this.addTableItem(data);
@@ -187,10 +191,10 @@ export class AskModelComponent implements OnInit, OnDestroy {
     this.modelResults = this.modelResults.concat(item);
   }
 
-  importRandom() {
+  importRandom(count = 25) {
     const stockList = [];
     const uniqueCheck = {};
-    for (let i = 0; i < 25; i++) {
+    for (let i = 0; i < count; i++) {
       let rand;
       do {
         rand = Math.floor(Math.random() * IntradayStocks.length);
@@ -269,36 +273,42 @@ export class AskModelComponent implements OnInit, OnDestroy {
       this.isLoading = false;
     }, 5000);
 
-    // const featureList = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    // for (let i = 0; i < featureList.length - 1; i++) {
-    //   featureList[i] = featureList[i] ? 0 : 1;
-    //   for (let j = i + 1; j < featureList.length; j++) {
-    //     featureList[j] = featureList[j] ? 0 : 1;
-    //     this.calibrationBuffer.push({ features: featureList.slice() });
-    //   }
-    // }
+    // const defaultFeatureList = [
+    //   [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0],
+    //   [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0],
+    //   [1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0],
+    //   [1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0],
+    //   [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
+    //   [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+    //   [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0],
+    //   [1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0],
+    //   [1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+    //   [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+    //   [1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0],
+    //   [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1],
+    //   [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1],
+    //   [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0],
+    //   [1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0]
+    // ];
 
-    const defaultFeatureList = [
-      [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0],
-      [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0],
-      [1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0],
-      [1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0],
-      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
-      [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
-      [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0],
-      [1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0],
-      [1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0],
-      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-      [1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0],
-      [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1],
-      [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1],
-      [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0],
-      [1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0]
-    ];
+    const defaultFeatureList = [];
 
-    defaultFeatureList.forEach((value) => {
-      this.calibrationBuffer.push({ features: value });
-    });
+    const featureList = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    for (let i = 0; i < featureList.length - 1; i++) {
+      featureList[i] = featureList[i] ? 0 : 1;
+      for (let j = i + 1; j < featureList.length; j++) {
+        featureList[j] = featureList[j] ? 0 : 1;
+        defaultFeatureList.push(featureList.slice());
+      }
+    }
+
+    const stocks = this.importRandom(50);
+    for (let i = 0; i < stocks.length; i++) {
+      const stock = stocks[i];
+      defaultFeatureList.forEach((value) => {
+        this.calibrationBuffer.push({ stock: stock.symbol, features: value });
+      });
+    }
 
     console.log('combinations1: ', this.calibrationBuffer.length);
     this.setStartDate();
@@ -306,7 +316,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
     this.bufferSubject.subscribe(() => {
       const bufferItem = this.calibrationBuffer.pop();
       this.callChainSub.add(this.machineLearningService
-        .trainPredictNext30(this.form.value.query,
+        .trainPredictNext30(bufferItem.stock,
           moment(this.endDate).add({ days: 1 }).format('YYYY-MM-DD'),
           moment(this.startDate).subtract({ days: 1 }).format('YYYY-MM-DD'),
           0.7,
@@ -317,6 +327,8 @@ export class AskModelComponent implements OnInit, OnDestroy {
             this.addTableItem(data);
             console.log('results: ', data[0].algorithm,
               data[0].guesses, data[0].correct, data[0].score, bufferItem.features);
+
+            this.collectResult(bufferItem.features, data[0].score);
           }
 
           this.triggerNextCalibration();
@@ -329,7 +341,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
           TimerObservable.create(0, 60000)
             .takeWhile(() => pendingResults)
             .subscribe(() => {
-              this.backtestService.getRnn(this.form.value.query,
+              this.backtestService.getRnn(bufferItem.stock,
                 moment().format('YYYY-MM-DD'),
                 bufferItem.features)
                 .subscribe((data: any) => {
@@ -345,6 +357,9 @@ export class AskModelComponent implements OnInit, OnDestroy {
                     }];
                     this.addTableItem(converted);
                     pendingResults = false;
+
+                    this.collectResult(bufferItem.features, data[0].results[0].score);
+
                     this.triggerNextCalibration();
                   }
                 }, timerError => {
@@ -356,6 +371,18 @@ export class AskModelComponent implements OnInit, OnDestroy {
     });
 
     this.triggerNextCalibration();
+  }
+
+  collectResult(featureList, score) {
+    const featureListKey: string = featureList.join();
+    if (score >  0.5) {
+      if (this.featureListScoring[featureListKey]) {
+        this.featureListScoring[featureListKey]++;
+      } else {
+        this.featureListScoring[featureListKey] = 1;
+      }
+      console.log('Score: ', this.featureListScoring);
+    }
   }
 
   ngOnDestroy() {
