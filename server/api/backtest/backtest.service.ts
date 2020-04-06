@@ -862,7 +862,7 @@ class BacktestService {
     return this.getBBands(indicators.reals, bbandPeriod, 2)
       .then((bband80) => {
         currentQuote.bband80 = bband80;
-        const quotes10Day = this.getSubArray(indicators.reals, 10);
+        const quotes10Day = this.getSubArray(indicators.reals, 24);
         return this.getRateOfChange(quotes10Day, 10);
       })
       .then((roc10) => {
