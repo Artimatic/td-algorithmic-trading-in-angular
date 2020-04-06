@@ -849,7 +849,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         orderQuantity = _.round(_.multiply(modifier, orderQuantity), 0);
 
         this.machineLearningService.activate(this.order.holding.symbol,
-          [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0])
+          [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1])
           .subscribe((machineResult: { nextOutput: number }) => {
             const mlLog = `RNN model result: ${machineResult.nextOutput}`;
             const mlReport = this.reportingService.addAuditLog(this.order.holding.symbol, mlLog);

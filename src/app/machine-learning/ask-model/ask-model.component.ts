@@ -132,8 +132,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
         this.isLoading = false;
         data[0].algorithm = 'Open Price Up';
         this.modelResults.push(data[0]);
-      }, error => {
-        console.log('error: ', error);
+      }, () => {
         this.isLoading = false;
       });
   }
@@ -159,12 +158,11 @@ export class AskModelComponent implements OnInit, OnDestroy {
         moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD'),
         moment(this.startDate).format('YYYY-MM-DD'),
         1,
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0]
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
       ).subscribe((data: TrainingResults[]) => {
         this.isLoading = false;
         this.addTableItem(data);
-      }, error => {
-        console.log('error: ', error);
+      }, () => {
         this.isLoading = false;
       });
   }
@@ -181,8 +179,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
       ).subscribe((data: TrainingResults[]) => {
         this.isLoading = false;
         this.addTableItem(data);
-      }, error => {
-        console.log('error: ', error);
+      }, () => {
         this.isLoading = false;
       });
   }
@@ -228,9 +225,10 @@ export class AskModelComponent implements OnInit, OnDestroy {
         ).subscribe((data: TrainingResults[]) => {
           this.isLoading = false;
           this.addTableItem(data);
-          this.triggerNextBacktest();
-        }, error => {
-          console.log('model error: ', error);
+          setTimeout(() => {
+            this.triggerNextBacktest();
+          }, 100000);
+        }, () => {
           this.isLoading = false;
           setTimeout(() => {
             this.machineLearningService
@@ -247,12 +245,14 @@ export class AskModelComponent implements OnInit, OnDestroy {
                 this.triggerNextBacktest();
               });
 
-          }, 200000);
+          }, 300000);
 
         }));
     });
+    setTimeout(() => {
+      this.triggerNextBacktest();
+    }, 100000);
 
-    this.triggerNextBacktest();
   }
 
   triggerNextCalibration() {
@@ -273,34 +273,34 @@ export class AskModelComponent implements OnInit, OnDestroy {
       this.isLoading = false;
     }, 5000);
 
-    // const defaultFeatureList = [
-    //   [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0],
-    //   [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0],
-    //   [1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0],
-    //   [1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0],
-    //   [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
-    //   [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
-    //   [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0],
-    //   [1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0],
-    //   [1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0],
-    //   [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-    //   [1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0],
-    //   [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1],
-    //   [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1],
-    //   [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0],
-    //   [1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0]
-    // ];
+    const defaultFeatureList = [
+      [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0],
+      [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0],
+      [1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0],
+      [1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
+      [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+      [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0],
+      [1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0],
+      [1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+      [1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0],
+      [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1],
+      [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1],
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0],
+      [1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0]
+    ];
 
-    const defaultFeatureList = [];
+    // const defaultFeatureList = [];
 
-    const featureList = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    for (let i = 0; i < featureList.length - 1; i++) {
-      featureList[i] = featureList[i] ? 0 : 1;
-      for (let j = i + 1; j < featureList.length; j++) {
-        featureList[j] = featureList[j] ? 0 : 1;
-        defaultFeatureList.push(featureList.slice());
-      }
-    }
+    // const featureList = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    // for (let i = 0; i < featureList.length - 1; i++) {
+    //   featureList[i] = featureList[i] ? 0 : 1;
+    //   for (let j = i + 1; j < featureList.length; j++) {
+    //     featureList[j] = featureList[j] ? 0 : 1;
+    //     defaultFeatureList.push(featureList.slice());
+    //   }
+    // }
 
     const stocks = this.importRandom(50);
     for (let i = 0; i < stocks.length; i++) {
@@ -345,7 +345,6 @@ export class AskModelComponent implements OnInit, OnDestroy {
                 moment().format('YYYY-MM-DD'),
                 bufferItem.features)
                 .subscribe((data: any) => {
-                  console.log('rnn data: ', data);
                   if (data) {
                     const converted = [{
                       symbol: data[0].symbol,
@@ -374,8 +373,10 @@ export class AskModelComponent implements OnInit, OnDestroy {
   }
 
   collectResult(featureList, score) {
+    console.log('results: ', featureList, score);
+
     const featureListKey: string = featureList.join();
-    if (score >  0.5) {
+    if (score > 0.5) {
       if (this.featureListScoring[featureListKey]) {
         this.featureListScoring[featureListKey]++;
       } else {
