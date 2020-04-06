@@ -1,6 +1,14 @@
 <div class="setting-controls-container">
   <mat-grid-list cols="4" rowHeight="50px">
     <mat-grid-tile>
+      <label matTooltip="Orders trade date">
+        Date
+      </label>
+      <span>&nbsp;</span>
+      <input type="date" [ngModel]="globalSettingsService.tradeDate | date:'yyyy-MM-dd'"
+        (ngModelChange)="globalSettingsService.tradeDate = $event">
+    </mat-grid-tile>
+    <mat-grid-tile>
       <label matTooltip="Orders start time">
         Start
       </label>

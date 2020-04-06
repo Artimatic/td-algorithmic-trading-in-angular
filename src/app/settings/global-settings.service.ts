@@ -23,14 +23,9 @@ export class GlobalSettingsService {
   fastAvg: number;
   slowAvg: number;
   selectedAlgo: string;
-  constructor(private http: HttpClient) {
-    this.startTime = moment.tz('10:00am', 'h:mma', 'America/New_York').toDate();
-    this.sellAtCloseTime = moment.tz('3:40pm', 'h:mma', 'America/New_York').toDate();
-    this.stopTime = moment.tz('3:50pm', 'h:mma', 'America/New_York').toDate();
-    this.maxLoss = 50;
-    this.brokerage = Brokerage.Td;
-    this.backtestDate = moment().format('YYYY-MM-DD');
-  }
+  tradeDate;
+
+  constructor(private http: HttpClient) {}
 
   async globalModifier() {
     const spreadData = await this.get10y2ySpread().toPromise();
@@ -44,5 +39,24 @@ export class GlobalSettingsService {
 
   get10y2ySpread(): Observable<any> {
     return this.http.get('/api/bonds/10y2yspread');
+  }
+
+  initGlobalSettings() {
+    this.tradeDate = moment().tz('America/New_York');
+    const day = moment().tz('America/New_York').day();
+    if (day === 7) {
+      this.tradeDate = moment().add({ day: 2 });
+    } else if (day === 0) {
+      this.tradeDate = moment().add({ day: 1 });
+    } else if (moment().isAfter(moment.tz('4:00pm', 'h:mma', 'America/New_York'))) {
+      this.tradeDate = moment().add({ day: 1 });
+    }
+
+    this.startTime = moment.tz(`${this.tradeDate.format('YYYY-MM-DD')} 10:00`, 'America/New_York').toDate();
+    this.sellAtCloseTime = moment.tz(`${this.tradeDate.format('YYYY-MM-DD')} 15:40`, 'America/New_York').toDate();
+    this.stopTime = moment.tz(`${this.tradeDate.format('YYYY-MM-DD')} 15:50`, 'America/New_York').toDate();
+    this.maxLoss = 20;
+    this.brokerage = Brokerage.Td;
+    this.backtestDate = this.tradeDate.format('YYYY-MM-DD');
   }
 }

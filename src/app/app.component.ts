@@ -6,6 +6,7 @@ import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/operator/share';
 import { BacktestService, AuthenticationService } from './shared';
 import { ServiceStatus } from './shared/models/service-status';
+import { GlobalSettingsService } from './settings/global-settings.service';
 
 @Component({
   selector: 'app-root',
@@ -16,10 +17,13 @@ export class AppComponent implements OnInit, AfterViewInit {
   dataStatus: boolean;
   mlStatus: boolean;
 
-  constructor(private backtestService: BacktestService, private authenticationService: AuthenticationService) { }
+  constructor(private backtestService: BacktestService,
+    private authenticationService: AuthenticationService,
+    private globalSettingsService: GlobalSettingsService) { }
 
   ngOnInit() {
     this.checkStatus();
+    this.globalSettingsService.initGlobalSettings();
   }
 
   ngAfterViewInit() {

@@ -346,6 +346,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
                 bufferItem.features)
                 .subscribe((data: any) => {
                   if (data) {
+                    console.log('rnn data: ', data);
                     const converted = [{
                       symbol: data[0].symbol,
                       algorithm: data[0].modelName,
