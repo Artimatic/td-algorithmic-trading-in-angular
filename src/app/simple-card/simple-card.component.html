@@ -37,7 +37,7 @@
         </mat-form-field>
         <mat-form-field hintLabel="Quantity">
           <input matInput type="number" placeholder="Quantity"
-            formControlName="quantity" [disabled]="preferences.value === 'Sell positions at Open'" required>
+            formControlName="quantity" [readonly]="preferences.value === 'Sell positions at Open'" required>
         </mat-form-field>
         <mat-form-field>
           <mat-select placeholder="Preferences" [formControl]="preferences" name="preferences">
