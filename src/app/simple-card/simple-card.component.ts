@@ -126,9 +126,10 @@ export class SimpleCardComponent implements OnInit, OnChanges {
           }
         } else if (momentInst.isAfter(this.marketOpenTime) &&
           momentInst.isBefore(this.startTime)) {
-          if (this.preferences.value === OrderPref.BuyCloseSellOpen ||
-            this.preferences.value === OrderPref.SellAtOpen) {
+          if (this.preferences.value === OrderPref.BuyCloseSellOpen) {
             this.sell();
+          } else if (this.preferences.value === OrderPref.SellAtOpen) {
+            this.sellAll(this.order);
           }
         } else {
           if (this.preferences.value === OrderPref.BuyAt3SellBeforeClose) {
@@ -206,6 +207,27 @@ export class SimpleCardComponent implements OnInit, OnChanges {
           }
         };
         this.daytradeService.sendBuy(buyOrder, 'limit', resolve, reject);
+      });
+  }
+
+  sellAll(order: SmartOrder) {
+    const resolve = () => {
+      this.snackBar.open(`Sell all ${order.holding.symbol} order sent`, 'Dismiss');
+    };
+
+    const reject = (error) => {
+      this.error = error._body;
+      this.snackBar.open(`Error selling ${order.holding.symbol}`, 'Dismiss');
+    };
+
+    const notFound = (error) => {
+      this.error = error._body;
+      this.snackBar.open(`${order.holding.symbol} position not found`, 'Dismiss');
+    };
+    return this.portfolioService.getPrice(this.order.holding.symbol)
+      .subscribe((bid) => {
+        order.price = bid;
+        this.daytradeService.closePosition(order, 'limit', resolve, reject, notFound);
       });
   }
 
