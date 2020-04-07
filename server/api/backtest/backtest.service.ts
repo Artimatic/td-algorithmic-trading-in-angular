@@ -869,7 +869,7 @@ class BacktestService {
         const rocLen = roc10[0].length - 1;
         currentQuote.roc10 = _.round(roc10[0][rocLen], 4);
 
-        return this.getRateOfChange(this.getSubArrayShift(indicators.reals, 24, -2), 24);
+        return this.getRateOfChange(this.getSubArrayShift(indicators.reals, 24, -1), 24);
       })
       .then((roc10Previous) => {
         const rocLen = roc10Previous[0].length - 1;
@@ -881,7 +881,7 @@ class BacktestService {
         const rocLen = roc70[0].length - 1;
         currentQuote.roc70 = _.round(roc70[0][rocLen], 4);
 
-        return this.getRateOfChange(this.getSubArrayShift(indicators.reals, 70, -2), 70);
+        return this.getRateOfChange(this.getSubArrayShift(indicators.reals, 70, -1), 70);
       })
       .then((roc70Previous) => {
         const rocLen = roc70Previous[0].length - 1;
