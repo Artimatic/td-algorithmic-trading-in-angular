@@ -315,6 +315,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     for (let i = 0; i < algoParams.length; i++) {
       this.backtestBuffer.push({ stock: algoParams[i].ticker, sub: callback(algoParams[i]) });
     }
+    this.executeBacktests();
   }
 
   incrementProgress() {
@@ -485,7 +486,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
     this.progress = 0;
     this.selectedAlgo = currentSelected;
-    this.executeBacktests();
   }
 
   openChartDialog(element: Stock, endDate) {

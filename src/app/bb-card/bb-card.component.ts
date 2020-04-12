@@ -28,7 +28,7 @@ import { Indicators } from '../shared/models/indicators';
 import { CardOptions } from '../shared/models/card-options';
 import { Point } from 'angular-highcharts/lib/chart';
 import { GlobalSettingsService } from '../settings/global-settings.service';
-import { TradeService } from '../shared/services/trade.service';
+import { TradeService, AlgoQueueItem } from '../shared/services/trade.service';
 
 @Component({
   selector: 'app-bb-card',
@@ -38,7 +38,6 @@ import { TradeService } from '../shared/services/trade.service';
 export class BbCardComponent implements OnInit, OnChanges {
   @ViewChild('stepper') stepper;
   @Input() order: SmartOrder;
-  @Input() init: boolean;
   @Input() tearDown: boolean;
   chart: Chart;
   volumeChart: Chart;
@@ -122,9 +121,15 @@ export class BbCardComponent implements OnInit, OnChanges {
 
     this.setup();
 
-    this.tradeService.algoQueue.subscribe((symbol) => {
-      if (this.order.holding.symbol === symbol) {
-        this.step();
+    this.tradeService.algoQueue.subscribe((item: AlgoQueueItem) => {
+      if (this.order.holding.symbol === item.symbol) {
+        if (item.reset) {
+          this.setup();
+          this.alive = true;
+          this.setLive();
+        } else {
+          this.step();
+        }
       }
     });
 

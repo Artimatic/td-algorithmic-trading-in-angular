@@ -11,7 +11,7 @@ import * as moment from 'moment-timezone';
 import * as _ from 'lodash';
 import { Holding } from '../shared/models';
 import { GlobalSettingsService } from '../settings/global-settings.service';
-import { TradeService } from '../shared/services/trade.service';
+import { TradeService, AlgoQueueItem } from '../shared/services/trade.service';
 import { OrderRow } from '../shared/models/order-row';
 import { FormControl, Validators } from '@angular/forms';
 
@@ -173,7 +173,6 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         const concat = this.cartService.sellOrders.concat(this.cartService.buyOrders);
-
         this.queueAlgos(concat.concat(this.cartService.otherOrders));
       }
     });
@@ -185,8 +184,13 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
     const limit = 10;
 
     _.forEach(orders, (order: SmartOrder) => {
-      order.init = true;
       order.stopped = false;
+      const queueItem: AlgoQueueItem = {
+        symbol: order.holding.symbol,
+        reset: true
+      };
+
+      this.tradeService.algoQueue.next(queueItem);
     });
 
     this.sub = TimerObservable.create(0, this.interval)
@@ -201,7 +205,12 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
           moment().isBefore(moment(this.globalSettingsService.stopTime))) {
           let executed = 0;
           while (executed < limit && lastIndex < orders.length) {
-            this.tradeService.algoQueue.next(orders[lastIndex].holding.symbol);
+            const queueItem: AlgoQueueItem = {
+              symbol: orders[lastIndex].holding.symbol,
+              reset: false
+            };
+
+            this.tradeService.algoQueue.next(queueItem);
             lastIndex++;
             executed++;
           }
@@ -220,6 +229,10 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
           console.log('new interval: ', this.interval);
         }
       });
+  }
+
+  reset() {
+
   }
 
   stop() {

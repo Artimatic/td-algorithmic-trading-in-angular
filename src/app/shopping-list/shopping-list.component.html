@@ -26,21 +26,15 @@
   </div>
   <app-score-board [title]="'Total'" [score]="scoreKeeperService.total"></app-score-board>
   <div *ngFor="let sell of cartService.sellOrders" class="order-card">
-    <app-bb-card [order]="sell"
-                 [init]="sell.init"
-                 [tearDown]="sell.stopped">
+    <app-bb-card [order]="sell" [tearDown]="sell.stopped">
     </app-bb-card>
   </div>
   <div *ngFor="let buy of cartService.buyOrders" class="order-card">
-    <app-bb-card [order]="buy"
-                 [init]="buy.init"
-                 [tearDown]="buy.stopped">
+    <app-bb-card [order]="buy" [tearDown]="buy.stopped">
     </app-bb-card>
   </div>
   <div *ngFor="let other of cartService.otherOrders" class="order-card">
-    <app-bb-card [order]="other"
-                 [init]="other.init"
-                 [tearDown]="other.stopped">
+    <app-bb-card [order]="other" [tearDown]="other.stopped">
     </app-bb-card>
   </div>
   <hr>
