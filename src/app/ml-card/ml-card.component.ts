@@ -64,6 +64,9 @@ export class MlCardComponent implements OnInit {
 
   testing = new FormControl();
 
+  multiplierPreference: FormControl;
+  multiplierList: number[];
+
   constructor(private _formBuilder: FormBuilder,
     private portfolioService: PortfolioService,
     private daytradeService: DaytradeService,
@@ -88,6 +91,17 @@ export class MlCardComponent implements OnInit {
     this.allIn.setValue(false);
     this.inverse.setValue(false);
     this.testing.setValue(false);
+
+    this.multiplierList = [
+      1,
+      2,
+      3,
+      4,
+      5
+    ];
+
+    this.multiplierPreference = new FormControl();
+    this.multiplierPreference.setValue(1);
 
     this.firstFormGroup = this._formBuilder.group({
       amount: [500, Validators.required]
@@ -292,7 +306,7 @@ export class MlCardComponent implements OnInit {
   }
 
   initiateBuy(modifier: number, totalBuyAmount: number, bid: number, order: SmartOrder) {
-    const quantity = _.floor(modifier * this.calculateQuantity(totalBuyAmount, bid));
+    const quantity = _.floor(modifier * this.calculateQuantity(totalBuyAmount, bid)) * this.multiplierPreference.value;
     const buyOrder = this.daytradeService.createOrder(order.holding, 'Buy', quantity, bid, moment().unix());
     const log = `ORDER SENT ${buyOrder.side} ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
 

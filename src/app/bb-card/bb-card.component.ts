@@ -68,6 +68,9 @@ export class BbCardComponent implements OnInit, OnChanges {
   trailingHighPrice: number;
   preferences: FormControl;
 
+  multiplierPreference: FormControl;
+  multiplierList: number[];
+
   constructor(private _formBuilder: FormBuilder,
     private backtestService: BacktestService,
     private daytradeService: DaytradeService,
@@ -87,6 +90,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.live = false;
     this.sides = ['Buy', 'Sell', 'DayTrade'];
     this.error = '';
+
     this.preferenceList = [OrderPref.TakeProfit,
     OrderPref.StopLoss,
     OrderPref.TrailingStopLoss,
@@ -94,6 +98,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     OrderPref.Mfi,
     OrderPref.SpyMomentum,
     OrderPref.SellAtClose];
+
     Highcharts.setOptions({
       global: {
         useUTC: false
@@ -103,6 +108,20 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.bbandPeriod = 80;
     this.dataInterval = '1min';
 
+    this.multiplierList = [
+      1,
+      2,
+      3,
+      4,
+      5
+    ];
+
+    this.preferences = new FormControl();
+    this.preferences.setValue(this.initPreferences());
+
+    this.multiplierPreference = new FormControl();
+    this.multiplierPreference.setValue(1);
+
     this.firstFormGroup = this._formBuilder.group({
       quantity: [this.order.quantity, Validators.required],
       lossThreshold: [this.order.lossThreshold || -0.005, Validators.required],
@@ -111,9 +130,6 @@ export class BbCardComponent implements OnInit, OnChanges {
       orderSize: [this.order.orderSize || this.daytradeService.getDefaultOrderSize(this.order.quantity), Validators.required],
       orderType: [this.order.side, Validators.required]
     });
-
-    this.preferences = new FormControl();
-    this.preferences.setValue(this.initPreferences());
 
     this.secondFormGroup = this._formBuilder.group({
       secondCtrl: ['', Validators.required]
@@ -781,8 +797,10 @@ export class BbCardComponent implements OnInit, OnChanges {
   }
 
   async processAnalysis(daytradeType, analysis, quote, timestamp) {
+    const initialQuanity = this.multiplierPreference.value * this.firstFormGroup.value.quantity;
+
     if (daytradeType === 'buy') {
-      if (this.buyCount >= this.firstFormGroup.value.quantity) {
+      if (this.buyCount >= initialQuanity) {
         this.stop();
       } else if ((!this.globalSettingsService.backtesting ||
         !this.isBacktest) &&
@@ -790,7 +808,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         this.scoringService.total < this.globalSettingsService.maxLoss * -1) {
         this.warning = 'Global stop loss exceeded. Buying paused.';
       } else if (analysis.recommendation.toLowerCase() === 'buy') {
-        const orderQuantity = this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
+        const orderQuantity = this.daytradeService.getBuyOrderQuantity(initialQuanity,
           this.firstFormGroup.value.orderSize,
           this.buyCount,
           this.positionCount);
@@ -805,10 +823,10 @@ export class BbCardComponent implements OnInit, OnChanges {
 
       }
     } else if (daytradeType === 'sell') {
-      if (this.sellCount >= this.firstFormGroup.value.quantity) {
+      if (this.sellCount >= initialQuanity) {
         this.stop();
       } else if (analysis.recommendation.toLowerCase() === 'sell') {
-        const orderQuantity = this.daytradeService.getOrderQuantity(this.firstFormGroup.value.quantity,
+        const orderQuantity = this.daytradeService.getOrderQuantity(initialQuanity,
           this.firstFormGroup.value.orderSize,
           this.sellCount);
 
@@ -845,7 +863,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         const log = `Received buy recommendation`;
         const report = this.reportingService.addAuditLog(this.order.holding.symbol, log);
         console.log(report);
-        let orderQuantity: number = this.scoringService.determineBetSize(this.order.holding.symbol, this.daytradeService.getBuyOrderQuantity(this.firstFormGroup.value.quantity,
+        let orderQuantity: number = this.scoringService.determineBetSize(this.order.holding.symbol, this.daytradeService.getBuyOrderQuantity(initialQuanity,
           this.firstFormGroup.value.orderSize,
           this.buyCount,
           this.positionCount), this.positionCount, this.order.quantity);

@@ -59,6 +59,15 @@
                 </mat-select>
               </mat-form-field>
             </mat-grid-tile>
+            <mat-grid-tile [colspan]="2" [rowspan]="1">
+              <mat-form-field>
+                <mat-select placeholder="Multiplier" [formControl]="multiplierPreference" name="multiplier">
+                  <mat-option *ngFor="let mulitiplier of multiplierList" [value]="mulitiplier">
+                    {{ mulitiplier }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </mat-grid-tile>
             <mat-grid-tile [colspan]="2" [rowspan]="2">
               <mat-slide-toggle [formControl]="testing" (change)="setTest()">
                 Test Mode
