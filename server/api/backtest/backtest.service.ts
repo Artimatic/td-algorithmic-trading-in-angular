@@ -268,7 +268,7 @@ class BacktestService {
 
     const mfiRecommendation = AlgoService.checkMfi(indicator.mfiLeft);
 
-    const rocMomentumRecommendation = AlgoService.checkRocMomentum(indicator.mfiLeft,
+    const rocMomentumRecommendation = AlgoService.checkRocMomentum(indicator.mfiPrevious, indicator.mfiLeft,
       indicator.roc10, indicator.roc10Previous,
       indicator.roc70, indicator.roc70Previous);
 
@@ -863,7 +863,7 @@ class BacktestService {
       .then((bband80) => {
         currentQuote.bband80 = bband80;
         const quotes10Day = this.getSubArray(indicators.reals, 24);
-        return this.getRateOfChange(quotes10Day, 10);
+        return this.getRateOfChange(quotes10Day, 24);
       })
       .then((roc10) => {
         const rocLen = roc10[0].length - 1;
@@ -926,7 +926,7 @@ class BacktestService {
         // })
         // .then((sma70) => {
         //   currentQuote.sma70 = sma70[0][sma70[0].length - 1];
-        return this.getRateOfChange(this.getSubArray(indicators.reals, 10), 10);
+        return this.getRateOfChange(this.getSubArray(indicators.reals, 24), 24);
       })
       .then((roc10) => {
         const rocLen = roc10[0].length - 1;
@@ -1258,13 +1258,13 @@ class BacktestService {
     const currentQuote = quotes[quotes.length - 1];
     const indicators = this.processQuotes(quotes);
 
-    const quotes10Day = this.getSubArray(indicators.reals, 10);
-    return this.getRateOfChange(quotes10Day, 10)
+    const quotes10Day = this.getSubArray(indicators.reals, 24);
+    return this.getRateOfChange(quotes10Day, 24)
       .then((roc10) => {
         const rocLen = roc10[0].length - 1;
         currentQuote.roc10 = _.round(roc10[0][rocLen], 4);
 
-        return this.getRateOfChange(this.getSubArrayShift(indicators.reals, 10, -1), 10);
+        return this.getRateOfChange(this.getSubArrayShift(indicators.reals, 24, -1), 24);
       })
       .then((roc10Previous) => {
         const rocLen = roc10Previous[0].length - 1;
@@ -1308,13 +1308,13 @@ class BacktestService {
     const currentQuote = quotes[quotes.length - 1];
     const indicators = this.processQuotes(quotes);
 
-    const quotes10Day = this.getSubArray(indicators.reals, 10);
-    return this.getRateOfChange(quotes10Day, 10)
+    const quotes10Day = this.getSubArray(indicators.reals, 24);
+    return this.getRateOfChange(quotes10Day, 24)
       .then((roc10) => {
         const rocLen = roc10[0].length - 1;
         currentQuote.roc10 = _.round(roc10[0][rocLen], 4);
 
-        return this.getRateOfChange(this.getSubArrayShift(indicators.reals, 10, -1), 10);
+        return this.getRateOfChange(this.getSubArrayShift(indicators.reals, 24, -1), 24);
       })
       .then((roc10Previous) => {
         const rocLen = roc10Previous[0].length - 1;

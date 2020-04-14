@@ -28,17 +28,17 @@ class AlgoService {
     return DaytradeRecommendation.Neutral;
   }
 
-  checkRocMomentum(mfi: number,
+  checkRocMomentum(mfiPrevious: number, mfi: number,
     roc10: number, roc10Previous: number,
     roc70: number, roc70Previous: number): DaytradeRecommendation {
     if (roc10Previous >= 0 && roc10 < 0) {
-      if (mfi > 42) {
+      if (mfiPrevious > mfi) {
         return DaytradeRecommendation.Bearish;
       }
     }
 
     if (roc70Previous <= 0 && roc70 > 0) {
-      if (mfi < 75) {
+      if (mfi < 65 && mfiPrevious < mfi) {
         return DaytradeRecommendation.Bullish;
       }
     }
