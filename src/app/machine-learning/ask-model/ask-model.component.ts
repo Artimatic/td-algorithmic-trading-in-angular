@@ -268,6 +268,8 @@ export class AskModelComponent implements OnInit, OnDestroy {
   }
 
   calibrate() {
+    this.calibrationBuffer = [];
+
     this.isLoading = true;
     setTimeout(() => {
       this.isLoading = false;
@@ -329,9 +331,8 @@ export class AskModelComponent implements OnInit, OnDestroy {
               data[0].guesses, data[0].correct, data[0].score, bufferItem.features);
 
             this.collectResult(bufferItem.features, data[0].score);
+            this.triggerNextCalibration();
           }
-
-          this.triggerNextCalibration();
         }, error => {
           console.log('model error: ', error);
           this.isLoading = false;
