@@ -25,11 +25,19 @@
       <button pButton type="button" label="Random" (click)="random()"></button>
     </div>
   </div>
-  <p-table [columns]="cols" [value]="modelResults">
+  <p-table #dt [columns]="cols" [value]="modelResults" [paginator]="true" [rows]="100" dataKey="algorithm">
+    <ng-template pTemplate="caption">
+      <div class="global-filter">
+        <i class="fa fa-search" style="margin:4px 4px 0 0"></i>
+        <input type="text" pInputText size="50" placeholder="Filter By Algorithm"
+          (input)="dt.filterGlobal($event.target.value, 'contains')" style="width:auto">
+      </div>
+    </ng-template>
     <ng-template pTemplate="header" let-columns>
       <tr>
-        <th *ngFor="let col of columns">
+        <th *ngFor="let col of columns" [pSortableColumn]="col.field">
           {{col.header}}
+          <p-sortIcon [field]="col.field"></p-sortIcon>
         </th>
       </tr>
     </ng-template>

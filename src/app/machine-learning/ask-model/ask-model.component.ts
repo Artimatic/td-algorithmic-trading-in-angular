@@ -6,6 +6,7 @@ import { BacktestService, MachineLearningService } from '../../shared/index';
 import IntradayStocks from '../../intraday-backtest-view/intraday-backtest-stocks.constant';
 import { Subscription, Subject } from 'rxjs';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
+import { GlobalSettingsService } from '../../settings/global-settings.service';
 
 export interface TrainingResults {
   symbol?: string;
@@ -41,6 +42,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
     private _formBuilder: FormBuilder,
     private backtestService: BacktestService,
     private machineLearningService: MachineLearningService,
+    private globalSettingsService: GlobalSettingsService,
     public snackBar: MatSnackBar) { }
 
   ngOnInit() {
@@ -158,7 +160,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
         moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD'),
         moment(this.startDate).format('YYYY-MM-DD'),
         1,
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+        this.globalSettingsService.daytradeAlgo
       ).subscribe((data: TrainingResults[]) => {
         this.isLoading = false;
         this.addTableItem(data);
@@ -334,7 +336,6 @@ export class AskModelComponent implements OnInit, OnDestroy {
             this.triggerNextCalibration();
           }
         }, error => {
-          console.log('model error: ', error);
           this.isLoading = false;
 
           let pendingResults = true;
@@ -364,7 +365,6 @@ export class AskModelComponent implements OnInit, OnDestroy {
                     this.triggerNextCalibration();
                   }
                 }, timerError => {
-                  console.log('error: ', timerError);
                   pendingResults = false;
                 });
             });

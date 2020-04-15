@@ -4,6 +4,7 @@ import { SettingControlsComponent } from './setting-controls/setting-controls.co
 import { TimepickerModule } from 'ngx-bootstrap/timepicker';
 import { FormsModule } from '@angular/forms';
 import { MatGridListModule, MatTooltipModule, MatSlideToggleModule } from '@angular/material';
+import { DropdownModule } from 'primeng/dropdown';
 
 @NgModule({
   declarations: [SettingControlsComponent],
@@ -13,7 +14,8 @@ import { MatGridListModule, MatTooltipModule, MatSlideToggleModule } from '@angu
     FormsModule,
     MatGridListModule,
     MatTooltipModule,
-    MatSlideToggleModule
+    MatSlideToggleModule,
+    DropdownModule
   ],
   exports: [
     SettingControlsComponent

@@ -30,6 +30,13 @@
       <timepicker [(ngModel)]="globalSettingsService.stopTime" [showMeridian]="ismeridian"></timepicker>
     </mat-grid-tile>
     <mat-grid-tile>
+      <div class="dropdown-selection">
+        <p-dropdown appendTo="body" [options]="globalSettingsService.daytradeAlgoSelection"
+          [(ngModel)]="globalSettingsService.daytradeAlgo" placeholder="Select a daytrade algorithm">
+        </p-dropdown>
+      </div>
+    </mat-grid-tile>
+    <mat-grid-tile>
       <label matTooltip="Max loss threshold. Buying will stop if met.">
         Loss threshold
       </label>

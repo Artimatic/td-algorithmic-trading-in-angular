@@ -24,8 +24,10 @@ export class GlobalSettingsService {
   slowAvg: number;
   selectedAlgo: string;
   tradeDate;
+  daytradeAlgo: number[];
+  daytradeAlgoSelection;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   async globalModifier() {
     const spreadData = await this.get10y2ySpread().toPromise();
@@ -58,5 +60,24 @@ export class GlobalSettingsService {
     this.maxLoss = 20;
     this.brokerage = Brokerage.Td;
     this.backtestDate = this.tradeDate.format('YYYY-MM-DD');
+
+    this.daytradeAlgo = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1];
+    this.daytradeAlgoSelection = [
+      { label: '1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0', value: [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0] },
+      { label: '1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0', value: [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0] },
+      { label: '1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0', value: [1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0] },
+      { label: '1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0', value: [1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0] },
+      { label: '1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1', value: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1] },
+      { label: '1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0', value: [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0] },
+      { label: '1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0', value: [1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0] },
+      { label: '1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0', value: [1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0] },
+      { label: '1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0', value: [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0] },
+      { label: '1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0', value: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0] },
+      { label: '1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0', value: [1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0] },
+      { label: '1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1', value: [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1] },
+      { label: '1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1', value: [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1] },
+      { label: '1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0', value: [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0] },
+      { label: '1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0', value: [1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0] }
+    ];
   }
 }
