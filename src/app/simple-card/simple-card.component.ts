@@ -12,6 +12,7 @@ import { OrderPref } from '../shared/enums/order-pref.enum';
 
 import * as _ from 'lodash';
 import { Holding } from '../shared/models';
+import { GlobalSettingsService } from '../settings/global-settings.service';
 
 interface BuyAt3Algo {
   purchaseSent: boolean;
@@ -63,17 +64,18 @@ export class SimpleCardComponent implements OnInit, OnChanges {
     public cartService: CartService,
     private portfolioService: PortfolioService,
     private backtestService: BacktestService,
+    private globalSettingsService: GlobalSettingsService,
     public snackBar: MatSnackBar,
     public dialog: MatDialog) { }
 
   ngOnInit() {
     this.testing.setValue(false);
 
-    this.marketOpenTime = moment.tz('9:30am', 'h:mma', 'America/New_York');
-    this.startTime = moment.tz('9:36am', 'h:mma', 'America/New_York');
+    this.marketOpenTime = moment.tz(`${this.globalSettingsService.tradeDate.format('YYYY-MM-DD')} 09:30`, 'America/New_York');
+    this.startTime = moment.tz(`${this.globalSettingsService.tradeDate.format('YYYY-MM-DD')} 09:36`, 'America/New_York')
 
-    this.stopTime = moment.tz('3:50pm', 'h:mma', 'America/New_York');
-    this.marketCloseTime = moment.tz('4:00pm', 'h:mma', 'America/New_York');
+    this.stopTime = moment.tz(`${this.globalSettingsService.tradeDate.format('YYYY-MM-DD')} 15:55`, 'America/New_York')
+    this.marketCloseTime = moment.tz(`${this.globalSettingsService.tradeDate.format('YYYY-MM-DD')} 16:00`, 'America/New_York')
 
     this.preferenceList = [
       OrderPref.BuyCloseSellOpen,
