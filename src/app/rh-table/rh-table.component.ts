@@ -292,7 +292,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
         this.iterateAlgoParams(algoParams, rocCb);
 
         break;
-      case 'indicators':
+      case 'daily-indicators':
         const indicatorsCb = (param) => {
           return this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, 'daily-indicators')
             .map(
@@ -496,12 +496,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     this.interval = 0;
 
     this.getData(Stocks, 'daily-indicators');
-
-    this.getData(Stocks, 'v2');
-
-    this.getData(Stocks, 'v5');
-
-    this.getData(Stocks, 'daily-roc');
 
     this.progress = 0;
   }
