@@ -222,9 +222,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
         break;
       case 'v3':
-        algo = 'intraday';
         algoParams.forEach((param) => {
-          this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, algo).subscribe(
+          this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, 'intraday').subscribe(
             result => {
               this.incrementProgress();
             }, error => {
@@ -234,9 +233,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
         });
         break;
       case 'v4':
-        algo = 'bbands';
         algoParams.forEach((param) => {
-          this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, 'crossover').subscribe(
+          this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, 'bbands').subscribe(
             result => {
               this.incrementProgress();
             }, error => {
@@ -263,9 +261,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
         });
         break;
       case 'v5':
-        algo = 'daily-mfi';
         const mfiCb = (param) => {
-          return this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, algo).map(
+          return this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, 'daily-mfi').map(
             (testResults: any[]) => {
               if (testResults.length > 0) {
                 const result = testResults[testResults.length - 1];
@@ -280,9 +277,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
         break;
       case 'daily-roc':
-        algo = 'daily-roc';
         const rocCb = (param) => {
-          return this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, algo)
+          return this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, 'daily-roc')
             .map(
               (testResults: BacktestResponse) => {
                 if (testResults) {
@@ -297,9 +293,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
         break;
       case 'indicators':
-        algo = 'daily-indicators';
         const indicatorsCb = (param) => {
-          return this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, algo)
+          return this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, 'daily-indicators')
             .map(
               (testResults: BacktestResponse) => {
                 if (testResults) {
