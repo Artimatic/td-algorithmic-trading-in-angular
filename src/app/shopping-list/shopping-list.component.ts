@@ -179,6 +179,8 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
   }
 
   queueAlgos(orders: SmartOrder[]) {
+    this.globalSettingsService.setStartTimes();
+    console.log(`New queue set to start at ${moment(this.globalSettingsService.startTime).format()}`);
     this.alive = true;
     let lastIndex = 0;
     const limit = 10;

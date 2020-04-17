@@ -43,6 +43,16 @@ export class GlobalSettingsService {
     return this.http.get('/api/bonds/10y2yspread');
   }
 
+  setStartTimes() {
+    this.startTime = moment.tz(`${this.getTradeDate().format('YYYY-MM-DD')} 10:00`, 'America/New_York').toDate();
+    this.sellAtCloseTime = moment.tz(`${this.getTradeDate().format('YYYY-MM-DD')} 15:40`, 'America/New_York').toDate();
+    this.stopTime = moment.tz(`${this.getTradeDate().format('YYYY-MM-DD')} 15:50`, 'America/New_York').toDate();
+  }
+
+  getTradeDate() {
+    return moment(this.tradeDate);
+  }
+
   initGlobalSettings() {
     this.tradeDate = moment().tz('America/New_York');
     const day = moment().tz('America/New_York').day();
@@ -54,9 +64,8 @@ export class GlobalSettingsService {
       this.tradeDate = moment().add({ day: 1 });
     }
 
-    this.startTime = moment.tz(`${this.tradeDate.format('YYYY-MM-DD')} 10:00`, 'America/New_York').toDate();
-    this.sellAtCloseTime = moment.tz(`${this.tradeDate.format('YYYY-MM-DD')} 15:40`, 'America/New_York').toDate();
-    this.stopTime = moment.tz(`${this.tradeDate.format('YYYY-MM-DD')} 15:50`, 'America/New_York').toDate();
+    this.setStartTimes();
+
     this.maxLoss = 20;
     this.brokerage = Brokerage.Td;
     this.backtestDate = this.tradeDate.format('YYYY-MM-DD');
