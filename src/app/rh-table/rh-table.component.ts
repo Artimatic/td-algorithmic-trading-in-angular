@@ -156,7 +156,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes.data) {
+    if (changes.data && changes.data.currentValue > 0) {
       this.interval = 0;
       this.getData(changes.data.currentValue);
     }
