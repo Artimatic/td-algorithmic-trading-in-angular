@@ -42,7 +42,7 @@ class BacktestController extends BaseController {
               .catch((err) => BaseController.requestErrorHandler(response, err));
             break;
           case 'daily-indicators':
-            BacktestService.getDailyMachineLearningIndicators(request.body.ticker, request.body.end, request.body.start)
+            BacktestService.initDailyStrategy(request.body.ticker, request.body.end, request.body.start, request.body.parameters)
               .then((data) => BaseController.requestGetSuccessHandler(response, data))
               .catch((err) => BaseController.requestErrorHandler(response, err));
             break;
@@ -111,6 +111,16 @@ class BacktestController extends BaseController {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     } else {
       BacktestService.getMfi(request.body.high, request.body.low, request.body.close, request.body.volume, request.body.period)
+        .then((data) => BaseController.requestGetSuccessHandler(response, data))
+        .catch((err) => BaseController.requestErrorHandler(response, err));
+    }
+  }
+
+  getMacd(request, response) {
+    if (_.isEmpty(request.body)) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    } else {
+      BacktestService.getMacd(request.body.real, request.body.shortPeriod, request.body.longPeriod, request.body.signalPeriod)
         .then((data) => BaseController.requestGetSuccessHandler(response, data))
         .catch((err) => BaseController.requestErrorHandler(response, err));
     }

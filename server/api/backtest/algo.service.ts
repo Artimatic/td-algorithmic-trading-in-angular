@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { DaytradeRecommendation } from './backtest.service';
+import { DaytradeRecommendation, Indicators } from './backtest.service';
 import DecisionService from '../mean-reversion/reversion-decision.service';
 
 class AlgoService {
@@ -97,6 +97,20 @@ class AlgoService {
       return DaytradeRecommendation.Bearish;
     }
 
+    return DaytradeRecommendation.Neutral;
+  }
+
+  checkMacd(indicator: Indicators, previousIndicator: Indicators): DaytradeRecommendation {
+    if (previousIndicator) {
+      const macd = indicator.macd[2];
+      const prevMacd = previousIndicator.macd[2];
+
+      if (macd[macd.length - 1] > 0 && prevMacd[prevMacd.length - 1] <= 0) {
+        return DaytradeRecommendation.Bullish;
+      } else if (macd[macd.length - 1] <= 0 && prevMacd[prevMacd.length - 1] > 0) {
+        return DaytradeRecommendation.Bearish;
+      }
+    }
     return DaytradeRecommendation.Neutral;
   }
 }

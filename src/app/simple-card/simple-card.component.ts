@@ -72,10 +72,10 @@ export class SimpleCardComponent implements OnInit, OnChanges {
     this.testing.setValue(false);
 
     this.marketOpenTime = moment.tz(`${this.globalSettingsService.tradeDate.format('YYYY-MM-DD')} 09:30`, 'America/New_York');
-    this.startTime = moment.tz(`${this.globalSettingsService.tradeDate.format('YYYY-MM-DD')} 09:36`, 'America/New_York')
+    this.startTime = moment.tz(`${this.globalSettingsService.tradeDate.format('YYYY-MM-DD')} 09:36`, 'America/New_York');
 
-    this.stopTime = moment.tz(`${this.globalSettingsService.tradeDate.format('YYYY-MM-DD')} 15:55`, 'America/New_York')
-    this.marketCloseTime = moment.tz(`${this.globalSettingsService.tradeDate.format('YYYY-MM-DD')} 16:00`, 'America/New_York')
+    this.stopTime = moment.tz(`${this.globalSettingsService.tradeDate.format('YYYY-MM-DD')} 15:55`, 'America/New_York');
+    this.marketCloseTime = moment.tz(`${this.globalSettingsService.tradeDate.format('YYYY-MM-DD')} 16:00`, 'America/New_York');
 
     this.preferenceList = [
       OrderPref.BuyCloseSellOpen,

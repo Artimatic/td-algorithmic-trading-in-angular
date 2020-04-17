@@ -86,6 +86,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
         { value: 'v2', viewValue: 'Daily - Bollinger Band' },
         { value: 'v5', viewValue: 'Daily - Money Flow Index' },
         { value: 'v1', viewValue: 'Daily - Moving Average Crossover' },
+        { value: 'indicators', viewValue: 'Daily - All Indicators' },
         { value: 'daily-roc', viewValue: 'Daily - Rate of Change/MFI' },
         { value: 'moving_average_resistance', viewValue: 'Daily - Moving Average Resistance' },
         { value: 'v3', viewValue: 'Intraday - MFI' },
@@ -295,6 +296,32 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
         this.iterateAlgoParams(algoParams, rocCb);
 
         break;
+      case 'indicators':
+        algo = 'daily-indicators';
+        const indicatorsCb = (param) => {
+          return this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, algo)
+            .map(
+              (testResults: BacktestResponse) => {
+                if (testResults) {
+                  testResults.stock = param.ticker;
+                  const macdResults: BacktestResponse = testResults;
+
+                  macdResults.algo = 'MACD';
+                  if (macdResults.signals[macdResults.signals.length - 1].recommendation.macd === 'Bullish') {
+                    macdResults.recommendation = 'Buy';
+                  } else if (macdResults.signals[macdResults.signals.length - 1].recommendation.macd === 'Bearish') {
+                    macdResults.recommendation = 'Sell';
+                  } else {
+                    macdResults.recommendation = 'Neutral';
+                  }
+                  this.addToList(macdResults);
+                  this.updateAlgoReport(macdResults);
+                }
+                this.incrementProgress();
+              });
+        };
+        this.iterateAlgoParams(algoParams, indicatorsCb);
+        break;
       case 'moving_average_resistance':
         const callback = (param) => {
           return this.algo.getResistanceChart(param.ticker, startDate, currentDate).map(
@@ -474,6 +501,9 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     this.interval = 0;
     const currentSelected = this.selectedAlgo;
 
+    this.selectedAlgo = 'daily-indicators';
+    this.getData(Stocks);
+
     this.selectedAlgo = 'v2';
     this.getData(Stocks);
 
@@ -482,7 +512,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
     this.selectedAlgo = 'daily-roc';
     this.getData(Stocks);
-
 
     this.progress = 0;
     this.selectedAlgo = currentSelected;

@@ -34,6 +34,7 @@ export interface Indicators {
   mfiLeft: number;
   bband80: any[];
   mfiPrevious?: number;
+  macd?: number;
   roc10?: number;
   roc10Previous?: number;
   roc70?: number;
@@ -57,6 +58,7 @@ export interface Recommendation {
   bband?: DaytradeRecommendation;
   vwma?: DaytradeRecommendation;
   mfiTrade?: DaytradeRecommendation;
+  macd?: DaytradeRecommendation;
 }
 
 export enum DaytradeRecommendation {
@@ -115,6 +117,10 @@ class BacktestService {
 
   getVwma(close, volume, period) {
     return tulind.indicators.vwma.indicator([close, volume], [period]);
+  }
+
+  getMacd(real, shortPeriod, longPeriod, signalPeriod) {
+    return tulind.indicators.macd.indicator([real], [shortPeriod, longPeriod, signalPeriod]);
   }
 
   getRsi(real, period) {
@@ -323,7 +329,7 @@ class BacktestService {
       returns: 0
     };
 
-    _.forEach(indicators, (indicator) => {
+    indicators.forEach((indicator, idx) => {
       if (indicator.close) {
         let orderType = OrderType.None;
         const avgPrice = this.estimateAverageBuyOrderPrice(orders);
@@ -334,9 +340,11 @@ class BacktestService {
           orderType = OrderType.Sell;
           indicator.recommendation = { recommendation: OrderType.Sell };
         } else {
-          const recommendation: Recommendation = recommendationFn(indicator.close, indicator);
+          const recommendation: Recommendation = recommendationFn(indicator.close,
+            indicator,
+            idx > 0 ? indicators[idx - 1] : null);
 
-          orderType = recommendation.recommendation;
+            orderType = recommendation.recommendation;
           indicator.recommendation = recommendation;
         }
 
@@ -386,7 +394,7 @@ class BacktestService {
 
         const lossThreshold = 0.05;
         const profitThreshold = 0.05;
-        const mfiRange = [20, 80];
+        const mfiRange = [20, 75];
         const fields = ['leftRange', 'rightRange', 'totalTrades', 'net', 'avgTrade', 'returns'];
         let count = 0;
         let leftRange = -1;
@@ -445,6 +453,31 @@ class BacktestService {
           }
         });
         return Promise.all(getIndicatorQuotes);
+      });
+  }
+
+  initDailyStrategy(symbol, startDate, currentDate, parameters = { minQuotes: 80 }) {
+    const minQuotes = parameters.minQuotes;
+    const getIndicatorQuotes = [];
+
+    return this.getData(symbol, startDate, currentDate)
+      .then(quotes => {
+        _.forEach(quotes, (value, key) => {
+          const idx = Number(key);
+          if (idx > minQuotes) {
+            const q = _.slice(quotes, idx - minQuotes, idx);
+            getIndicatorQuotes.push(this.initStrategy(q));
+          }
+        });
+        return Promise.all(getIndicatorQuotes);
+      })
+      .then(indicators => {
+        const testResults = this.backtestIndicators(this.getAllRecommendations,
+          indicators,
+          parameters);
+
+        testResults.algo = 'All indicators';
+        return testResults;
       });
   }
 
@@ -902,7 +935,10 @@ class BacktestService {
       .then(vwma => {
         const vwmaLen = vwma[0].length - 1;
         currentQuote.vwma = _.round(vwma[0][vwmaLen], 3);
-
+        return this.getMacd(indicators.reals, 12, 26, 9);
+      })
+      .then(macd => {
+        currentQuote.macd = macd;
         return this.getRsi(this.getSubArray(indicators.reals, 14), 14);
       })
       .then(rsi => {
@@ -1354,10 +1390,6 @@ class BacktestService {
       });
   }
 
-  processMachineLearningIndicators(indicators: Indicators[]): Indicators[] {
-    return indicators;
-  }
-
   getDailyRocRecommendation(price: number, indicator: Indicators): Recommendation {
     const recommendations: Recommendation = {
       recommendation: OrderType.None,
@@ -1380,6 +1412,40 @@ class BacktestService {
       recommendations.recommendation = OrderType.Buy;
     } else if (recommendations.roc === DaytradeRecommendation.Bearish &&
       recommendations.mfiTrade === DaytradeRecommendation.Bearish) {
+      recommendations.recommendation = OrderType.Sell;
+    }
+
+    return recommendations;
+  }
+
+  getAllRecommendations(price: number, indicator: Indicators, previousIndicator: Indicators): Recommendation {
+    const recommendations: Recommendation = {
+      recommendation: OrderType.None,
+      mfi: DaytradeRecommendation.Neutral,
+      roc: DaytradeRecommendation.Neutral,
+      bband: DaytradeRecommendation.Neutral,
+      vwma: DaytradeRecommendation.Neutral,
+      mfiTrade: DaytradeRecommendation.Neutral,
+      macd: DaytradeRecommendation.Neutral
+    };
+
+    const rocCrossoverRecommendation = AlgoService.checkRocCrossover(indicator.roc10Previous, indicator.roc10, indicator.roc70Previous, indicator.roc70);
+
+    const mfiTrendRecommendation = AlgoService.checkMfiTrend(indicator.mfiPrevious, indicator.mfiLeft);
+
+    const macdRecommendation = AlgoService.checkMacd(indicator, previousIndicator);
+
+    recommendations.roc = rocCrossoverRecommendation;
+    recommendations.mfiTrade = mfiTrendRecommendation;
+    recommendations.macd = macdRecommendation;
+
+    if (recommendations.roc === DaytradeRecommendation.Bullish ||
+      recommendations.mfiTrade === DaytradeRecommendation.Bullish ||
+      recommendations.macd === DaytradeRecommendation.Bullish) {
+      recommendations.recommendation = OrderType.Buy;
+    } else if (recommendations.roc === DaytradeRecommendation.Bearish ||
+      recommendations.mfiTrade === DaytradeRecommendation.Bearish ||
+      recommendations.macd === DaytradeRecommendation.Bearish) {
       recommendations.recommendation = OrderType.Sell;
     }
 
@@ -1412,27 +1478,6 @@ class BacktestService {
 
         testResults.algo = 'RocCrossover';
         return testResults;
-      });
-  }
-
-  getDailyMachineLearningIndicators(symbol, currentDate, startDate) {
-    const getIndicatorQuotes = [];
-    const minQuotes = 100;
-
-    return this.getData(symbol, currentDate, startDate)
-      .then(quotes => {
-        _.forEach(quotes, (value, key) => {
-          const idx = Number(key);
-          if (idx > minQuotes) {
-            const q = _.slice(quotes, idx - minQuotes, idx);
-            getIndicatorQuotes.push(this.getMachineLearningIndicators(q));
-          }
-        });
-        return Promise.all(getIndicatorQuotes);
-      })
-      .then(indicators => {
-        const trainingData = this.processMachineLearningIndicators(indicators);
-        return trainingData;
       });
   }
 
