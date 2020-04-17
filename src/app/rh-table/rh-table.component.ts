@@ -501,9 +501,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     this.interval = 0;
     const currentSelected = this.selectedAlgo;
 
-    this.selectedAlgo = 'daily-indicators';
-    this.getData(Stocks);
-
     this.selectedAlgo = 'v2';
     this.getData(Stocks);
 
@@ -511,6 +508,9 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     this.getData(Stocks);
 
     this.selectedAlgo = 'daily-roc';
+    this.getData(Stocks);
+
+    this.selectedAlgo = 'daily-indicators';
     this.getData(Stocks);
 
     this.progress = 0;
