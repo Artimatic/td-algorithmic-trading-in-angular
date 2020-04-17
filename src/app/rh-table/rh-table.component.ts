@@ -162,7 +162,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  async getData(algoParams) {
+  async getData(algoParams, selectedAlgo = null) {
     const currentDate = moment(this.endDate).format('YYYY-MM-DD');
     const startDate = moment(this.endDate).subtract(700, 'days').format('YYYY-MM-DD');
 
@@ -175,9 +175,9 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       averageTrades: 0
     };
 
-    let algo;
+    const algorithm = selectedAlgo ? selectedAlgo : this.selectedAlgo;
 
-    switch (this.selectedAlgo) {
+    switch (algorithm) {
       case 'v1':
         algoParams.forEach((param) => {
           if (!param.start) {
@@ -499,22 +499,16 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
   runDefaultBacktest() {
     this.interval = 0;
-    const currentSelected = this.selectedAlgo;
 
-    this.selectedAlgo = 'v2';
-    this.getData(Stocks);
+    this.getData(Stocks, 'daily-indicators');
 
-    this.selectedAlgo = 'v5';
-    this.getData(Stocks);
+    this.getData(Stocks, 'v2');
 
-    this.selectedAlgo = 'daily-roc';
-    this.getData(Stocks);
+    this.getData(Stocks, 'v5');
 
-    this.selectedAlgo = 'daily-indicators';
-    this.getData(Stocks);
+    this.getData(Stocks, 'daily-roc');
 
     this.progress = 0;
-    this.selectedAlgo = currentSelected;
   }
 
   openChartDialog(element: Stock, endDate) {
