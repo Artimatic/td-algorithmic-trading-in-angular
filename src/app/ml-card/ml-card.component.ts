@@ -77,14 +77,6 @@ export class MlCardComponent implements OnInit {
     public dialog: MatDialog) { }
 
   ngOnInit() {
-    this.startTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 15:55`, 'America/New_York');
-    this.stopTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 16:00`, 'America/New_York');
-
-    this.holdingCount = 0;
-
-    this.interval = 300000;
-    this.reportWaitInterval = 180000;
-
     this.live = false;
     this.alive = true;
     this.longOnly.setValue(false);
@@ -369,8 +361,15 @@ export class MlCardComponent implements OnInit {
   }
 
   setup() {
+    this.startTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 15:55`, 'America/New_York');
+    this.stopTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 16:00`, 'America/New_York');
+
     this.holdingCount = 0;
     this.warning = '';
+    this.holdingCount = 0;
+
+    this.interval = 300000;
+    this.reportWaitInterval = 180000;
   }
 
   setTest() {

@@ -71,22 +71,14 @@ export class SimpleCardComponent implements OnInit, OnChanges {
   ngOnInit() {
     this.testing.setValue(false);
 
-    this.marketOpenTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 09:30`, 'America/New_York');
-    this.startTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 09:36`, 'America/New_York');
-
-    this.stopTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 15:55`, 'America/New_York');
-    this.marketCloseTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 16:00`, 'America/New_York');
+    this.live = false;
+    this.alive = true;
 
     this.preferenceList = [
       OrderPref.BuyCloseSellOpen,
       OrderPref.SellAtOpen,
       OrderPref.BuyAt3SellBeforeClose
     ];
-
-    this.holdingCount = 0;
-    this.interval = 60000;
-    this.live = false;
-    this.alive = true;
 
     this.firstFormGroup = this._formBuilder.group({
       quantity: [_.get(this.order, 'quantity', 10), Validators.required],
@@ -306,6 +298,13 @@ export class SimpleCardComponent implements OnInit, OnChanges {
   }
 
   setup() {
+    this.marketOpenTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 09:30`, 'America/New_York');
+    this.startTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 09:36`, 'America/New_York');
+
+    this.stopTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 15:55`, 'America/New_York');
+    this.marketCloseTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 16:00`, 'America/New_York');
+
+    this.interval = 60000;
     this.holdingCount = 0;
     this.warning = '';
     this.buyAt3Algo = { purchaseSent: false };
