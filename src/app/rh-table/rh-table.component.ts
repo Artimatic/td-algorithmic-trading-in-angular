@@ -86,7 +86,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
         { value: 'v2', viewValue: 'Daily - Bollinger Band' },
         { value: 'v5', viewValue: 'Daily - Money Flow Index' },
         { value: 'v1', viewValue: 'Daily - Moving Average Crossover' },
-        { value: 'indicators', viewValue: 'Daily - All Indicators' },
+        { value: 'daily-indicators', viewValue: 'Daily - All Indicators' },
         { value: 'daily-roc', viewValue: 'Daily - Rate of Change/MFI' },
         { value: 'moving_average_resistance', viewValue: 'Daily - Moving Average Resistance' },
         { value: 'v3', viewValue: 'Intraday - MFI' },
@@ -156,7 +156,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes.data && changes.data.currentValue > 0) {
+    if (changes.data && changes.data.currentValue.length > 0) {
       this.interval = 0;
       this.getData(changes.data.currentValue);
     }

@@ -199,7 +199,7 @@ class IntradayPredicationService {
     // 1,0,0,0,0,1,0,1,0,1,0,0,0
     const input = [
       _.round(DecisionService.getPercentChange(openingPrice, close) * 1000, 0),
-      _.round(DecisionService.getPercentChange(previousClose, close) * 1000, 0)
+      _.round(currentSignal.macd[2][currentSignal.macd[2].length - 1] * 100, 0)
     ]
       // .concat(this.comparePrices(currentSignal.vwma, close))
       // .concat(this.comparePrices(currentSignal.high, close))

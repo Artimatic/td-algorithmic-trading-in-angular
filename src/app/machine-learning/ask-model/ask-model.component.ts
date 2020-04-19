@@ -77,7 +77,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
     this.modelResults = [];
     this.isLoading = false;
     this.setStartDate();
-    this.selectedModel = this.models[1];
+    this.selectedModel = this.models[2];
   }
 
   setStartDate() {
@@ -107,7 +107,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
         break;
       }
       case 'calibrate': {
-        this.calibrate();
+        this.calibrateOne();
         break;
       }
     }
@@ -205,15 +205,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
   }
 
   random() {
-    this.setStartDate();
-
-    const stocks = this.importRandom();
-    for (let i = 0; i < stocks.length; i++) {
-      const stock = stocks[i];
-      this.backtestBuffer.push({ stock: stock.symbol });
-    }
-
-    this.executeBacktests();
+    this.calibrateRandom()
   }
 
   executeBacktests() {
@@ -269,7 +261,18 @@ export class AskModelComponent implements OnInit, OnDestroy {
     }
   }
 
-  calibrate() {
+  calibrateOne() {
+    this.calibrate([{ symbol: this.form.value.query }]);
+  }
+
+  calibrateRandom() {
+    const stocks = this.importRandom(50);
+    this.calibrate(stocks);
+  }
+
+  calibrate(stocks) {
+    this.setStartDate();
+
     this.calibrationBuffer = [];
 
     this.isLoading = true;
@@ -278,6 +281,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
     }, 5000);
 
     const defaultFeatureList = [
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
       [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0],
       [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0],
       [1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0],
@@ -306,16 +310,12 @@ export class AskModelComponent implements OnInit, OnDestroy {
     //   }
     // }
 
-    const stocks = this.importRandom(50);
     for (let i = 0; i < stocks.length; i++) {
       const stock = stocks[i];
       defaultFeatureList.forEach((value) => {
         this.calibrationBuffer.push({ stock: stock.symbol, features: value });
       });
     }
-
-    console.log('combinations1: ', this.calibrationBuffer.length);
-    this.setStartDate();
 
     this.bufferSubject.subscribe(() => {
       const bufferItem = this.calibrationBuffer.pop();

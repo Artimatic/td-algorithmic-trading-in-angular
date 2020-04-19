@@ -232,7 +232,7 @@ class BacktestService {
       });
   }
 
-  runDaytradeBacktest(symbol, currentDate, startDate, parameters) {
+  runDaytradeBacktest(symbol, currentDate, startDate, parameters): BacktestResults {
     return this.initDaytradeStrategy(symbol, startDate, currentDate, parameters)
       .then(indicators => {
         const testResults = this.backtestIndicators(this.getDaytradeRecommendation,
