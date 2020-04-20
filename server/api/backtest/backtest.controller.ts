@@ -236,13 +236,10 @@ class BacktestController extends BaseController {
       !request.body.parameters) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     }
-    BacktestService.runDaytradeBacktest(request.body.symbol,
+    response.status(200).send(BacktestService.runDaytradeBacktest(request.body.symbol,
       request.body.currentDate,
       request.body.startDate,
-      request.body.parameters)
-      .then((data) => BaseController.requestGetSuccessHandler(response, data))
-      .catch((err) => BaseController.requestErrorHandler(response, err));
-
+      request.body.parameters));
   }
 
   getDaytrade(request, response) {
