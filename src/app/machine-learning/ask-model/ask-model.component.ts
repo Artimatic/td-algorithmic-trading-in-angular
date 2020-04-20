@@ -205,7 +205,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
   }
 
   random() {
-    this.calibrateRandom()
+    this.calibrateRandom();
   }
 
   executeBacktests() {
