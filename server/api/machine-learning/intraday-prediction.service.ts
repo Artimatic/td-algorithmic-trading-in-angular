@@ -195,9 +195,9 @@ class IntradayPredicationService {
 
     dataSetObj.date = currentSignal.date;
 
-    // 1,0,0,0,0,1,0,1,0,1,1,0,0
-    // 1,0,0,0,0,1,0,1,0,1,0,0,0
-    // 1,0,1,0,1,1,1,1,1,0,0,1,1
+    // 1,0,1,0,1,0,1,0,1,1,1,1,0: 6
+    // 1,0,1,0,1,1,1,1,1,0,0,1,1: 5
+    // 1,0,1,0,1,1,1,1,1,1,1,0,0: 5
     const input = [
       _.round(DecisionService.getPercentChange(openingPrice, close) * 1000, 0),
       _.round(currentSignal.macd[2][currentSignal.macd[2].length - 1] * 100, 0)

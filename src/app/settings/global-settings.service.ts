@@ -26,6 +26,7 @@ export class GlobalSettingsService {
   tradeDate;
   daytradeAlgo: number[];
   daytradeAlgoSelection;
+  featureList: number[][]
 
   constructor(private http: HttpClient) { }
 
@@ -72,7 +73,7 @@ export class GlobalSettingsService {
 
     this.daytradeAlgo = [1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1];
 
-    const initialList = [
+    this.featureList = [
       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
       [1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0],
       [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0],
@@ -96,7 +97,7 @@ export class GlobalSettingsService {
 
     this.daytradeAlgoSelection = [];
 
-    initialList.forEach((value) => {
+    this.featureList.forEach((value) => {
       this.daytradeAlgoSelection.push({ label: value.join(''), value });
     });
   }
