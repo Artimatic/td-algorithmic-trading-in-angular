@@ -797,10 +797,10 @@ export class BbCardComponent implements OnInit, OnChanges {
   }
 
   async processAnalysis(daytradeType, analysis, quote, timestamp) {
-    const initialQuanity = this.multiplierPreference.value * this.firstFormGroup.value.quantity;
+    const initialQuantity = this.multiplierPreference.value * this.firstFormGroup.value.quantity;
 
     if (daytradeType === 'buy') {
-      if (this.buyCount >= initialQuanity) {
+      if (this.buyCount >= initialQuantity) {
         this.stop();
       } else if ((!this.globalSettingsService.backtesting ||
         !this.isBacktest) &&
@@ -808,7 +808,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         this.scoringService.total < this.globalSettingsService.maxLoss * -1) {
         this.warning = 'Global stop loss exceeded. Buying paused.';
       } else if (analysis.recommendation.toLowerCase() === 'buy') {
-        const orderQuantity = this.daytradeService.getBuyOrderQuantity(initialQuanity,
+        const orderQuantity = this.daytradeService.getBuyOrderQuantity(initialQuantity,
           this.firstFormGroup.value.orderSize,
           this.buyCount,
           this.positionCount);
@@ -823,10 +823,10 @@ export class BbCardComponent implements OnInit, OnChanges {
 
       }
     } else if (daytradeType === 'sell') {
-      if (this.sellCount >= initialQuanity) {
+      if (this.sellCount >= initialQuantity) {
         this.stop();
       } else if (analysis.recommendation.toLowerCase() === 'sell') {
-        const orderQuantity = this.daytradeService.getOrderQuantity(initialQuanity,
+        const orderQuantity = this.daytradeService.getOrderQuantity(initialQuantity,
           this.firstFormGroup.value.orderSize,
           this.sellCount);
 
