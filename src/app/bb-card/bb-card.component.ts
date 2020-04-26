@@ -863,7 +863,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         const log = `Received buy recommendation`;
         const report = this.reportingService.addAuditLog(this.order.holding.symbol, log);
         console.log(report);
-        let orderQuantity: number = this.scoringService.determineBetSize(this.order.holding.symbol, this.daytradeService.getBuyOrderQuantity(initialQuanity,
+        let orderQuantity: number = this.scoringService.determineBetSize(this.order.holding.symbol, this.daytradeService.getBuyOrderQuantity(initialQuantity,
           this.firstFormGroup.value.orderSize,
           this.buyCount,
           this.positionCount), this.positionCount, this.order.quantity);
