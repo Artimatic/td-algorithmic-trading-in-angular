@@ -57,6 +57,11 @@ import { HeaderComponent } from './header/header.component';
 import { SharedModule } from './shared/shared.module';
 import { RedirectLoginDialogComponent } from './redirect-login-dialog/redirect-login-dialog.component';
 import { NeuroCardComponent } from './neuro-card/neuro-card.component';
+import { DaytradeScoreBoardComponent } from './daytrade-score-board/daytrade-score-board.component';
+import { CardModule } from 'primeng/card';
+import { PokerhandComponent } from './pokerhand/pokerhand.component';
+import { ButtonModule } from 'primeng/button';
+import {SplitButtonModule} from 'primeng/splitbutton';
 
 @NgModule({
   declarations: [
@@ -89,6 +94,8 @@ import { NeuroCardComponent } from './neuro-card/neuro-card.component';
     HeaderComponent,
     RedirectLoginDialogComponent,
     NeuroCardComponent,
+    DaytradeScoreBoardComponent,
+    PokerhandComponent,
   ],
   entryComponents: [
     LoginDialogComponent,
@@ -111,7 +118,10 @@ import { NeuroCardComponent } from './neuro-card/neuro-card.component';
     OverviewModule,
     SettingsModule,
     MachineLearningModule,
-    SharedModule
+    SharedModule,
+    CardModule,
+    ButtonModule,
+    SplitButtonModule
   ],
   providers: [
     BacktestService,

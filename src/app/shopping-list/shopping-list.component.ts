@@ -14,6 +14,7 @@ import { GlobalSettingsService } from '../settings/global-settings.service';
 import { TradeService, AlgoQueueItem } from '../shared/services/trade.service';
 import { OrderRow } from '../shared/models/order-row';
 import { FormControl, Validators } from '@angular/forms';
+import { MenuItem } from 'primeng/components/common/menuitem';
 
 @Component({
   selector: 'app-shopping-list',
@@ -22,6 +23,7 @@ import { FormControl, Validators } from '@angular/forms';
 })
 export class ShoppingListComponent implements OnInit, OnDestroy {
   defaultInterval = 70800;
+  simultaneousOrderLimit = 3;
   spy: SmartOrder;
   tlt: SmartOrder;
 
@@ -39,6 +41,8 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
 
   simpleCards: SmartOrder[];
   mlCards: SmartOrder[];
+
+  multibuttonOptions: MenuItem[];
 
   constructor(public cartService: CartService,
     public scoreKeeperService: ScoreKeeperService,
@@ -143,6 +147,24 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
           duration: 2000,
         });
       });
+
+    this.multibuttonOptions = [
+      {
+        label: 'Delete Orders', icon: 'pi pi-trash', command: () => {
+          this.stopAndDeleteOrders();
+        }
+      },
+      {
+        label: 'Close Opened DayTrades', icon: 'pi pi-sign-out', command: () => {
+          this.closeAllTrades();
+        }
+      },
+      {
+        label: 'Load Example Orders', icon: 'pi pi-shopping-cart', command: () => {
+          this.loadExamples();
+        }
+      }
+    ];
   }
 
   ngOnDestroy() {
@@ -183,7 +205,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
     console.log(`New queue set to start at ${moment(this.globalSettingsService.startTime).format()}`);
     this.alive = true;
     let lastIndex = 0;
-    const limit = 10;
+    const limit = this.simultaneousOrderLimit > orders.length ? orders.length : this.simultaneousOrderLimit;
 
     _.forEach(orders, (order: SmartOrder) => {
       order.stopped = false;

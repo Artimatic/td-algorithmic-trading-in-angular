@@ -26,7 +26,7 @@ export class GlobalSettingsService {
   tradeDate;
   daytradeAlgo: number[];
   daytradeAlgoSelection;
-  featureList: number[][]
+  featureList: number[][];
 
   constructor(private http: HttpClient) { }
 
