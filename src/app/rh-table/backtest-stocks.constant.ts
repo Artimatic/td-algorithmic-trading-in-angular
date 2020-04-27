@@ -130,7 +130,6 @@ export const stockList = [
   'NEM',
   'NFLX',
   'NKE',
-  'NR',
   'NUE',
   'NVDA',
   'NXPI',
