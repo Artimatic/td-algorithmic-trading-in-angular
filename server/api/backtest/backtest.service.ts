@@ -1522,7 +1522,29 @@ class BacktestService {
   }
 
   trainCustomModel(symbol, modelName, trainingData, trainingSize, date) {
-    const URI = `${mlServiceUrl}api/train-custom?`;
+    const URI = `${mlServiceUrl}api/train-custom`;
+
+    const options = {
+      method: 'POST',
+      uri: URI,
+      body: {
+        symbol,
+        modelName,
+        trainingData,
+        trainingSize,
+        to: date
+      },
+      json: true
+    };
+
+    return RequestPromise(options)
+      .catch((error) => {
+        console.log('train-custom error: ', error.message);
+      });
+  }
+
+  trainTensorModel(symbol, modelName, trainingData, trainingSize, date) {
+    const URI = `${mlServiceUrl}api/tensor/train-model`;
 
     const options = {
       method: 'POST',

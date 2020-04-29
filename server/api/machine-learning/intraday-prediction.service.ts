@@ -42,11 +42,11 @@ class IntradayPredicationService {
         });
         console.log('Data set size: ', finalDataSet.length);
         const modelName = featureUse ? featureUse.join() : this.modelName;
-        if (finalDataSet.length > 1025) {
-          console.log('Data set too large. Trimming');
-          finalDataSet = finalDataSet.slice(finalDataSet.length - 1000, finalDataSet.length);
-        }
-        return BacktestService.trainCustomModel(symbol, modelName, finalDataSet, trainingSize, moment().format('YYYY-MM-DD'));
+        // if (finalDataSet.length > 1025) {
+        //   console.log('Data set too large. Trimming');
+        //   finalDataSet = finalDataSet.slice(finalDataSet.length - 1000, finalDataSet.length);
+        // }
+        return BacktestService.trainTensorModel(symbol, modelName, finalDataSet, trainingSize, moment().format('YYYY-MM-DD'));
       });
   }
 
@@ -113,7 +113,7 @@ class IntradayPredicationService {
   }
 
   getOutput(currentClose, futureClose) {
-    if (DecisionService.getPercentChange(currentClose, futureClose) > 0.007) {
+    if (DecisionService.getPercentChange(currentClose, futureClose) > 0.005) {
       return 1;
     }
 

@@ -33,7 +33,7 @@
   <h1 mat-subheader>Shopping List</h1>
   <p>Import and execute your trading algorithms</p>
   <app-pokerhand></app-pokerhand>
-  <p-splitButton label="Start All" (onClick)="confirmStart()" [model]="multibuttonOptions" icon="pi pi-dollar"
+  <p-splitButton label="Start Orders" (onClick)="confirmStart()" [model]="multibuttonOptions" icon="pi pi-dollar"
     styleClass="ui-button-success"></p-splitButton>
 
   <mat-accordion>
@@ -62,7 +62,7 @@
     <mat-expansion-panel>
       <mat-expansion-panel-header>
         <mat-panel-title>
-          <h2 matTooltip="Disregards global settings.">Other Orders</h2>
+          <h2 matTooltip="Disregards global settings.">Others</h2>
         </mat-panel-title>
       </mat-expansion-panel-header>
       <mat-grid-list cols="4" rowHeight="25px">
@@ -88,7 +88,7 @@
     <mat-expansion-panel>
       <mat-expansion-panel-header>
         <mat-panel-title>
-          <h2 matTooltip="Requires Machine Learning Service">Machine Learning Orders</h2>
+          <h2 matTooltip="Requires Machine Learning Service">Machine Learning</h2>
         </mat-panel-title>
       </mat-expansion-panel-header>
       <mat-grid-list cols="4" rowHeight="25px">

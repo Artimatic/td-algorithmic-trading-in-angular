@@ -35,7 +35,14 @@
                   <mat-option value="SPY">SPY</mat-option>
                   <mat-option value="QQQ">QQQ</mat-option>
                   <mat-option value="TQQQ">TQQQ</mat-option>
+                  <mat-option value="CUSTOM">Custom</mat-option>
                 </mat-select>
+              </mat-form-field>
+            </mat-grid-tile>
+            <mat-grid-tile [colspan]="2" [rowspan]="1" [hidden]="bullishPlay.value !== 'CUSTOM'">
+              <mat-form-field hintLabel="Symbol">
+                <input matInput type="text" placeholder="Symbol"
+                  formControlName="symbol" required>
               </mat-form-field>
             </mat-grid-tile>
             <mat-grid-tile [colspan]="2" [rowspan]="1">

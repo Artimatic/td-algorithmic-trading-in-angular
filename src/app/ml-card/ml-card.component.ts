@@ -96,7 +96,8 @@ export class MlCardComponent implements OnInit {
     this.multiplierPreference.setValue(1);
 
     this.firstFormGroup = this._formBuilder.group({
-      amount: [500, Validators.required]
+      amount: [500, Validators.required],
+      symbol: []
     });
 
     this.secondFormGroup = this._formBuilder.group({
@@ -111,15 +112,31 @@ export class MlCardComponent implements OnInit {
       Validators.required
     ]);
 
-    this.settings = new FormControl('closePositions', [
+    this.settings = new FormControl('openPositions', [
       Validators.required
     ]);
 
     this.setup();
   }
 
+  getTrainingStock() {
+    if (this.bullishPlay.value === 'CUSTOM' && this.firstFormGroup.value.symbol) {
+      return this.firstFormGroup.value.symbol;
+    } else {
+      return 'SPY';
+    }
+  }
+
+  getBullPick() {
+    if (this.bullishPlay.value === 'CUSTOM' && this.firstFormGroup.value.symbol) {
+      return this.firstFormGroup.value.symbol;
+    } else {
+      return this.bullishPlay.value;
+    }
+  }
+
   trainModel() {
-    this.backtestService.runLstmV2('VTI', moment().subtract({ day: 1 }).format('YYYY-MM-DD'), moment().subtract({ day: 50 }).format('YYYY-MM-DD')).subscribe();
+    this.backtestService.runLstmV2(this.getTrainingStock(), moment().subtract({ day: 1 }).format('YYYY-MM-DD'), moment().subtract({ day: 50 }).format('YYYY-MM-DD')).subscribe();
   }
 
   getTradeDay() {
@@ -147,7 +164,7 @@ export class MlCardComponent implements OnInit {
           momentInst.isBefore(this.stopTime) || this.testing.value) {
           this.alive = false;
           this.pendingResults = true;
-          this.backtestService.activateLstmV2('VTI')
+          this.backtestService.activateLstmV2(this.getTrainingStock())
             .subscribe((data: any) => {
               console.log('rnn data: ', this.getTradeDay(), data);
 
@@ -218,17 +235,17 @@ export class MlCardComponent implements OnInit {
     switch (bet.summary) {
       case Sentiment.Bullish:
         if (this.settings.value === 'closePositions') {
-          this.sellAll(this.getOrder(this.inverse.value ? this.bullishPlay.value :  this.bearishPlay.value));
+          this.sellAll(this.getOrder(this.inverse.value ? this.getBullPick() :  this.bearishPlay.value));
         } else if (this.settings.value === 'openPositions') {
-          this.buy(this.getOrder(this.inverse.value ? this.bearishPlay.value : this.bullishPlay.value), _.divide(bet.bullishOpen, bet.total));
+          this.buy(this.getOrder(this.inverse.value ? this.bearishPlay.value : this.getBullPick()), _.divide(bet.bullishOpen, bet.total));
         }
 
         break;
       case Sentiment.Bearish:
         if (this.settings.value === 'closePositions') {
-          this.sellAll(this.getOrder(this.inverse.value ? this.bearishPlay.value : this.bullishPlay.value));
+          this.sellAll(this.getOrder(this.inverse.value ? this.bearishPlay.value : this.getBullPick()));
         } else if (this.settings.value === 'openPositions' && !this.longOnly.value) {
-          this.buy(this.getOrder(this.inverse.value ? this.bullishPlay.value : this.bearishPlay.value), _.divide(bet.bearishOpen, bet.total));
+          this.buy(this.getOrder(this.inverse.value ? this.getBullPick() : this.bearishPlay.value), _.divide(bet.bearishOpen, bet.total));
         }
         break;
       default:
