@@ -34,7 +34,7 @@ class IntradayPredicationService {
         const signals = results.signals;
         console.log('Got backtest: ', signals[0].date, signals[signals.length - 1].date);
 
-        let finalDataSet = [];
+        const finalDataSet = [];
         signals.forEach((signal, idx) => {
           if (this.withinBounds(idx, signals.length)) {
             finalDataSet.push(this.buildFeatureSet(signals, signal, idx, featureUse));
