@@ -284,6 +284,25 @@ export class BacktestService {
     return this.http.get(`${BASE_URL}api/machine-learning/test-model`, options);
   }
 
+  runLstmV3(symbol: string,
+    endDate: string = null,
+    startDate: string = null,
+    trainingSize: number,
+    features: string): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const options = {
+      headers: headers,
+      params: {
+        symbol,
+        startDate,
+        endDate,
+        trainingSize: String(trainingSize),
+        features
+      }
+    };
+    return this.http.get(`${BASE_URL}api/machine-learning/v3/train-daily`, options);
+  }
+
   activateLstmV2(symbol: string): Observable<any> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     const options = {
@@ -294,6 +313,19 @@ export class BacktestService {
     };
 
     return this.http.get(`${BASE_URL}api/machine-learning/guess-activate`, options);
+  }
+
+  activateLstmV3(symbol: string, features: string): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const options = {
+      headers: headers,
+      params: {
+        symbol,
+        features
+      }
+    };
+
+    return this.http.get(`${BASE_URL}api/machine-learning/v3/activate-daily`, options);
   }
 
   getDaytradeIndicators(quotes: any, period: number, stddev: number, mfiPeriod: number,

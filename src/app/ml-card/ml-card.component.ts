@@ -42,6 +42,7 @@ export class MlCardComponent implements OnInit {
 
   bullishPlay: FormControl;
   bearishPlay: FormControl;
+  selectedModel: FormControl;
   settings: FormControl;
 
   error: string;
@@ -112,6 +113,10 @@ export class MlCardComponent implements OnInit {
       Validators.required
     ]);
 
+    this.selectedModel = new FormControl('V2', [
+      Validators.required
+    ]);
+
     this.settings = new FormControl('openPositions', [
       Validators.required
     ]);
@@ -136,7 +141,15 @@ export class MlCardComponent implements OnInit {
   }
 
   trainModel() {
-    this.backtestService.runLstmV2(this.getTrainingStock(), moment().subtract({ day: 1 }).format('YYYY-MM-DD'), moment().subtract({ day: 50 }).format('YYYY-MM-DD')).subscribe();
+    if (this.selectedModel.value === 'V3') {
+      this.backtestService.runLstmV3(this.getTrainingStock(),
+      moment().subtract({ day: 1 }).format('YYYY-MM-DD'),
+      moment().subtract({ day: 50 }).format('YYYY-MM-DD'),
+      0.7,
+      '0,0,1,0,0,1,1,1,1,1,1,0,0').subscribe();
+    } else {
+      this.backtestService.runLstmV2(this.getTrainingStock(), moment().subtract({ day: 1 }).format('YYYY-MM-DD'), moment().subtract({ day: 50 }).format('YYYY-MM-DD')).subscribe();
+    }
   }
 
   getTradeDay() {
@@ -164,7 +177,7 @@ export class MlCardComponent implements OnInit {
           momentInst.isBefore(this.stopTime) || this.testing.value) {
           this.alive = false;
           this.pendingResults = true;
-          this.backtestService.activateLstmV2(this.getTrainingStock())
+          this.sendActivation()
             .subscribe((data: any) => {
               console.log('rnn data: ', this.getTradeDay(), data);
 
@@ -402,5 +415,12 @@ export class MlCardComponent implements OnInit {
     } else {
       this.firstFormGroup.enable();
     }
+  }
+
+  sendActivation() {
+    if (this.selectedModel.value === 'V3') {
+      return this.backtestService.activateLstmV3(this.getTrainingStock(), '0,0,1,0,0,1,1,1,1,1,1,0,0');
+    }
+    return this.backtestService.activateLstmV2(this.getTrainingStock());
   }
 }
