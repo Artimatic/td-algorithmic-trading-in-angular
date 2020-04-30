@@ -212,7 +212,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
     this.bufferSubject.subscribe(() => {
       const backtest = this.backtestBuffer.pop();
       this.callChainSub.add(this.machineLearningService
-        .trainPredictNext30(backtest.stock,
+        .trainPredictNext30(backtest.stock.toUpperCase(),
           moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD'),
           moment(this.startDate).format('YYYY-MM-DD'),
           1
@@ -226,7 +226,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
           this.isLoading = false;
           setTimeout(() => {
             this.machineLearningService
-              .trainPredictNext30(backtest.stock,
+              .trainPredictNext30(backtest.stock.toUpperCase(),
                 moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD'),
                 moment(this.startDate).format('YYYY-MM-DD'),
                 0
@@ -250,6 +250,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
   }
 
   triggerNextCalibration() {
+    console.log('Triggering ', moment().format());
     if (this.calibrationBuffer.length > 0) {
       this.bufferSubject.next();
     }
@@ -303,7 +304,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
     this.bufferSubject.subscribe(() => {
       const bufferItem = this.calibrationBuffer.pop();
       this.callChainSub.add(this.machineLearningService
-        .trainPredictNext30(bufferItem.stock,
+        .trainPredictNext30(bufferItem.stock.toUpperCase(),
           moment(this.endDate).add({ days: 1 }).format('YYYY-MM-DD'),
           moment(this.startDate).subtract({ days: 1 }).format('YYYY-MM-DD'),
           0.7,
@@ -326,7 +327,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
           TimerObservable.create(0, 60000)
             .takeWhile(() => pendingResults)
             .subscribe(() => {
-              this.backtestService.getRnn(bufferItem.stock,
+              this.backtestService.getRnn(bufferItem.stock.toUpperCase(),
                 moment().format('YYYY-MM-DD'),
                 bufferItem.features)
                 .subscribe((data: any) => {

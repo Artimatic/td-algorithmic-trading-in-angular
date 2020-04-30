@@ -71,7 +71,7 @@ export class GlobalSettingsService {
     this.brokerage = Brokerage.Td;
     this.backtestDate = this.tradeDate.format('YYYY-MM-DD');
 
-    this.daytradeAlgo = [1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1];
+    this.daytradeAlgo = [0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0];
 
     this.featureList = [
       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -91,7 +91,8 @@ export class GlobalSettingsService {
       [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1],
       [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0],
       [1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0],
-      [1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1]
+      [1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1],
+      [0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0]
     ];
 
 

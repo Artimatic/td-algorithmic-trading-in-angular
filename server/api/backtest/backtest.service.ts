@@ -244,7 +244,10 @@ class BacktestService {
   }
 
   getDaytrade(price: number, paidPrice: number, indicator: Indicators, parameters, response) {
-    let recommendation;
+    let recommendation = {
+      recommendation: OrderType.None
+    };
+
     const avgPrice = paidPrice;
 
     const isAtLimit = this.determineStopProfit(avgPrice, price,
@@ -344,7 +347,7 @@ class BacktestService {
             indicator,
             idx > 0 ? indicators[idx - 1] : null);
 
-            orderType = recommendation.recommendation;
+          orderType = recommendation.recommendation;
           indicator.recommendation = recommendation;
         }
 
@@ -445,6 +448,10 @@ class BacktestService {
 
     return QuoteService.queryForIntraday(symbol, startDate, currentDate)
       .then(quotes => {
+        if (quotes.length === 0) {
+          console.log(`No quotes returned for ${startDate} - ${currentDate}`);
+        }
+
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);
           if (idx > minQuotes) {
@@ -456,11 +463,11 @@ class BacktestService {
       });
   }
 
-  initDailyStrategy(symbol, startDate, currentDate, parameters = { minQuotes: 80 }) {
+  initDailyStrategy(symbol, currentDate, startDate, parameters = { minQuotes: 80 }) {
     const minQuotes = parameters.minQuotes;
     const getIndicatorQuotes = [];
 
-    return this.getData(symbol, startDate, currentDate)
+    return this.getData(symbol, currentDate, startDate)
       .then(quotes => {
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);

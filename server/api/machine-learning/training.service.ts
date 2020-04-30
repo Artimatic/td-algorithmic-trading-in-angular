@@ -136,6 +136,35 @@ class TrainingService {
       });
   }
 
+  buildDailyQuotes(symbol, startDate, endDate) {
+    return QuoteService.getDailyQuotes(symbol, endDate, startDate)
+      .then(quotes => {
+        return PortfolioService.getIntradayV2(symbol, 1, 'minute', 1)
+          .then(intradayQuotes => {
+              console.log('dates: ', moment().subtract({ days: 1 }).format(), moment().format());
+              const quote = quotes[quotes.length - 1];
+              const intradayCandles = intradayQuotes.candles;
+              const datetime =  intradayCandles[intradayCandles.length - 2].datetime;
+              if (moment(datetime).diff(moment(quote.date), 'days') !== 1) {
+                console.log(moment(quote.date).diff(moment(datetime), 'days'), quote.date, moment(datetime).format());
+                console.log(`The dates ${moment(quote.date).format()} ${moment(datetime).format()} are incorrect`);
+              }
+
+              const currentQuote = this.processIntraday(intradayCandles);
+              const currentVolume = this.getVolume(intradayCandles);
+
+              currentQuote.date = moment(intradayCandles[intradayCandles.length - 2].datetime).toISOString();
+              currentQuote.volume = currentVolume;
+              currentQuote.symbol = symbol;
+              quotes = quotes.concat(currentQuote);
+            return quotes;
+          });
+      });
+  }
+
+  getVolume(intradayQuotes) {
+    return intradayQuotes.reduce((accumulator, currentValue) => accumulator + currentValue.volume, 0);
+  }
   buildTrainingData(quote, intradayQuotes) {
     const currentQuote = this.processIntraday(intradayQuotes);
     console.log('intraday quote: ', currentQuote);
