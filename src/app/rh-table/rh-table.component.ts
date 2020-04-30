@@ -164,7 +164,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
   async getData(algoParams, selectedAlgo = null) {
     const currentDate = moment(this.endDate).format('YYYY-MM-DD');
-    const startDate = moment(this.endDate).subtract(700, 'days').format('YYYY-MM-DD');
+    const startDate = moment(this.endDate).subtract(1000, 'days').format('YYYY-MM-DD');
 
     this.progress = 0;
     this.totalStocks += algoParams.length;

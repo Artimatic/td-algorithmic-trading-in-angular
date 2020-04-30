@@ -11,7 +11,7 @@ class DailyPredicationService extends PredictionService {
   modelName = 'model2020-04-02';
 
   constructor() {
-    super(1, 0.007);
+    super(2, 0.007);
   }
 
   getModelName(featureUse) {
@@ -23,8 +23,7 @@ class DailyPredicationService extends PredictionService {
     return BacktestService.initDailyStrategy(symbol, moment(endDate).valueOf(), moment(startDate).valueOf(), { minQuotes: 80 })
       .then((results: BacktestResults) => {
         const finalDataSet = this.processBacktestResults(results, featureUse);
-        BacktestService.trainCustomModel(symbol, this.getModelName(featureUse), finalDataSet, trainingSize, moment().format('YYYY-MM-DD'));
-        return finalDataSet;
+        return BacktestService.trainCustomModel(symbol, this.getModelName(featureUse), finalDataSet, trainingSize, moment().format('YYYY-MM-DD'));
       });
   }
 

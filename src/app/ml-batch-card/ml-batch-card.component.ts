@@ -1,6 +1,6 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core';
 import { SmartOrder } from '../shared/models/smart-order';
-import { Subscription } from 'rxjs';
+import { Subscription, Subject } from 'rxjs';
 import { FormGroup, FormBuilder, Validators, FormControl } from '@angular/forms';
 
 import * as moment from 'moment-timezone';
@@ -19,6 +19,11 @@ interface Bet {
   summary: String;
 }
 
+interface StockAllocation {
+  stock: string;
+  allocation: number;
+}
+
 enum Sentiment {
   Bullish = 'Bullish',
   Bearish = 'Bearish',
@@ -26,11 +31,11 @@ enum Sentiment {
 }
 
 @Component({
-  selector: 'app-ml-card',
-  templateUrl: './ml-card.component.html',
-  styleUrls: ['./ml-card.component.css']
+  selector: 'app-ml-batch-card',
+  templateUrl: './ml-batch-card.component.html',
+  styleUrls: ['./ml-batch-card.component.css']
 })
-export class MlCardComponent implements OnInit {
+export class MlBatchCardComponent implements OnInit, OnDestroy {
   @ViewChild('stepper') stepper;
 
   sub: Subscription;
@@ -39,11 +44,6 @@ export class MlCardComponent implements OnInit {
   live: boolean;
 
   pendingResults: boolean;
-
-  bullishPlay: FormControl;
-  bearishPlay: FormControl;
-  selectedModel: FormControl;
-  settings: FormControl;
 
   error: string;
   warning: string;
@@ -54,9 +54,6 @@ export class MlCardComponent implements OnInit {
 
   firstFormGroup: FormGroup;
   secondFormGroup: FormGroup;
-  longOnly = new FormControl();
-  allIn = new FormControl();
-  inverse = new FormControl();
 
   startTime: moment.Moment;
   stopTime: moment.Moment;
@@ -65,8 +62,11 @@ export class MlCardComponent implements OnInit {
 
   testing = new FormControl();
 
-  multiplierPreference: FormControl;
-  multiplierList: number[];
+  stockList: StockAllocation[];
+
+  private bufferSubject: Subject<void>;
+  private callChainSub: Subscription;
+  private buffer: StockAllocation[];
 
   constructor(private _formBuilder: FormBuilder,
     private portfolioService: PortfolioService,
@@ -80,21 +80,7 @@ export class MlCardComponent implements OnInit {
   ngOnInit() {
     this.live = false;
     this.alive = true;
-    this.longOnly.setValue(false);
-    this.allIn.setValue(false);
-    this.inverse.setValue(false);
     this.testing.setValue(false);
-
-    this.multiplierList = [
-      1,
-      2,
-      3,
-      4,
-      5
-    ];
-
-    this.multiplierPreference = new FormControl();
-    this.multiplierPreference.setValue(1);
 
     this.firstFormGroup = this._formBuilder.group({
       amount: [1000, Validators.required],
@@ -105,50 +91,56 @@ export class MlCardComponent implements OnInit {
       secondCtrl: ['', Validators.required]
     });
 
-    this.bullishPlay = new FormControl('SPY', [
-      Validators.required
-    ]);
-
-    this.bearishPlay = new FormControl('TLT', [
-      Validators.required
-    ]);
-
-    this.selectedModel = new FormControl('V2', [
-      Validators.required
-    ]);
-
-    this.settings = new FormControl('openPositions', [
-      Validators.required
-    ]);
-
     this.setup();
+
+    this.stockList = [
+      { stock: 'FB', allocation: 0.1 },
+      { stock: 'AAPL', allocation: 0.1 },
+      { stock: 'AMZN', allocation: 0.1 },
+      { stock: 'NFLX', allocation: 0.1 },
+      { stock: 'GOOG', allocation: 0.1 },
+      { stock: 'MSFT', allocation: 0.1 },
+      { stock: 'AMD', allocation: 0.1 },
+      { stock: 'NVDA', allocation: 0.1 },
+      { stock: 'ABBV', allocation: 0.1 },
+      { stock: 'EA', allocation: 0.1 }
+    ];
+
+    this.callChainSub = new Subscription();
+    this.bufferSubject = new Subject();
+    this.buffer = [];
   }
 
-  getTrainingStock() {
-    if (this.bullishPlay.value === 'CUSTOM' && this.firstFormGroup.value.symbol) {
-      return this.firstFormGroup.value.symbol;
-    } else {
-      return 'SPY';
-    }
-  }
-
-  getBullPick() {
-    if (this.bullishPlay.value === 'CUSTOM' && this.firstFormGroup.value.symbol) {
-      return this.firstFormGroup.value.symbol;
-    } else {
-      return this.bullishPlay.value;
-    }
+  getTrainingStocks() {
+    return this.stockList;
   }
 
   trainModel() {
-    if (this.selectedModel.value === 'V3') {
-      this.backtestService.runLstmV3(this.getTrainingStock(),
-      moment().subtract({ day: 1 }).format('YYYY-MM-DD'),
-      moment().subtract({ day: 365 }).format('YYYY-MM-DD'),
-      0.7,
-      '0,0,1,0,0,1,1,1,1,1,1,0,0').subscribe();
-    } else {
-      this.backtestService.runLstmV2(this.getTrainingStock(), moment().subtract({ day: 1 }).format('YYYY-MM-DD'), moment().subtract({ day: 50 }).format('YYYY-MM-DD')).subscribe();
+    this.stockList.forEach((alloc: StockAllocation) => {
+      this.buffer.push(alloc);
+    });
+
+    this.bufferSubject.subscribe(() => {
+      const bufferItem = this.buffer.pop();
+      this.callChainSub.add(this.backtestService.runLstmV3(bufferItem.stock.toUpperCase(),
+        moment().format('YYYY-MM-DD'),
+        moment().subtract({ day: 365 }).format('YYYY-MM-DD'),
+        0.7,
+        '0,0,1,0,0,1,1,1,1,1,1,0,0').subscribe(() => {
+          this.triggerNext();
+        }, error => {
+          console.log(`ML training ${bufferItem.stock.toUpperCase()} failed. Trying again.`);
+          this.alive = true;
+          this.triggerNext();
+        }));
+    });
+
+    this.triggerNext();
+  }
+
+  triggerNext() {
+    if (this.buffer.length > 0) {
+      this.bufferSubject.next();
     }
   }
 
@@ -177,54 +169,48 @@ export class MlCardComponent implements OnInit {
           momentInst.isBefore(this.stopTime) || this.testing.value) {
           this.alive = false;
           this.pendingResults = true;
-          this.sendActivation()
-            .subscribe((data: any) => {
-              console.log('rnn data: ', this.getTradeDay(), data);
-
-              if (data) {
-                const bet = this.determineBet(data);
-                this.placeBet(bet);
-                this.pendingResults = false;
-              }
-            }, error => {
-              console.log('ML activation failed. Trying again.');
-              this.alive = true;
-            });
+          this.runActivationQueue();
+          this.alive = false;
         }
       });
   }
 
-  determineBet(prediction) {
-    const bet: Bet = {
-      total: 0,
-      bearishOpen: 0,
-      bullishOpen: 0,
-      summary: Sentiment.Neutral
-    };
 
+
+  runActivationQueue() {
+    this.stockList.forEach((alloc: StockAllocation) => {
+      this.buffer.push(alloc);
+    });
+
+    this.bufferSubject.subscribe(() => {
+      const bufferItem = this.buffer.pop();
+      this.sendActivation(bufferItem.stock.toUpperCase())
+        .subscribe((data: any) => {
+          console.log('rnn data: ', this.getTradeDay(), data);
+
+          if (data) {
+            if (this.isBullish(data)) {
+              this.placeBet(bufferItem.stock.toUpperCase(), bufferItem.allocation);
+              this.pendingResults = false;
+            }
+          }
+          this.triggerNext();
+        }, error => {
+          console.log(`ML activation ${bufferItem.stock.toUpperCase()} failed. Trying again.`);
+          this.alive = true;
+          this.triggerNext();
+        });
+    });
+
+    this.triggerNext();
+  }
+
+  isBullish(prediction) {
     if (prediction.nextOutput > 0.55) {
-      bet.bullishOpen++;
-    } else if (prediction.nextOutput < 0.45) {
-      bet.bearishOpen++;
+      return true;
+    } else {
+      return false;
     }
-    bet.total++;
-
-    const bullishRatio = _.floor(_.divide(bet.bullishOpen, bet.total), 2);
-    const bearishRatio = _.floor(_.divide(bet.bearishOpen, bet.total), 2);
-
-    if (bullishRatio > 0.6 || bearishRatio > 0.6) {
-      if (bullishRatio > bearishRatio) {
-        bet.summary = Sentiment.Bullish;
-      } else if (bearishRatio > bullishRatio) {
-        bet.summary = Sentiment.Bearish;
-      } else {
-        bet.summary = Sentiment.Neutral;
-      }
-    }
-
-    this.reportingService.addAuditLog(null, bet);
-
-    return bet;
   }
 
   getOrder(symbol: string) {
@@ -244,30 +230,9 @@ export class MlCardComponent implements OnInit {
     return order;
   }
 
-  placeBet(bet: Bet) {
-    switch (bet.summary) {
-      case Sentiment.Bullish:
-        if (this.settings.value === 'closePositions') {
-          this.sellAll(this.getOrder(this.inverse.value ? this.getBullPick() :  this.bearishPlay.value));
-        } else if (this.settings.value === 'openPositions') {
-          this.buy(this.getOrder(this.inverse.value ? this.bearishPlay.value : this.getBullPick()), _.divide(bet.bullishOpen, bet.total));
-        }
+  placeBet(stock: string, allocation: number) {
 
-        break;
-      case Sentiment.Bearish:
-        if (this.settings.value === 'closePositions') {
-          this.sellAll(this.getOrder(this.inverse.value ? this.bearishPlay.value : this.getBullPick()));
-        } else if (this.settings.value === 'openPositions' && !this.longOnly.value) {
-          this.buy(this.getOrder(this.inverse.value ? this.getBullPick() : this.bearishPlay.value), _.divide(bet.bearishOpen, bet.total));
-        }
-        break;
-      default:
-        const log = 'Neutral position. No orders made.';
-        this.reportingService.addAuditLog(null, log);
-        this.setWarning(log);
-        this.snackBar.open(log, 'Dismiss');
-        break;
-    }
+    this.buy(this.getOrder(stock), allocation);
   }
 
   getQuote(symbol: string) {
@@ -315,7 +280,7 @@ export class MlCardComponent implements OnInit {
               const totalBalance = _.add(balance.cashBalance, balance.moneyMarketFund);
               let totalBuyAmount = this.firstFormGroup.value.amount;
 
-              if (this.allIn.value === true || totalBuyAmount > totalBalance) {
+              if (totalBuyAmount > totalBalance) {
                 totalBuyAmount = totalBalance;
               }
 
@@ -328,7 +293,7 @@ export class MlCardComponent implements OnInit {
   }
 
   initiateBuy(modifier: number, totalBuyAmount: number, bid: number, order: SmartOrder) {
-    const quantity = _.floor(modifier * this.calculateQuantity(totalBuyAmount, bid)) * this.multiplierPreference.value;
+    const quantity = _.floor(modifier * this.calculateQuantity(totalBuyAmount, bid));
     const buyOrder = this.daytradeService.createOrder(order.holding, 'Buy', quantity, bid, moment().unix());
     const log = `ORDER SENT ${buyOrder.side} ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
 
@@ -405,18 +370,11 @@ export class MlCardComponent implements OnInit {
     }
   }
 
-  activateAllIn() {
-    if (this.allIn.value === true) {
-      this.firstFormGroup.disable();
-    } else {
-      this.firstFormGroup.enable();
-    }
+  sendActivation(stock) {
+    return this.backtestService.activateLstmV3(stock, '0,0,1,0,0,1,1,1,1,1,1,0,0');
   }
 
-  sendActivation() {
-    if (this.selectedModel.value === 'V3') {
-      return this.backtestService.activateLstmV3(this.getTrainingStock(), '0,0,1,0,0,1,1,1,1,1,1,0,0');
-    }
-    return this.backtestService.activateLstmV2(this.getTrainingStock());
+  ngOnDestroy() {
+    this.callChainSub.unsubscribe();
   }
 }

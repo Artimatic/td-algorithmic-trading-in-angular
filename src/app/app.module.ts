@@ -62,6 +62,7 @@ import { CardModule } from 'primeng/card';
 import { PokerhandComponent } from './pokerhand/pokerhand.component';
 import { ButtonModule } from 'primeng/button';
 import {SplitButtonModule} from 'primeng/splitbutton';
+import { MlBatchCardComponent } from './ml-batch-card/ml-batch-card.component';
 
 @NgModule({
   declarations: [
@@ -96,6 +97,7 @@ import {SplitButtonModule} from 'primeng/splitbutton';
     NeuroCardComponent,
     DaytradeScoreBoardComponent,
     PokerhandComponent,
+    MlBatchCardComponent,
   ],
   entryComponents: [
     LoginDialogComponent,
