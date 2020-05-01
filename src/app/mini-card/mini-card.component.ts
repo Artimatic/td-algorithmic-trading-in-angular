@@ -9,7 +9,7 @@ import { SmartOrder } from '../shared/models/smart-order';
 export class MiniCardComponent implements OnInit {
   @Input() order: SmartOrder;
   @Output() delete: EventEmitter<any> = new EventEmitter();
-  changeText: boolean;
+  changeText;
   constructor() { }
 
   ngOnInit() {
