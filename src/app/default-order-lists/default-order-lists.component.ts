@@ -4,6 +4,7 @@ import { SmartOrder } from '../shared/models/smart-order';
 import { PortfolioService } from '../shared';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import * as _ from 'lodash';
+import { CartService } from '../shared/services/cart.service';
 
 @Component({
   selector: 'app-default-order-lists',
@@ -18,7 +19,8 @@ export class DefaultOrderListsComponent implements OnInit {
   firstFormGroup: FormGroup;
 
   constructor(private _formBuilder: FormBuilder,
-    private portfolioService: PortfolioService) { }
+    private portfolioService: PortfolioService,
+    private cartService: CartService) { }
 
   ngOnInit() {
     this.firstFormGroup = this._formBuilder.group({
@@ -31,23 +33,31 @@ export class DefaultOrderListsComponent implements OnInit {
       {
         label: 'UPRO35 TQQQ20 TMF45',
         value: [
-          { stock: 'UPRO', alloc: 0.35 },
-          { stock: 'TQQQ', alloc: 0.20 },
-          { stock: 'TMF', alloc: 0.45 }
+          { stock: 'UPRO', allocation: 0.35 },
+          { stock: 'TQQQ', allocation: 0.20 },
+          { stock: 'TMF', allocation: 0.45 }
         ]
       },
       {
         label: 'TQQQ50 TMF50', value: [
-          { stock: 'TQQQ', alloc: 0.50 },
-          { stock: 'TMF', alloc: 0.50 }
+          { stock: 'TQQQ', allocation: 0.50 },
+          { stock: 'TMF', allocation: 0.50 }
         ]
       },
       {
         label: 'MSFT90 VXX10', value: [
-          { stock: 'MSFT', alloc: 0.90 },
-          { stock: 'VXX', alloc: 0.10 }
+          { stock: 'MSFT', allocation: 0.90 },
+          { stock: 'VXX', allocation: 0.10 }
         ]
-      }
+      },
+      {
+        label: 'SPXU35 SQQQ20 TMV45',
+        value: [
+          { stock: 'SPXU', allocation: 0.35 },
+          { stock: 'SQQQ', allocation: 0.20 },
+          { stock: 'TMV', allocation: 0.45 }
+        ]
+      },
     ];
 
     this.selectedList = [];
@@ -59,13 +69,11 @@ export class DefaultOrderListsComponent implements OnInit {
 
   changedSelection(selected) {
     this.templateOrders = [];
-    console.log('changed ', selected);
     selected.forEach((allocationItem) => {
       const stock = allocationItem.stock;
       const allocationPct = allocationItem.allocation;
       const total = this.firstFormGroup.value.amount;
       this.getQuote(stock).subscribe((price) => {
-        console.log('price: ', price);
         const quantity = this.getQuantity(price, allocationPct, total);
         this.templateOrders.push(this.buildOrder(stock, quantity, price));
       });
@@ -87,6 +95,7 @@ export class DefaultOrderListsComponent implements OnInit {
       price,
       submitted: false,
       pending: false,
+      orderSize: _.floor(quantity / 2) | 1,
       side: 'Buy',
     };
   }
@@ -97,5 +106,12 @@ export class DefaultOrderListsComponent implements OnInit {
 
   getQuote(symbol: string) {
     return this.portfolioService.getPrice(symbol);
+  }
+
+  addSelectedList() {
+    this.templateOrders.forEach((order) => {
+      this.cartService.addToCart(order);
+    });
+    this.display = false;
   }
 }

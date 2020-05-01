@@ -1,15 +1,26 @@
 <div class="mini-card-container">
-  <p-card header="{{order.holding.symbol}}" subheader="{{order.holding.name}}"
-    [style]="{width: '150px', height: '150px'}">
-    <p-header>
-      <a class="close-icon">
-        <i class="pi pi-times" (click)="deleteCard()"></i>
-      </a>
-    </p-header>
-    <div>
-      Type: {{order.side}}
-      Quantity: {{order.quantity}}
-      Order: {{order.orderSize}}
+  <p-card [style]="{width: '125px', height: '130px'}">
+    <div class="card-content" (mouseover)="changeText=true" (mouseout)="changeText=false">
+      <span *ngIf="!changeText">
+        <h4>
+          {{order.holding.symbol}}
+        </h4>
+        <h5>{{order.holding.name}}</h5>
+        <ul class="detail-list">
+          <li>
+            <b>Type</b> {{order.side}}
+          </li>
+          <li>
+            <b>Quantity</b> {{order.quantity}}
+          </li>
+          <li>
+            <b>Order</b> {{order.orderSize}}
+          </li>
+        </ul>
+      </span>
+      <span *ngIf="changeText"> <button pButton type="button" label="Delete" class="ui-button-danger"
+          (click)="deleteCard()"></button>
+      </span>
     </div>
   </p-card>
 </div>

@@ -1,10 +1,16 @@
-<p-dialog header="Shopping Lists" [(visible)]="display" [style]="{width:'500px', height: '500px'}">
+<p-dialog header="Shopping Lists" [(visible)]="display" [appendTo]="body"
+  [contentStyle]="{width:'500px', 'max-height': '600px'}" [draggable]="true" [dismissableMask]="true"
+  [responsive]="true">
   <div class="ui-g">
     <div class="ui-g-6">
       <p-listbox [options]="defaultLists" [(ngModel)]="selectedList" (onChange)="changedSelection($event.value)">
       </p-listbox>
     </div>
     <div class="ui-g-6">
+      <div class="add-button">
+        <button pButton type="button" label="Add to Cart" class="ui-button-success"
+          (click)="addSelectedList()"></button>
+      </div>
       <form [formGroup]="firstFormGroup">
         <div class="ui-inputgroup">
           <span class="ui-inputgroup-addon">$</span>
@@ -19,4 +25,4 @@
   </div>
 </p-dialog>
 
-<button type="button" (click)="showDialog()" pButton icon="pi pi-list" label="Default Shopping Lists"></button>
+<button type="button" (click)="showDialog()" pButton icon="pi pi-list" label="Add Default List"></button>

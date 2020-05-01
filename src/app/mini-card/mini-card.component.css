@@ -1,8 +1,10 @@
 .close-icon {
   font-size: 1.5em;
-  right: 20px;
+  top: 16px;
+  left: 80px;
   cursor: pointer;
   opacity: .5;
+  position: relative
 }
 
 .close-icon:focus, .close-icon:hover {
@@ -12,4 +14,14 @@
 
 .mini-card-container {
   margin: 5px;
+}
+
+.detail-list {
+  list-style-type:none;
+  padding: 0;
+}
+
+.card-content {
+  width: 125px;
+  height: 130px;
 }
