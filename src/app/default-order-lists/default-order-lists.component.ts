@@ -95,7 +95,7 @@ export class DefaultOrderListsComponent implements OnInit {
       price,
       submitted: false,
       pending: false,
-      orderSize: _.floor(quantity / 2) | 1,
+      orderSize: _.floor(quantity / 2) || 1,
       side: 'Buy',
     };
   }
