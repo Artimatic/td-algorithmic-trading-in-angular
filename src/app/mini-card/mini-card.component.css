@@ -1,0 +1,15 @@
+.close-icon {
+  font-size: 1.5em;
+  right: 20px;
+  cursor: pointer;
+  opacity: .5;
+}
+
+.close-icon:focus, .close-icon:hover {
+  color: #000;
+  opacity: .75;
+}
+
+.mini-card-container {
+  margin: 5px;
+}

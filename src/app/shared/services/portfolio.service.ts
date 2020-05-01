@@ -7,13 +7,15 @@ import { AuthenticationService } from './authentication.service';
 import { Holding } from '../models';
 import * as _ from 'lodash';
 import { GlobalSettingsService, Brokerage } from '../../settings/global-settings.service';
+import { MatSnackBar } from '@angular/material';
 
 @Injectable()
 export class PortfolioService {
   constructor(
     private http: Http,
     private authenticationService: AuthenticationService,
-    private globalSettingsService: GlobalSettingsService) {
+    private globalSettingsService: GlobalSettingsService,
+    public snackBar: MatSnackBar) {
   }
 
   getPortfolio(): Observable<Holding[]> {
@@ -29,7 +31,7 @@ export class PortfolioService {
   getTdPortfolio(): Observable<any> {
     const options = {
       params: {
-        accountId: this.authenticationService.selectedTdaAccount.accountId
+        accountId: this.getAccountId()
       }
     };
     return this.http.get('/api/portfolio/v2/positions/', options)
@@ -143,7 +145,7 @@ export class PortfolioService {
     const options = {
       params: {
         symbol,
-        accountId: this.authenticationService.selectedTdaAccount.accountId
+        accountId: this.getAccountId()
       }
     };
 
@@ -159,7 +161,7 @@ export class PortfolioService {
     };
 
     if (this.authenticationService.selectedTdaAccount) {
-      options.params.accountId = this.authenticationService.selectedTdaAccount.accountId;
+      options.params.accountId = this.getAccountId();
     }
     return this.http.get('/api/portfolio/quote', options)
       .map((response: Response) => {
@@ -174,31 +176,44 @@ export class PortfolioService {
       price: price,
       type: 'LIMIT',
       extendedHours: extended,
-      accountId: this.authenticationService.selectedTdaAccount.accountId
+      accountId: this.getAccountId()
     };
     return this.http.post('/api/portfolio/v2/buy', body);
   }
 
   sendTdSell(holding: Holding, quantity: number, price: number, extended: boolean): Observable<any> {
+
     const body = {
       symbol: holding.symbol,
       quantity: quantity,
       price: price,
       type: 'MARKET',
       extendedHours: extended,
-      accountId: this.authenticationService.selectedTdaAccount.accountId
+      accountId: this.getAccountId()
     };
     return this.http.post('/api/portfolio/v2/sell', body);
   }
 
   getTdBalance(): Observable<any> {
+    const accountId = this.getAccountId();
     const options = {
       params: {
-        accountId: this.authenticationService.selectedTdaAccount.accountId
+        accountId
       }
     };
 
     return this.http.get('/api/portfolio/balance', options)
       .map((response: Response) => response.json());
+  }
+
+  getAccountId() {
+    if (!this.authenticationService.selectedTdaAccount || !this.getAccountId()) {
+      this.snackBar.open('Login Missing - Please log in with TD Ameritrade account', 'Dismiss', {
+        duration: 5000,
+      });
+      return null;
+    } else {
+      return this.getAccountId();
+    }
   }
 }

@@ -1,0 +1,22 @@
+<p-dialog header="Shopping Lists" [(visible)]="display" [style]="{width:'500px', height: '500px'}">
+  <div class="ui-g">
+    <div class="ui-g-6">
+      <p-listbox [options]="defaultLists" [(ngModel)]="selectedList" (onChange)="changedSelection($event.value)">
+      </p-listbox>
+    </div>
+    <div class="ui-g-6">
+      <form [formGroup]="firstFormGroup">
+        <div class="ui-inputgroup">
+          <span class="ui-inputgroup-addon">$</span>
+          <input type="text" pInputText placeholder="Amount" formControlName="amount">
+          <span class="ui-inputgroup-addon">.00</span>
+        </div>
+      </form>
+      <div *ngFor="let order of templateOrders">
+        <app-mini-card [order]="order" (delete)="delete($event)"></app-mini-card>
+      </div>
+    </div>
+  </div>
+</p-dialog>
+
+<button type="button" (click)="showDialog()" pButton icon="pi pi-list" label="Default Shopping Lists"></button>

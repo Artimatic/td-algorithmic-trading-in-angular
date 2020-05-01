@@ -61,8 +61,13 @@ import { DaytradeScoreBoardComponent } from './daytrade-score-board/daytrade-sco
 import { CardModule } from 'primeng/card';
 import { PokerhandComponent } from './pokerhand/pokerhand.component';
 import { ButtonModule } from 'primeng/button';
-import {SplitButtonModule} from 'primeng/splitbutton';
+import { SplitButtonModule } from 'primeng/splitbutton';
 import { MlBatchCardComponent } from './ml-batch-card/ml-batch-card.component';
+import { DefaultOrderListsComponent } from './default-order-lists/default-order-lists.component';
+import { DialogModule } from 'primeng/dialog';
+import { ListboxModule } from 'primeng/listbox';
+import { MiniCardComponent } from './mini-card/mini-card.component';
+import { EasyOrdersEditorComponent } from './easy-orders-editor/easy-orders-editor.component';
 
 @NgModule({
   declarations: [
@@ -98,6 +103,9 @@ import { MlBatchCardComponent } from './ml-batch-card/ml-batch-card.component';
     DaytradeScoreBoardComponent,
     PokerhandComponent,
     MlBatchCardComponent,
+    DefaultOrderListsComponent,
+    MiniCardComponent,
+    EasyOrdersEditorComponent,
   ],
   entryComponents: [
     LoginDialogComponent,
@@ -123,7 +131,9 @@ import { MlBatchCardComponent } from './ml-batch-card/ml-batch-card.component';
     SharedModule,
     CardModule,
     ButtonModule,
-    SplitButtonModule
+    SplitButtonModule,
+    DialogModule,
+    ListboxModule,
   ],
   providers: [
     BacktestService,

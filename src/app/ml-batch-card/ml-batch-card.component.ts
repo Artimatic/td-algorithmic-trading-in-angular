@@ -12,22 +12,9 @@ import { PortfolioService, DaytradeService, ReportingService, BacktestService } 
 import { Holding } from '../shared/models';
 import { GlobalSettingsService, Brokerage } from '../settings/global-settings.service';
 
-interface Bet {
-  total: number;
-  bearishOpen: number;
-  bullishOpen: number;
-  summary: String;
-}
-
-interface StockAllocation {
+export interface StockAllocation {
   stock: string;
   allocation: number;
-}
-
-enum Sentiment {
-  Bullish = 'Bullish',
-  Bearish = 'Bearish',
-  Neutral = 'Neutral'
 }
 
 @Component({
