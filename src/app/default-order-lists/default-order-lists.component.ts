@@ -12,7 +12,7 @@ import { CartService } from '../shared/services/cart.service';
   styleUrls: ['./default-order-lists.component.css']
 })
 export class DefaultOrderListsComponent implements OnInit {
-  display: boolean = false;
+  display = false;
   defaultLists: SelectItem[];
   templateOrders: SmartOrder[];
   selectedList;
@@ -47,6 +47,30 @@ export class DefaultOrderListsComponent implements OnInit {
       {
         label: 'MSFT90 VXX10', value: [
           { stock: 'MSFT', allocation: 0.90 },
+          { stock: 'VXX', allocation: 0.10 }
+        ]
+      },
+      {
+        label: 'AMZN90 VXX10', value: [
+          { stock: 'AMZN', allocation: 0.90 },
+          { stock: 'VXX', allocation: 0.10 }
+        ]
+      },
+      {
+        label: 'NFLX90 VXX10', value: [
+          { stock: 'NFLX', allocation: 0.90 },
+          { stock: 'VXX', allocation: 0.10 }
+        ]
+      },
+      {
+        label: 'FB90 VXX10', value: [
+          { stock: 'FB', allocation: 0.90 },
+          { stock: 'VXX', allocation: 0.10 }
+        ]
+      },
+      {
+        label: 'AAPL90 VXX10', value: [
+          { stock: 'AAPL', allocation: 0.90 },
           { stock: 'VXX', allocation: 0.10 }
         ]
       },

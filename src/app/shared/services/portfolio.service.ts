@@ -207,7 +207,7 @@ export class PortfolioService {
   }
 
   getAccountId() {
-    if (!this.authenticationService.selectedTdaAccount || !this.getAccountId()) {
+    if (!this.authenticationService.selectedTdaAccount) {
       this.snackBar.open('Login Missing - Please log in with TD Ameritrade account', 'Dismiss', {
         duration: 5000,
       });
