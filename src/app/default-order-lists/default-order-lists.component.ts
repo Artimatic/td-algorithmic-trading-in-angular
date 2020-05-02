@@ -31,6 +31,21 @@ export class DefaultOrderListsComponent implements OnInit {
     this.defaultLists = [
       { label: 'Select List', value: null },
       {
+        label: 'UPRO60 TMF40',
+        value: [
+          { stock: 'UPRO', allocation: 0.60 },
+          { stock: 'TMF', allocation: 0.40 }
+        ]
+      },
+      {
+        label: 'SPXU35 SQQQ20 TMV45',
+        value: [
+          { stock: 'SPXU', allocation: 0.35 },
+          { stock: 'SQQQ', allocation: 0.20 },
+          { stock: 'TMV', allocation: 0.45 }
+        ]
+      },
+      {
         label: 'UPRO35 TQQQ20 TMF45',
         value: [
           { stock: 'UPRO', allocation: 0.35 },
@@ -73,15 +88,7 @@ export class DefaultOrderListsComponent implements OnInit {
           { stock: 'AAPL', allocation: 0.90 },
           { stock: 'VXX', allocation: 0.10 }
         ]
-      },
-      {
-        label: 'SPXU35 SQQQ20 TMV45',
-        value: [
-          { stock: 'SPXU', allocation: 0.35 },
-          { stock: 'SQQQ', allocation: 0.20 },
-          { stock: 'TMV', allocation: 0.45 }
-        ]
-      },
+      }
     ];
 
     this.selectedList = [];
@@ -134,6 +141,7 @@ export class DefaultOrderListsComponent implements OnInit {
 
   addSelectedList() {
     this.templateOrders.forEach((order) => {
+      console.log('Adding: ', order);
       this.cartService.addToCart(order);
     });
     this.display = false;

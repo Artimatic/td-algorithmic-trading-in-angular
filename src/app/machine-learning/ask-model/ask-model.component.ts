@@ -281,7 +281,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
       this.isLoading = false;
     }, 5000);
 
-    const defaultFeatureList = this.globalSettingsService.featureList;
+    const defaultFeatureList = [this.globalSettingsService.daytradeAlgo];
 
     // const defaultFeatureList = [];
 
@@ -370,6 +370,10 @@ export class AskModelComponent implements OnInit, OnDestroy {
       }
       console.log('Score: ', this.featureListScoring);
     }
+  }
+
+  addDaytrade(item) {
+    console.log('item ', item);
   }
 
   ngOnDestroy() {

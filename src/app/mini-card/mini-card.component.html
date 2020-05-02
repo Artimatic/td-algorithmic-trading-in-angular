@@ -1,7 +1,7 @@
 <div class="mini-card-container">
   <p-card [style]="{width: '125px', height: '130px'}">
-    <div class="card-content" (mouseover)="changeText=true" (mouseout)="changeText=false">
-      <span *ngIf="!changeText">
+    <div class="card-content" (mouseover)="mouseIn()" (mouseout)="mouseOut()">
+      <span *ngIf="detailMode">
         <h4>
           {{order.holding.symbol}}
         </h4>
@@ -18,8 +18,24 @@
           </li>
         </ul>
       </span>
-      <span *ngIf="changeText"> <button pButton type="button" label="Delete" class="ui-button-danger"
+      <span *ngIf="actionMode">
+        <button pButton type="button" label="Delete" icon="pi pi-times-circle" class="mini-card-button ui-button-danger"
           (click)="deleteCard()"></button>
+        <button pButton type="button" label="Edit" icon="pi pi-cog" class="mini-card-button"
+          (click)="editCard()" *ngIf="canEdit"></button>
+      </span>
+      <span *ngIf="editMode">
+        <form [formGroup]="firstFormGroup">
+          <div class="mini-card-input">
+            <div class="ui-inputgroup">
+              <span class="ui-inputgroup-addon">$</span>
+              <input type="text" pInputText placeholder="Amount" formControlName="amount">
+              <span class="ui-inputgroup-addon">.00</span>
+            </div>
+          </div>
+          <button pButton type="button" label="Cancel" class="mini-card-button" (click)="cancelEdit()"></button>
+          <button pButton type="button" label="Save" class="mini-card-button ui-button-success" (click)="saveEdit()"></button>
+        </form>
       </span>
     </div>
   </p-card>

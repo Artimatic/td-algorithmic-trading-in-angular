@@ -165,11 +165,9 @@ class TrainingService {
   getVolume(intradayQuotes) {
     return intradayQuotes.reduce((accumulator, currentValue) => accumulator + currentValue.volume, 0);
   }
+
   buildTrainingData(quote, intradayQuotes) {
     const currentQuote = this.processIntraday(intradayQuotes);
-    console.log('intraday quote: ', currentQuote);
-    console.log('previous quote: ', quote);
-
     return this.compareQuotes(quote, currentQuote);
   }
 

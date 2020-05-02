@@ -39,12 +39,18 @@
           {{col.header}}
           <p-sortIcon [field]="col.field"></p-sortIcon>
         </th>
+        <th>
+          Actions
+        </th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-rowData let-columns="columns">
       <tr>
         <td *ngFor="let col of columns">
           <div class="data-cell">{{rowData[col.field]}}</div>
+        </td>
+        <td>
+          <button pButton type="button" label="Daytrade" class="ui-button-rounded" (click)="addDaytrade(rowData)"></button>
         </td>
       </tr>
     </ng-template>

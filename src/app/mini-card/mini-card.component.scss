@@ -25,3 +25,16 @@
   width: 125px;
   height: 130px;
 }
+
+.mini-card-button {
+  margin: 1px;
+}
+
+.mini-card-input {
+  .ui-inputgroup{
+    input {
+      width: 3em;
+      height: 2.5em;
+    }
+  }
+}
