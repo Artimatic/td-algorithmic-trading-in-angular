@@ -112,8 +112,7 @@ export class BbCardComponent implements OnInit, OnChanges {
       this.stop();
     } else if (_.get(changes, 'init.currentValue') && !this.isBacktest) {
       this.initRun();
-    }
-    else {
+    } else {
       this.init();
     }
   }

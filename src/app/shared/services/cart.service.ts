@@ -64,8 +64,8 @@ export class CartService {
   }
 
   updateOrder(updatedOrder: SmartOrder) {
-    let indices: number[] = this.searchAllLists(updatedOrder);
-    let lists = [this.buyOrders, this.sellOrders, this.otherOrders];
+    const indices: number[] = this.searchAllLists(updatedOrder);
+    const lists = [this.buyOrders, this.sellOrders, this.otherOrders];
 
     indices.forEach((val, idx) => {
       if (val > -1) {
@@ -84,10 +84,10 @@ export class CartService {
   }
 
   searchAllLists(targetOrder: SmartOrder) {
-    let buyIndex = this.getOrderIndex(this.buyOrders, targetOrder);
-    let sellIndex = this.getOrderIndex(this.sellOrders, targetOrder);
-    let otherIndex = this.getOrderIndex(this.otherOrders, targetOrder);
-    return [buyIndex, sellIndex, otherIndex]
+    const buyIndex = this.getOrderIndex(this.buyOrders, targetOrder);
+    const sellIndex = this.getOrderIndex(this.sellOrders, targetOrder);
+    const otherIndex = this.getOrderIndex(this.otherOrders, targetOrder);
+    return [buyIndex, sellIndex, otherIndex];
   }
 
   deleteDaytrade(deleteOrder: SmartOrder) {
