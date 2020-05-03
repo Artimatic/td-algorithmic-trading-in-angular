@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { PortfolioService } from './portfolio.service';
 import { MatSnackBar } from '@angular/material';
 import { SmartOrder } from '../models/smart-order';
+import { TradeService, AlgoQueueItem } from './trade.service';
 
 @Injectable()
 export class CartService {
@@ -13,10 +14,23 @@ export class CartService {
 
   constructor(
     private portfolioService: PortfolioService,
+    private tradeService: TradeService,
     public snackBar: MatSnackBar) { }
 
   addToCart(order: SmartOrder) {
-    if (order.quantity > 0) {
+    const indices = this.searchAllLists(order);
+    let noDup = true;
+    for (const idx of indices) {
+      if (idx > -1) {
+        this.snackBar.open(`Order for ${order.holding.symbol} already exists`, 'Dismiss', {
+          duration: 2000,
+        });
+        noDup = false;
+        break;
+      }
+    }
+
+    if (noDup && order.quantity > 0) {
       if (order.side.toLowerCase() === 'sell') {
         this.sellOrders.push(order);
         this.snackBar.open('Sell order added to cart', 'Dismiss', {
@@ -33,34 +47,47 @@ export class CartService {
           duration: 2000,
         });
       }
+      this.calculateTotals();
     }
-    this.calculateTotals();
   }
 
   deleteSell(deleteOrder: SmartOrder) {
-    const index = this.sellOrders.findIndex((order) => {
-      if (deleteOrder.price === order.price
-        && deleteOrder.holding.symbol === order.holding.symbol
-        && deleteOrder.quantity === order.quantity) {
-        return true;
-      }
-      return false;
-    });
+    const index = this.getOrderIndex(this.sellOrders, deleteOrder);
     this.sellOrders.splice(index, 1);
     this.calculateTotals();
   }
 
   deleteBuy(deleteOrder: SmartOrder) {
-    const index = this.buyOrders.findIndex((order) => {
-      if (deleteOrder.price === order.price
-        && deleteOrder.holding.symbol === order.holding.symbol
-        && deleteOrder.quantity === order.quantity) {
-        return true;
-      }
-      return false;
-    });
+    const index = this.getOrderIndex(this.buyOrders, deleteOrder);
     this.buyOrders.splice(index, 1);
     this.calculateTotals();
+  }
+
+  updateOrder(updatedOrder: SmartOrder) {
+    let indices: number[] = this.searchAllLists(updatedOrder);
+    let lists = [this.buyOrders, this.sellOrders, this.otherOrders];
+
+    indices.forEach((val, idx) => {
+      if (val > -1) {
+        lists[idx][val] = updatedOrder;
+        const queueItem: AlgoQueueItem = {
+          symbol: updatedOrder.holding.symbol,
+          reset: false,
+          updateOrder: true
+        };
+
+        this.tradeService.algoQueue.next(queueItem);
+      }
+    });
+
+    this.calculateTotals();
+  }
+
+  searchAllLists(targetOrder: SmartOrder) {
+    let buyIndex = this.getOrderIndex(this.buyOrders, targetOrder);
+    let sellIndex = this.getOrderIndex(this.sellOrders, targetOrder);
+    let otherIndex = this.getOrderIndex(this.otherOrders, targetOrder);
+    return [buyIndex, sellIndex, otherIndex]
   }
 
   deleteDaytrade(deleteOrder: SmartOrder) {
@@ -88,6 +115,15 @@ export class CartService {
         this.deleteDaytrade(order);
       break;
     }
+  }
+
+  getOrderIndex(orderList: SmartOrder[], targetOrder: SmartOrder) {
+    return orderList.findIndex((order) => {
+      if (order.holding.symbol === targetOrder.holding.symbol) {
+        return true;
+      }
+      return false;
+    });
   }
 
   deleteCart() {

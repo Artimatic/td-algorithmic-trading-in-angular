@@ -64,4 +64,9 @@ export class PokerhandComponent implements OnInit {
       }
     }
   }
+
+  updateOrder(order: SmartOrder) {
+    console.log('updating: ', order);
+    this.cartService.updateOrder(order);
+  }
 }

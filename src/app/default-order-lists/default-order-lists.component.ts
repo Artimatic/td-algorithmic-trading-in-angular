@@ -9,7 +9,7 @@ import { CartService } from '../shared/services/cart.service';
 @Component({
   selector: 'app-default-order-lists',
   templateUrl: './default-order-lists.component.html',
-  styleUrls: ['./default-order-lists.component.css']
+  styleUrls: ['./default-order-lists.component.scss']
 })
 export class DefaultOrderListsComponent implements OnInit {
   display = false;
@@ -17,19 +17,31 @@ export class DefaultOrderListsComponent implements OnInit {
   templateOrders: SmartOrder[];
   selectedList;
   firstFormGroup: FormGroup;
+  addOrderFormGroup: FormGroup;
+  sides: SelectItem[];
+  errorMsg: string;
 
   constructor(private _formBuilder: FormBuilder,
     private portfolioService: PortfolioService,
     private cartService: CartService) { }
 
   ngOnInit() {
+    this.templateOrders = [];
+    this.sides = [
+      { label: 'Buy', value: 'Buy' },
+      { label: 'Sell', value: 'Sell' },
+      { label: 'Daytrade', value: 'Daytrade' }
+    ];
+
     this.firstFormGroup = this._formBuilder.group({
-      amount: [1000, Validators.required],
-      symbol: []
+      amount: [1000, Validators.required]
     });
 
+    this.setAddOrderForm();
+
     this.defaultLists = [
-      { label: 'Select List', value: null },
+      { label: 'Choose a List', value: null },
+      { label: 'CUSTOM', value: [] },
       {
         label: 'UPRO60 TMF40',
         value: [
@@ -104,10 +116,14 @@ export class DefaultOrderListsComponent implements OnInit {
       const stock = allocationItem.stock;
       const allocationPct = allocationItem.allocation;
       const total = this.firstFormGroup.value.amount;
-      this.getQuote(stock).subscribe((price) => {
-        const quantity = this.getQuantity(price, allocationPct, total);
-        this.templateOrders.push(this.buildOrder(stock, quantity, price));
-      });
+      this.addOrder(stock, allocationPct, total);
+    });
+  }
+
+  addOrder(stock: string, allocationPct: number, total: number) {
+    this.getQuote(stock).subscribe((price) => {
+      const quantity = this.getQuantity(price, allocationPct, total);
+      this.templateOrders.push(this.buildOrder(stock, quantity, price));
     });
   }
 
@@ -145,5 +161,29 @@ export class DefaultOrderListsComponent implements OnInit {
       this.cartService.addToCart(order);
     });
     this.display = false;
+  }
+
+  addCustomList() {
+    console.log(this.addOrderFormGroup, this.selectedList);
+    if (this.addOrderFormGroup.valid) {
+      const stock = this.addOrderFormGroup.value.symbol;
+      const allocationPct = this.addOrderFormGroup.value.allocation;
+      const total = this.firstFormGroup.value.amount;
+      this.addOrder(stock, allocationPct, total);
+
+      this.setAddOrderForm();
+      this.errorMsg = '';
+    } else {
+      this.errorMsg = 'Please fix errors.';
+    }
+  }
+
+  setAddOrderForm() {
+    const initAllocation = this.templateOrders.length ? _.round(1/this.templateOrders.length, 2) : 1;
+    this.addOrderFormGroup = this._formBuilder.group({
+      allocation: [initAllocation, Validators.required],
+      symbol: ['', Validators.required],
+      side: ['Buy', Validators.required]
+    });
   }
 }

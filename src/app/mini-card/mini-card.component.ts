@@ -1,6 +1,8 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { SmartOrder } from '../shared/models/smart-order';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { PortfolioService } from '../shared';
+import * as _ from 'lodash';
 
 @Component({
   selector: 'app-mini-card',
@@ -18,11 +20,11 @@ export class MiniCardComponent implements OnInit {
   actionMode: boolean;
   editMode: boolean;
 
-  constructor(private _formBuilder: FormBuilder) { }
+  constructor(private _formBuilder: FormBuilder, private portfolioService: PortfolioService) { }
 
   ngOnInit() {
     this.firstFormGroup = this._formBuilder.group({
-      amount: [this.order.amount || 1000, Validators.required]
+      amount: [this.order.amount, Validators.required]
     });
 
     this.setDetailMode();
@@ -56,8 +58,17 @@ export class MiniCardComponent implements OnInit {
 
   saveEdit() {
     this.setDetailMode();
-    this.order.amount = this.firstFormGroup.value.amount;
-    this.updatedOrder.emit(this.order);
+    const totalAmount = this.firstFormGroup.value.amount;
+    if (totalAmount > 0) {
+      this.portfolioService.getPrice(this.order.holding.symbol)
+      .subscribe((stockPrice) => {
+        const quantity = _.floor(totalAmount / stockPrice);
+        this.order.amount = Number(this.firstFormGroup.value.amount);
+        this.order.quantity = quantity;
+        this.order.orderSize = _.floor(quantity / 3) || 1;
+        this.updatedOrder.emit(this.order);
+      });
+    }
   }
 
   cancelEdit() {

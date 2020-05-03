@@ -85,6 +85,40 @@ export class BbCardComponent implements OnInit, OnChanges {
     public dialog: MatDialog) { }
 
   ngOnInit() {
+    this.tradeService.algoQueue.subscribe((item: AlgoQueueItem) => {
+      if (this.order.holding.symbol === item.symbol) {
+        if (item.reset) {
+          this.setup();
+          this.alive = true;
+          this.setLive();
+        } else if (item.updateOrder) {
+          this.init();
+        } else {
+          this.step();
+        }
+      }
+    });
+
+    this.backtestService.triggerBacktest
+      .subscribe(stock => {
+        if (stock === this.order.holding.symbol) {
+          this.backtest();
+        }
+      });
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (_.get(changes, 'tearDown.currentValue')) {
+      this.stop();
+    } else if (_.get(changes, 'init.currentValue') && !this.isBacktest) {
+      this.initRun();
+    }
+    else {
+      this.init();
+    }
+  }
+
+  init() {
     this.alive = true;
     this.interval = 60000;
     this.live = false;
@@ -136,35 +170,6 @@ export class BbCardComponent implements OnInit, OnChanges {
     });
 
     this.setup();
-
-    this.tradeService.algoQueue.subscribe((item: AlgoQueueItem) => {
-      if (this.order.holding.symbol === item.symbol) {
-        if (item.reset) {
-          this.setup();
-          this.alive = true;
-          this.setLive();
-        } else {
-          this.step();
-        }
-      }
-    });
-
-    this.backtestService.triggerBacktest
-      .subscribe(stock => {
-        if (stock === this.order.holding.symbol) {
-          this.backtest();
-        }
-      });
-  }
-
-  ngOnChanges(changes: SimpleChanges) {
-    if (_.get(changes, 'tearDown.currentValue')) {
-      this.stop();
-    } else {
-      if (_.get(changes, 'init.currentValue') && !this.isBacktest) {
-        this.initRun();
-      }
-    }
   }
 
   resetStepper(stepper) {

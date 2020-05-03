@@ -1,30 +1,12 @@
 <div class="ui-g">
   <div class="ui-g-2" *ngFor="let order of cartService.otherOrders" class="single-card"
     [class.card-hover]="mouseOver === order.holding.symbol" (mouseover)="onHoverOver(order)" (mouseout)="onHoverAway()">
-    <p-card header="{{order.holding.symbol}}" subheader="{{order.holding.name}}"
-      [style]="{width: '150px', height: '200px'}">
-      <div>
-        <b>Type:</b> {{order.side}}
-        <b>Size:</b> {{order.orderSize}}
-      </div>
-      <p-footer>
-        <button pButton type="button" label="Delete" class="ui-button-raised ui-button-danger" style="margin: .25em"
-          (click)="delete(order)"></button>
-      </p-footer>
-    </p-card>
+    <app-mini-card [order]="order" [canEdit]="true" (delete)="delete(order)" (updatedOrder)="updateOrder(order)">
+    </app-mini-card>
   </div>
   <div class="ui-g-2" *ngFor="let order of cartService.buyOrders" class="single-card"
     [class.card-hover]="mouseOver === order.holding.symbol" (mouseover)="onHoverOver(order)" (mouseout)="onHoverAway()">
-    <p-card header="{{order.holding.symbol}}" subheader="{{order.holding.name}}"
-      [style]="{width: '150px', height: '200px'}">
-      <div>
-        <b>Type:</b> {{order.side}}
-        <b>Size:</b> {{order.orderSize}}
-      </div>
-      <p-footer>
-        <button pButton type="button" label="Delete" class="ui-button-raised ui-button-danger" style="margin: .25em"
-          (click)="delete(order)"></button>
-      </p-footer>
-    </p-card>
+    <app-mini-card [order]="order" [canEdit]="true" (delete)="delete(order)" (updatedOrder)="updateOrder(order)">
+    </app-mini-card>
   </div>
 </div>

@@ -4,6 +4,7 @@ import { Subject } from 'rxjs';
 export interface AlgoQueueItem  {
   symbol: string;
   reset: boolean;
+  updateOrder?: boolean;
 }
 
 @Injectable()

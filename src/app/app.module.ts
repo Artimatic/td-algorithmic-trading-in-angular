@@ -68,6 +68,8 @@ import { DialogModule } from 'primeng/dialog';
 import { ListboxModule } from 'primeng/listbox';
 import { MiniCardComponent } from './mini-card/mini-card.component';
 import { EasyOrdersEditorComponent } from './easy-orders-editor/easy-orders-editor.component';
+import { SpinnerModule } from 'primeng/spinner';
+import { DropdownModule } from 'primeng/dropdown';
 
 @NgModule({
   declarations: [
@@ -134,6 +136,8 @@ import { EasyOrdersEditorComponent } from './easy-orders-editor/easy-orders-edit
     SplitButtonModule,
     DialogModule,
     ListboxModule,
+    SpinnerModule,
+    DropdownModule,
   ],
   providers: [
     BacktestService,
