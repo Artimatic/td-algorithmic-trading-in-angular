@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { SelectItem } from 'primeng/components/common/selectitem';
 import { SmartOrder } from '../shared/models/smart-order';
 import { PortfolioService } from '../shared';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import * as _ from 'lodash';
 import { CartService } from '../shared/services/cart.service';
+import { Order } from '../shared/models/order';
 
 @Component({
   selector: 'app-default-order-lists',
@@ -12,7 +13,9 @@ import { CartService } from '../shared/services/cart.service';
   styleUrls: ['./default-order-lists.component.scss']
 })
 export class DefaultOrderListsComponent implements OnInit {
-  display = false;
+  @Input() display: boolean;
+  @Input() hideButton: boolean;
+  @Input() prefillOrderForm: Order;
   defaultLists: SelectItem[];
   templateOrders: SmartOrder[];
   selectedList;
@@ -26,6 +29,8 @@ export class DefaultOrderListsComponent implements OnInit {
     private cartService: CartService) { }
 
   ngOnInit() {
+    this.display = false;
+    this.hideButton = false;
     this.templateOrders = [];
     this.sides = [
       { label: 'Buy', value: 'Buy' },
@@ -112,12 +117,14 @@ export class DefaultOrderListsComponent implements OnInit {
 
   changedSelection(selected) {
     this.templateOrders = [];
-    selected.forEach((allocationItem) => {
-      const stock = allocationItem.stock;
-      const allocationPct = allocationItem.allocation;
-      const total = this.firstFormGroup.value.amount;
-      this.addOrder(stock, allocationPct, total);
-    });
+    if (selected) {
+      selected.forEach((allocationItem) => {
+        const stock = allocationItem.stock;
+        const allocationPct = allocationItem.allocation;
+        const total = this.firstFormGroup.value.amount;
+        this.addOrder(stock, allocationPct, total);
+      });
+    }
   }
 
   addOrder(stock: string, allocationPct: number, total: number) {
@@ -157,14 +164,12 @@ export class DefaultOrderListsComponent implements OnInit {
 
   addSelectedList() {
     this.templateOrders.forEach((order) => {
-      console.log('Adding: ', order);
       this.cartService.addToCart(order);
     });
     this.display = false;
   }
 
   addCustomList() {
-    console.log(this.addOrderFormGroup, this.selectedList);
     if (this.addOrderFormGroup.valid) {
       const stock = this.addOrderFormGroup.value.symbol;
       const allocationPct = this.addOrderFormGroup.value.allocation;
@@ -179,11 +184,25 @@ export class DefaultOrderListsComponent implements OnInit {
   }
 
   setAddOrderForm() {
-    const initAllocation = this.templateOrders.length ? _.round(1/this.templateOrders.length, 2) : 1;
+    const initAllocation = this.templateOrders.length ? _.round(1 / this.templateOrders.length, 2) : 1;
     this.addOrderFormGroup = this._formBuilder.group({
       allocation: [initAllocation, Validators.required],
       symbol: ['', Validators.required],
       side: ['Buy', Validators.required]
     });
+  }
+
+  onShow() {
+    if (this.prefillOrderForm) {
+      this.addOrderFormGroup = this._formBuilder.group({
+        allocation: [1, Validators.required],
+        symbol: [this.prefillOrderForm.holding.symbol, Validators.required],
+        side: [this.prefillOrderForm.side, Validators.required]
+      });
+    }
+  }
+
+  onHide() {
+    this.display = false;
   }
 }

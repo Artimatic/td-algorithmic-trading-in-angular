@@ -213,7 +213,7 @@ export class PortfolioService {
       });
       return null;
     } else {
-      return this.getAccountId();
+      return this.authenticationService.selectedTdaAccount.accountId;
     }
   }
 }

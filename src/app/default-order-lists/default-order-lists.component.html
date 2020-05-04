@@ -1,6 +1,6 @@
-<p-dialog header="Shopping Lists" [(visible)]="display" [appendTo]="'body'"
+<p-dialog header="Add Orders" [(visible)]="display" [appendTo]="'body'"
   [contentStyle]="{width:'500px', 'max-height': '600px'}" [draggable]="true" [dismissableMask]="true"
-  [responsive]="true">
+  [responsive]="true" (onShow)="onShow()" (onHide)="onHide()">
   <div class="ui-g">
     <div class="ui-g-6">
       <p-listbox [options]="defaultLists" [(ngModel)]="selectedList" (onChange)="changedSelection($event.value)">
@@ -24,7 +24,7 @@
             <div class="order-form-item">
               <input type="text" pInputText placeholder="Stock" formControlName="symbol">
               <p-dropdown [options]="sides" formControlName="side"
-                [style]="{'minWidth':'50px', 'width': '70px', 'margin-left': '5px'}"></p-dropdown>
+                [style]="{'minWidth':'50px', 'width':'93px', 'margin-left':'5px'}"></p-dropdown>
             </div>
             <div class="order-form-item">
               <label>Allocation</label>
@@ -47,4 +47,4 @@
   </div>
 </p-dialog>
 
-<button type="button" (click)="showDialog()" pButton icon="pi pi-list" label="Add"></button>
+<button type="button" *ngIf="!hideButton" (click)="showDialog()" pButton icon="pi pi-list" label="Add"></button>

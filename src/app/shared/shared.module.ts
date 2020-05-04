@@ -31,6 +31,7 @@ import { TableModule } from 'primeng/table';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { ListboxModule } from 'primeng/listbox';
+import { DialogModule } from 'primeng/dialog';
 
 const materialModules = [
   MatMenuModule,
@@ -61,6 +62,7 @@ const materialModules = [
   MultiSelectModule,
   SelectButtonModule,
   ListboxModule,
+  DialogModule
 ];
 
 @NgModule({

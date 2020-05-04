@@ -31,6 +31,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
   interval: number;
 
   alive: boolean;
+  displayOrderDialog: boolean;
 
   sub: Subscription;
 
@@ -388,5 +389,9 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
           duration: 2000,
         });
       });
+  }
+
+  showOrderDialog() {
+    this.displayOrderDialog = true;
   }
 }
