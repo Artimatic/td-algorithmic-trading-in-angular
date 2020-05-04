@@ -881,14 +881,23 @@ export class BbCardComponent implements OnInit, OnChanges {
             const mlLog = `RNN model result: ${machineResult.nextOutput}`;
             const mlReport = this.reportingService.addAuditLog(this.order.holding.symbol, mlLog);
             console.log(mlReport);
-            if (machineResult.nextOutput > 0.6) {
+            if (machineResult.nextOutput > 0.5) {
               if (orderQuantity > 0) {
-                const buyOrder = this.buildBuyOrder(orderQuantity,
-                  quote,
-                  timestamp,
-                  analysis);
+                setTimeout(() => {
+                  this.portfolioService.getPrice(this.order.holding.symbol)
+                    .subscribe((price) => {
+                      if (price > quote) {
+                        const buyOrder = this.buildBuyOrder(orderQuantity,
+                          price,
+                          timestamp,
+                          analysis);
 
-                this.sendBuy(buyOrder);
+                        this.sendBuy(buyOrder);
+                      } else {
+                        console.log('Current price is too low. Actual: ', price, ' Expected: ', quote);
+                      }
+                    });
+                }, 180000);
               }
             }
           });
