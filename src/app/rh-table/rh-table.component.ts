@@ -499,8 +499,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
     this.getData(Stocks, 'v5');
 
-    this.getData(Stocks, 'daily-roc');
-
     this.progress = 0;
   }
 
