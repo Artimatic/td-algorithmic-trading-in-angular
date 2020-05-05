@@ -897,7 +897,7 @@ export class BbCardComponent implements OnInit, OnChanges {
                         console.log('Current price is too low. Actual: ', price, ' Expected: ', quote);
                       }
                     });
-                }, 180000);
+                }, 60000);
               }
             }
           });
