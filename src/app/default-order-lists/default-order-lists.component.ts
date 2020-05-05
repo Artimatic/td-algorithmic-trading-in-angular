@@ -6,6 +6,10 @@ import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import * as _ from 'lodash';
 import { CartService } from '../shared/services/cart.service';
 import { Order } from '../shared/models/order';
+import { Subject } from 'rxjs';
+import {
+  debounceTime, distinctUntilChanged, switchMap
+} from 'rxjs/operators';
 
 @Component({
   selector: 'app-default-order-lists',
@@ -21,6 +25,8 @@ export class DefaultOrderListsComponent implements OnInit {
   selectedList;
   firstFormGroup: FormGroup;
   addOrderFormGroup: FormGroup;
+  private amountChange = new Subject<string>();
+
   sides: SelectItem[];
   errorMsg: string;
 
@@ -32,6 +38,17 @@ export class DefaultOrderListsComponent implements OnInit {
     this.display = false;
     this.hideButton = false;
     this.templateOrders = [];
+
+    this.amountChange
+      .pipe(
+        debounceTime(400),
+        distinctUntilChanged()
+      )
+      .subscribe(value => {
+        this.firstFormGroup.value.amount = value;
+        this.changedSelection(this.selectedList);
+      });
+
     this.sides = [
       { label: 'Buy', value: 'Buy' },
       { label: 'Sell', value: 'Sell' },
@@ -204,5 +221,9 @@ export class DefaultOrderListsComponent implements OnInit {
 
   onHide() {
     this.display = false;
+  }
+
+  updatedAmount(query: string) {
+    this.amountChange.next(query);
   }
 }

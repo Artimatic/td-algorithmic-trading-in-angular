@@ -14,7 +14,8 @@
       <form [formGroup]="firstFormGroup">
         <div class="ui-inputgroup">
           <span class="ui-inputgroup-addon">$</span>
-          <input type="text" pInputText placeholder="Amount" formControlName="amount">
+          <input type="text" #searchBox id="search-box" pInputText placeholder="Amount"
+            (input)="updatedAmount(searchBox.value)" formControlName="amount">
           <span class="ui-inputgroup-addon">.00</span>
         </div>
       </form>
