@@ -26,7 +26,7 @@
     </div>
   </div>
 
-  <p-table #dt [columns]="cols" [value]="modelResults" [paginator]="true" [rows]="100" dataKey="algorithm"
+  <p-table #dt [columns]="cols" [value]="modelResults" [paginator]="true" [rows]="100" dataKey="symbol"
     selectionMode="single" (onRowSelect)="onRowSelect($event)">
     <ng-template pTemplate="caption">
       <div class="global-filter">
