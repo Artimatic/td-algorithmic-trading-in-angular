@@ -157,18 +157,7 @@ export class DefaultOrderListsComponent implements OnInit {
   }
 
   buildOrder(symbol: string, quantity = 0, price = 0): SmartOrder {
-    return {
-      holding: {
-        instrument: null,
-        symbol,
-      },
-      quantity,
-      price,
-      submitted: false,
-      pending: false,
-      orderSize: _.floor(quantity / 2) || 1,
-      side: 'Buy',
-    };
+    return this.cartService.buildOrder(symbol, quantity, price);
   }
 
   delete(event) {

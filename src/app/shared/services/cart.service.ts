@@ -3,6 +3,7 @@ import { PortfolioService } from './portfolio.service';
 import { MatSnackBar } from '@angular/material';
 import { SmartOrder } from '../models/smart-order';
 import { TradeService, AlgoQueueItem } from './trade.service';
+import * as _ from 'lodash';
 
 @Injectable()
 export class CartService {
@@ -185,5 +186,27 @@ export class CartService {
           });
       }
     });
+  }
+
+  buildOrder(symbol: string, quantity = 0, price = 0, side = 'DayTrade'): SmartOrder {
+    return {
+      holding: {
+        instrument: null,
+        symbol,
+      },
+      quantity,
+      price,
+      submitted: false,
+      pending: false,
+      orderSize: _.floor(quantity / 3) || 1,
+      side,
+      lossThreshold: 0.003,
+      profitTarget: 0.008,
+      trailingStop: 0.002,
+      useStopLoss: true,
+      useTrailingStopLoss: true,
+      useTakeProfit: true,
+      sellAtClose: true
+    };
   }
 }

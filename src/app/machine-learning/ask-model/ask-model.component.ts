@@ -8,6 +8,7 @@ import { Subscription, Subject } from 'rxjs';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import { GlobalSettingsService } from '../../settings/global-settings.service';
 import * as _ from 'lodash';
+import { CartService } from '../../shared/services/cart.service';
 
 export interface TrainingResults {
   symbol?: string;
@@ -47,6 +48,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
     private machineLearningService: MachineLearningService,
     private globalSettingsService: GlobalSettingsService,
     private portfolioService: PortfolioService,
+    private cartService: CartService,
     public snackBar: MatSnackBar) { }
 
   ngOnInit() {
@@ -381,21 +383,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
     this.portfolioService.getPrice(event.data.symbol).subscribe((stockPrice) => {
       const amount = 1000;
       const quantity = _.floor(amount / stockPrice);
-      const orderSize = _.floor(quantity / 3) || 1;
-      this.prefillOrderForm = {
-        holding: {
-          instrument: null,
-          symbol: event.data.symbol
-        },
-        quantity,
-        amount,
-        submitted: false,
-        pending: false,
-        side: 'DayTrade',
-        price: stockPrice,
-        orderSize
-      };
-      console.log('daytrade: ', this.prefillOrderForm);
+      this.prefillOrderForm = this.cartService.buildOrder(event.data.symbol, quantity, stockPrice);
     });
   }
 
