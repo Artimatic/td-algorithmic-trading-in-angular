@@ -16,7 +16,6 @@ export class DaytradeScoreBoardComponent implements OnChanges, OnInit {
   constructor(private scoreKeeperService: ScoreKeeperService) { }
 
   ngOnInit() {
-    this.scoreTable = [];
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -26,6 +25,8 @@ export class DaytradeScoreBoardComponent implements OnChanges, OnInit {
   }
 
   getScores() {
+    this.scoreTable = [];
+
     this.buyOrders.forEach((order) => {
       const tableItem = {
         stock: order.holding.symbol,

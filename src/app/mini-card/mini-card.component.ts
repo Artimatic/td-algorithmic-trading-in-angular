@@ -31,7 +31,7 @@ export class MiniCardComponent implements OnInit {
   }
 
   deleteCard() {
-    this.delete.emit();
+    this.delete.emit(this.order.holding.symbol);
   }
 
   setDetailMode() {

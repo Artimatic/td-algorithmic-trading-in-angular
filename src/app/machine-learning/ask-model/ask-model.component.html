@@ -6,7 +6,7 @@
     <div class="p-col">
       <form [formGroup]="form" novalidate>
         <mat-form-field>
-          <input matInput formControlName="query" placeholder="Enter ticker symbol" (keyup.enter)="train()"/>
+          <input matInput formControlName="query" placeholder="Enter ticker symbol" (keyup.enter)="train()" />
         </mat-form-field>
       </form>
     </div>
@@ -25,13 +25,16 @@
       <button pButton type="button" label="Random" (click)="random()"></button>
     </div>
   </div>
-  <p-table #dt [columns]="cols" [value]="modelResults" [paginator]="true" [rows]="100" dataKey="algorithm">
+
+  <p-table #dt [columns]="cols" [value]="modelResults" [paginator]="true" [rows]="100" dataKey="algorithm"
+    selectionMode="single" (onRowSelect)="onRowSelect($event)">
     <ng-template pTemplate="caption">
       <div class="global-filter">
         <i class="fa fa-search" style="margin:4px 4px 0 0"></i>
         <input type="text" pInputText size="50" placeholder="Filter By Algorithm"
           (input)="dt.filterGlobal($event.target.value, 'contains')" style="width:auto">
       </div>
+      <app-default-order-lists class="default-orders-button" [prefillOrderForm]="prefillOrderForm"></app-default-order-lists>
     </ng-template>
     <ng-template pTemplate="header" let-columns>
       <tr>
@@ -39,18 +42,12 @@
           {{col.header}}
           <p-sortIcon [field]="col.field"></p-sortIcon>
         </th>
-        <th>
-          Actions
-        </th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-rowData let-columns="columns">
-      <tr>
+      <tr [pSelectableRow]="rowData">
         <td *ngFor="let col of columns">
           <div class="data-cell">{{rowData[col.field]}}</div>
-        </td>
-        <td>
-          <button pButton type="button" label="Daytrade" class="ui-button-rounded" (click)="addDaytrade(rowData)"></button>
         </td>
       </tr>
     </ng-template>

@@ -2,11 +2,12 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import * as moment from 'moment';
 import { MatSnackBar } from '@angular/material';
 import { FormGroup, FormBuilder } from '@angular/forms';
-import { BacktestService, MachineLearningService } from '../../shared/index';
+import { BacktestService, MachineLearningService, PortfolioService } from '../../shared/index';
 import IntradayStocks from '../../intraday-backtest-view/intraday-backtest-stocks.constant';
 import { Subscription, Subject } from 'rxjs';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import { GlobalSettingsService } from '../../settings/global-settings.service';
+import * as _ from 'lodash';
 
 export interface TrainingResults {
   symbol?: string;
@@ -32,6 +33,8 @@ export class AskModelComponent implements OnInit, OnDestroy {
   models: any[];
   cols: any[];
   modelResults: TrainingResults[];
+  selectedStock;
+  prefillOrderForm;
   private callChainSub: Subscription;
   private backtestBuffer: { stock: string }[];
   private bufferSubject: Subject<void>;
@@ -43,6 +46,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
     private backtestService: BacktestService,
     private machineLearningService: MachineLearningService,
     private globalSettingsService: GlobalSettingsService,
+    private portfolioService: PortfolioService,
     public snackBar: MatSnackBar) { }
 
   ngOnInit() {
@@ -372,8 +376,27 @@ export class AskModelComponent implements OnInit, OnDestroy {
     }
   }
 
-  addDaytrade(item) {
-    console.log('item ', item);
+  onRowSelect(event) {
+    console.log('item ', event);
+    this.portfolioService.getPrice(event.data.symbol).subscribe((stockPrice) => {
+      const amount = 1000;
+      const quantity = _.floor(amount / stockPrice);
+      const orderSize = _.floor(quantity / 3) || 1;
+      this.prefillOrderForm = {
+        holding: {
+          instrument: null,
+          symbol: event.data.symbol
+        },
+        quantity,
+        amount,
+        submitted: false,
+        pending: false,
+        side: 'DayTrade',
+        price: stockPrice,
+        orderSize
+      };
+      console.log('daytrade: ', this.prefillOrderForm);
+    });
   }
 
   ngOnDestroy() {

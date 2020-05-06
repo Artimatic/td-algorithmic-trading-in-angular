@@ -8,7 +8,7 @@ import { CartService } from '../shared/services/cart.service';
 import { Order } from '../shared/models/order';
 import { Subject } from 'rxjs';
 import {
-  debounceTime, distinctUntilChanged, switchMap
+  debounceTime, distinctUntilChanged
 } from 'rxjs/operators';
 
 @Component({
@@ -52,7 +52,7 @@ export class DefaultOrderListsComponent implements OnInit {
     this.sides = [
       { label: 'Buy', value: 'Buy' },
       { label: 'Sell', value: 'Sell' },
-      { label: 'Daytrade', value: 'Daytrade' }
+      { label: 'DayTrade', value: 'DayTrade' }
     ];
 
     this.firstFormGroup = this._formBuilder.group({
@@ -145,7 +145,7 @@ export class DefaultOrderListsComponent implements OnInit {
   }
 
   addOrder(stock: string, allocationPct: number, total: number) {
-    this.getQuote(stock).subscribe((price) => {
+    this.portfolioService.getPrice(stock).subscribe((price) => {
       const quantity = this.getQuantity(price, allocationPct, total);
       this.templateOrders.push(this.buildOrder(stock, quantity, price));
     });
@@ -173,10 +173,14 @@ export class DefaultOrderListsComponent implements OnInit {
 
   delete(event) {
     console.log('delete: ', event);
-  }
+    const foundIdx = this.templateOrders.findIndex((val) => {
+      if (val.holding.symbol === event) {
+        return true;
+      }
+      return false;
+    });
 
-  getQuote(symbol: string) {
-    return this.portfolioService.getPrice(symbol);
+    this.templateOrders.splice(foundIdx, 1);
   }
 
   addSelectedList() {
@@ -210,6 +214,7 @@ export class DefaultOrderListsComponent implements OnInit {
   }
 
   onShow() {
+    console.log('show form ', this.prefillOrderForm);
     if (this.prefillOrderForm) {
       this.addOrderFormGroup = this._formBuilder.group({
         allocation: [1, Validators.required],

@@ -58,18 +58,11 @@ import { SharedModule } from './shared/shared.module';
 import { RedirectLoginDialogComponent } from './redirect-login-dialog/redirect-login-dialog.component';
 import { NeuroCardComponent } from './neuro-card/neuro-card.component';
 import { DaytradeScoreBoardComponent } from './daytrade-score-board/daytrade-score-board.component';
-import { CardModule } from 'primeng/card';
 import { PokerhandComponent } from './pokerhand/pokerhand.component';
-import { ButtonModule } from 'primeng/button';
-import { SplitButtonModule } from 'primeng/splitbutton';
+
 import { MlBatchCardComponent } from './ml-batch-card/ml-batch-card.component';
-import { DefaultOrderListsComponent } from './default-order-lists/default-order-lists.component';
-import { DialogModule } from 'primeng/dialog';
-import { ListboxModule } from 'primeng/listbox';
-import { MiniCardComponent } from './mini-card/mini-card.component';
+
 import { EasyOrdersEditorComponent } from './easy-orders-editor/easy-orders-editor.component';
-import { SpinnerModule } from 'primeng/spinner';
-import { DropdownModule } from 'primeng/dropdown';
 
 @NgModule({
   declarations: [
@@ -105,8 +98,6 @@ import { DropdownModule } from 'primeng/dropdown';
     DaytradeScoreBoardComponent,
     PokerhandComponent,
     MlBatchCardComponent,
-    DefaultOrderListsComponent,
-    MiniCardComponent,
     EasyOrdersEditorComponent,
   ],
   entryComponents: [
@@ -131,13 +122,6 @@ import { DropdownModule } from 'primeng/dropdown';
     SettingsModule,
     MachineLearningModule,
     SharedModule,
-    CardModule,
-    ButtonModule,
-    SplitButtonModule,
-    DialogModule,
-    ListboxModule,
-    SpinnerModule,
-    DropdownModule,
   ],
   providers: [
     BacktestService,
