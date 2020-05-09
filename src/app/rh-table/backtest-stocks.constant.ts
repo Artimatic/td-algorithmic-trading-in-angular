@@ -184,6 +184,7 @@ export const stockList = [
   'UMPQ',
   'UNH',
   'UNP',
+  'URBN',
   'URI',
   'USB',
   'USO',

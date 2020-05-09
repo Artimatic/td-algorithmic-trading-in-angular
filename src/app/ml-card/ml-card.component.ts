@@ -141,15 +141,14 @@ export class MlCardComponent implements OnInit {
   }
 
   trainModel() {
-    if (this.selectedModel.value === 'V3') {
-      this.backtestService.runLstmV3(this.getTrainingStock(),
+    this.backtestService.runLstmV3(this.getTrainingStock(),
       moment().subtract({ day: 1 }).format('YYYY-MM-DD'),
       moment().subtract({ day: 365 }).format('YYYY-MM-DD'),
       0.7,
       '0,0,1,0,0,1,1,1,1,1,1,0,0').subscribe();
-    } else {
-      this.backtestService.runLstmV2(this.getTrainingStock(), moment().subtract({ day: 1 }).format('YYYY-MM-DD'), moment().subtract({ day: 50 }).format('YYYY-MM-DD')).subscribe();
-    }
+
+
+    this.backtestService.runLstmV2(this.getTrainingStock(), moment().subtract({ day: 1 }).format('YYYY-MM-DD'), moment().subtract({ day: 50 }).format('YYYY-MM-DD')).subscribe();
   }
 
   getTradeDay() {
@@ -187,7 +186,8 @@ export class MlCardComponent implements OnInit {
                 this.pendingResults = false;
               }
             }, error => {
-              console.log('ML activation failed. Trying again.');
+              console.log('ML activation failed. Trying other models.');
+              this.activateOtherModel();
               this.alive = true;
             });
         }
@@ -248,7 +248,7 @@ export class MlCardComponent implements OnInit {
     switch (bet.summary) {
       case Sentiment.Bullish:
         if (this.settings.value === 'closePositions') {
-          this.sellAll(this.getOrder(this.inverse.value ? this.getBullPick() :  this.bearishPlay.value));
+          this.sellAll(this.getOrder(this.inverse.value ? this.getBullPick() : this.bearishPlay.value));
         } else if (this.settings.value === 'openPositions') {
           this.buy(this.getOrder(this.inverse.value ? this.bearishPlay.value : this.getBullPick()), _.divide(bet.bullishOpen, bet.total));
         }
@@ -418,5 +418,12 @@ export class MlCardComponent implements OnInit {
       return this.backtestService.activateLstmV3(this.getTrainingStock(), '0,0,1,0,0,1,1,1,1,1,1,0,0');
     }
     return this.backtestService.activateLstmV2(this.getTrainingStock());
+  }
+
+  activateOtherModel() {
+    if (this.selectedModel.value === 'V3') {
+      return this.backtestService.activateLstmV2(this.getTrainingStock());
+    }
+    return this.backtestService.activateLstmV3(this.getTrainingStock(), '0,0,1,0,0,1,1,1,1,1,1,0,0');
   }
 }
