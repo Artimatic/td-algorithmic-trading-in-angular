@@ -1440,11 +1440,19 @@ class BacktestService {
 
     const mfiTrendRecommendation = AlgoService.checkMfiTrend(indicator.mfiPrevious, indicator.mfiLeft);
 
+    const mfiRecommendation = AlgoService.checkMfi(indicator.mfiLeft);
+
     const macdRecommendation = AlgoService.checkMacd(indicator, previousIndicator);
+
+    const bbandRecommendation = AlgoService.checkBBand(price,
+      AlgoService.getLowerBBand(indicator.bband80), AlgoService.getUpperBBand(indicator.bband80),
+      indicator.mfiLeft);
 
     recommendations.roc = rocCrossoverRecommendation;
     recommendations.mfiTrade = mfiTrendRecommendation;
     recommendations.macd = macdRecommendation;
+    recommendations.mfi = mfiRecommendation;
+    recommendations.bband = bbandRecommendation;
 
     if (recommendations.roc === DaytradeRecommendation.Bullish ||
       recommendations.mfiTrade === DaytradeRecommendation.Bullish ||

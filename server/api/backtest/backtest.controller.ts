@@ -4,6 +4,7 @@ import * as Boom from 'boom';
 import BaseController from '../templates/base.controller';
 
 import BacktestService from './backtest.service';
+import BacktestAggregationService from './backtest-aggregation.service';
 
 class BacktestController extends BaseController {
 
@@ -266,7 +267,11 @@ class BacktestController extends BaseController {
       request.body.currentDate,
       request.body.startDate,
       response);
+  }
 
+  scoreSignals(request, response) {
+    const data = BacktestAggregationService.getSignalResults(request.body.signals);
+    BaseController.requestGetSuccessHandler(response, data);
   }
 }
 

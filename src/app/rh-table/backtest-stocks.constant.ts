@@ -151,7 +151,7 @@ export const stockList = [
   'RAD',
   'BOX',
   'RF',
-  'RTN',
+  'RTX',
   'SCCO',
   'SCHE',
   'SCHF',
