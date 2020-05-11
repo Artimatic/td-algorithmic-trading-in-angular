@@ -25,3 +25,15 @@
 .global-filter {
   padding: 3px;
 }
+
+:host ::ng-deep .ui-table .ui-table-thead > tr > th {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 70px;
+}
+
+@media screen and (max-width: 64em) {
+  :host ::ng-deep .ui-table .ui-table-thead > tr > th {
+      top: 100px;
+  }
+}

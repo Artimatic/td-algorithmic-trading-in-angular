@@ -7,7 +7,7 @@ class BacktestAggregationService {
     const indicatorsTable = {};
 
     const shortTermMinIdx = signals.length - 26;
-    const midTermMinIdx = signals.length - 60;
+    const midTermMinIdx = signals.length - 90;
 
     signals.forEach((current, idx) => {
       for (const indicator in current.recommendation) {
@@ -17,15 +17,15 @@ class BacktestAggregationService {
           if (recommendation.toLowerCase() === 'bullish') {
             const indicatorResults = this.getIndicatorResults(indicatorsTable, indicatorName);
 
-            if (idx > shortTermMinIdx && idx < signals.length - 7) {
-              const futureClose = signals[idx + 5].close;
+            if (idx > shortTermMinIdx && idx < signals.length - 12) {
+              const futureClose = signals[idx + 10].close;
               const percentChange = DecisionService.getPercentChange(futureClose, current.close);
               indicatorResults.bullishShortTermProfitLoss += percentChange;
               indicatorResults.bullishShortTermSignals++;
             }
 
-            if (idx > midTermMinIdx && idx < signals.length - 7) {
-              const futureClose = signals[idx + 5].close;
+            if (idx > midTermMinIdx && idx < signals.length - 17) {
+              const futureClose = signals[idx + 15].close;
               const percentChange = DecisionService.getPercentChange(futureClose, current.close);
               indicatorResults.bullishMidTermProfitLoss += percentChange;
               indicatorResults.bullishMidTermSignals++;
@@ -41,15 +41,15 @@ class BacktestAggregationService {
           } else if (recommendation.toLowerCase() === 'bearish') {
             const indicatorResults = this.getIndicatorResults(indicatorsTable, indicatorName);
 
-            if (idx > shortTermMinIdx && idx < signals.length - 7) {
-              const futureClose = signals[idx + 5].close;
+            if (idx > shortTermMinIdx && idx < signals.length - 12) {
+              const futureClose = signals[idx + 10].close;
               const percentChange = DecisionService.getPercentChange(current.close, futureClose);
               indicatorResults.bearishShortTermProfitLoss += percentChange;
               indicatorResults.bearishShortTermSignals++;
             }
 
-            if (idx > midTermMinIdx && idx < signals.length - 7) {
-              const futureClose = signals[idx + 5].close;
+            if (idx > midTermMinIdx && idx < signals.length - 17) {
+              const futureClose = signals[idx + 15].close;
               const percentChange = DecisionService.getPercentChange(current.close, futureClose);
               indicatorResults.bearishMidTermProfitLoss += percentChange;
               indicatorResults.bearishMidTermSignals++;
