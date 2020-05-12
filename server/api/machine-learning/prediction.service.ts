@@ -126,7 +126,7 @@ export default class PredictionService {
         input.push(0);
       }
 
-      if (signal.recommendation.vwma && signal.recommendation.vwma.toLowerCase() === 'bullish') {
+      if (signal.recommendation.macd && signal.recommendation.macd.toLowerCase() === 'bullish') {
         input.push(1);
       } else {
         input.push(0);

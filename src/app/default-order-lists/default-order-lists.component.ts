@@ -147,17 +147,13 @@ export class DefaultOrderListsComponent implements OnInit {
   addOrder(stock: string, allocationPct: number, total: number) {
     this.portfolioService.getPrice(stock).subscribe((price) => {
       const quantity = this.getQuantity(price, allocationPct, total);
-      this.templateOrders.push(this.buildOrder(stock, quantity, price));
+      this.templateOrders.push(this.cartService.buildOrder(stock, quantity, price, this.addOrderFormGroup.value.side));
     });
   }
 
   getQuantity(stockPrice: number, allocationPct: number, total: number) {
     const totalCost = _.round(total * allocationPct, 2);
     return _.floor(totalCost / stockPrice);
-  }
-
-  buildOrder(symbol: string, quantity = 0, price = 0): SmartOrder {
-    return this.cartService.buildOrder(symbol, quantity, price);
   }
 
   delete(event) {
@@ -203,7 +199,6 @@ export class DefaultOrderListsComponent implements OnInit {
   }
 
   onShow() {
-    console.log('show form ', this.prefillOrderForm);
     if (this.prefillOrderForm) {
       this.addOrderFormGroup = this._formBuilder.group({
         allocation: [1, Validators.required],

@@ -5,11 +5,12 @@ export interface AlgoQueueItem  {
   symbol: string;
   reset: boolean;
   updateOrder?: boolean;
+  triggerMlBuySell?: boolean;
 }
 
 @Injectable()
 export class TradeService {
-  algoQueue = new Subject();
+  algoQueue: Subject<AlgoQueueItem> = new Subject();
 
   constructor() { }
 

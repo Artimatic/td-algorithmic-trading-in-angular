@@ -202,6 +202,8 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
   }
 
   queueAlgos(orders: SmartOrder[]) {
+    const mlStartTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 15:55`, 'America/New_York');
+    let mlStopTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 16:00`, 'America/New_York');
     this.globalSettingsService.setStartTimes();
     console.log(`New queue set to start at ${moment(this.globalSettingsService.startTime).format()}`);
     this.alive = true;
@@ -253,11 +255,22 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
           this.interval = moment().subtract(5, 'minutes').diff(moment(this.globalSettingsService.startTime), 'milliseconds');
           console.log('new interval: ', this.interval);
         }
+
+        if ((moment().isAfter(moment(mlStartTime)) &&
+          moment().isBefore(moment(mlStopTime)))) {
+          orders.forEach((order: SmartOrder) => {
+            if (order.side.toLowerCase() !== 'daytrade') {
+              const queueItem: AlgoQueueItem = {
+                symbol: order.holding.symbol,
+                reset: false,
+                triggerMlBuySell: true
+              };
+              this.tradeService.algoQueue.next(queueItem);
+            }
+          });
+          mlStopTime = mlStartTime;
+        }
       });
-  }
-
-  reset() {
-
   }
 
   stop() {
@@ -326,9 +339,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
           useStopLoss: row.StopLoss || null,
           useTrailingStopLoss: row.TrailingStopLoss || null,
           useTakeProfit: row.TakeProfit || null,
-          buyCloseSellOpen: row.BuyCloseSellOpen || null,
           sellAtClose: row.SellAtClose || null,
-          yahooData: row.YahooData || null,
           orderSize: row.OrderSize * 1 || null
         };
         this.cartService.addToCart(order);

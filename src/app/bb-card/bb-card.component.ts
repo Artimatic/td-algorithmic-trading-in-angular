@@ -29,6 +29,8 @@ import { CardOptions } from '../shared/models/card-options';
 import { Point } from 'angular-highcharts/lib/chart';
 import { GlobalSettingsService } from '../settings/global-settings.service';
 import { TradeService, AlgoQueueItem } from '../shared/services/trade.service';
+import { OrderingService } from '@shared/services/ordering.service';
+import { GlobalTaskQueueService } from '@shared/services/global-task-queue.service';
 
 @Component({
   selector: 'app-bb-card',
@@ -82,6 +84,8 @@ export class BbCardComponent implements OnInit, OnChanges {
     private globalSettingsService: GlobalSettingsService,
     private tradeService: TradeService,
     private machineLearningService: MachineLearningService,
+    private orderingService: OrderingService,
+    private globalTaskQueueService: GlobalTaskQueueService,
     public dialog: MatDialog) { }
 
   ngOnInit() {
@@ -93,6 +97,8 @@ export class BbCardComponent implements OnInit, OnChanges {
           this.setLive();
         } else if (item.updateOrder) {
           this.init();
+        } else if (item.triggerMlBuySell) {
+          this.runMlBuySell();
         } else {
           this.step();
         }
@@ -124,13 +130,13 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.sides = ['Buy', 'Sell', 'DayTrade'];
     this.error = '';
 
-    this.preferenceList = [OrderPref.TakeProfit,
-    OrderPref.StopLoss,
-    OrderPref.TrailingStopLoss,
-    OrderPref.MeanReversion1,
-    OrderPref.Mfi,
-    OrderPref.SpyMomentum,
-    OrderPref.SellAtClose];
+    this.preferenceList = [
+      OrderPref.TakeProfit,
+      OrderPref.StopLoss,
+      OrderPref.TrailingStopLoss,
+      OrderPref.SellAtClose,
+      OrderPref.MlBuySellAtClose
+    ];
 
     Highcharts.setOptions({
       global: {
@@ -597,6 +603,10 @@ export class BbCardComponent implements OnInit, OnChanges {
         break;
       default:
         this.color = 'accent';
+    }
+
+    if (this.config.MlBuySellAtClose) {
+      this.globalTaskQueueService.trainMl2(this.order.holding.symbol, undefined, undefined, 1, undefined, () => {}, () => {});
     }
   }
 
@@ -1101,5 +1111,15 @@ export class BbCardComponent implements OnInit, OnChanges {
 
         this.sendSell(sellOrder);
       });
+  }
+
+  runMlBuySell() {
+    if (this.config.MlBuySellAtClose) {
+      const orderQuantity = this.firstFormGroup.value.quantity - this.buyCount;
+
+      if (orderQuantity > 0) {
+        this.orderingService.executeMlOrder(this.order.holding.symbol, orderQuantity);
+      }
+    }
   }
 }

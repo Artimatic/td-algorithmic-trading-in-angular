@@ -13,11 +13,6 @@ function createRow(ticker: string): OrderRow {
     StopLoss: true,
     TrailingStopLoss: true,
     TakeProfit: true,
-    MeanReversion1: true,
-    Mfi: true,
-    SpyMomentum: true,
-    BuyCloseSellOpen: false,
-    YahooData: false,
     SellAtClose: true,
     OrderSize: 10
   };

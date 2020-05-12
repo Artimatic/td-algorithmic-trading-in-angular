@@ -1,27 +1,33 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { Subscription, Subject, Observable } from 'rxjs';
+import * as moment from 'moment-timezone';
 import { BacktestService } from './backtest.service';
 
 @Injectable({
   providedIn: 'root'
 })
-export class GlobalTaskQueueService {
-
-  private callChainSub: Subscription;
+export class GlobalTaskQueueService implements OnDestroy {
+  private callChainSub: Subscription = new Subscription();
   private buffer: {
     sub: Observable<any>,
-    cb: () => {},
-    errorHandler: () => {}
-  }[];
-  private bufferSubject: Subject<void>;
-  private executing = false;
+    cb: Function,
+    errorHandler: Function
+  }[] = [];
+  private bufferSubject: Subject<void> = new Subject();
   constructor(private backtestService: BacktestService) { }
 
-  addTask(taskName: string, callback: () => {}) {
-
+  startTasks() {
+    this.bufferSubject.subscribe(() => {
+      const buffer = this.buffer.pop();
+      this.callChainSub.add(buffer.sub.subscribe((result) => {
+        buffer.cb(result);
+      }, error => {
+        buffer.errorHandler(error);
+      }));
+    });
   }
 
-  activateMl(stock: string, callback: () => {}, errorHandler: () => {}) {
+  activateMl(stock: string, callback: Function, errorHandler: Function) {
     this.buffer.push({
       sub: this.backtestService.activateLstmV2(stock),
       cb: callback,
@@ -31,7 +37,7 @@ export class GlobalTaskQueueService {
     this.afterTaskAdded();
   }
 
-  activateMl2(stock: string, featuresList: string, callback: () => {}, errorHandler: () => {}) {
+  activateMl2(stock: string, featuresList = '0,0,1,0,0,1,1,1,1,1,1,0,0', callback: Function, errorHandler: Function) {
     this.buffer.push({
       sub: this.backtestService.activateLstmV3(stock, featuresList),
       cb: callback,
@@ -41,8 +47,24 @@ export class GlobalTaskQueueService {
     this.afterTaskAdded();
   }
 
+  trainMl2(stock: string,
+    startDate = moment().format('YYYY-MM-DD'),
+    endDate = moment().subtract({ day: 365 }).format('YYYY-MM-DD'),
+    trainingSize = 0.7,
+    featuresList = '0,0,1,0,0,1,1,1,1,1,1,0,0',
+    callback: Function,
+    errorHandler: Function) {
+    this.buffer.push({
+      sub: this.backtestService.runLstmV3(stock.toUpperCase(), startDate, endDate, trainingSize, featuresList),
+      cb: callback,
+      errorHandler
+    });
+
+    this.afterTaskAdded();
+  }
+
   afterTaskAdded() {
-    if (!this.executing) {
+    if (this.buffer.length === 1) {
       this.triggerNext();
     }
   }

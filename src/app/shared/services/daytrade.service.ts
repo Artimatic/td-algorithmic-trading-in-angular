@@ -69,12 +69,8 @@ export class DaytradeService {
       TakeProfit: false,
       TrailingStopLoss: false,
       StopLoss: false,
-      MeanReversion1: false,
-      Mfi: false,
-      SpyMomentum: false,
-      BuyCloseSellOpen: false,
       SellAtClose: false,
-      useYahooData: false
+      MlBuySellAtClose: false
     };
 
     if (preferences) {
@@ -86,26 +82,14 @@ export class DaytradeService {
           case OrderPref.StopLoss:
             config.StopLoss = true;
             break;
-          case OrderPref.MeanReversion1:
-            config.MeanReversion1 = true;
-            break;
-          case OrderPref.Mfi:
-            config.Mfi = true;
-            break;
-          case OrderPref.SpyMomentum:
-            config.SpyMomentum = true;
-            break;
-          case OrderPref.BuyCloseSellOpen:
-            config.BuyCloseSellOpen = true;
-            break;
           case OrderPref.SellAtClose:
             config.SellAtClose = true;
             break;
-          case OrderPref.useYahooData:
-            config.useYahooData = true;
-            break;
           case OrderPref.TrailingStopLoss:
             config.TrailingStopLoss = true;
+            break;
+          case OrderPref.MlBuySellAtClose:
+            config.MlBuySellAtClose = true;
             break;
         }
       });
