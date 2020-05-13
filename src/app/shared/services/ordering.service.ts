@@ -9,6 +9,7 @@ import { take } from 'rxjs/operators';
 import { SmartOrder } from '@shared/models/smart-order';
 import { DaytradeService } from './daytrade.service';
 import { MatSnackBar } from '@angular/material';
+import { ReportingService } from './reporting.service';
 
 @Injectable({
   providedIn: 'root'
@@ -18,6 +19,7 @@ export class OrderingService {
     private portfolioService: PortfolioService,
     private cartService: CartService,
     private snackBar: MatSnackBar,
+    private reportingService: ReportingService,
     private daytradeService: DaytradeService) { }
 
   executeMlOrder(symbol: string, quantity: number) {
@@ -84,5 +86,49 @@ export class OrderingService {
       error => {
         reject(error);
       });
+  }
+
+  buildBuyOrder(symbol: string,
+    orderQuantity: number,
+    price: number,
+    signalTime,
+    analysis) {
+
+    let log = '';
+    if (analysis.mfi.toLowerCase() === 'bullish') {
+      log += `[mfi oversold Event - time: ${moment.unix(signalTime).format()}]`;
+    }
+
+    if (analysis.bband.toLowerCase() === 'bullish') {
+      log += `[Bollinger band bullish Event -` +
+        `time: ${moment.unix(signalTime).format()}]`;
+    }
+
+    if (analysis.roc.toLowerCase() === 'bullish') {
+      log += `[Rate of Change Crossover bullish Event -` +
+        `time: ${moment.unix(signalTime).format()}}]`;
+    }
+
+    console.log(log);
+    this.reportingService.addAuditLog(symbol, log);
+    return this.daytradeService.createOrder({ symbol }, 'Buy', orderQuantity, price, signalTime);
+  }
+
+  sendDelayedOrder(order,
+    quote: number,
+    successfulBuyHandler,
+    errorHandler,
+    delay = 120000) {
+    setTimeout(() => {
+      this.portfolioService.getPrice(order.holding.symbol)
+        .subscribe((price) => {
+          if (price > quote) {
+            order.price = quote;
+            this.daytradeService.sendBuy(order, 'limit', successfulBuyHandler, errorHandler);
+          } else {
+            console.log('Current price is too low. Actual: ', price, ' Expected: ', quote);
+          }
+        });
+    }, delay);
   }
 }
