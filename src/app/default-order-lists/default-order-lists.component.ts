@@ -194,7 +194,7 @@ export class DefaultOrderListsComponent implements OnInit {
     this.addOrderFormGroup = this._formBuilder.group({
       allocation: [initAllocation, Validators.required],
       symbol: ['', Validators.required],
-      side: ['Buy', Validators.required]
+      side: [this.prefillOrderForm.side, Validators.required]
     });
   }
 
