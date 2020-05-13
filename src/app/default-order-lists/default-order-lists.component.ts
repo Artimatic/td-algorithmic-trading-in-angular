@@ -190,11 +190,15 @@ export class DefaultOrderListsComponent implements OnInit {
   }
 
   setAddOrderForm() {
+    let defaultSide = 'Buy';
+    if (this.prefillOrderForm) {
+      defaultSide = this.prefillOrderForm.side;
+    }
     const initAllocation = this.templateOrders.length ? _.round(1 / this.templateOrders.length, 2) : 1;
     this.addOrderFormGroup = this._formBuilder.group({
       allocation: [initAllocation, Validators.required],
       symbol: ['', Validators.required],
-      side: [this.prefillOrderForm.side, Validators.required]
+      side: [defaultSide, Validators.required]
     });
   }
 
