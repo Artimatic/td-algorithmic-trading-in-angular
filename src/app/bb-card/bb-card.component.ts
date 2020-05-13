@@ -670,9 +670,6 @@ export class BbCardComponent implements OnInit, OnChanges {
 
         const reject = (error) => {
           this.error = error._body;
-          if (error.status !== 400 || error.status !== 500) {
-            this.stop();
-          }
         };
 
         const handleNotFound = () => {
