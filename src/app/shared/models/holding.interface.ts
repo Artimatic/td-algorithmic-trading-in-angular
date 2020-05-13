@@ -3,7 +3,7 @@ export interface Holding {
     average_buy_price?: number;
     created_at?: Date;
     updated_at?: Date;
-    instrument?: string;
+    instrument: string;
     symbol: string;
     name?: string;
     realtime_price?: number;

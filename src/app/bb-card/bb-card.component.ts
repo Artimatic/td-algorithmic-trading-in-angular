@@ -606,7 +606,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
 
     if (this.config.MlBuySellAtClose) {
-      this.globalTaskQueueService.trainMl2(this.order.holding.symbol, undefined, undefined, 1, undefined, () => { }, () => { });
+      this.globalTaskQueueService.trainMl2(this.order.holding.symbol, undefined, undefined, 1, undefined, () => {}, () => {});
     }
   }
 
@@ -622,6 +622,34 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.sellCount += order.quantity;
     this.positionCount -= order.quantity;
     this.order.positionCount = this.positionCount;
+  }
+
+  sendBuy(buyOrder: SmartOrder) {
+    if (buyOrder) {
+      const log = `ORDER SENT ${buyOrder.side} ${buyOrder.quantity} ${buyOrder.holding.symbol}@${buyOrder.price}`;
+
+      if (this.live) {
+        const resolve = (response) => {
+          this.incrementBuy(buyOrder);
+
+          console.log(`${moment().format('hh:mm')} ${log}`);
+          this.reportingService.addAuditLog(this.order.holding.symbol, log);
+        };
+
+        const reject = (error) => {
+          this.error = error._body;
+          if (error.status !== 400 || error.status !== 500) {
+            this.stop();
+          }
+        };
+        this.daytradeService.sendBuy(buyOrder, 'limit', resolve, reject);
+      } else {
+        this.incrementBuy(buyOrder);
+        console.log(`${moment(buyOrder.signalTime).format('hh:mm')} ${log}`);
+        this.reportingService.addAuditLog(this.order.holding.symbol, log);
+      }
+    }
+    return buyOrder;
   }
 
   sendSell(sellOrder: SmartOrder) {
@@ -732,6 +760,31 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
   }
 
+  buildBuyOrder(orderQuantity: number,
+    price,
+    signalTime,
+    analysis) {
+
+    let log = '';
+    if (analysis.mfi.toLowerCase() === 'bullish') {
+      log += `[mfi oversold Event - time: ${moment.unix(signalTime).format()}]`;
+    }
+
+    if (analysis.bband.toLowerCase() === 'bullish') {
+      log += `[Bollinger band bullish Event -` +
+        `time: ${moment.unix(signalTime).format()}]`;
+    }
+
+    if (analysis.roc.toLowerCase() === 'bullish') {
+      log += `[Rate of Change Crossover bullish Event -` +
+        `time: ${moment.unix(signalTime).format()}}]`;
+    }
+
+    console.log(log);
+    this.reportingService.addAuditLog(this.order.holding.symbol, log);
+    return this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, price, signalTime);
+  }
+
   buildSellOrder(orderQuantity: number, price, signalTime, analysis) {
     let log = '';
     if (analysis.mfi.toLowerCase() === 'bearish') {
@@ -757,26 +810,6 @@ export class BbCardComponent implements OnInit, OnChanges {
     return this.processSpecialRules(quote, timestamp);
   }
 
-  buySuccessHandler(buyOrder: SmartOrder) {
-    const log = `ORDER SENT ${buyOrder.side} ${buyOrder.quantity} ${buyOrder.holding.symbol}@${buyOrder.price}`;
-
-    return () => {
-      this.incrementBuy(buyOrder);
-
-      console.log(`${moment().format('hh:mm')} ${log}`);
-      this.reportingService.addAuditLog(this.order.holding.symbol, log);
-    };
-  }
-
-  buyErrorHandler() {
-    return (error) => {
-      this.error = error._body;
-      if (error.status !== 400 || error.status !== 500) {
-        this.stop();
-      }
-    };
-  }
-
   async processAnalysis(daytradeType, analysis, quote, timestamp) {
     const initialQuantity = this.multiplierPreference.value * this.firstFormGroup.value.quantity;
 
@@ -795,16 +828,11 @@ export class BbCardComponent implements OnInit, OnChanges {
           this.positionCount);
 
         if (orderQuantity > 0) {
-          const buyOrder = this.orderingService.buildBuyOrder(this.order.holding.symbol,
-            orderQuantity,
+          const buyOrder = this.buildBuyOrder(orderQuantity,
             quote,
             timestamp,
             analysis);
-
-          this.orderingService.sendDelayedOrder(buyOrder,
-            quote,
-            this.buySuccessHandler(buyOrder),
-            this.buyErrorHandler());
+          this.sendBuy(buyOrder);
         }
 
       }
@@ -865,16 +893,21 @@ export class BbCardComponent implements OnInit, OnChanges {
             console.log(mlReport);
             if (machineResult.nextOutput > 0.5) {
               if (orderQuantity > 0) {
-                const buyOrder = this.orderingService.buildBuyOrder(this.order.holding.symbol,
-                  orderQuantity,
-                  quote,
-                  timestamp,
-                  analysis);
+                setTimeout(() => {
+                  this.portfolioService.getPrice(this.order.holding.symbol)
+                    .subscribe((price) => {
+                      if (price > quote) {
+                        const buyOrder = this.buildBuyOrder(orderQuantity,
+                          price,
+                          timestamp,
+                          analysis);
 
-                this.orderingService.sendDelayedOrder(buyOrder,
-                  quote,
-                  this.buySuccessHandler(buyOrder),
-                  this.buyErrorHandler());
+                        this.sendBuy(buyOrder);
+                      } else {
+                        console.log('Current price is too low. Actual: ', price, ' Expected: ', quote);
+                      }
+                    });
+                }, 120000);
               }
             }
           });
@@ -1062,12 +1095,7 @@ export class BbCardComponent implements OnInit, OnChanges {
           this.positionCount);
 
         const buyOrder = this.daytradeService.createOrder(this.order.holding, 'Buy', orderQuantity, 1 * quote, null);
-
-        this.orderingService.sendDelayedOrder(buyOrder,
-          quote,
-          this.buySuccessHandler(buyOrder),
-          this.buyErrorHandler(),
-          1000);
+        this.sendBuy(buyOrder);
       });
   }
 

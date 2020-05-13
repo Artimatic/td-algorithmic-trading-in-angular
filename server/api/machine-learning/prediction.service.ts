@@ -56,7 +56,6 @@ export default class PredictionService {
 
     dataSetObj.date = currentSignal.date;
 
-    // 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0
     // 1,0,1,0,1,0,1,0,1,1,1,1,0: 6
     // 1,0,1,0,1,1,1,1,1,0,0,1,1: 5
     // 1,0,1,0,1,1,1,1,1,1,1,0,0: 5

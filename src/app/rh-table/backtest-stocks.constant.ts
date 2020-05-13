@@ -475,8 +475,7 @@ export const stockList = [
   'PRU',
   'ZNGA',
   'SEAS',
-  'SIX',
-  'INFY'
+  'SIX'
 ];
 
 const Stocks: AlgoParam[] = [];
