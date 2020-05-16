@@ -1,5 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {MessagesModule} from 'primeng/messages';
+import {MessageModule} from 'primeng/message';
 
 import {
   MatMenuModule,
@@ -82,6 +84,8 @@ const primeModules = [
   ListboxModule,
   SpinnerModule,
   DropdownModule,
+  MessagesModule,
+  MessageModule,
 ];
 
 @NgModule({

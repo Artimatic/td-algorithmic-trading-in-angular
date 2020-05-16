@@ -216,7 +216,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
 
   executeBacktests() {
     this.bufferSubject.subscribe(() => {
-      const backtest = this.backtestBuffer.pop();
+      const backtest = this.backtestBuffer[0];
       this.callChainSub.add(this.machineLearningService
         .trainPredictNext30(backtest.stock.toUpperCase(),
           moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD'),
@@ -225,9 +225,8 @@ export class AskModelComponent implements OnInit, OnDestroy {
         ).subscribe((data: TrainingResults[]) => {
           this.isLoading = false;
           this.addTableItem(data);
-          setTimeout(() => {
-            this.triggerNextBacktest();
-          }, 100000);
+          this.backtestBuffer.shift();
+          this.triggerNextBacktest();
         }, () => {
           this.isLoading = false;
           setTimeout(() => {
@@ -239,9 +238,11 @@ export class AskModelComponent implements OnInit, OnDestroy {
               ).subscribe((data: TrainingResults[]) => {
                 this.isLoading = false;
                 this.addTableItem(data);
+                this.backtestBuffer.shift();
                 this.triggerNextBacktest();
               }, () => {
                 this.isLoading = false;
+                this.backtestBuffer.shift();
                 this.triggerNextBacktest();
               });
 
@@ -308,7 +309,8 @@ export class AskModelComponent implements OnInit, OnDestroy {
     }
 
     this.bufferSubject.subscribe(() => {
-      const bufferItem = this.calibrationBuffer.pop();
+      const bufferItem = this.calibrationBuffer[0];
+
       this.callChainSub.add(this.machineLearningService
         .trainPredictNext30(bufferItem.stock.toUpperCase(),
           moment(this.endDate).add({ days: 1 }).format('YYYY-MM-DD'),
@@ -323,6 +325,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
               data[0].guesses, data[0].correct, data[0].score, bufferItem.features);
 
             this.collectResult(bufferItem.features, data[0].score);
+            this.calibrationBuffer.shift();
             this.triggerNextCalibration();
           }
         }, error => {
@@ -351,7 +354,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
                     pendingResults = false;
 
                     this.collectResult(bufferItem.features, data[0].results[0].score);
-
+                    this.calibrationBuffer.shift();
                     this.triggerNextCalibration();
                   }
                 }, timerError => {

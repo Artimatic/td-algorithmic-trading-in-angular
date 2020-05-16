@@ -18,13 +18,27 @@ export class GlobalTaskQueueService implements OnDestroy {
 
   startTasks() {
     this.bufferSubject.subscribe(() => {
-      const buffer = this.buffer.pop();
+      const buffer = this.buffer[0];
       this.callChainSub.add(buffer.sub.subscribe((result) => {
         buffer.cb(result);
+        this.buffer.shift();
+        this.triggerNext();
       }, error => {
         buffer.errorHandler(error);
+        this.buffer.shift();
+        this.triggerNext();
       }));
     });
+  }
+
+  addTask(sub: Observable<any>, callback: Function, errorHandler: Function) {
+    this.buffer.push({
+      sub,
+      cb: callback,
+      errorHandler
+    });
+
+    this.afterTaskAdded();
   }
 
   activateMl(stock: string, callback: Function, errorHandler: Function) {

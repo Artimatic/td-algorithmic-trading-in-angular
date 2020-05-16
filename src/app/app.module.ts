@@ -63,6 +63,8 @@ import { PokerhandComponent } from './pokerhand/pokerhand.component';
 import { MlBatchCardComponent } from './ml-batch-card/ml-batch-card.component';
 
 import { EasyOrdersEditorComponent } from './easy-orders-editor/easy-orders-editor.component';
+import { StocklistCleanupComponent } from './stocklist-cleanup/stocklist-cleanup.component';
+import { StocklistComponent } from './stocklist/stocklist.component';
 
 @NgModule({
   declarations: [
@@ -99,6 +101,8 @@ import { EasyOrdersEditorComponent } from './easy-orders-editor/easy-orders-edit
     PokerhandComponent,
     MlBatchCardComponent,
     EasyOrdersEditorComponent,
+    StocklistCleanupComponent,
+    StocklistComponent,
   ],
   entryComponents: [
     LoginDialogComponent,

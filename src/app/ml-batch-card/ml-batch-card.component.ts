@@ -108,16 +108,18 @@ export class MlBatchCardComponent implements OnInit, OnDestroy {
     });
 
     this.bufferSubject.subscribe(() => {
-      const bufferItem = this.buffer.pop();
+      const bufferItem = this.buffer[0];
       this.callChainSub.add(this.backtestService.runLstmV3(bufferItem.stock.toUpperCase(),
         moment().format('YYYY-MM-DD'),
         moment().subtract({ day: 365 }).format('YYYY-MM-DD'),
         0.7,
         '0,0,1,0,0,1,1,1,1,1,1,0,0').subscribe(() => {
+          this.buffer.shift();
           this.triggerNext();
         }, error => {
           console.log(`ML training ${bufferItem.stock.toUpperCase()} failed. Trying again.`);
           this.alive = true;
+          this.buffer.shift();
           this.triggerNext();
         }));
     });
@@ -170,7 +172,7 @@ export class MlBatchCardComponent implements OnInit, OnDestroy {
     });
 
     this.bufferSubject.subscribe(() => {
-      const bufferItem = this.buffer.pop();
+      const bufferItem = this.buffer[0];
       this.sendActivation(bufferItem.stock.toUpperCase())
         .subscribe((data: any) => {
           console.log('rnn data: ', this.getTradeDay(), data);
@@ -181,10 +183,12 @@ export class MlBatchCardComponent implements OnInit, OnDestroy {
               this.pendingResults = false;
             }
           }
+          this.buffer.shift();
           this.triggerNext();
         }, error => {
           console.log(`ML activation ${bufferItem.stock.toUpperCase()} failed. Trying again.`);
           this.alive = true;
+          this.buffer.shift();
           this.triggerNext();
         });
     });
