@@ -1,0 +1,26 @@
+<p-table [value]="holdings">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>Holding</th>
+      <th>P/L Open</th>
+      <th>NetLiq</th>
+      <th>Recommendation</th>
+      <th>Buy Reasons</th>
+      <th>Buy Confidence</th>
+      <th>Sell Reasons</th>
+      <th>Sell Confidence</th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-holding>
+    <tr>
+      <td>{{holding.name}}</td>
+      <td>{{holding.pl | currency}}</td>
+      <td>{{holding.netLiq | currency}}</td>
+      <td>{{holding.recommendation}}</td>
+      <td>{{holding.buyReasons}}</td>
+      <td>{{holding.buyConfidence}}</td>
+      <td>{{holding.sellReasons}}</td>
+      <td>{{holding.sellConfidence}}</td>
+    </tr>
+  </ng-template>
+</p-table>

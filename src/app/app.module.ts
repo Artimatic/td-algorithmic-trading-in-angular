@@ -65,6 +65,8 @@ import { MlBatchCardComponent } from './ml-batch-card/ml-batch-card.component';
 import { EasyOrdersEditorComponent } from './easy-orders-editor/easy-orders-editor.component';
 import { StocklistCleanupComponent } from './stocklist-cleanup/stocklist-cleanup.component';
 import { StocklistComponent } from './stocklist/stocklist.component';
+import { PortfolioManagementComponent } from './portfolio-management/portfolio-management.component';
+import { PortfolioInfoComponent } from './portfolio-info/portfolio-info.component';
 
 @NgModule({
   declarations: [
@@ -103,6 +105,8 @@ import { StocklistComponent } from './stocklist/stocklist.component';
     EasyOrdersEditorComponent,
     StocklistCleanupComponent,
     StocklistComponent,
+    PortfolioManagementComponent,
+    PortfolioInfoComponent,
   ],
   entryComponents: [
     LoginDialogComponent,

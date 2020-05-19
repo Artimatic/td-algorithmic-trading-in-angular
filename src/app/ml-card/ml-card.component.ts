@@ -145,10 +145,11 @@ export class MlCardComponent implements OnInit {
       moment().subtract({ day: 1 }).format('YYYY-MM-DD'),
       moment().subtract({ day: 365 }).format('YYYY-MM-DD'),
       0.7,
-      '0,0,1,0,0,1,1,1,1,1,1,0,0').subscribe();
-
-
-    this.backtestService.runLstmV2(this.getTrainingStock(), moment().subtract({ day: 1 }).format('YYYY-MM-DD'), moment().subtract({ day: 50 }).format('YYYY-MM-DD')).subscribe();
+      '0,0,1,0,0,1,1,1,1,1,1,0,0').subscribe(() => {
+        this.backtestService.runLstmV2(this.getTrainingStock(),
+          moment().subtract({ day: 1 }).format('YYYY-MM-DD'),
+          moment().subtract({ day: 50 }).format('YYYY-MM-DD')).subscribe();
+      });
   }
 
   getTradeDay() {
@@ -166,6 +167,7 @@ export class MlCardComponent implements OnInit {
 
   goLive() {
     this.setup();
+    this.trainModel();
     this.alive = true;
     this.sub = TimerObservable.create(0, this.interval)
       .takeWhile(() => this.alive)

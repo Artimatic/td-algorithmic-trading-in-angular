@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {MessagesModule} from 'primeng/messages';
-import {MessageModule} from 'primeng/message';
+import { MessagesModule } from 'primeng/messages';
+import { MessageModule } from 'primeng/message';
 
 import {
   MatMenuModule,
@@ -43,6 +43,7 @@ import { SplitButtonModule } from 'primeng/splitbutton';
 import { MiniCardComponent } from '../mini-card/mini-card.component';
 import { DefaultOrderListsComponent } from '../default-order-lists/default-order-lists.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { StepsModule } from 'primeng/steps';
 
 const materialModules = [
   MatMenuModule,
@@ -86,6 +87,7 @@ const primeModules = [
   DropdownModule,
   MessagesModule,
   MessageModule,
+  StepsModule,
 ];
 
 @NgModule({

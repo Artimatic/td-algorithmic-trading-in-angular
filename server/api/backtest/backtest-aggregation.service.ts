@@ -93,6 +93,15 @@ class BacktestAggregationService {
     }
     return indicatorsTable[indicatorName];
   }
+
+  getChadScore(activeSignals: string[], indicatorsScore, bullish: boolean) {
+    const scoreHash = {};
+    activeSignals.forEach((value) => {
+      scoreHash[value] = {};
+      scoreHash[value].bull = indicatorsScore[value].bullishMidTermProfitLoss;
+      scoreHash[value].bear = indicatorsScore[value].bearishMidTermProfitLoss;
+    });
+  }
 }
 
 export default new BacktestAggregationService();

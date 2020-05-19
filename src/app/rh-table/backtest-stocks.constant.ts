@@ -60,7 +60,6 @@ export const stockList = [
   'FAST',
   'FB',
   'FDX',
-  'FITB',
   'IQ',
   'XLU',
   'JD',
