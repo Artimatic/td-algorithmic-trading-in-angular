@@ -1,7 +1,7 @@
 <app-product-view #product></app-product-view>
 
 <h3 class="table-title">Stocks</h3>
-<p-table #dt [columns]="selectedColumns" [value]="currentList" [paginator]="true" [rows]="100" selectionMode="single"
+<p-table #dt [columns]="selectedColumns" [value]="currentList" [paginator]="true" [rows]="10" selectionMode="single"
   [(selection)]="selectedStock" dataKey="stock">
   <ng-template pTemplate="caption">
     <div class="ui-g">

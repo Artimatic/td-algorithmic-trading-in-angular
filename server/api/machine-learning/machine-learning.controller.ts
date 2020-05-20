@@ -24,7 +24,7 @@ class MachineLearningController extends BaseController {
   }
 
   testV2Model(request, response) {
-    TrainingService.testModel(request.query.symbol, request.query.startDate, request.query.endDate)
+    TrainingService.testModel(request.query.symbol, request.query.startDate, request.query.endDate, request.query.trainingSize)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }

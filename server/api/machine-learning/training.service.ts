@@ -204,9 +204,9 @@ class TrainingService {
     }, accumulator);
   }
 
-  testModel(symbol, startDate, endDate) {
+  testModel(symbol, startDate, endDate, trainingSize = 0.7) {
     console.log('start - end: ', startDate, endDate);
-    return BacktestService.trainV2Model(symbol, endDate, startDate);
+    return BacktestService.trainV2Model(symbol, endDate, startDate, trainingSize);
   }
 
   async activateModel(symbol, startDate) {

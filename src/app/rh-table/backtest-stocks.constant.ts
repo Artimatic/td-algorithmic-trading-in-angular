@@ -221,7 +221,6 @@ export const stockList = [
   'EWZ',
   'MSFT',
   'EUO',
-  'TVIX',
   'FMC',
   'THO',
   'OKTA',

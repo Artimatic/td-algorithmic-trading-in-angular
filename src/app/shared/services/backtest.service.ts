@@ -271,14 +271,15 @@ export class BacktestService {
     return this.http.post(`${BASE_URL}api/backtest/rnn-activate`, data, {});
   }
 
-  runLstmV2(symbol: string, endDate: string = null, startDate: string = null): Observable<any> {
+  runLstmV2(symbol: string, endDate: string = null, startDate: string = null, trainingSize = 0.7): Observable<any> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     const options = {
       headers: headers,
       params: {
         symbol,
         startDate,
-        endDate
+        endDate,
+        trainingSize: String(trainingSize)
       }
     };
     return this.http.get(`${BASE_URL}api/machine-learning/test-model`, options);

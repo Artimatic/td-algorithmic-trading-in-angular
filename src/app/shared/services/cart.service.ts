@@ -198,13 +198,13 @@ export class CartService {
       price,
       submitted: false,
       pending: false,
-      orderSize: _.floor(quantity / 3) || 1,
+      orderSize: _.floor(quantity / 5) || 1,
       side,
       lossThreshold: 0.003,
       profitTarget: 0.008,
-      trailingStop: 0.002,
+      trailingStop: 0.003,
       useStopLoss: true,
-      useTrailingStopLoss: true,
+      useTrailingStopLoss: false,
       useTakeProfit: true,
       sellAtClose: side === 'DayTrade' ? true : false
     };

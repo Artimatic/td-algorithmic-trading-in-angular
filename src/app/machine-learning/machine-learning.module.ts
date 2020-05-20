@@ -15,6 +15,7 @@ import { CardModule } from 'primeng/card';
 import { TableModule } from 'primeng/table';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { SharedModule } from '../shared/shared.module';
+import { MlTimeperiodsComponent } from './ml-timeperiods/ml-timeperiods.component';
 
 const routes: Routes =
   [
@@ -48,6 +49,7 @@ const routes: Routes =
     PrecogComponent,
     MachineLearningPageComponent,
     AskModelComponent,
+    MlTimeperiodsComponent,
   ],
   exports: [
     MachineLearningPageComponent,

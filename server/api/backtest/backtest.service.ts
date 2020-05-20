@@ -1513,7 +1513,7 @@ class BacktestService {
     });
   }
 
-  trainV2Model(symbol, endDate, startDate) {
+  trainV2Model(symbol, endDate, startDate, trainingSize) {
     const to = moment(endDate).format('YYYY-MM-DD');
     const from = moment(startDate).format('YYYY-MM-DD');
     console.log('from - to: ', from, to);
@@ -1526,7 +1526,8 @@ class BacktestService {
       qs: {
         symbol,
         to,
-        from
+        from,
+        trainingSize
       }
     };
 
