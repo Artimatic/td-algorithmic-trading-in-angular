@@ -700,23 +700,21 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   executeBacktests() {
-    this.bufferSubject
-      .pipe(take(1))
-      .subscribe(() => {
-        const backtest = this.backtestBuffer[0];
-        this.callChainSub.add(backtest.sub
-          .pipe(take(1))
-          .subscribe(() => {
-            this.backtestBuffer.shift();
-            this.triggerNextBacktest();
-          }, error => {
-            this.snackBar.open(`Error on ${backtest.stock}`, 'Dismiss');
-            console.log(`Error on ${backtest.stock}`, error);
-            this.incrementProgress();
-            this.backtestBuffer.shift();
-            this.triggerNextBacktest();
-          }));
-      });
+    this.bufferSubject.subscribe(() => {
+      const backtest = this.backtestBuffer[0];
+      this.callChainSub.add(backtest.sub
+        .pipe(take(1))
+        .subscribe(() => {
+          this.backtestBuffer.shift();
+          this.triggerNextBacktest();
+        }, error => {
+          this.snackBar.open(`Error on ${backtest.stock}`, 'Dismiss');
+          console.log(`Error on ${backtest.stock}`, error);
+          this.incrementProgress();
+          this.backtestBuffer.shift();
+          this.triggerNextBacktest();
+        }));
+    });
 
     this.triggerNextBacktest();
   }
