@@ -17,7 +17,6 @@ import { GlobalSettingsService } from '../settings/global-settings.service';
 import { OptionsDataService } from '../shared/options-data.service';
 import { Subscription, Observable, Subject } from 'rxjs';
 import { DailyBacktestService } from '@shared/daily-backtest.service';
-import { take } from 'rxjs/operators';
 
 export interface Algo {
   value: string;
@@ -703,7 +702,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     this.bufferSubject.subscribe(() => {
       const backtest = this.backtestBuffer[0];
       this.callChainSub.add(backtest.sub
-        .pipe(take(1))
         .subscribe(() => {
           this.backtestBuffer.shift();
           this.triggerNextBacktest();
