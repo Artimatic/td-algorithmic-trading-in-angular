@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { GlobalTaskQueueService } from '@shared/services/global-task-queue.service';
 import { BacktestService } from '@shared/services';
 import * as moment from 'moment-timezone';
 
@@ -10,9 +9,7 @@ import * as moment from 'moment-timezone';
 })
 export class MlTimeperiodsComponent implements OnInit {
   backtest = [];
-  constructor(private globalTaskQueueService: GlobalTaskQueueService,
-    private backtestService: BacktestService,
-  ) { }
+  constructor(private backtestService: BacktestService) { }
 
   ngOnInit() {
     this.train().subscribe((training) => {

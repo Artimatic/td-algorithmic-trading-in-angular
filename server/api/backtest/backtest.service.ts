@@ -43,6 +43,7 @@ export interface Indicators {
   recommendation?: Recommendation;
   action?: string;
   date?: string;
+  demark9?: any;
 }
 
 export interface DaytradeAlgos {
@@ -59,6 +60,7 @@ export interface Recommendation {
   vwma?: DaytradeRecommendation;
   mfiTrade?: DaytradeRecommendation;
   macd?: DaytradeRecommendation;
+  demark9?: DaytradeRecommendation;
 }
 
 export enum DaytradeRecommendation {
@@ -125,6 +127,35 @@ class BacktestService {
 
   getRsi(real, period) {
     return tulind.indicators.rsi.indicator([real], [period]);
+  }
+
+  getDemark9(close, high, low) {
+    let perfectSell = true;
+    let perfectBuy = true;
+    for (let i = 4; i < 10; i++) {
+      if (perfectSell) {
+        if (close[i] < close[i - 4]) {
+          perfectSell = false;
+        }
+      }
+      if (perfectBuy) {
+        if (close[i] > close[i - 4]) {
+          perfectBuy = false;
+        }
+      }
+    }
+
+    if (perfectSell) {
+      if (high[11] < high[10] && high[11] < high[9]) {
+        perfectSell = false;
+      }
+    }
+    if (perfectBuy) {
+      if (low[11] > low[10] && low[11] > low[9]) {
+        perfectBuy = false;
+      }
+    }
+    return { perfectSell, perfectBuy };
   }
 
   getDaytradeIndicators(quotes, period) {
@@ -950,6 +981,12 @@ class BacktestService {
       })
       .then(rsi => {
         currentQuote.rsi = rsi;
+        return this.getDemark9(this.getSubArray(indicators.reals, 13),
+          this.getSubArray(indicators.highs, 13),
+          this.getSubArray(indicators.lows, 13));
+      })
+      .then(demark9 => {
+        currentQuote.demark9 = demark9;
         return currentQuote;
       });
   }
@@ -1433,7 +1470,8 @@ class BacktestService {
       bband: DaytradeRecommendation.Neutral,
       vwma: DaytradeRecommendation.Neutral,
       mfiTrade: DaytradeRecommendation.Neutral,
-      macd: DaytradeRecommendation.Neutral
+      macd: DaytradeRecommendation.Neutral,
+      demark9: DaytradeRecommendation.Neutral
     };
 
     const rocCrossoverRecommendation = AlgoService.checkRocCrossover(indicator.roc10Previous, indicator.roc10, indicator.roc70Previous, indicator.roc70);
@@ -1448,11 +1486,14 @@ class BacktestService {
       AlgoService.getLowerBBand(indicator.bband80), AlgoService.getUpperBBand(indicator.bband80),
       indicator.mfiLeft);
 
+    const demark9Recommendation = AlgoService.checkDemark9(indicator.demark9);
+
     recommendations.roc = rocCrossoverRecommendation;
     recommendations.mfiTrade = mfiTrendRecommendation;
     recommendations.macd = macdRecommendation;
     recommendations.mfi = mfiRecommendation;
     recommendations.bband = bbandRecommendation;
+    recommendations.demark9 = demark9Recommendation;
 
     if (recommendations.roc === DaytradeRecommendation.Bullish ||
       recommendations.mfiTrade === DaytradeRecommendation.Bullish ||

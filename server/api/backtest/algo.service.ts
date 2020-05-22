@@ -113,6 +113,15 @@ class AlgoService {
     }
     return DaytradeRecommendation.Neutral;
   }
+
+  checkDemark9(demark9Indicator): DaytradeRecommendation {
+    if (demark9Indicator.perfectSell) {
+      return DaytradeRecommendation.Bearish;
+    } else if (demark9Indicator.perfectBuy) {
+      return DaytradeRecommendation.Bullish;
+    }
+    return DaytradeRecommendation.Neutral;
+  }
 }
 
 export default new AlgoService();
