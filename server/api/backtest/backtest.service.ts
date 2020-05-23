@@ -146,12 +146,12 @@ class BacktestService {
     }
 
     if (perfectSell) {
-      if (high[11] < high[10] && high[11] < high[9]) {
+      if ((high[11] < high[10] || high[11] < high[9]) || close[12] < close[8]) {
         perfectSell = false;
       }
     }
     if (perfectBuy) {
-      if (low[11] > low[10] && low[11] > low[9]) {
+      if ((low[11] > low[10] || low[11] > low[9]) || close[12] > close[8]) {
         perfectBuy = false;
       }
     }

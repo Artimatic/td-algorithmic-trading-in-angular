@@ -39,6 +39,7 @@ export const stockList = [
   'BX',
   'C',
   'CAG',
+  'CARS',
   'CCI',
   'CCK',
   'CFG',
