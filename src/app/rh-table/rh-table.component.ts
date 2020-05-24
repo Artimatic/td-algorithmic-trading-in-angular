@@ -134,10 +134,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       { field: 'lastVolume', header: 'Last Volume' },
       { field: 'lastPrice', header: 'Last Price' },
       { field: 'totalTrades', header: 'Trades' },
-      { field: 'strongbuySignals', header: 'Strong Buy' },
       { field: 'buySignals', header: 'Buy' },
       { field: 'sellSignals', header: 'Sell' },
-      { field: 'strongsellSignals', header: 'Strong Sell' },
       { field: 'upperResistance', header: 'Upper Resistance' },
       { field: 'lowerResistance', header: 'Lower Resistance' },
       { field: 'impliedMovement', header: 'Implied Movement' },
@@ -175,7 +173,14 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       { field: 'bbandBearish', header: 'BBand Bearish' },
       { field: 'bbandBullishShortTerm', header: 'BBand Bullish Short Term' },
       { field: 'bbandBullishMidTerm', header: 'BBand Bullish Mid Term' },
-      { field: 'bbandBullish', header: 'BBand Bullish' }
+      { field: 'bbandBullish', header: 'BBand Bullish' },
+
+      { field: 'demark9BearishShortTerm', header: 'BBand Bearish Short Term' },
+      { field: 'demark9BearishMidTerm', header: 'BBand Bearish Mid Term' },
+      { field: 'demark9Bearish', header: 'BBand Bearish' },
+      { field: 'demark9BullishShortTerm', header: 'BBand Bullish Short Term' },
+      { field: 'demark9BullishMidTerm', header: 'BBand Bullish Mid Term' },
+      { field: 'demark9Bullish', header: 'BBand Bullish' }
     ];
 
     this.selectedColumns = [
@@ -188,7 +193,9 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       { field: 'macdBearishMidTerm', header: 'MACD Bearish Mid Term' },
       { field: 'macdBullishMidTerm', header: 'MACD Bullish Mid Term' },
       { field: 'mfiBearishMidTerm', header: 'MFI Bearish Mid Term' },
-      { field: 'mfiBullishMidTerm', header: 'MFI Bullish Mid Term' }
+      { field: 'mfiBullishMidTerm', header: 'MFI Bullish Mid Term' },
+      { field: 'demark9BearishMidTerm', header: 'Demark9 Bearish Mid Term' },
+      { field: 'demark9BullishMidTerm', header: 'Demark9 Bullish Mid Term' }
     ];
 
     this.selectedRecommendation = ['strongbuy', 'buy', 'sell', 'strongsell'];
@@ -420,7 +427,13 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
           bbandBearish: 0,
           bbandBullishShortTerm: 0,
           bbandBullishMidTerm: 0,
-          bbandBullish: 0
+          bbandBullish: 0,
+          demark9BearishShortTerm: 0,
+          demark9BearishMidTerm: 0,
+          demark9Bearish: 0,
+          demark9BullishShortTerm: 0,
+          demark9BullishMidTerm: 0,
+          demark9Bullish: 0
         };
 
         if (score.macd) {
@@ -467,6 +480,15 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
           update.bbandBullishShortTerm = this.roundNumber(score.bband.bullishShortTermProfitLoss);
           update.bbandBullishMidTerm = this.roundNumber(score.bband.bullishMidTermProfitLoss);
           update.bbandBullish = this.roundNumber(score.bband.bullishProfitLoss);
+        }
+
+        if (score.demark9) {
+          update.demark9BearishShortTerm = this.roundNumber(score.demark9.bearishShortTermProfitLoss);
+          update.demark9BearishMidTerm = this.roundNumber(score.demark9.bearishMidTermProfitLoss);
+          update.demark9Bearish = this.roundNumber(score.demark9.bearishProfitLoss);
+          update.demark9BullishShortTerm = this.roundNumber(score.demark9.bullishShortTermProfitLoss);
+          update.demark9BullishMidTerm = this.roundNumber(score.demark9.bullishMidTermProfitLoss);
+          update.demark9Bullish = this.roundNumber(score.demark9.bullishProfitLoss);
         }
         this.findAndUpdateIndicatorScore(stock, update, this.stockList);
       });
