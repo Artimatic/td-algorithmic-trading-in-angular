@@ -346,9 +346,10 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
             .map(
               (testResults: BacktestResponse) => {
                 if (testResults) {
+                  const symbol = param.ticker;
                   this.scoreSignals(param.ticker, testResults.signals);
 
-                  testResults.stock = param.ticker;
+                  testResults.stock = symbol;
                   const indicatorResults: BacktestResponse = testResults;
 
                   const lastSignal = indicatorResults.signals[indicatorResults.signals.length - 1];
@@ -372,6 +373,10 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                       this.updateAlgoReport(tableObj);
                     }
                   }
+
+                  setTimeout(() => {
+                    this.getImpliedMovement(testResults);
+                  }, 10000);
                 }
                 this.incrementProgress();
               });

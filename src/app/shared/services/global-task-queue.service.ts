@@ -2,6 +2,7 @@ import { Injectable, OnDestroy } from '@angular/core';
 import { Subscription, Subject, Observable } from 'rxjs';
 import * as moment from 'moment-timezone';
 import { BacktestService } from './backtest.service';
+import { take } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -19,7 +20,9 @@ export class GlobalTaskQueueService implements OnDestroy {
   startTasks() {
     this.bufferSubject.subscribe(() => {
       const buffer = this.buffer[0];
-      this.callChainSub.add(buffer.sub.subscribe((result) => {
+      this.callChainSub.add(buffer.sub
+        .pipe(take(1))
+        .subscribe((result) => {
         buffer.cb(result);
         this.buffer.shift();
         this.triggerNext();
