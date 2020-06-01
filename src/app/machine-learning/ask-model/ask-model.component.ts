@@ -5,10 +5,10 @@ import { FormGroup, FormBuilder } from '@angular/forms';
 import { BacktestService, MachineLearningService, PortfolioService } from '../../shared/index';
 import IntradayStocks from '../../intraday-backtest-view/intraday-backtest-stocks.constant';
 import { Subscription, Subject } from 'rxjs';
-import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import { GlobalSettingsService } from '../../settings/global-settings.service';
 import * as _ from 'lodash';
 import { CartService } from '../../shared/services/cart.service';
+import { take } from 'rxjs/operators';
 
 export interface TrainingResults {
   symbol?: string;
@@ -136,7 +136,9 @@ export class AskModelComponent implements OnInit, OnDestroy {
       .runLstmV2(this.form.value.query,
         moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD'),
         moment(this.startDate).format('YYYY-MM-DD')
-      ).subscribe((data: TrainingResults[]) => {
+      )
+      .pipe(take(1))
+      .subscribe((data: TrainingResults[]) => {
         this.isLoading = false;
         data[0].algorithm = 'Open Price Up';
         this.modelResults.push(data[0]);
@@ -149,6 +151,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
     this.isLoading = true;
 
     this.backtestService.activateLstmV2(this.form.value.query)
+      .pipe(take(1))
       .subscribe((data) => {
         this.isLoading = false;
         data[0].algorithm = 'Open Price Up';
@@ -167,24 +170,9 @@ export class AskModelComponent implements OnInit, OnDestroy {
         moment(this.startDate).format('YYYY-MM-DD'),
         1,
         this.globalSettingsService.daytradeAlgo
-      ).subscribe((data: TrainingResults[]) => {
-        this.isLoading = false;
-        this.addTableItem(data);
-      }, () => {
-        this.isLoading = false;
-      });
-  }
-
-  score() {
-    this.setStartDate();
-
-    this.isLoading = true;
-    this.machineLearningService
-      .trainPredictNext30(this.form.value.query,
-        moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD'),
-        moment(this.startDate).format('YYYY-MM-DD'),
-        0
-      ).subscribe((data: TrainingResults[]) => {
+      )
+      .pipe(take(1))
+      .subscribe((data: TrainingResults[]) => {
         this.isLoading = false;
         this.addTableItem(data);
       }, () => {
@@ -215,41 +203,47 @@ export class AskModelComponent implements OnInit, OnDestroy {
   }
 
   executeBacktests() {
-    this.bufferSubject.subscribe(() => {
-      const backtest = this.backtestBuffer[0];
-      this.callChainSub.add(this.machineLearningService
-        .trainPredictNext30(backtest.stock.toUpperCase(),
-          moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD'),
-          moment(this.startDate).format('YYYY-MM-DD'),
-          1
-        ).subscribe((data: TrainingResults[]) => {
-          this.isLoading = false;
-          this.addTableItem(data);
-          this.backtestBuffer.shift();
-          this.triggerNextBacktest();
-        }, () => {
-          this.isLoading = false;
-          setTimeout(() => {
-            this.machineLearningService
-              .trainPredictNext30(backtest.stock.toUpperCase(),
-                moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD'),
-                moment(this.startDate).format('YYYY-MM-DD'),
-                0
-              ).subscribe((data: TrainingResults[]) => {
-                this.isLoading = false;
-                this.addTableItem(data);
-                this.backtestBuffer.shift();
-                this.triggerNextBacktest();
-              }, () => {
-                this.isLoading = false;
-                this.backtestBuffer.shift();
-                this.triggerNextBacktest();
-              });
+    this.bufferSubject
+      .pipe(take(1))
+      .subscribe(() => {
+        const backtest = this.backtestBuffer[0];
+        this.callChainSub.add(this.machineLearningService
+          .trainPredictNext30(backtest.stock.toUpperCase(),
+            moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD'),
+            moment(this.startDate).format('YYYY-MM-DD'),
+            1
+          )
+          .pipe(take(1))
+          .subscribe((data: TrainingResults[]) => {
+            this.isLoading = false;
+            this.addTableItem(data);
+            this.backtestBuffer.shift();
+            this.triggerNextBacktest();
+          }, () => {
+            this.isLoading = false;
+            setTimeout(() => {
+              this.machineLearningService
+                .trainPredictNext30(backtest.stock.toUpperCase(),
+                  moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD'),
+                  moment(this.startDate).format('YYYY-MM-DD'),
+                  0
+                )
+                .pipe(take(1))
+                .subscribe((data: TrainingResults[]) => {
+                  this.isLoading = false;
+                  this.addTableItem(data);
+                  this.backtestBuffer.shift();
+                  this.triggerNextBacktest();
+                }, () => {
+                  this.isLoading = false;
+                  this.backtestBuffer.shift();
+                  this.triggerNextBacktest();
+                });
 
-          }, 300000);
+            }, 300000);
 
-        }));
-    });
+          }));
+      });
     setTimeout(() => {
       this.triggerNextBacktest();
     }, 100000);
@@ -257,7 +251,6 @@ export class AskModelComponent implements OnInit, OnDestroy {
   }
 
   triggerNextCalibration() {
-    console.log('Triggering ', moment().format());
     if (this.calibrationBuffer.length > 0) {
       this.bufferSubject.next();
     }
@@ -308,61 +301,69 @@ export class AskModelComponent implements OnInit, OnDestroy {
       });
     }
 
-    this.bufferSubject.subscribe(() => {
-      const bufferItem = this.calibrationBuffer[0];
+    this.bufferSubject
+      .pipe(take(1))
+      .subscribe(() => {
+        const bufferItem = this.calibrationBuffer[0];
 
-      this.callChainSub.add(this.machineLearningService
-        .trainPredictNext30(bufferItem.stock.toUpperCase(),
-          moment(this.endDate).add({ days: 1 }).format('YYYY-MM-DD'),
-          moment(this.startDate).subtract({ days: 1 }).format('YYYY-MM-DD'),
-          0.7,
-          bufferItem.features
-        ).subscribe((data: any[]) => {
-          this.isLoading = false;
-          if (data) {
-            this.addTableItem(data);
-            console.log('results: ', data[0].algorithm,
-              data[0].guesses, data[0].correct, data[0].score, bufferItem.features);
+        this.callChainSub.add(this.machineLearningService
+          .trainPredictNext30(bufferItem.stock.toUpperCase(),
+            moment(this.endDate).add({ days: 1 }).format('YYYY-MM-DD'),
+            moment(this.startDate).subtract({ days: 1 }).format('YYYY-MM-DD'),
+            0.7,
+            bufferItem.features
+          )
+          .pipe(take(1))
+          .subscribe((data: any[]) => {
+            this.isLoading = false;
+            if (data) {
+              this.addTableItem(data);
+              console.log('results: ', data[0].algorithm,
+                data[0].guesses, data[0].correct, data[0].score, bufferItem.features);
 
-            this.collectResult(bufferItem.features, data[0].score);
-            this.calibrationBuffer.shift();
-            this.triggerNextCalibration();
-          }
-        }, error => {
-          this.isLoading = false;
+              this.collectResult(bufferItem.features, data[0].score);
+              this.calibrationBuffer.shift();
+              this.triggerNextCalibration();
+            }
+          }, error => {
+            this.isLoading = false;
 
-          let pendingResults = true;
+            setTimeout(() => {
+              this.calibrationBuffer.shift();
+              this.triggerNextCalibration();
+            }, 180000);
+            // let pendingResults = true;
 
-          TimerObservable.create(0, 60000)
-            .takeWhile(() => pendingResults)
-            .subscribe(() => {
-              this.backtestService.getRnn(bufferItem.stock.toUpperCase(),
-                moment().format('YYYY-MM-DD'),
-                bufferItem.features)
-                .subscribe((data: any) => {
-                  if (data) {
-                    console.log('rnn data: ', data);
-                    const converted = [{
-                      symbol: data[0].symbol,
-                      algorithm: data[0].modelName,
-                      guesses: data[0].results[0].guesses,
-                      correct: data[0].results[0].correct,
-                      score: data[0].results[0].score,
-                      nextOutput: data[0].results[0].nextOutput
-                    }];
-                    this.addTableItem(converted);
-                    pendingResults = false;
+            // TimerObservable.create(0, 60000)
+            //   .takeWhile(() => pendingResults)
+            //   .subscribe(() => {
+            //     this.backtestService.getRnn(bufferItem.stock.toUpperCase(),
+            //       moment().format('YYYY-MM-DD'),
+            //       bufferItem.features)
+            //       .subscribe((data: any) => {
+            //         if (data) {
+            //           console.log('rnn data: ', data);
+            //           const converted = [{
+            //             symbol: data[0].symbol,
+            //             algorithm: data[0].modelName,
+            //             guesses: data[0].results[0].guesses,
+            //             correct: data[0].results[0].correct,
+            //             score: data[0].results[0].score,
+            //             nextOutput: data[0].results[0].nextOutput
+            //           }];
+            //           this.addTableItem(converted);
+            //           pendingResults = false;
 
-                    this.collectResult(bufferItem.features, data[0].results[0].score);
-                    this.calibrationBuffer.shift();
-                    this.triggerNextCalibration();
-                  }
-                }, timerError => {
-                  pendingResults = false;
-                });
-            });
-        }));
-    });
+            //           this.collectResult(bufferItem.features, data[0].results[0].score);
+            //           this.calibrationBuffer.shift();
+            //           this.triggerNextCalibration();
+            //         }
+            //       }, timerError => {
+            //         pendingResults = false;
+            //       });
+            //   });
+          }));
+      });
 
     this.triggerNextCalibration();
   }
@@ -382,12 +383,13 @@ export class AskModelComponent implements OnInit, OnDestroy {
   }
 
   onRowSelect(event) {
-    console.log('item ', event);
-    this.portfolioService.getPrice(event.data.symbol).subscribe((stockPrice) => {
-      const amount = 1000;
-      const quantity = _.floor(amount / stockPrice);
-      this.prefillOrderForm = this.cartService.buildOrder(event.data.symbol, quantity, stockPrice);
-    });
+    this.portfolioService.getPrice(event.data.symbol)
+      .pipe(take(1))
+      .subscribe((stockPrice) => {
+        const amount = 1000;
+        const quantity = _.floor(amount / stockPrice);
+        this.prefillOrderForm = this.cartService.buildOrder(event.data.symbol, quantity, stockPrice);
+      });
   }
 
   ngOnDestroy() {

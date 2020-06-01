@@ -303,7 +303,9 @@ class BacktestService {
       mfi: DaytradeRecommendation.Neutral,
       roc: DaytradeRecommendation.Neutral,
       bband: DaytradeRecommendation.Neutral,
-      vwma: DaytradeRecommendation.Neutral
+      vwma: DaytradeRecommendation.Neutral,
+      macd: DaytradeRecommendation.Neutral,
+      demark9: DaytradeRecommendation.Neutral
     };
 
     const mfiRecommendation = AlgoService.checkMfi(indicator.mfiLeft);
@@ -318,9 +320,15 @@ class BacktestService {
 
     const vwmaRecommendation = AlgoService.checkVwma(price, indicator.vwma);
 
+    const macdRecommendation = AlgoService.checkMacdDaytrade(indicator, indicator.roc10Previous, indicator.roc10);
+
+    const demark9Recommendation = AlgoService.checkDemark9(indicator.demark9);
+
     counter = AlgoService.countRecommendation(mfiRecommendation, counter);
     counter = AlgoService.countRecommendation(rocMomentumRecommendation, counter);
     counter = AlgoService.countRecommendation(bbandRecommendation, counter);
+    counter = AlgoService.countRecommendation(macdRecommendation, counter);
+    counter = AlgoService.countRecommendation(demark9Recommendation, counter);
 
     if (counter.bullishCounter > counter.bearishCounter) {
       if (vwmaRecommendation !== DaytradeRecommendation.Bearish) {
@@ -335,6 +343,9 @@ class BacktestService {
     recommendations.mfi = mfiRecommendation;
     recommendations.roc = rocMomentumRecommendation;
     recommendations.bband = bbandRecommendation;
+    recommendations.demark9 = demark9Recommendation;
+    recommendations.macd = macdRecommendation;
+
     return recommendations;
   }
 

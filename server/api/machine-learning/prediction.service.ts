@@ -131,6 +131,18 @@ export default class PredictionService {
       } else {
         input.push(0);
       }
+
+      if (signal.recommendation.demark9 && signal.recommendation.demark9.toLowerCase() === 'bullish') {
+        input.push(1);
+      } else {
+        input.push(0);
+      }
+
+      if (signal.recommendation.vwma && signal.recommendation.vwma.toLowerCase() === 'bullish') {
+        input.push(1);
+      } else {
+        input.push(0);
+      }
     } else {
       console.log('Missing recommendation: ', signal);
     }

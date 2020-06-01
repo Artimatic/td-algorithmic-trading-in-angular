@@ -70,6 +70,34 @@ class IntradayPredicationService extends PredictionService {
         return BacktestService.activateCustomModel(symbol, modelName, inputData.input, moment().format('YYYY-MM-DD'));
       });
   }
+
+  buildInputSet(openingPrice, currentSignal, featureUse) {
+    if (!featureUse) {
+      featureUse = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+    }
+
+    const dataSetObj = {
+      date: null,
+      input: null,
+      output: null
+    };
+
+    const close = currentSignal.close;
+    dataSetObj.date = currentSignal.date;
+
+    const input = []
+      .concat(this.comparePrices(currentSignal.vwma, close))
+      .concat(this.convertRecommendations(currentSignal));
+
+    dataSetObj.input = [];
+
+    featureUse.forEach((value, idx) => {
+      if (value === '1' || value === 1) {
+        dataSetObj.input.push(input[idx]);
+      }
+    });
+    return dataSetObj;
+  }
 }
 
 export default new IntradayPredicationService();

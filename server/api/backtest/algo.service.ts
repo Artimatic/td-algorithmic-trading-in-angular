@@ -47,11 +47,11 @@ class AlgoService {
   }
 
   checkBBand(price: number, low: number, high: number, mfi: number): DaytradeRecommendation {
-    if (price <= low && mfi < 20) {
+    if (price <= low && mfi < 40) {
       return DaytradeRecommendation.Bullish;
     }
 
-    if (price >= high && mfi > 80) {
+    if (price >= high && mfi > 60) {
       return DaytradeRecommendation.Bearish;
     }
 
@@ -111,6 +111,24 @@ class AlgoService {
         return DaytradeRecommendation.Bearish;
       }
     }
+    return DaytradeRecommendation.Neutral;
+  }
+
+  checkMacdDaytrade(indicator: Indicators, roc10Previous: number, roc10: number): DaytradeRecommendation {
+    const macd = indicator.macd[2];
+
+    if (roc10Previous > 0 && roc10 < 0) {
+      if (macd[macd.length - 1] <= 0) {
+        return DaytradeRecommendation.Bearish;
+      }
+    }
+
+    if (roc10Previous < 0 && roc10 > 0) {
+      if (macd[macd.length - 1] > 0) {
+        return DaytradeRecommendation.Bullish;
+      }
+    }
+
     return DaytradeRecommendation.Neutral;
   }
 
