@@ -12,6 +12,9 @@ export class MlTimeperiodsComponent implements OnInit {
   constructor(private backtestService: BacktestService) { }
 
   ngOnInit() {
+  }
+
+  init() {
     this.train().subscribe((training) => {
       console.log('initial training: ', training);
       this.testModel().subscribe((data) => {
