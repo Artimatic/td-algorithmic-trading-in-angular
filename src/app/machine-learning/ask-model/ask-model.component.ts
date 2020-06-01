@@ -262,7 +262,23 @@ export class AskModelComponent implements OnInit, OnDestroy {
   }
 
   calibrateOne() {
-    this.calibrate([{ symbol: this.form.value.query }]);
+    this.machineLearningService
+      .trainPredictNext30(this.form.value.query.toUpperCase(),
+        moment(this.endDate).add({ days: 1 }).format('YYYY-MM-DD'),
+        moment(this.startDate).subtract({ days: 1 }).format('YYYY-MM-DD'),
+        0.7,
+        this.globalSettingsService.daytradeAlgo
+      )
+      .pipe(take(1))
+      .subscribe((data: any[]) => {
+        this.isLoading = false;
+        if (data) {
+          this.addTableItem(data);
+          this.collectResult(this.globalSettingsService.daytradeAlgo, data[0].score);
+        }
+      }, error => {
+        this.isLoading = false;
+      });
   }
 
   calibrateRandom() {
