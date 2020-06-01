@@ -204,7 +204,6 @@ export class AskModelComponent implements OnInit, OnDestroy {
 
   executeBacktests() {
     this.bufferSubject
-      .pipe(take(1))
       .subscribe(() => {
         const backtest = this.backtestBuffer[0];
         this.callChainSub.add(this.machineLearningService
@@ -302,7 +301,6 @@ export class AskModelComponent implements OnInit, OnDestroy {
     }
 
     this.bufferSubject
-      .pipe(take(1))
       .subscribe(() => {
         const bufferItem = this.calibrationBuffer[0];
 

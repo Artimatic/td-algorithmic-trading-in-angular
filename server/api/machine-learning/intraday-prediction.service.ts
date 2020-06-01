@@ -92,7 +92,7 @@ class IntradayPredicationService extends PredictionService {
     dataSetObj.input = [];
 
     featureUse.forEach((value, idx) => {
-      if (value === '1' || value === 1) {
+      if ((value === '1' || value === 1) && input[idx] !== undefined) {
         dataSetObj.input.push(input[idx]);
       }
     });
