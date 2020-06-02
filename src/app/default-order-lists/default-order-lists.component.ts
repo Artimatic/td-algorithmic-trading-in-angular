@@ -157,7 +157,6 @@ export class DefaultOrderListsComponent implements OnInit {
   }
 
   delete(event) {
-    console.log('delete: ', event);
     const foundIdx = this.templateOrders.findIndex((val) => {
       if (val.holding.symbol === event) {
         return true;
@@ -182,7 +181,6 @@ export class DefaultOrderListsComponent implements OnInit {
       const total = this.firstFormGroup.value.amount;
       this.addOrder(stock, allocationPct, total);
 
-      this.setAddOrderForm();
       this.errorMsg = '';
     } else {
       this.errorMsg = 'Please fix errors.';

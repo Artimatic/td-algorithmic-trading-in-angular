@@ -836,7 +836,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         if (this.firstFormGroup.value.lossThreshold > gains) {
           this.setWarning('Loss threshold met. Sending stop loss order. Estimated loss: ' +
             `${this.daytradeService.convertToFixedNumber(gains, 4) * 100}%`);
-          const log = `Stop Loss triggered: ${closePrice}/${estimatedPrice}`;
+          const log = `Stop Loss triggered: closing price: ${closePrice} purchase price:${estimatedPrice}`;
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
           console.log(log);
           const stopLossOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
