@@ -1455,7 +1455,7 @@ class BacktestService {
       mfiTrade: DaytradeRecommendation.Neutral
     };
 
-    const rocCrossoverRecommendation = AlgoService.checkRocCrossover(indicator.roc10Previous, indicator.roc10, indicator.roc70Previous, indicator.roc70);
+    const rocCrossoverRecommendation = AlgoService.checkRocCrossover(indicator.roc70Previous, indicator.roc70);
 
     const mfiTrendRecommendation = AlgoService.checkMfiTrend(indicator.mfiPrevious, indicator.mfiLeft);
 
@@ -1485,7 +1485,7 @@ class BacktestService {
       demark9: DaytradeRecommendation.Neutral
     };
 
-    const rocCrossoverRecommendation = AlgoService.checkRocCrossover(indicator.roc10Previous, indicator.roc10, indicator.roc70Previous, indicator.roc70);
+    const rocCrossoverRecommendation = AlgoService.checkRocCrossover(indicator.roc70Previous, indicator.roc70);
 
     const mfiTrendRecommendation = AlgoService.checkMfiTrend(indicator.mfiPrevious, indicator.mfiLeft);
 

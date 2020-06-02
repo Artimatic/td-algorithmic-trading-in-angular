@@ -73,10 +73,6 @@
           <button mat-raised-button disabled>STALLED</button>
         </div>
         <div>
-          <section class="example-section">
-            <mat-progress-bar class="progress-bar" [mode]="'determinate'" [color]="color" [value]="progress()">
-            </mat-progress-bar>
-          </section>
           Orders Submitted: {{ buyCount + sellCount}}/{{firstFormGroup.value.quantity || 0}} shares
         </div>
         <div class="toolbar-content" fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px"
@@ -119,8 +115,6 @@
         <mat-card-actions>
           <button mat-raised-button color="warn" (click)="resetStepper(stepper)">STOP</button>
           <button mat-button color="primary" (click)="backtest()">Backtest</button>
-          <button mat-button color="primary" (click)="testRuntime()">Test Runtime</button>
-          <button mat-button color="warn" (click)="openDialog()">GO LIVE</button>
           <button mat-button color="warn" (click)="testBuy()">Buy</button>
           <button mat-button color="warn" (click)="testSell()">Sell</button>
         </mat-card-actions>

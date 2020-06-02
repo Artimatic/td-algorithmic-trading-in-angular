@@ -18,9 +18,7 @@ import {
   PortfolioService,
   MachineLearningService
 } from '../shared';
-import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import { SmartOrder } from '../shared/models/smart-order';
-import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { Subscription } from 'rxjs/Subscription';
 import { IndicatorsService } from '../shared/services/indicators.service';
 import { CartService } from '../shared/services/cart.service';
@@ -104,28 +102,18 @@ export class BbCardComponent implements OnInit, OnChanges {
         }
       }
     });
-
-    this.backtestService.triggerBacktest
-      .subscribe(stock => {
-        if (stock === this.order.holding.symbol) {
-          this.backtest();
-        }
-      });
   }
 
   ngOnChanges(changes: SimpleChanges) {
     if (_.get(changes, 'tearDown.currentValue')) {
       this.stop();
-    } else if (_.get(changes, 'init.currentValue') && !this.isBacktest) {
-      this.initRun();
-    } else {
+    } else if (_.get(changes, 'order')) {
       this.init();
     }
   }
 
   init() {
     this.alive = true;
-    this.interval = 60000;
     this.live = false;
     this.sides = ['Buy', 'Sell', 'DayTrade'];
     this.error = '';
@@ -182,23 +170,6 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.stop();
   }
 
-  progress() {
-    return Number((100 * (this.buyCount + this.sellCount / this.firstFormGroup.value.quantity)).toFixed(2));
-  }
-
-  openDialog(): void {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '250px',
-      data: { title: 'Confirm', message: 'Are you sure you want to execute this order?' }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.goLive();
-      }
-    });
-  }
-
   backtest(): void {
     this.setup();
     this.stop();
@@ -217,17 +188,6 @@ export class BbCardComponent implements OnInit, OnChanges {
         }, error => {
           this.error = `Error getting quotes for ${this.order.holding.symbol}`;
         });
-  }
-
-  goLive() {
-    this.setup();
-    this.alive = true;
-    this.sub = TimerObservable.create(0, this.interval)
-      .takeWhile(() => this.alive)
-      .subscribe(() => {
-        this.setLive();
-        this.play();
-      });
   }
 
   initRun() {
@@ -376,7 +336,7 @@ export class BbCardComponent implements OnInit, OnChanges {
   }
 
   async play() {
-    this.live = true;
+    this.setLive();
 
     const requestBody = {
       symbol: this.order.holding.symbol,
@@ -444,66 +404,6 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
 
     this.tiles = this.daytradeService.buildTileList(this.orders);
-  }
-
-  initVolumeChart(data): Chart {
-    return new Chart({
-      chart: {
-        type: 'column',
-        marginLeft: 40, // Keep all charts left aligned
-        marginTop: 0,
-        marginBottom: 0,
-        width: 800,
-        height: 175
-      },
-      title: {
-        text: '',
-        style: {
-          display: 'none'
-        }
-      },
-      subtitle: {
-        text: '',
-        style: {
-          display: 'none'
-        }
-      },
-      legend: {
-        enabled: false
-      },
-      xAxis: {
-        type: 'datetime',
-        labels: {
-          formatter: function () {
-            return moment(this.value).format('hh:mm');
-          }
-        }
-      },
-      yAxis: {
-        endOnTick: false,
-        startOnTick: false,
-        labels: {
-          enabled: false
-        },
-        title: {
-          text: null
-        },
-        tickPositions: [0]
-      },
-      tooltip: {
-        crosshairs: true,
-        shared: true,
-        formatter: function () {
-          return moment(this.x).format('hh:mm') + '<br><b>Volume:</b> ' + this.y + '<br>' + this.points[0].key;
-        }
-      },
-      series: [
-        {
-          name: 'Volume',
-          id: 'volume',
-          data: data
-        }]
-    });
   }
 
   initPriceChart(title, timestamps, seriesData): Chart {
@@ -606,7 +506,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     }
 
     if (this.config.MlBuySellAtClose) {
-      this.globalTaskQueueService.trainMl2(this.order.holding.symbol, undefined, undefined, 1, undefined, () => {}, () => {});
+      this.globalTaskQueueService.trainMl2(this.order.holding.symbol, undefined, undefined, 1, undefined, () => { }, () => { });
     }
   }
 
@@ -882,31 +782,41 @@ export class BbCardComponent implements OnInit, OnChanges {
         const modifier = await this.globalSettingsService.globalModifier();
         orderQuantity = _.round(_.multiply(modifier, orderQuantity), 0);
 
-        this.machineLearningService.activate(this.order.holding.symbol,
-          this.globalSettingsService.daytradeAlgo)
-          .subscribe((machineResult: { nextOutput: number }) => {
-            const mlLog = `RNN model result: ${machineResult.nextOutput}`;
-            const mlReport = this.reportingService.addAuditLog(this.order.holding.symbol, mlLog);
-            console.log(mlReport);
-            if (machineResult.nextOutput > 0.5) {
-              if (orderQuantity > 0) {
-                setTimeout(() => {
-                  this.portfolioService.getPrice(this.order.holding.symbol)
-                    .subscribe((price) => {
-                      if (price > quote) {
-                        const buyOrder = this.buildBuyOrder(orderQuantity,
-                          price,
-                          timestamp,
-                          analysis);
+        this.machineLearningService
+          .trainPredictNext30(this.order.holding.symbol.toUpperCase(),
+            moment().add({ days: 1 }).format('YYYY-MM-DD'),
+            moment().subtract({ days: 3 }).format('YYYY-MM-DD'),
+            0.7,
+            this.globalSettingsService.daytradeAlgo
+          )
+          .subscribe((data: any[]) => {
+            this.machineLearningService.activate(this.order.holding.symbol,
+              this.globalSettingsService.daytradeAlgo)
+              .subscribe((machineResult: { nextOutput: number }) => {
+                const mlLog = `RNN model result: ${machineResult.nextOutput}`;
+                const mlReport = this.reportingService.addAuditLog(this.order.holding.symbol, mlLog);
+                console.log(mlReport);
+                if (machineResult.nextOutput > 0.5) {
+                  if (orderQuantity > 0) {
+                    setTimeout(() => {
+                      this.portfolioService.getPrice(this.order.holding.symbol)
+                        .subscribe((price) => {
+                          if (price > quote) {
+                            const buyOrder = this.buildBuyOrder(orderQuantity,
+                              price,
+                              timestamp,
+                              analysis);
 
-                        this.sendBuy(buyOrder);
-                      } else {
-                        console.log('Current price is too low. Actual: ', price, ' Expected: ', quote);
-                      }
-                    });
-                }, 120000);
-              }
-            }
+                            this.sendBuy(buyOrder);
+                          } else {
+                            console.log('Current price is too low. Actual: ', price, ' Expected: ', quote);
+                          }
+                        });
+                    }, 120000);
+                  }
+                }
+              });
+          }, error => {
           });
       }
     }

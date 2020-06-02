@@ -73,11 +73,7 @@ class AlgoService {
     return counter;
   }
 
-  checkRocCrossover(roc10Previous: number, roc10: number, roc70Previous: number, roc70: number): DaytradeRecommendation {
-    if (roc10Previous > 0 && roc10 < 0) {
-      return DaytradeRecommendation.Bearish;
-    }
-
+  checkRocCrossover(roc70Previous: number, roc70: number): DaytradeRecommendation {
     if (roc70Previous > 0 && roc70 < 0) {
       return DaytradeRecommendation.Bearish;
     }
