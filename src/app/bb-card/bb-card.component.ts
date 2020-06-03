@@ -785,7 +785,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         this.machineLearningService
           .trainPredictNext30(this.order.holding.symbol.toUpperCase(),
             moment().add({ days: 1 }).format('YYYY-MM-DD'),
-            moment().subtract({ days: 3 }).format('YYYY-MM-DD'),
+            moment().subtract({ days: 2 }).format('YYYY-MM-DD'),
             0.9,
             this.globalSettingsService.daytradeAlgo
           )
