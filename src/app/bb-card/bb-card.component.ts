@@ -786,7 +786,7 @@ export class BbCardComponent implements OnInit, OnChanges {
           .trainPredictNext30(this.order.holding.symbol.toUpperCase(),
             moment().add({ days: 1 }).format('YYYY-MM-DD'),
             moment().subtract({ days: 3 }).format('YYYY-MM-DD'),
-            0.7,
+            0.9,
             this.globalSettingsService.daytradeAlgo
           )
           .subscribe((data: any[]) => {
