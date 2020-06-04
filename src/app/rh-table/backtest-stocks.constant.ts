@@ -43,6 +43,7 @@ export const stockList = [
   'CCI',
   'CCK',
   'CFG',
+  'CLDR',
   'CIEN',
   'COF',
   'COST',
