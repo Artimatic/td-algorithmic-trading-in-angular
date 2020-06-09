@@ -54,7 +54,7 @@ export class GlobalSettingsService {
     return moment(this.tradeDate);
   }
 
-  initGlobalSettings() {
+  initStartTimes() {
     this.tradeDate = moment().tz('America/New_York');
     const day = moment().tz('America/New_York').day();
     if (day === 7) {
@@ -64,12 +64,14 @@ export class GlobalSettingsService {
     } else if (moment().isAfter(moment.tz('4:00pm', 'h:mma', 'America/New_York'))) {
       this.tradeDate = moment().add({ day: 1 });
     }
+    this.backtestDate = this.tradeDate.format('YYYY-MM-DD');
+  }
 
+  initGlobalSettings() {
     this.setStartTimes();
 
     this.maxLoss = 20;
     this.brokerage = Brokerage.Td;
-    this.backtestDate = this.tradeDate.format('YYYY-MM-DD');
 
     this.daytradeAlgo = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
 
@@ -94,7 +96,6 @@ export class GlobalSettingsService {
       [1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1],
       [0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0]
     ];
-
 
     this.daytradeAlgoSelection = [];
 

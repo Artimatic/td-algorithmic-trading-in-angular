@@ -254,6 +254,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
           }
           this.interval = moment().subtract(5, 'minutes').diff(moment(this.globalSettingsService.startTime), 'milliseconds');
           console.log('new interval: ', this.interval);
+          this.globalSettingsService.initStartTimes();
         }
 
         if ((moment().isAfter(moment(mlStartTime)) &&
