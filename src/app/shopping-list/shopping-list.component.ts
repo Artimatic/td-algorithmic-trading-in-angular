@@ -270,7 +270,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
           });
           mlStopTime = mlStartTime;
 
-          setTimeout(this.globalSettingsService.initStartTimes, 3600000);
+          setTimeout(this.globalSettingsService.initTradeDate, 3600000);
         }
       });
   }

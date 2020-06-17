@@ -54,7 +54,7 @@ export class GlobalSettingsService {
     return moment(this.tradeDate);
   }
 
-  initStartTimes() {
+  initTradeDate() {
     this.tradeDate = moment().tz('America/New_York');
     const day = moment().tz('America/New_York').day();
     if (day === 7) {
@@ -69,6 +69,7 @@ export class GlobalSettingsService {
 
   initGlobalSettings() {
     this.setStartTimes();
+    this.initTradeDate();
 
     this.maxLoss = 20;
     this.brokerage = Brokerage.Td;
