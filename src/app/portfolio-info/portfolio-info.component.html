@@ -4,6 +4,7 @@
       <th>Holding</th>
       <th>P/L Open</th>
       <th>NetLiq</th>
+      <th>Shares</th>
       <th>Recommendation</th>
       <th>Buy Reasons</th>
       <th>Buy Confidence</th>
@@ -13,14 +14,15 @@
   </ng-template>
   <ng-template pTemplate="body" let-holding>
     <tr>
-      <td>{{holding.name}}</td>
-      <td>{{holding.pl | currency}}</td>
-      <td>{{holding.netLiq | currency}}</td>
-      <td>{{holding.recommendation}}</td>
-      <td>{{holding.buyReasons}}</td>
-      <td>{{holding.buyConfidence}}</td>
-      <td>{{holding.sellReasons}}</td>
-      <td>{{holding.sellConfidence}}</td>
+      <td class="table-cell">{{holding.name}}</td>
+      <td class="table-cell">{{holding.pl | currency}}</td>
+      <td class="table-cell">{{holding.netLiq | currency}}</td>
+      <td class="table-cell">{{holding.shares}}</td>
+      <td class="table-cell">{{holding.recommendation}}</td>
+      <td class="table-cell">{{holding.buyReasons}}</td>
+      <td class="table-cell">{{holding.buyConfidence}}</td>
+      <td class="table-cell">{{holding.sellReasons}}</td>
+      <td class="table-cell">{{holding.sellConfidence}}</td>
     </tr>
   </ng-template>
 </p-table>

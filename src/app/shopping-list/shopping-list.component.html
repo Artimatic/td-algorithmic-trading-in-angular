@@ -36,53 +36,8 @@
   <p-splitButton label="Start Orders" (onClick)="confirmStart()" [model]="multibuttonOptions" icon="pi pi-dollar"
     styleClass="ui-button-success"></p-splitButton>
   <app-default-order-lists class="default-orders-button"></app-default-order-lists>
-  <mat-accordion>
-    <mat-expansion-panel>
-      <mat-expansion-panel-header>
-        <mat-panel-title>
-          <h2>Orders</h2>
-        </mat-panel-title>
-      </mat-expansion-panel-header>
-      <div *ngFor="let sell of cartService.sellOrders" class="order-card">
-        <app-bb-card [order]="sell" [tearDown]="sell.stopped">
-        </app-bb-card>
-      </div>
-      <div *ngFor="let buy of cartService.buyOrders" class="order-card">
-        <app-bb-card [order]="buy" [tearDown]="buy.stopped">
-        </app-bb-card>
-      </div>
-      <div *ngFor="let other of cartService.otherOrders" class="order-card">
-        <app-bb-card [order]="other" [tearDown]="other.stopped">
-        </app-bb-card>
-      </div>
-    </mat-expansion-panel>
-  </mat-accordion>
 
-  <mat-accordion>
-    <mat-expansion-panel>
-      <mat-expansion-panel-header>
-        <mat-panel-title>
-          <h2 matTooltip="Disregards global settings.">Others</h2>
-        </mat-panel-title>
-      </mat-expansion-panel-header>
-      <mat-grid-list cols="4" rowHeight="25px">
-        <mat-grid-tile [colspan]="2" [rowspan]="2">
-          <mat-form-field>
-            <mat-label>Stock</mat-label>
-            <input matInput [formControl]="simpleCardForm" placeholder="Ex. MSFT">
-          </mat-form-field>
-        </mat-grid-tile>
-        <mat-grid-tile [colspan]="2" [rowspan]="1">
-          <button mat-raised-button color="primary" (click)="addSimpleCard()">Add Simple Card</button>
-        </mat-grid-tile>
-      </mat-grid-list>
-
-      <div *ngFor="let simpleCard of simpleCards" class="order-card">
-        <app-simple-card [order]="simpleCard">
-        </app-simple-card>
-      </div>
-    </mat-expansion-panel>
-  </mat-accordion>
+  <app-orders-list></app-orders-list>
 
   <mat-accordion>
     <mat-expansion-panel>

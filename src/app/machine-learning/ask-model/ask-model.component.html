@@ -45,7 +45,7 @@
     </ng-template>
     <ng-template pTemplate="body" let-rowData let-columns="columns">
       <tr [pSelectableRow]="rowData">
-        <td *ngFor="let col of columns">
+        <td *ngFor="let col of columns" class="table-cell">
           <div class="data-cell">{{rowData[col.field]}}</div>
         </td>
       </tr>

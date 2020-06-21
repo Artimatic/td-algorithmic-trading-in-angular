@@ -67,6 +67,7 @@ import { StocklistCleanupComponent } from './stocklist-cleanup/stocklist-cleanup
 import { StocklistComponent } from './stocklist/stocklist.component';
 import { PortfolioManagementComponent } from './portfolio-management/portfolio-management.component';
 import { PortfolioInfoComponent } from './portfolio-info/portfolio-info.component';
+import { OrdersListComponent } from './orders-list/orders-list.component';
 
 @NgModule({
   declarations: [
@@ -107,6 +108,7 @@ import { PortfolioInfoComponent } from './portfolio-info/portfolio-info.componen
     StocklistComponent,
     PortfolioManagementComponent,
     PortfolioInfoComponent,
+    OrdersListComponent,
   ],
   entryComponents: [
     LoginDialogComponent,
