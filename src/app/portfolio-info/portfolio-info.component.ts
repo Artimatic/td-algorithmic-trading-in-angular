@@ -217,5 +217,4 @@ export class PortfolioInfoComponent implements OnInit {
       }
     });
   }
-
 }

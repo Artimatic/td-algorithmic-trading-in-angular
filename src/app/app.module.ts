@@ -68,6 +68,7 @@ import { StocklistComponent } from './stocklist/stocklist.component';
 import { PortfolioManagementComponent } from './portfolio-management/portfolio-management.component';
 import { PortfolioInfoComponent } from './portfolio-info/portfolio-info.component';
 import { OrdersListComponent } from './orders-list/orders-list.component';
+import { FindBuyComponent } from './find-buy/find-buy.component';
 
 @NgModule({
   declarations: [
@@ -109,6 +110,7 @@ import { OrdersListComponent } from './orders-list/orders-list.component';
     PortfolioManagementComponent,
     PortfolioInfoComponent,
     OrdersListComponent,
+    FindBuyComponent,
   ],
   entryComponents: [
     LoginDialogComponent,
