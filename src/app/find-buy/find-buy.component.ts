@@ -119,9 +119,7 @@ export class FindBuyComponent implements OnInit {
         .pipe(take(1))
         .subscribe(() => {
           this.backtestBuffer.shift();
-          if (this.buyList.length > 10 || this.backtestCounter >= Stocks.length) {
-            this.scoreAndBuy();
-          } else {
+          if (this.buyList.length < 10) {
             this.triggerNextBacktest();
           }
           this.backtestCounter++;
@@ -153,6 +151,7 @@ export class FindBuyComponent implements OnInit {
 
         if (this.potentialBuys[foundIdx].buyConfidence > 0.1) {
           this.buyList.push(this.potentialBuys[foundIdx]);
+          this.portfolioBuy(stock);
         }
       }
 
@@ -167,6 +166,7 @@ export class FindBuyComponent implements OnInit {
 
         if (this.potentialBuys[foundIdx].sellConfidence < -0.3) {
           this.buyList.push(this.potentialBuys[foundIdx]);
+          this.portfolioBuy(stock);
         }
       }
     });
@@ -176,12 +176,6 @@ export class FindBuyComponent implements OnInit {
     if (this.backtestBuffer.length > 0) {
       this.bufferSubject.next();
     }
-  }
-
-  scoreAndBuy() {
-    this.buyList.forEach(stock => {
-      this.portfolioBuy(stock);
-    });
   }
 
   portfolioBuy(holding: PotentialBuy) {
