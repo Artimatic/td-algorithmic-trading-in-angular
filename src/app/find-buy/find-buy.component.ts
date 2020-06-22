@@ -6,6 +6,11 @@ import Stocks from '../rh-table/backtest-stocks.constant';
 import { Subscription, Subject, Observable } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { DailyBacktestService } from '@shared/daily-backtest.service';
+import { PortfolioService } from '@shared/services/portfolio.service';
+import { CartService } from '@shared/services/cart.service';
+import { SmartOrder } from '@shared/models/smart-order';
+import * as _ from 'lodash';
+import { MatSnackBar } from '@angular/material';
 
 export interface PotentialBuy {
   name: string;
@@ -27,14 +32,22 @@ export class FindBuyComponent implements OnInit {
   private backtestBuffer: { stock: string; sub: Observable<any>; }[];
   private bufferSubject: Subject<void>;
   public potentialBuys: PotentialBuy[];
+  public buyList: PotentialBuy[];
+  private backtestCounter: number;
 
-  constructor(private backtestService: BacktestService, private dailyBacktestService: DailyBacktestService) { }
+  constructor(private backtestService: BacktestService,
+    private dailyBacktestService: DailyBacktestService,
+    private portfolioService: PortfolioService,
+    private cartService: CartService,
+    private snackBar: MatSnackBar) { }
 
   ngOnInit() {
     this.bufferSubject = new Subject();
     this.backtestBuffer = [];
     this.callChainSub = new Subscription();
     this.potentialBuys = [];
+    this.backtestCounter = 0;
+    this.buyList = [];
   }
 
   getBacktestRequest() {
@@ -52,8 +65,9 @@ export class FindBuyComponent implements OnInit {
               const indicatorResults: BacktestResponse = testResults;
 
               if (indicatorResults.recommendation.toLowerCase() === 'buy' ||
-                indicatorResults.recommendation.toLowerCase() === 'strongbuy') {
-                console.log('Buy recommendation ', indicatorResults);
+                indicatorResults.recommendation.toLowerCase() === 'strongbuy' ||
+                indicatorResults.recommendation.toLowerCase() === 'sell' ||
+                indicatorResults.recommendation.toLowerCase() === 'strongsell') {
                 const potential = {
                   name: indicatorResults.stock,
                   buySignals: [],
@@ -87,7 +101,7 @@ export class FindBuyComponent implements OnInit {
   }
 
   queueBacktests() {
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < Stocks.length; i++) {
       this.backtestBuffer.push({ stock: Stocks[i].ticker, sub: this.getBacktestRequest()(Stocks[i]) });
     }
 
@@ -105,11 +119,17 @@ export class FindBuyComponent implements OnInit {
         .pipe(take(1))
         .subscribe(() => {
           this.backtestBuffer.shift();
-          this.triggerNextBacktest();
+          if (this.buyList.length > 10 || this.backtestCounter >= Stocks.length) {
+            this.scoreAndBuy();
+          } else {
+            this.triggerNextBacktest();
+          }
+          this.backtestCounter++;
         }, error => {
           console.log(`Error on ${backtest.stock}`, error);
           this.backtestBuffer.shift();
           this.triggerNextBacktest();
+          this.backtestCounter++;
         }));
     });
 
@@ -130,6 +150,24 @@ export class FindBuyComponent implements OnInit {
             this.potentialBuys[foundIdx].buyConfidence += score[indicators[i]].bullishMidTermProfitLoss;
           }
         }
+
+        if (this.potentialBuys[foundIdx].buyConfidence > 0.1) {
+          this.buyList.push(this.potentialBuys[foundIdx]);
+        }
+      }
+
+      if (this.potentialBuys[foundIdx].sellSignals) {
+        const indicators = this.potentialBuys[foundIdx].sellSignals;
+
+        for (const i in indicators) {
+          if (indicators.hasOwnProperty(i)) {
+            this.potentialBuys[foundIdx].sellConfidence += score[indicators[i]].bullishMidTermProfitLoss;
+          }
+        }
+
+        if (this.potentialBuys[foundIdx].sellConfidence < -0.3) {
+          this.buyList.push(this.potentialBuys[foundIdx]);
+        }
       }
     });
   }
@@ -139,4 +177,50 @@ export class FindBuyComponent implements OnInit {
       this.bufferSubject.next();
     }
   }
+
+  scoreAndBuy() {
+    this.buyList.forEach(stock => {
+      this.portfolioBuy(stock);
+    });
+  }
+
+  portfolioBuy(holding: PotentialBuy) {
+    this.portfolioService.getPrice(holding.name).subscribe((price) => {
+      this.portfolioService.getTdBalance().subscribe((data) => {
+        const quantity = this.getQuantity(price, 0.1, data.cashAvailableForTrading);
+
+        const order = this.buildOrder(holding.name, quantity, price);
+        this.cartService.addToCart(order);
+        this.snackBar.open('Added order for ' + holding.name, 'Dismiss');
+      });
+    });
+  }
+
+  private getQuantity(stockPrice: number, allocationPct: number, total: number) {
+    const totalCost = _.round(total * allocationPct, 2);
+    return _.floor(totalCost / stockPrice);
+  }
+
+  buildOrder(symbol: string, quantity = 0, price = 0): SmartOrder {
+    return {
+      holding: {
+        instrument: null,
+        symbol,
+      },
+      quantity,
+      price,
+      submitted: false,
+      pending: false,
+      orderSize: _.floor(quantity / 3) || 1,
+      side: 'Buy',
+      lossThreshold: -0.004,
+      profitTarget: 0.009,
+      trailingStop: -0.003,
+      useStopLoss: true,
+      useTrailingStopLoss: false,
+      useTakeProfit: true,
+      sellAtClose: false
+    };
+  }
+
 }

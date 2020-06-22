@@ -30,7 +30,7 @@ export interface PortfolioInfoHolding {
   sellReasons: string;
   buyConfidence: number;
   sellConfidence: number;
-};
+}
 
 @Component({
   selector: 'app-portfolio-info',
