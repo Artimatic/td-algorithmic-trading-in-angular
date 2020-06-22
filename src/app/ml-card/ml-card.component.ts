@@ -68,6 +68,8 @@ export class MlCardComponent implements OnInit {
   multiplierPreference: FormControl;
   multiplierList: number[];
 
+  stockConstant = 'SPY';
+
   constructor(private _formBuilder: FormBuilder,
     private portfolioService: PortfolioService,
     private daytradeService: DaytradeService,
@@ -189,6 +191,7 @@ export class MlCardComponent implements OnInit {
               }
             }, error => {
               console.log('ML activation failed. Trying other models.');
+              this.stockConstant = this.stockConstant === 'SPY'? 'VOO' : 'SPY';
               this.activateOtherModel();
               this.alive = true;
             });
