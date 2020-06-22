@@ -33,7 +33,6 @@ export class FindBuyComponent implements OnInit {
   private bufferSubject: Subject<void>;
   public potentialBuys: PotentialBuy[];
   public buyList: PotentialBuy[];
-  private backtestCounter: number;
 
   constructor(private backtestService: BacktestService,
     private dailyBacktestService: DailyBacktestService,
@@ -46,7 +45,6 @@ export class FindBuyComponent implements OnInit {
     this.backtestBuffer = [];
     this.callChainSub = new Subscription();
     this.potentialBuys = [];
-    this.backtestCounter = 0;
     this.buyList = [];
   }
 
@@ -122,12 +120,10 @@ export class FindBuyComponent implements OnInit {
           if (this.buyList.length < 10) {
             this.triggerNextBacktest();
           }
-          this.backtestCounter++;
         }, error => {
           console.log(`Error on ${backtest.stock}`, error);
           this.backtestBuffer.shift();
           this.triggerNextBacktest();
-          this.backtestCounter++;
         }));
     });
 
@@ -151,7 +147,7 @@ export class FindBuyComponent implements OnInit {
 
         if (this.potentialBuys[foundIdx].buyConfidence > 0.1) {
           this.buyList.push(this.potentialBuys[foundIdx]);
-          this.portfolioBuy(stock);
+          this.portfolioBuy(this.potentialBuys[foundIdx]);
         }
       }
 
@@ -166,7 +162,7 @@ export class FindBuyComponent implements OnInit {
 
         if (this.potentialBuys[foundIdx].sellConfidence < -0.3) {
           this.buyList.push(this.potentialBuys[foundIdx]);
-          this.portfolioBuy(stock);
+          this.portfolioBuy(this.potentialBuys[foundIdx]);
         }
       }
     });
