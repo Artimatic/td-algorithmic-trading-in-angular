@@ -191,7 +191,7 @@ export class MlCardComponent implements OnInit {
               }
             }, error => {
               console.log('ML activation failed. Trying other models.');
-              this.stockConstant = this.stockConstant === 'SPY'? 'VOO' : 'SPY';
+              this.stockConstant = this.stockConstant === 'SPY' ? 'VOO' : 'SPY';
               this.activateOtherModel();
               this.alive = true;
             });

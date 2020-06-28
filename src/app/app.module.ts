@@ -69,6 +69,7 @@ import { PortfolioManagementComponent } from './portfolio-management/portfolio-m
 import { PortfolioInfoComponent } from './portfolio-info/portfolio-info.component';
 import { OrdersListComponent } from './orders-list/orders-list.component';
 import { FindBuyComponent } from './find-buy/find-buy.component';
+import { DetermineHedgeComponent } from './determine-hedge/determine-hedge.component';
 
 @NgModule({
   declarations: [
@@ -111,6 +112,7 @@ import { FindBuyComponent } from './find-buy/find-buy.component';
     PortfolioInfoComponent,
     OrdersListComponent,
     FindBuyComponent,
+    DetermineHedgeComponent,
   ],
   entryComponents: [
     LoginDialogComponent,

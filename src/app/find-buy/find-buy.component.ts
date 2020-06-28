@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { BacktestService } from '@shared/services/backtest.service';
 import * as moment from 'moment';
 import { BacktestResponse } from '../rh-table';
@@ -27,7 +27,7 @@ export interface PotentialBuy {
   templateUrl: './find-buy.component.html',
   styleUrls: ['./find-buy.component.css']
 })
-export class FindBuyComponent implements OnInit {
+export class FindBuyComponent implements OnInit, OnDestroy {
   private callChainSub: Subscription;
   private backtestBuffer: { stock: string; sub: Observable<any>; }[];
   private bufferSubject: Subject<void>;
@@ -51,7 +51,7 @@ export class FindBuyComponent implements OnInit {
   getBacktestRequest() {
     return (param) => {
       const currentDate = moment().format('YYYY-MM-DD');
-      const startDate = moment().subtract(1000, 'days').format('YYYY-MM-DD');
+      const startDate = moment().subtract(365, 'days').format('YYYY-MM-DD');
 
       return this.backtestService.getBacktestEvaluation(param.ticker, startDate, currentDate, 'daily-indicators')
         .map(
@@ -213,4 +213,7 @@ export class FindBuyComponent implements OnInit {
     };
   }
 
+  ngOnDestroy() {
+    this.callChainSub.unsubscribe();
+  }
 }

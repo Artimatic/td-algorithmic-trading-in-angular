@@ -51,8 +51,6 @@ export class PortfolioInfoComponent implements OnInit {
     const startDate = moment().subtract(365, 'days').format('YYYY-MM-DD');
 
     this.portfolioService.getTdPortfolio().subscribe((data) => {
-      console.log('Portfolio": ', data);
-
       data.forEach((holding) => {
         const stock = holding.instrument.symbol;
         let pl;
@@ -212,7 +210,7 @@ export class PortfolioInfoComponent implements OnInit {
 
   checkForStopLoss() {
     this.holdings.forEach(val => {
-      if (_.divide(val.pl, val.netLiq) < -0.7) {
+      if (_.divide(val.pl, val.netLiq) < -0.3) {
         this.portfolioSell(val);
       }
     });

@@ -1506,11 +1506,11 @@ class BacktestService {
     recommendations.bband = bbandRecommendation;
     recommendations.demark9 = demark9Recommendation;
 
-    if (recommendations.roc === DaytradeRecommendation.Bullish ||
+    if (recommendations.demark9 === DaytradeRecommendation.Bullish ||
       recommendations.mfiTrade === DaytradeRecommendation.Bullish ||
       recommendations.macd === DaytradeRecommendation.Bullish) {
       recommendations.recommendation = OrderType.Buy;
-    } else if (recommendations.roc === DaytradeRecommendation.Bearish ||
+    } else if (recommendations.demark9 === DaytradeRecommendation.Bearish ||
       recommendations.mfiTrade === DaytradeRecommendation.Bearish ||
       recommendations.macd === DaytradeRecommendation.Bearish) {
       recommendations.recommendation = OrderType.Sell;
