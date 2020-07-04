@@ -133,7 +133,6 @@ export class DetermineHedgeComponent implements OnInit {
           this.portfolioBuy('VXX', allocation - actualAllocation, cash);
         } else {
           this.portfolioSell('VXX', longMarketValue * allocation, vxxHolding.marketValue);
-
         }
       });
     });
@@ -142,8 +141,8 @@ export class DetermineHedgeComponent implements OnInit {
   portfolioBuy(stock, desiredAllocation, cash) {
     this.portfolioService.getPrice(stock).subscribe((price) => {
       this.portfolioService.getTdBalance().subscribe((data) => {
-        console.log('balance: ', data);
-        const quantity = this.getQuantity(price, desiredAllocation, cash);
+        const allocation = data.cashAvailableForTrading >= desiredAllocation ? desiredAllocation : data.cashAvailableForTrading;
+        const quantity = this.getQuantity(price, allocation, cash);
 
         const order = this.buildOrder(stock, quantity, price, 'Buy');
         this.cartService.addToCart(order);
