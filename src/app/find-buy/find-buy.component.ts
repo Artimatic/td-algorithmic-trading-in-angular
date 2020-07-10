@@ -177,7 +177,7 @@ export class FindBuyComponent implements OnInit, OnDestroy {
   portfolioBuy(holding: PotentialBuy) {
     this.portfolioService.getPrice(holding.name).subscribe((price) => {
       this.portfolioService.getTdBalance().subscribe((data) => {
-        const quantity = this.getQuantity(price, 0.1, data.cashAvailableForTrading);
+        const quantity = this.getQuantity(price, 0.1, data.availableFundsNonMarginableTrade);
 
         const order = this.buildOrder(holding.name, quantity, price);
         this.cartService.addToCart(order);

@@ -166,7 +166,7 @@ export class PortfolioInfoComponent implements OnInit {
     this.portfolioService.getPrice(holding.name).subscribe((price) => {
       this.portfolioService.getTdBalance().subscribe((data) => {
         console.log('balance: ', data);
-        const quantity = this.getQuantity(price, 0.1, data.cashAvailableForTrading);
+        const quantity = this.getQuantity(price, 0.1, data.availableFundsNonMarginableTrade);
 
         const order = this.buildOrder(holding.name, quantity, price, 'Buy');
         this.cartService.addToCart(order);

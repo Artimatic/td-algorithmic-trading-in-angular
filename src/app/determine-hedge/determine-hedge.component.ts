@@ -27,32 +27,32 @@ export class DetermineHedgeComponent implements OnInit {
 
     this.getTechnicals('SPY')
       .pipe(take(1))
-      .subscribe(recommendation => {
-        if (recommendation === 'bearish') {
+      .subscribe(spyRecommendation => {
+        if (spyRecommendation === 'bearish') {
           this.resolveHedge(hedge, 0.2);
         } else {
           this.getTechnicals('QQQ')
             .pipe(take(1))
-            .subscribe(recommendation => {
-              if (recommendation === 'bearish') {
+            .subscribe(qqqRecommendation => {
+              if (qqqRecommendation === 'bearish') {
                 this.resolveHedge(hedge, 0.2);
               } else {
                 this.getTechnicals('IWM')
                   .pipe(take(1))
-                  .subscribe(recommendation => {
-                    if (recommendation === 'bearish') {
+                  .subscribe(iwmRecommendation => {
+                    if (iwmRecommendation === 'bearish') {
                       this.resolveHedge(hedge, 0.2);
                     } else {
                       this.getTechnicals('HYG')
                         .pipe(take(1))
-                        .subscribe(recommendation => {
-                          if (recommendation === 'bearish') {
+                        .subscribe(hygRecommendation => {
+                          if (hygRecommendation === 'bearish') {
                             this.resolveHedge(hedge, 0.2);
                           } else {
                             this.getTechnicals('VXX')
                               .pipe(take(1))
-                              .subscribe(recommendation => {
-                                if (recommendation === 'bullish') {
+                              .subscribe(vxxRecommendation => {
+                                if (vxxRecommendation === 'bullish') {
                                   this.resolveHedge(hedge, 0.2);
                                 } else {
                                   this.globalSettingsService.get10y2ySpread()
@@ -122,7 +122,7 @@ export class DetermineHedgeComponent implements OnInit {
   resolveHedge(hedge, allocation) {
     hedge.allocation = allocation;
     this.portfolioService.getTdBalance().subscribe((data) => {
-      const cash = data.cashAvailableForTrading;
+      const cash = data.availableFundsNonMarginableTrade;
       const longMarketValue = data.longMarketValue;
 
       this.portfolioService.getTdPortfolio().subscribe((data) => {
@@ -141,7 +141,7 @@ export class DetermineHedgeComponent implements OnInit {
   portfolioBuy(stock, desiredAllocation, cash) {
     this.portfolioService.getPrice(stock).subscribe((price) => {
       this.portfolioService.getTdBalance().subscribe((data) => {
-        const allocation = data.cashAvailableForTrading >= desiredAllocation ? desiredAllocation : data.cashAvailableForTrading;
+        const allocation = data.availableFundsNonMarginableTrade >= desiredAllocation ? desiredAllocation : data.availableFundsNonMarginableTrade;
         const quantity = this.getQuantity(price, allocation, cash);
 
         const order = this.buildOrder(stock, quantity, price, 'Buy');
