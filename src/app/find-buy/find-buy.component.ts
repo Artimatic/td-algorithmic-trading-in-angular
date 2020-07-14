@@ -145,7 +145,7 @@ export class FindBuyComponent implements OnInit, OnDestroy {
           }
         }
 
-        if (this.potentialBuys[foundIdx].buyConfidence > 0.1) {
+        if (this.potentialBuys[foundIdx].buyConfidence > 0.25) {
           this.buyList.push(this.potentialBuys[foundIdx]);
           this.portfolioBuy(this.potentialBuys[foundIdx]);
         }
