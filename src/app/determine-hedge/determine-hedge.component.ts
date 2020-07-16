@@ -121,9 +121,9 @@ export class DetermineHedgeComponent implements OnInit {
 
   resolveHedge(hedge, allocation) {
     hedge.allocation = allocation;
-    this.portfolioService.getTdBalance().subscribe((data) => {
-      const cash = data.availableFundsNonMarginableTrade;
-      const longMarketValue = data.longMarketValue;
+    this.portfolioService.getTdBalance().subscribe((balance) => {
+      const cash = balance.availableFundsNonMarginableTrade;
+      const longMarketValue = balance.longMarketValue;
 
       this.portfolioService.getTdPortfolio().subscribe((data) => {
         const vxxHolding = data.find((holding) => holding.instrument.symbol === 'VXX');
