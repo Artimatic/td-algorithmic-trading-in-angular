@@ -12,7 +12,7 @@ class IntradayPredicationService extends PredictionService {
   modelName = 'model2020-04-02';
 
   constructor() {
-    super(15, 0.003);
+    super(15, 0.001);
   }
 
   train(symbol, startDate, endDate, trainingSize, featureUse) {
