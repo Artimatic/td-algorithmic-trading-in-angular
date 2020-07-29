@@ -336,6 +336,7 @@ export const stockList = [
   'TQQQ',
   'FAZ',
   'NI',
+  'NIO',
   'OIH',
   'ANTM',
   'ADSK',
