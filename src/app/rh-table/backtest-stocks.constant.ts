@@ -115,6 +115,7 @@ export const stockList = [
   'MU',
   'MXIM',
   'NEM',
+  'NET',
   'NFLX',
   'NKE',
   'NUE',
