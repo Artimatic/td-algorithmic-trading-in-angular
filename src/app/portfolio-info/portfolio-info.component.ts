@@ -6,6 +6,7 @@ import * as moment from 'moment';
 import { CartService } from '@shared/services/cart.service';
 import * as _ from 'lodash';
 import { SmartOrder } from '@shared/models/smart-order';
+import { take } from 'rxjs/operators';
 
 // bearishMidTermProfitLoss: 0
 // bearishMidTermSignals: 0
@@ -39,6 +40,8 @@ export interface PortfolioInfoHolding {
 })
 export class PortfolioInfoComponent implements OnInit {
   holdings: PortfolioInfoHolding[];
+  prefillOrderForm;
+  cols;
 
   constructor(private portfolioService: PortfolioService,
     private backtestService: BacktestService,
@@ -46,6 +49,18 @@ export class PortfolioInfoComponent implements OnInit {
     private cartService: CartService) { }
 
   ngOnInit() {
+    this.cols = [
+      { field: 'name', header: 'Holding' },
+      { field: 'pl', header: 'P/L Open' },
+      { field: 'netLiq', header: 'NetLiq' },
+      { field: 'shares', header: 'Shares' },
+      { field: 'recommendation', header: 'Recommendation' },
+      { field: 'buyReasons', header: 'Buy Reasons' },
+      { field: 'buyConfidence', header: 'Buy Confidence' },
+      { field: 'sellReasons', header: 'Sell Reasons' },
+      { field: 'sellConfidence', header: 'Sell Confidence' }
+    ];
+
     this.holdings = [];
     const currentDate = moment().format('YYYY-MM-DD');
     const startDate = moment().subtract(365, 'days').format('YYYY-MM-DD');
@@ -214,5 +229,15 @@ export class PortfolioInfoComponent implements OnInit {
         this.portfolioSell(val);
       }
     });
+  }
+
+  onRowSelect(event) {
+    this.portfolioService.getPrice(event.data.name)
+      .pipe(take(1))
+      .subscribe((stockPrice: number) => {
+        const amount = 1000;
+        const quantity = _.floor(amount / stockPrice);
+        this.prefillOrderForm = this.cartService.buildOrder(event.data.name, quantity, stockPrice);
+      });
   }
 }

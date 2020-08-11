@@ -57,27 +57,28 @@
       <span *ngIf="!loading">
         <button mat-raised-button type="submit" [disabled]="!tdaForm.valid">Save</button>
       </span>
+
+      <h3>Available Accounts</h3>
+      <div class="available-accounts">
+        <p-listbox [options]="authenticationService.tdaAccounts"
+                   [(ngModel)]="selectedItem"
+                   [ngModelOptions]="{standalone: true}"
+                   [listStyle]="{'max-height':'250px'}">
+          <ng-template let-account pTemplate="item">
+            <div class="item-container">
+              <div class="item-title">{{account.accountId}}</div>
+              <div class="action-icon">
+                <mat-icon matSuffix (click)="removeAccount(account)">close</mat-icon>
+                <mat-icon matSuffix (click)="selectAccount(account)">check</mat-icon>
+              </div>
+            </div>
+          </ng-template>
+          <p-footer>
+            Selected: {{authenticationService?.selectedTdaAccount?.accountId||'none'}}
+          </p-footer>
+        </p-listbox>
+      </div>
     </div>
     <div *ngIf="error" class="alert alert-danger">{{error}}</div>
   </form>
-
-  <h3>Available Accounts</h3>
-  <div class="available-accounts">
-    <p-listbox [options]="authenticationService.tdaAccounts"
-               [(ngModel)]="selectedItem"
-               [listStyle]="{'max-height':'250px'}">
-      <ng-template let-account pTemplate="item">
-        <div class="item-container">
-          <div class="item-title">{{account.accountId}}</div>
-          <div class="action-icon">
-            <mat-icon matSuffix (click)="removeAccount(account)">close</mat-icon>
-            <mat-icon matSuffix (click)="selectAccount(account)">check</mat-icon>
-          </div>
-        </div>
-      </ng-template>
-      <p-footer>
-        Selected: {{authenticationService?.selectedTdaAccount?.accountId||'none'}}
-      </p-footer>
-    </p-listbox>
-  </div>
 </div>

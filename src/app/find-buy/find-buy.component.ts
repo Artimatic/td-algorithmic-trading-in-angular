@@ -33,6 +33,7 @@ export class FindBuyComponent implements OnInit, OnDestroy {
   private bufferSubject: Subject<void>;
   public potentialBuys: PotentialBuy[];
   public buyList: PotentialBuy[];
+  prefillOrderForm;
 
   constructor(private backtestService: BacktestService,
     private dailyBacktestService: DailyBacktestService,
@@ -211,6 +212,16 @@ export class FindBuyComponent implements OnInit, OnDestroy {
       useTakeProfit: true,
       sellAtClose: false
     };
+  }
+
+  onRowSelect(event) {
+    this.portfolioService.getPrice(event.data.name)
+      .pipe(take(1))
+      .subscribe((stockPrice: number) => {
+        const amount = 1000;
+        const quantity = _.floor(amount / stockPrice);
+        this.prefillOrderForm = this.cartService.buildOrder(event.data.name, quantity, stockPrice);
+      });
   }
 
   ngOnDestroy() {

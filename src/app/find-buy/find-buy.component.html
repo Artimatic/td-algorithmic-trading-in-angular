@@ -1,7 +1,12 @@
 <button pButton type="button" label="Recommend a Stock" class="ui-button-success" (click)="findStock()">
 </button>
 
-<p-table [value]="potentialBuys">
+<p-table [value]="potentialBuys" [paginator]="true" [rows]="20" dataKey="name" selectionMode="single"
+  (onRowSelect)="onRowSelect($event)">
+  <ng-template pTemplate="caption">
+    <app-default-order-lists class="default-orders-button" [prefillOrderForm]="prefillOrderForm">
+    </app-default-order-lists>
+  </ng-template>
   <ng-template pTemplate="header">
     <tr>
       <th>Stock</th>
@@ -12,7 +17,7 @@
     </tr>
   </ng-template>
   <ng-template pTemplate="body" let-holding>
-    <tr>
+    <tr [pSelectableRow]="holding">
       <td class="table-cell">{{holding.name}}</td>
       <td class="table-cell">{{holding.buyReasons}}</td>
       <td class="table-cell">{{holding.buyConfidence}}</td>
