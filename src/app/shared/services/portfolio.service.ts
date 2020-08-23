@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Http, Headers, RequestOptions, Response } from '@angular/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 
@@ -12,20 +12,17 @@ import { MatSnackBar } from '@angular/material';
 @Injectable()
 export class PortfolioService {
   constructor(
-    private http: Http,
+    private http: HttpClient,
     private authenticationService: AuthenticationService,
     private globalSettingsService: GlobalSettingsService,
     public snackBar: MatSnackBar) {
   }
 
-  getPortfolio(): Observable<Holding[]> {
-    const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.getToken() });
-    const options = new RequestOptions({ headers: headers });
+  getPortfolio(): Observable<any> {
+    const headers = new HttpHeaders({ 'Authorization': 'Bearer ' + this.authenticationService.getToken() });
+    const options = { headers: headers };
 
-    return this.http.get('/api/portfolio/positions/', options)
-      .map((response: Response) => {
-        return response.json().results;
-      });
+    return this.http.get('/api/portfolio/positions/', options);
   }
 
   getTdPortfolio(): Observable<any> {
@@ -64,8 +61,8 @@ export class PortfolioService {
     if (quantity === 0) {
       throw new Error('Order Quantity is 0');
     }
-    const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.getToken() });
-    const options = new RequestOptions({ headers: headers });
+    const headers = new HttpHeaders({ 'Authorization': 'Bearer ' + this.authenticationService.getToken() });
+    const options = { headers: headers };
     const body = {
       'account': this.authenticationService.myAccount.account,
       'url': holding.instrument,
@@ -88,8 +85,8 @@ export class PortfolioService {
     if (quantity === 0) {
       throw new Error('Order Quantity is 0');
     }
-    const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.getToken() });
-    const options = new RequestOptions({ headers: headers });
+    const headers = new HttpHeaders({ 'Authorization': 'Bearer ' + this.authenticationService.getToken() });
+    const options = { headers: headers };
     const body = {
       'account': this.authenticationService.myAccount.account,
       'url': holding.instrument,
@@ -117,8 +114,8 @@ export class PortfolioService {
     if (quantity === 0) {
       throw new Error('Order Quantity is 0');
     }
-    const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.getToken() });
-    const options = new RequestOptions({ headers: headers });
+    const headers = new HttpHeaders({ 'Authorization': 'Bearer ' + this.authenticationService.getToken() });
+    const options = { headers: headers };
     const body = {
       'account': this.authenticationService.myAccount.account,
       'url': holding.instrument,
@@ -164,7 +161,7 @@ export class PortfolioService {
       options.params.accountId = this.getAccountId();
     }
     return this.http.get('/api/portfolio/quote', options)
-      .map((response: Response) => {
+      .map((response) => {
         return _.round(response.json().askPrice, 2);
       });
   }

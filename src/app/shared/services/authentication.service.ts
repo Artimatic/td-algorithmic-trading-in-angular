@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Http, Headers, RequestOptions, Response } from '@angular/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 import { Account } from '../account';
@@ -18,7 +18,7 @@ export class AuthenticationService {
   public tdaAccounts: TdaAccount[];
   public selectedTdaAccount: TdaAccount;
 
-  constructor(private http: Http, private dialog: MatDialog, public snackBar: MatSnackBar) { }
+  constructor(private http: HttpClient, private dialog: MatDialog, public snackBar: MatSnackBar) { }
 
   openLoginDialog(): void {
     this.dialog.open(RedirectLoginDialogComponent, {
