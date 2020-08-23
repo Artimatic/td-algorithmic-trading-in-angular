@@ -12,6 +12,7 @@ import BaseErrors from '../../components/errors/baseErrors';
 import * as tulind from 'tulind';
 import * as configurations from '../../config/environment';
 import AlgoService from './algo.service';
+import MfiService from './mfi.service';
 
 const dataServiceUrl = configurations.apps.goliath;
 const mlServiceUrl = configurations.apps.armadillo;
@@ -107,10 +108,6 @@ class BacktestService {
 
   getSMA(real, period) {
     return tulind.indicators.sma.indicator([real], [period]);
-  }
-
-  getMfi(high, low, close, volume, period) {
-    return tulind.indicators.mfi.indicator([high, low, close, volume], [period]);
   }
 
   getRateOfChange(real, period) {
@@ -969,7 +966,7 @@ class BacktestService {
         const rocLen = roc70Previous[0].length - 1;
         currentQuote.roc70Previous = _.round(roc70Previous[0][rocLen], 4);
 
-        return this.getMfi(this.getSubArray(indicators.highs, 14),
+        return MfiService.getMfi(this.getSubArray(indicators.highs, 14),
           this.getSubArray(indicators.lows, 14),
           this.getSubArray(indicators.reals, 14),
           this.getSubArray(indicators.volumes, 14),
@@ -998,6 +995,14 @@ class BacktestService {
       })
       .then(demark9 => {
         currentQuote.demark9 = demark9;
+        return MfiService.getMfiLow(indicators.high,
+        indicators.lows,
+        indicators.reals,
+        indicators.volumes,
+        14);
+      })
+      .then(mfiLow => {
+        currentQuote.mfiLow = mfiLow;
         return currentQuote;
       });
   }
@@ -1032,7 +1037,7 @@ class BacktestService {
         // .then((roc5) => {
         //   const rocLen = roc5[0].length - 1;
         //   currentQuote.roc5 = _.round(roc5[0][rocLen], 3);
-        return this.getMfi(this.getSubArray(indicators.highs, 14),
+        return MfiService.getMfi(this.getSubArray(indicators.highs, 14),
           this.getSubArray(indicators.lows, 14),
           this.getSubArray(indicators.reals, 14),
           this.getSubArray(indicators.volumes, 14),
@@ -1373,7 +1378,7 @@ class BacktestService {
         const rocLen = roc70Previous[0].length - 1;
         currentQuote.roc70Previous = _.round(roc70Previous[0][rocLen], 4);
 
-        return this.getMfi(this.getSubArray(indicators.highs, 14),
+        return MfiService.getMfi(this.getSubArray(indicators.highs, 14),
           this.getSubArray(indicators.lows, 14),
           this.getSubArray(indicators.reals, 14),
           this.getSubArray(indicators.volumes, 14),
@@ -1382,7 +1387,7 @@ class BacktestService {
       .then((mfiLeft) => {
         const len = mfiLeft[0].length - 1;
         currentQuote.mfiLeft = _.round(mfiLeft[0][len], 3);
-        return this.getMfi(this.getSubArrayShift(indicators.highs, 14, -10),
+        return MfiService.getMfi(this.getSubArrayShift(indicators.highs, 14, -10),
           this.getSubArrayShift(indicators.lows, 14, -10),
           this.getSubArrayShift(indicators.reals, 14, -10),
           this.getSubArrayShift(indicators.volumes, 14, -10),
@@ -1423,7 +1428,7 @@ class BacktestService {
         const rocLen = roc70Previous[0].length - 1;
         currentQuote.roc70Previous = _.round(roc70Previous[0][rocLen], 4);
 
-        return this.getMfi(this.getSubArray(indicators.highs, 14),
+        return MfiService.getMfi(this.getSubArray(indicators.highs, 14),
           this.getSubArray(indicators.lows, 14),
           this.getSubArray(indicators.reals, 14),
           this.getSubArray(indicators.volumes, 14),
@@ -1432,7 +1437,7 @@ class BacktestService {
       .then((mfiLeft) => {
         const len = mfiLeft[0].length - 1;
         currentQuote.mfiLeft = _.round(mfiLeft[0][len], 3);
-        return this.getMfi(this.getSubArrayShift(indicators.highs, 14, -10),
+        return MfiService.getMfi(this.getSubArrayShift(indicators.highs, 14, -10),
           this.getSubArrayShift(indicators.lows, 14, -10),
           this.getSubArrayShift(indicators.reals, 14, -10),
           this.getSubArrayShift(indicators.volumes, 14, -10),

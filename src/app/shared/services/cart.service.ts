@@ -206,7 +206,7 @@ export class CartService {
       useStopLoss: true,
       useTrailingStopLoss: false,
       useTakeProfit: true,
-      sellAtClose: side === 'DayTrade' ? true : false
+      sellAtClose: false
     };
   }
 }

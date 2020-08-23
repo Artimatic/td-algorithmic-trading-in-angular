@@ -4,6 +4,7 @@ import * as Boom from 'boom';
 import BaseController from '../templates/base.controller';
 
 import BacktestService from './backtest.service';
+import MfiService from './mfi.service';
 import BacktestAggregationService from './backtest-aggregation.service';
 
 class BacktestController extends BaseController {
@@ -111,7 +112,7 @@ class BacktestController extends BaseController {
     if (_.isEmpty(request.body)) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     } else {
-      BacktestService.getMfi(request.body.high, request.body.low, request.body.close, request.body.volume, request.body.period)
+      MfiService.getMfi(request.body.high, request.body.low, request.body.close, request.body.volume, request.body.period)
         .then((data) => BaseController.requestGetSuccessHandler(response, data))
         .catch((err) => BaseController.requestErrorHandler(response, err));
     }
