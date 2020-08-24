@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 import { Account } from '../account';
@@ -45,48 +45,6 @@ export class AuthenticationService {
         } else {
           return false;
         }
-      });
-  }
-
-  mfa(username: string, password: string, code: number): Observable<boolean> {
-    return this.http.post('/api/portfolio/mfa', { username: username, password: password, code: code })
-      .map((response: Response) => {
-        // login successful if there's a jwt token in the response
-        const token = response.json() && response.json().access_token;
-        if (token) {
-          // set token property
-          this.token = token;
-
-          // store username and jwt token in local storage to keep user logged in between page refreshes
-          sessionStorage.setItem('currentUser', JSON.stringify({ username: username, token: token }));
-
-          this.loginInit();
-          // return true to indicate successful login
-          return true;
-        } else {
-          // return false to indicate failed login
-          return false;
-        }
-      });
-  }
-
-  loginInit() {
-    this.refreshAccount();
-  }
-
-  refreshAccount() {
-    this.getPortfolioAccount().subscribe();
-  }
-
-  getPortfolioAccount(): Observable<Account> {
-    const headers = new Headers({ 'Authorization': 'Bearer ' + this.token });
-    const options = new RequestOptions({ headers: headers });
-
-    return this.http.get('/api/portfolio', options)
-      .map((response: Response) => {
-        const account = response.json().results;
-        this.myAccount = account[account.length - 1];
-        return this.myAccount;
       });
   }
 

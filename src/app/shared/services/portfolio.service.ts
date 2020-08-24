@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/operator/map';
+import { map } from 'rxjs/operators';
 
 import { AuthenticationService } from './authentication.service';
 import { Holding } from '../models';
@@ -150,7 +150,7 @@ export class PortfolioService {
       .map((response: Response) => response.json());
   }
 
-  getPrice(symbol: string): Observable<any> {
+  getPrice(symbol: string): Observable<number> {
     const options: any = {
       params: {
         symbol
@@ -161,9 +161,12 @@ export class PortfolioService {
       options.params.accountId = this.getAccountId();
     }
     return this.http.get('/api/portfolio/quote', options)
-      .map((response) => {
-        return _.round(response.json().askPrice, 2);
-      });
+      .pipe(
+        map((response) => {
+          console.log('getprice: ', response);
+          return _.round(response['askPrice'], 2);
+        })
+      );
   }
 
   sendTdBuy(holding: Holding, quantity: number, price: number, extended: boolean): Observable<any> {
