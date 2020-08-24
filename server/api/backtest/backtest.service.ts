@@ -45,6 +45,7 @@ export interface Indicators {
   action?: string;
   date?: string;
   demark9?: any;
+  mfiLow?: number;
 }
 
 export interface DaytradeAlgos {
@@ -62,6 +63,7 @@ export interface Recommendation {
   mfiTrade?: DaytradeRecommendation;
   macd?: DaytradeRecommendation;
   demark9?: DaytradeRecommendation;
+  mfiLow?: DaytradeRecommendation;
 }
 
 export enum DaytradeRecommendation {
@@ -1006,6 +1008,15 @@ class BacktestService {
       })
       .then(mfiLow => {
         currentQuote.mfiLow = mfiLow;
+        return MfiService.getMfi(this.getSubArrayShift(indicators.highs, 14, -1),
+          this.getSubArrayShift(indicators.lows, 14, -1),
+          this.getSubArrayShift(indicators.reals, 14, -1),
+          this.getSubArrayShift(indicators.volumes, 14, -1),
+          14);
+      })
+      .then((mfiPrevious) => {
+        const len = mfiPrevious[0].length - 1;
+        currentQuote.mfiPrevious = _.round(mfiPrevious[0][len], 3);
         return currentQuote;
       });
   }
@@ -1485,8 +1496,7 @@ class BacktestService {
     const recommendations: Recommendation = {
       recommendation: OrderType.None,
       mfi: DaytradeRecommendation.Neutral,
-      roc: DaytradeRecommendation.Neutral,
-      bband: DaytradeRecommendation.Neutral,
+      mfiLow: DaytradeRecommendation.Neutral,
       vwma: DaytradeRecommendation.Neutral,
       mfiTrade: DaytradeRecommendation.Neutral,
       macd: DaytradeRecommendation.Neutral,
@@ -1501,18 +1511,16 @@ class BacktestService {
 
     const macdRecommendation = AlgoService.checkMacd(indicator, previousIndicator);
 
-    const bbandRecommendation = AlgoService.checkBBand(price,
-      AlgoService.getLowerBBand(indicator.bband80), AlgoService.getUpperBBand(indicator.bband80),
-      indicator.mfiLeft);
-
     const demark9Recommendation = AlgoService.checkDemark9(indicator.demark9);
+
+    const mfiLowRecommendation = AlgoService.checkMfiLow(indicator.mfiLow, indicator.mfiLeft);
 
     recommendations.roc = rocCrossoverRecommendation;
     recommendations.mfiTrade = mfiTrendRecommendation;
     recommendations.macd = macdRecommendation;
     recommendations.mfi = mfiRecommendation;
-    recommendations.bband = bbandRecommendation;
     recommendations.demark9 = demark9Recommendation;
+    recommendations.mfiLow = mfiLowRecommendation;
 
     if (recommendations.demark9 === DaytradeRecommendation.Bullish ||
       recommendations.mfiTrade === DaytradeRecommendation.Bullish ||
