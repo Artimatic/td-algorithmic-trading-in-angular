@@ -14,11 +14,12 @@ class MfiService {
       const realSubarray = reals.slice(i, i + period);
       const volumeSubarray = volumes.slice(i, i + period);
       const mfi = this.getMfi(highSubarray, lowSubarray, realSubarray, volumeSubarray, period);
-      console.log('mfi len: ', highSubarray.length, lowSubarray.length, realSubarray.length, volumeSubarray.length);
       if (mfi < mfiLow) {
         mfiLow = mfi;
       }
     }
+
+    return mfiLow;
   }
 
   getMfi(high, low, close, volume, period) {

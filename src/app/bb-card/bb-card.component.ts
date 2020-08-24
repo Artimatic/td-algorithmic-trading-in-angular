@@ -36,7 +36,7 @@ import { GlobalTaskQueueService } from '@shared/services/global-task-queue.servi
   styleUrls: ['./bb-card.component.css']
 })
 export class BbCardComponent implements OnInit, OnChanges {
-  @ViewChild('stepper') stepper;
+  @ViewChild('stepper', {static: false}) stepper;
   @Input() order: SmartOrder;
   @Input() tearDown: boolean;
   chart: Chart;

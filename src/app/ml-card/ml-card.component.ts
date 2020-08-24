@@ -31,7 +31,7 @@ enum Sentiment {
   styleUrls: ['./ml-card.component.css']
 })
 export class MlCardComponent implements OnInit {
-  @ViewChild('stepper') stepper;
+  @ViewChild('stepper', {static: false}) stepper;
 
   sub: Subscription;
 

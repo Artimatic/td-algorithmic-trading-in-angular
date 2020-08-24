@@ -23,7 +23,7 @@ export interface StockAllocation {
   styleUrls: ['./ml-batch-card.component.css']
 })
 export class MlBatchCardComponent implements OnInit, OnDestroy {
-  @ViewChild('stepper') stepper;
+  @ViewChild('stepper', {static: false}) stepper;
 
   sub: Subscription;
 

@@ -24,7 +24,7 @@ interface BuyAt3Algo {
   styleUrls: ['./simple-card.component.css']
 })
 export class SimpleCardComponent implements OnInit, OnChanges {
-  @ViewChild('stepper') stepper;
+  @ViewChild('stepper', {static: false}) stepper;
   @Input() order: SmartOrder;
 
   selectedOrder: FormControl;

@@ -3,10 +3,8 @@ import { Component } from '@angular/core';
 import { MatSidenav } from '@angular/material/sidenav';
 import * as moment from 'moment';
 
-import { PortfolioService } from '../shared/services/portfolio.service';
 import { Holding } from '../shared/models';
 import { PortfolioTableComponent } from '../portfolio-table/portfolio-table.component';
-import { AuthenticationService } from '../shared/services/authentication.service';
 import { CartService } from '../shared/services/cart.service';
 import { MatSnackBar } from '@angular/material';
 import { ExcelService } from '../shared/services/excel-service.service';
@@ -18,16 +16,14 @@ import { SmartOrder } from '../shared/models/smart-order';
   styleUrls: ['./portfolio-view.component.css']
 })
 export class PortfolioViewComponent implements AfterViewInit {
-  @ViewChild('sidenav') sidenav: MatSidenav;
+  @ViewChild('sidenav', {static: false}) sidenav: MatSidenav;
 
-  @ViewChild(PortfolioTableComponent)
+  @ViewChild(PortfolioTableComponent, {static: false})
   private portfolioTableComponent: PortfolioTableComponent;
 
   portfolioData: Holding[];
 
   constructor(
-    private portfolioService: PortfolioService,
-    private authenticationService: AuthenticationService,
     public cartService: CartService,
     private excelService: ExcelService,
     public snackBar: MatSnackBar) { }

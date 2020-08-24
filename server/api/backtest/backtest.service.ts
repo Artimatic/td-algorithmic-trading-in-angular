@@ -494,7 +494,7 @@ class BacktestService {
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);
           if (idx > minQuotes) {
-            const q = _.slice(quotes, idx - minQuotes, idx);
+            const q = quotes.slice(idx - minQuotes, idx);
             getIndicatorQuotes.push(this.initStrategy(q));
           }
         });
@@ -510,15 +510,18 @@ class BacktestService {
       .then(quotes => {
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);
+
           if (idx > minQuotes) {
-            const q = _.slice(quotes, idx - minQuotes, idx);
+            const q = quotes.slice(idx - minQuotes, idx);
             getIndicatorQuotes.push(this.initStrategy(q));
           }
         });
+
         return Promise.all(getIndicatorQuotes);
       })
       .then(indicators => {
-        const testResults = this.backtestIndicators(this.getAllRecommendations,
+        let testResults;
+        testResults = this.backtestIndicators(this.getAllRecommendations,
           indicators,
           parameters);
 
@@ -560,7 +563,7 @@ class BacktestService {
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);
           if (idx > minQuotes) {
-            const q = _.slice(quotes, idx - minQuotes, idx);
+            const q = quotes.slice(idx - minQuotes, idx);
             getIndicatorQuotes.push(this.initMAIndicators(q));
           }
         });
@@ -644,7 +647,7 @@ class BacktestService {
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);
           if (idx > minQuotes) {
-            const q = _.slice(quotes, idx - minQuotes, idx);
+            const q = quotes.slice(idx - minQuotes, idx);
             getIndicatorQuotes.push(this.initMAIndicators(q));
           }
         });
@@ -901,12 +904,12 @@ class BacktestService {
   }
 
   getSubArray(reals, period) {
-    return _.slice(reals, reals.length - (period + 1));
+    return reals.slice(reals.length - (period + 1));
   }
 
   getSubArrayShift(reals, period, modifier) {
     const length = reals.length + modifier;
-    return _.slice(reals, length - (period + 1), length);
+    return reals.slice(length - (period + 1), length);
   }
 
   processQuotes(quotes) {
@@ -995,11 +998,11 @@ class BacktestService {
       })
       .then(demark9 => {
         currentQuote.demark9 = demark9;
-        return MfiService.getMfiLow(indicators.high,
-        indicators.lows,
-        indicators.reals,
-        indicators.volumes,
-        14);
+        return MfiService.getMfiLow(indicators.highs,
+          indicators.lows,
+          indicators.reals,
+          indicators.volumes,
+          14);
       })
       .then(mfiLow => {
         currentQuote.mfiLow = mfiLow;
@@ -1537,7 +1540,7 @@ class BacktestService {
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);
           if (idx > minQuotes) {
-            const q = _.slice(quotes, idx - minQuotes, idx);
+            const q = quotes.slice(idx - minQuotes, idx);
             getIndicatorQuotes.push(this.getRocMfiTrend(q));
           }
         });

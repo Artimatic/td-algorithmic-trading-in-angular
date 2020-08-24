@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { BacktestService } from './backtest.service';
-import { AuthenticationService } from './authentication.service';
 import { PortfolioService } from './portfolio.service';
 import { OrderPref } from '../enums/order-pref.enum';
 import { SmartOrder } from '../models/smart-order';
@@ -16,7 +15,6 @@ import { GlobalSettingsService, Brokerage } from '../../settings/global-settings
 export class DaytradeService {
 
   constructor(private backtestService: BacktestService,
-    private authenticationService: AuthenticationService,
     private portfolioService: PortfolioService,
     private indicatorsService: IndicatorsService,
     private cartService: CartService,
