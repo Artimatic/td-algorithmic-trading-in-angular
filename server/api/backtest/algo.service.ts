@@ -86,9 +86,9 @@ class AlgoService {
 
   checkMfiTrend(mfiPrevious: number, mfi: number): DaytradeRecommendation {
     const change = DecisionService.getPercentChange(mfi, mfiPrevious);
-    if (change > 0.03) {
+    if (change > 0.3) {
       return DaytradeRecommendation.Bullish;
-    } else if (change < -0.03) {
+    } else if (change < -0.3) {
       return DaytradeRecommendation.Bearish;
     }
 
