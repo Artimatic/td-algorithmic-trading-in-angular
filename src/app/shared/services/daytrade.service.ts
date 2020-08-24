@@ -142,17 +142,13 @@ export class DaytradeService {
   }
 
   sendSell(sellOrder: SmartOrder, type: string, resolve: Function, reject: Function, handleNotFound: Function): SmartOrder {
-    if (this.globalSettingsService.brokerage === Brokerage.Robinhood) {
-      return this.sendRhSell(sellOrder, type, resolve, reject, handleNotFound);
-    } else if (this.globalSettingsService.brokerage === Brokerage.Td) {
+    if (this.globalSettingsService.brokerage === Brokerage.Td) {
       return this.sendTdSell(sellOrder, type, resolve, reject, handleNotFound);
     }
   }
 
   closePosition(sellOrder: SmartOrder, type: string, resolve: Function, reject: Function, handleNotFound: Function): SmartOrder {
-    if (this.globalSettingsService.brokerage === Brokerage.Robinhood) {
-      return this.closeRhPosition(sellOrder, type, resolve, reject, handleNotFound);
-    } else if (this.globalSettingsService.brokerage === Brokerage.Td) {
+    if (this.globalSettingsService.brokerage === Brokerage.Td) {
       return this.closeTdPosition(sellOrder, type, resolve, reject, handleNotFound);
     }
   }
@@ -232,86 +228,6 @@ export class DaytradeService {
         } else {
           handleNotFound();
         }
-      });
-    return sellOrder;
-  }
-
-  sendRhSell(sellOrder: SmartOrder, type: string, resolve: Function, reject: Function, handleNotFound: Function): SmartOrder {
-    this.authenticationService.getPortfolioAccount().subscribe(account => {
-      this.portfolioService.getPortfolio()
-        .subscribe(result => {
-          const foundPosition = result.find((pos) => {
-            return pos.instrument === sellOrder.holding.instrument;
-          });
-
-          if (foundPosition) {
-            const positionCount = Number(foundPosition.quantity);
-            if (positionCount === 0) {
-              handleNotFound();
-            } else {
-              sellOrder.quantity = sellOrder.quantity < positionCount ? sellOrder.quantity : positionCount;
-
-              let price = sellOrder.price;
-
-              if (type === 'market') {
-                price = null;
-              }
-
-              this.portfolioService.sell(sellOrder.holding, sellOrder.quantity, price, type).subscribe(
-                response => {
-                  resolve(response);
-                },
-                error => {
-                  reject(error);
-                });
-            }
-          } else {
-            handleNotFound();
-          }
-        });
-    },
-      error => {
-        reject();
-      });
-    return sellOrder;
-  }
-
-  closeRhPosition(sellOrder: SmartOrder, type: string, resolve: Function, reject: Function, handleNotFound: Function): SmartOrder {
-    this.authenticationService.getPortfolioAccount().subscribe(account => {
-      this.portfolioService.getPortfolio()
-        .subscribe(result => {
-          const foundPosition = result.find((pos) => {
-            return pos.instrument === sellOrder.holding.instrument;
-          });
-
-          if (foundPosition) {
-            const positionCount = Number(foundPosition.quantity);
-            if (positionCount === 0) {
-              handleNotFound();
-            } else {
-              sellOrder.quantity = positionCount;
-
-              let price = sellOrder.price;
-
-              if (type === 'market') {
-                price = null;
-              }
-
-              this.portfolioService.sell(sellOrder.holding, sellOrder.quantity, price, type).subscribe(
-                response => {
-                  resolve(response);
-                },
-                error => {
-                  reject(error);
-                });
-            }
-          } else {
-            handleNotFound();
-          }
-        });
-    },
-      error => {
-        reject();
       });
     return sellOrder;
   }

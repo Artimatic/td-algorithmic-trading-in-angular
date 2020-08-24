@@ -51,15 +51,6 @@ export class PortfolioViewComponent implements AfterViewInit {
     this.cartService.submitOrders();
   }
 
-  refresh() {
-    this.authenticationService.getPortfolioAccount().subscribe(account => {
-      this.portfolioService.getPortfolio()
-        .subscribe(result => {
-          this.portfolioTableComponent.setData(result);
-        });
-    });
-  }
-
   exportPortfolio() {
     const today = moment().format('MM-DD-YY');
     console.log('export data: ', this.portfolioTableComponent.dataSource.data);
