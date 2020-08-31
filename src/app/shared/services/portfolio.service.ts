@@ -31,14 +31,12 @@ export class PortfolioService {
         accountId: this.getAccountId()
       }
     };
-    return this.http.get('/api/portfolio/v2/positions/', options)
-      .map((response: Response) => response.json());
+    return this.http.get('/api/portfolio/v2/positions/', options);
   }
 
   getResource(url: string): Observable<any> {
     const body = { instrument: url };
-    return this.http.post('/api/portfolio/resources', body)
-      .map((response: Response) => response.json());
+    return this.http.post('/api/portfolio/resources', body);
   }
 
   sell(holding: Holding, quantity: number, price: number, type: string): Observable<any> {
@@ -75,10 +73,7 @@ export class PortfolioService {
       body['price'] = price;
     }
 
-    return this.http.post('/api/portfolio/sell', body, options)
-      .map((response: Response) => {
-        return response.json();
-      });
+    return this.http.post('/api/portfolio/sell', body, options);
   }
 
   buyRh(holding: Holding, quantity: number, price: number, type: string): Observable<any> {
@@ -96,10 +91,7 @@ export class PortfolioService {
       'type': type
     };
 
-    return this.http.post('/api/portfolio/buy', body, options)
-      .map((response: Response) => {
-        return response.json();
-      });
+    return this.http.post('/api/portfolio/buy', body, options);
   }
 
   extendedHoursBuy(holding: Holding, quantity: number, price: number): Observable<any> {
@@ -126,16 +118,12 @@ export class PortfolioService {
       'extendedHour': true
     };
 
-    return this.http.post('/api/portfolio/buy', body, options)
-      .map((response: Response) => {
-        return response.json();
-      });
+    return this.http.post('/api/portfolio/buy', body, options);
   }
 
   getInstruments(symbol: string): Observable<any> {
     const body = { symbol: symbol };
-    return this.http.post('/api/portfolio/instruments', body)
-      .map((response: Response) => response.json());
+    return this.http.post('/api/portfolio/instruments', body);
   }
 
   getQuote(symbol: string): Observable<any> {
@@ -146,8 +134,7 @@ export class PortfolioService {
       }
     };
 
-    return this.http.get('/api/portfolio/quote', options)
-      .map((response: Response) => response.json());
+    return this.http.get('/api/portfolio/quote', options);
   }
 
   getPrice(symbol: string): Observable<number> {
@@ -202,8 +189,7 @@ export class PortfolioService {
       }
     };
 
-    return this.http.get('/api/portfolio/balance', options)
-      .map((response: Response) => response.json());
+    return this.http.get('/api/portfolio/balance', options);
   }
 
   getAccountId() {
