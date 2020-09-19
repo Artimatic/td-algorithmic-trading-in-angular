@@ -195,6 +195,9 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
+        if (this.sub) {
+          this.sub.unsubscribe();
+        }
         const concat = this.cartService.sellOrders.concat(this.cartService.buyOrders);
         this.queueAlgos(concat.concat(this.cartService.otherOrders));
       }
