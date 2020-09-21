@@ -36,7 +36,7 @@ import { GlobalTaskQueueService } from '@shared/services/global-task-queue.servi
   styleUrls: ['./bb-card.component.css']
 })
 export class BbCardComponent implements OnInit, OnChanges {
-  @ViewChild('stepper', {static: false}) stepper;
+  @ViewChild('stepper', { static: false }) stepper;
   @Input() order: SmartOrder;
   @Input() tearDown: boolean;
   chart: Chart;
@@ -71,6 +71,8 @@ export class BbCardComponent implements OnInit, OnChanges {
   multiplierPreference: FormControl;
   multiplierList: number[];
 
+  lastTriggeredTime: string;
+
   constructor(private _formBuilder: FormBuilder,
     private backtestService: BacktestService,
     private daytradeService: DaytradeService,
@@ -96,9 +98,16 @@ export class BbCardComponent implements OnInit, OnChanges {
         } else if (item.updateOrder) {
           this.init();
         } else if (item.triggerMlBuySell) {
-          this.runMlBuySell();
+          if (this.lastTriggeredTime !== this.getTimeStamp()) {
+            this.lastTriggeredTime = this.getTimeStamp();
+            this.runMlBuySell();
+          }
         } else {
-          this.step();
+          if (this.lastTriggeredTime !== this.getTimeStamp()) {
+            this.lastTriggeredTime = this.getTimeStamp();
+            this.step();
+            console.log('triggered1');
+          }
         }
       }
     });
@@ -163,6 +172,10 @@ export class BbCardComponent implements OnInit, OnChanges {
     });
 
     this.setup();
+  }
+
+  getTimeStamp() {
+    return new Date().getDate() + ' ' + new Date().getHours() + ':' + new Date().getMinutes();
   }
 
   resetStepper(stepper) {
