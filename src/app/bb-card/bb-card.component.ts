@@ -103,10 +103,10 @@ export class BbCardComponent implements OnInit, OnChanges {
             this.runMlBuySell();
           }
         } else {
-          if (this.lastTriggeredTime !== this.getTimeStamp()) {
+          const currentTimeStamp = this.getTimeStamp();
+          if (this.lastTriggeredTime !== currentTimeStamp) {
             this.lastTriggeredTime = this.getTimeStamp();
             this.step();
-            console.log('triggered1');
           }
         }
       }
@@ -175,7 +175,7 @@ export class BbCardComponent implements OnInit, OnChanges {
   }
 
   getTimeStamp() {
-    return new Date().getDate() + ' ' + new Date().getHours() + ':' + new Date().getMinutes();
+    return new Date().getHours() + ':' + new Date().getMinutes();
   }
 
   resetStepper(stepper) {
@@ -569,9 +569,9 @@ export class BbCardComponent implements OnInit, OnChanges {
     if (sellOrder) {
       const log = `ORDER SENT ${sellOrder.side} ${sellOrder.quantity} ${sellOrder.holding.symbol}@${sellOrder.price}`;
       if (this.live) {
-        const resolve = (response) => {
-          this.incrementSell(sellOrder);
+        this.incrementSell(sellOrder);
 
+        const resolve = (response) => {
           if (this.order.side.toLowerCase() !== 'sell') {
             const pl = this.daytradeService.estimateSellProfitLoss(this.orders);
             this.scoringService.addProfitLoss(this.order.holding.symbol, pl);
