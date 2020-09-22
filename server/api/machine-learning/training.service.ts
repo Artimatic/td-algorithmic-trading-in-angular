@@ -121,7 +121,7 @@ class TrainingService {
               const quote = val[val.length - 2]; // TODO CHANGE TO -1
               const intraday = intradayQuotes[idx].candles;
               const datetime =  intraday[intraday.length - 2].datetime;
-              if (moment(datetime).diff(moment(quote.date), 'days') !== 1) {
+              if (moment(datetime).diff(moment(quote.date), 'days') > 1) {
                 console.log(moment(quote.date).diff(moment(datetime), 'days'), quote.date, moment(datetime).format());
                 console.log(`The dates ${moment(quote.date).format()} ${moment(datetime).format()} are incorrect`);
               }
@@ -145,7 +145,7 @@ class TrainingService {
               const quote = quotes[quotes.length - 1];
               const intradayCandles = intradayQuotes.candles;
               const datetime =  intradayCandles[intradayCandles.length - 2].datetime;
-              if (moment(datetime).diff(moment(quote.date), 'days') !== 1) {
+              if (moment(datetime).diff(moment(quote.date), 'days') > 1) {
                 console.log(moment(quote.date).diff(moment(datetime), 'days'), quote.date, moment(datetime).format());
                 console.log(`The dates ${moment(quote.date).format()} ${moment(datetime).format()} are incorrect`);
               }
