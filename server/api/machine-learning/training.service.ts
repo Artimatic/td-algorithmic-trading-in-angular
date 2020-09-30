@@ -141,10 +141,11 @@ class TrainingService {
       .then(quotes => {
         return PortfolioService.getIntradayV2(symbol, 1, 'minute', 1)
           .then(intradayQuotes => {
-              console.log('dates: ', moment().subtract({ days: 1 }).format(), moment().format());
               const quote = quotes[quotes.length - 1];
               const intradayCandles = intradayQuotes.candles;
               const datetime =  intradayCandles[intradayCandles.length - 2].datetime;
+              console.log('Yesterday: ', moment(quote.date).format(), 'Today: ', moment(datetime).format());
+
               if (moment(datetime).diff(moment(quote.date), 'days') > 1) {
                 console.log(moment(quote.date).diff(moment(datetime), 'days'), quote.date, moment(datetime).format());
                 console.log(`The dates ${moment(quote.date).format()} ${moment(datetime).format()} are incorrect`);
