@@ -141,23 +141,34 @@ class TrainingService {
       .then(quotes => {
         return PortfolioService.getIntradayV2(symbol, 1, 'minute', 1)
           .then(intradayQuotes => {
-              const quote = quotes[quotes.length - 1];
+              let quote = quotes[quotes.length - 1];
               const intradayCandles = intradayQuotes.candles;
               const datetime =  intradayCandles[intradayCandles.length - 2].datetime;
-              console.log('Yesterday: ', moment(quote.date).format(), 'Today: ', moment(datetime).format());
 
               if (moment(datetime).diff(moment(quote.date), 'days') > 1) {
                 console.log(moment(quote.date).diff(moment(datetime), 'days'), quote.date, moment(datetime).format());
                 console.log(`The dates ${moment(quote.date).format()} ${moment(datetime).format()} are incorrect`);
+              } else if (moment(datetime).diff(moment(quote.date), 'days') < 1) {
+
+                const currentQuote = this.processIntraday(intradayCandles);
+                const currentVolume = this.getVolume(intradayCandles);
+
+                currentQuote.date = moment(intradayCandles[intradayCandles.length - 2].datetime).toISOString();
+                currentQuote.volume = currentVolume;
+                currentQuote.symbol = symbol;
+                quotes[quotes.length - 1] = currentQuote;
+              } else {
+                const currentQuote = this.processIntraday(intradayCandles);
+                const currentVolume = this.getVolume(intradayCandles);
+
+                currentQuote.date = moment(intradayCandles[intradayCandles.length - 2].datetime).toISOString();
+                currentQuote.volume = currentVolume;
+                currentQuote.symbol = symbol;
+                quotes = quotes.concat(currentQuote);
               }
 
-              const currentQuote = this.processIntraday(intradayCandles);
-              const currentVolume = this.getVolume(intradayCandles);
+              console.log('Yesterday: ', moment(quote.date).format(), 'Today: ', moment(datetime).format());
 
-              currentQuote.date = moment(intradayCandles[intradayCandles.length - 2].datetime).toISOString();
-              currentQuote.volume = currentVolume;
-              currentQuote.symbol = symbol;
-              quotes = quotes.concat(currentQuote);
             return quotes;
           });
       });

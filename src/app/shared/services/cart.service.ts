@@ -200,10 +200,10 @@ export class CartService {
       pending: false,
       orderSize: _.floor(quantity / 3) || 1,
       side,
-      lossThreshold: -0.004,
-      profitTarget: 0.008,
+      lossThreshold: -0.01,
+      profitTarget: 0.05,
       trailingStop: -0.003,
-      useStopLoss: false,
+      useStopLoss: true,
       useTrailingStopLoss: false,
       useTakeProfit: false,
       sellAtClose: false

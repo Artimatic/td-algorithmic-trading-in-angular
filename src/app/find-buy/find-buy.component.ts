@@ -204,12 +204,12 @@ export class FindBuyComponent implements OnInit, OnDestroy {
       pending: false,
       orderSize: _.floor(quantity / 3) || 1,
       side: 'Buy',
-      lossThreshold: -0.004,
-      profitTarget: 0.009,
+      lossThreshold: -0.01,
+      profitTarget: 0.05,
       trailingStop: -0.003,
       useStopLoss: true,
       useTrailingStopLoss: false,
-      useTakeProfit: true,
+      useTakeProfit: false,
       sellAtClose: false
     };
   }
