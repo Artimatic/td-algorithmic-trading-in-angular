@@ -167,7 +167,7 @@ class TrainingService {
                 quotes = quotes.concat(currentQuote);
               }
 
-              console.log('Yesterday: ', moment(quote.date).format(), 'Today: ', moment(datetime).format());
+              console.log('Yesterday: ', moment(quotes[quotes.length - 2].date).format(), 'Today: ', moment(quotes[quotes.length - 1].date).format());
 
             return quotes;
           });

@@ -31,7 +31,7 @@ enum Sentiment {
   styleUrls: ['./ml-card.component.css']
 })
 export class MlCardComponent implements OnInit {
-  @ViewChild('stepper', {static: false}) stepper;
+  @ViewChild('stepper', { static: false }) stepper;
 
   sub: Subscription;
 
@@ -143,15 +143,22 @@ export class MlCardComponent implements OnInit {
   }
 
   trainModel() {
-    this.backtestService.runLstmV3(this.getTrainingStock(),
-      moment().subtract({ day: 1 }).format('YYYY-MM-DD'),
-      moment().subtract({ day: 365 }).format('YYYY-MM-DD'),
-      0.7,
-      '0,0,1,0,0,1,1,1,1,1,1,0,0').subscribe(() => {
-        this.backtestService.runLstmV2(this.getTrainingStock(),
-          moment().subtract({ day: 1 }).format('YYYY-MM-DD'),
-          moment().subtract({ day: 50 }).format('YYYY-MM-DD')).subscribe();
-      });
+    if (this.selectedModel.value === 'V3') {
+      this.backtestService.runLstmV3(this.getTrainingStock(),
+        moment().subtract({ day: 1 }).format('YYYY-MM-DD'),
+        moment().subtract({ day: 365 }).format('YYYY-MM-DD'),
+        0.7,
+        '0,0,1,0,0,1,1,1,1,1,1,0,0')
+        .subscribe(() => {
+          this.sendActivation().subscribe();
+        });
+    } else {
+      this.backtestService.runLstmV2(this.getTrainingStock(),
+        moment().subtract({ day: 1 }).format('YYYY-MM-DD'),
+        moment().subtract({ day: 50 }).format('YYYY-MM-DD')).subscribe(() => {
+          this.sendActivation().subscribe();
+        });
+    }
   }
 
   getTradeDay() {
@@ -360,7 +367,7 @@ export class MlCardComponent implements OnInit {
     return _.floor(_.divide(betSize, price));
   }
 
-  openDialog(): void {
+  goLiveClick(): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '250px',
       data: { title: 'Confirm', message: 'Are you sure you want to execute this order?' }
