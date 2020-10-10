@@ -13,6 +13,7 @@ function createParam(ticker: string): AlgoParam {
 }
 
 export const stockList = [
+  'NOK',
   'MET',
   'AA',
   'GOLD',
