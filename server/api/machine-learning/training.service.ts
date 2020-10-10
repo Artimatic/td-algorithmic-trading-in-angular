@@ -141,7 +141,7 @@ class TrainingService {
       .then(quotes => {
         return PortfolioService.getIntradayV2(symbol, 1, 'minute', 1)
           .then(intradayQuotes => {
-              let quote = quotes[quotes.length - 1];
+              const quote = quotes[quotes.length - 1];
               const intradayCandles = intradayQuotes.candles;
               const datetime =  intradayCandles[intradayCandles.length - 2].datetime;
 
