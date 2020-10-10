@@ -1,84 +1,97 @@
 <div class="shopping-list">
   <mat-accordion>
     <mat-expansion-panel>
-        <mat-expansion-panel-header>
-            <mat-panel-title>
-                Import Orders
-            </mat-panel-title>
-        </mat-expansion-panel-header>
-        <app-xls-import (onImport)="import($event)"></app-xls-import>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Import Orders
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <app-xls-import (onImport)="import($event)"></app-xls-import>
+    </mat-expansion-panel>
+  </mat-accordion>
+  <mat-accordion>
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Settings
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <app-setting-controls></app-setting-controls>
+    </mat-expansion-panel>
+  </mat-accordion>
+  <mat-accordion>
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Profit/Loss
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <app-daytrade-score-board [buyOrders]="cartService.buyOrders" [otherOrders]="cartService.otherOrders"
+        [totalScore]="scoreKeeperService.total"></app-daytrade-score-board>
     </mat-expansion-panel>
   </mat-accordion>
   <h1 mat-subheader>Shopping List</h1>
   <p>Import and execute your trading algorithms</p>
-  <app-setting-controls></app-setting-controls>
-  <div>
-    <button mat-button color="warn" (click)="stopAndDeleteOrders()">Delete Orders</button>
-    <button mat-raised-button color="warn" (click)="closeAllTrades()">Close Opened DayTrades</button>
-    <button mat-button color="primary" (click)="loadExamples()">Load Example Orders</button>
-    <button mat-raised-button color="primary" (click)="confirmStart()" [disabled]="globalSettingsService.backtesting">Start</button>
-  </div>
-  <div *ngFor="let buys of cartService.buyOrders">
-    <app-score-board [title]="buys.holding.symbol" [score]="scoreKeeperService.profitLossHash[buys.holding.symbol]"></app-score-board>
-  </div>
-  <div *ngFor="let other of cartService.otherOrders">
-    <app-score-board [title]="other.holding.symbol" [score]="scoreKeeperService.profitLossHash[other.holding.symbol]"></app-score-board>
-  </div>
-  <app-score-board [title]="'Total'" [score]="scoreKeeperService.total"></app-score-board>
-  <div *ngFor="let sell of cartService.sellOrders" class="order-card">
-    <app-bb-card [order]="sell"
-                 [init]="sell.init"
-                 [tearDown]="sell.stopped">
-    </app-bb-card>
-  </div>
-  <div *ngFor="let buy of cartService.buyOrders" class="order-card">
-    <app-bb-card [order]="buy"
-                 [init]="buy.init"
-                 [tearDown]="buy.stopped">
-    </app-bb-card>
-  </div>
-  <div *ngFor="let other of cartService.otherOrders" class="order-card">
-    <app-bb-card [order]="other"
-                 [init]="other.init"
-                 [tearDown]="other.stopped">
-    </app-bb-card>
-  </div>
-  <hr>
-  <h1 matTooltip="Disregards global settings.">Default Orders</h1>
-  <label>Last Checked Time</label> {{this.lastCheckedTime}}
-  <mat-grid-list cols="4" rowHeight="25px">
-    <mat-grid-tile [colspan]="2" [rowspan]="2">
-      <mat-form-field>
-        <mat-label>Stock</mat-label>
-        <input matInput [formControl]="simpleCardForm" placeholder="Ex. MSFT">
-      </mat-form-field>
-    </mat-grid-tile>
-    <mat-grid-tile [colspan]="2" [rowspan]="1">
-      <button mat-raised-button color="primary" (click)="addSimpleCard()">Add Simple Card</button>
-    </mat-grid-tile>
-  </mat-grid-list>
+  <app-pokerhand></app-pokerhand>
+  <p-splitButton label="Start Orders" (onClick)="confirmStart()" [model]="multibuttonOptions" icon="pi pi-dollar"
+    styleClass="ui-button-success"></p-splitButton>
+  <app-default-order-lists class="default-orders-button"></app-default-order-lists>
 
-  <div *ngFor="let simpleCard of simpleCards" class="order-card">
-    <app-simple-card [order]="simpleCard">
-    </app-simple-card>
-  </div>
+  <app-orders-list></app-orders-list>
 
-  <h1 matTooltip="Requires Machine Learning Service">Machine Learning Order</h1>
-  <mat-grid-list cols="4" rowHeight="25px">
-    <mat-grid-tile [colspan]="2" [rowspan]="2">
-      <mat-form-field>
-        <mat-label>Stock</mat-label>
-        <input matInput [formControl]="mlCardForm" placeholder="Ex. MSFT">
-      </mat-form-field>
-    </mat-grid-tile>
-    <mat-grid-tile [colspan]="2" [rowspan]="1">
-      <button mat-raised-button color="primary" (click)="addMlCard()">Add Machine Learning Card</button>
-    </mat-grid-tile>
-  </mat-grid-list>
-  <div *ngFor="let mlCard of mlCards" class="order-card">
-    <app-neuro-card [order]="mlCard"></app-neuro-card>
-  </div>
-  <div class="order-card">
-    <app-ml-card></app-ml-card>
-  </div>
+  <mat-accordion>
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <h2 matTooltip="Disregards global settings.">Others</h2>
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <mat-grid-list cols="4" rowHeight="25px">
+        <mat-grid-tile [colspan]="2" [rowspan]="2">
+          <mat-form-field>
+            <mat-label>Stock</mat-label>
+            <input matInput [formControl]="simpleCardForm" placeholder="Ex. MSFT">
+          </mat-form-field>
+        </mat-grid-tile>
+        <mat-grid-tile [colspan]="2" [rowspan]="1">
+          <button mat-raised-button color="primary" (click)="addSimpleCard()">Add Simple Card</button>
+        </mat-grid-tile>
+      </mat-grid-list>
+
+      <div *ngFor="let simpleCard of simpleCards" class="order-card">
+        <app-simple-card [order]="simpleCard">
+        </app-simple-card>
+      </div>
+    </mat-expansion-panel>
+  </mat-accordion>
+
+  <mat-accordion>
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <h2 matTooltip="Requires Machine Learning Service">Machine Learning</h2>
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <mat-grid-list cols="4" rowHeight="25px">
+        <mat-grid-tile [colspan]="2" [rowspan]="2">
+          <mat-form-field>
+            <mat-label>Stock</mat-label>
+            <input matInput [formControl]="mlCardForm" placeholder="Ex. MSFT">
+          </mat-form-field>
+        </mat-grid-tile>
+        <mat-grid-tile [colspan]="2" [rowspan]="1">
+          <button mat-raised-button color="primary" (click)="addMlCard()">Add Machine Learning Card</button>
+        </mat-grid-tile>
+      </mat-grid-list>
+      <div *ngFor="let mlCard of mlCards" class="order-card">
+        <app-neuro-card [order]="mlCard"></app-neuro-card>
+      </div>
+      <div class="order-card">
+        <app-ml-card></app-ml-card>
+      </div>
+      <div class="order-card">
+        <app-ml-batch-card></app-ml-batch-card>
+      </div>
+    </mat-expansion-panel>
+  </mat-accordion>
 </div>

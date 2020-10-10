@@ -4,6 +4,8 @@ import * as Boom from 'boom';
 import BaseController from '../templates/base.controller';
 
 import BacktestService from './backtest.service';
+import MfiService from './mfi.service';
+import BacktestAggregationService from './backtest-aggregation.service';
 
 class BacktestController extends BaseController {
 
@@ -42,7 +44,7 @@ class BacktestController extends BaseController {
               .catch((err) => BaseController.requestErrorHandler(response, err));
             break;
           case 'daily-indicators':
-            BacktestService.getDailyMachineLearningIndicators(request.body.ticker, request.body.end, request.body.start)
+            BacktestService.initDailyStrategy(request.body.ticker, request.body.end, request.body.start, request.body.parameters)
               .then((data) => BaseController.requestGetSuccessHandler(response, data))
               .catch((err) => BaseController.requestErrorHandler(response, err));
             break;
@@ -110,7 +112,17 @@ class BacktestController extends BaseController {
     if (_.isEmpty(request.body)) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     } else {
-      BacktestService.getMfi(request.body.high, request.body.low, request.body.close, request.body.volume, request.body.period)
+      MfiService.getMfi(request.body.high, request.body.low, request.body.close, request.body.volume, request.body.period)
+        .then((data) => BaseController.requestGetSuccessHandler(response, data))
+        .catch((err) => BaseController.requestErrorHandler(response, err));
+    }
+  }
+
+  getMacd(request, response) {
+    if (_.isEmpty(request.body)) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    } else {
+      BacktestService.getMacd(request.body.real, request.body.shortPeriod, request.body.longPeriod, request.body.signalPeriod)
         .then((data) => BaseController.requestGetSuccessHandler(response, data))
         .catch((err) => BaseController.requestErrorHandler(response, err));
     }
@@ -185,7 +197,7 @@ class BacktestController extends BaseController {
   }
 
   getRNNPrediction(request, response) {
-    BacktestService.checkRNNStatus(request.body.symbol, request.body.to)
+    BacktestService.checkRNNStatus(request.body.symbol, request.body.to, request.body.modelName)
       .then((data) => { response.json(data); })
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
@@ -226,13 +238,10 @@ class BacktestController extends BaseController {
       !request.body.parameters) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     }
-    BacktestService.runDaytradeBacktest(request.body.symbol,
+    response.status(200).send(BacktestService.runDaytradeBacktest(request.body.symbol,
       request.body.currentDate,
       request.body.startDate,
-      request.body.parameters)
-      .then((data) => BaseController.requestGetSuccessHandler(response, data))
-      .catch((err) => BaseController.requestErrorHandler(response, err));
-
+      request.body.parameters));
   }
 
   getDaytrade(request, response) {
@@ -259,7 +268,11 @@ class BacktestController extends BaseController {
       request.body.currentDate,
       request.body.startDate,
       response);
+  }
 
+  scoreSignals(request, response) {
+    const data = BacktestAggregationService.getSignalResults(request.body.signals);
+    BaseController.requestGetSuccessHandler(response, data);
   }
 }
 

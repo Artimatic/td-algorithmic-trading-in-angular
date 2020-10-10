@@ -1,0 +1,25 @@
+.add-button {
+  margin-bottom: 5px;
+}
+
+.order-form-item {
+  margin-top: 5px;
+  margin-bottom: 5px;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+
+  input {
+    width: 3em;
+    height: 2.5em;
+  }
+}
+
+.card-form {
+  margin: 5px;
+}
+
+.error-message {
+  color: red;
+  margin-left: 5px;
+}

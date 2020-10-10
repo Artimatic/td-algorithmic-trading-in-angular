@@ -1,14 +1,12 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { HttpModule } from '@angular/http';
 import { HttpClientModule } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 import { ChartModule } from 'angular-highcharts';
 
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import 'hammerjs';
-import { FlexLayoutModule } from '@angular/flex-layout';
 
 import { routes } from './app.routes';
 import { AppComponent } from './app.component';
@@ -57,6 +55,19 @@ import { HeaderComponent } from './header/header.component';
 import { SharedModule } from './shared/shared.module';
 import { RedirectLoginDialogComponent } from './redirect-login-dialog/redirect-login-dialog.component';
 import { NeuroCardComponent } from './neuro-card/neuro-card.component';
+import { DaytradeScoreBoardComponent } from './daytrade-score-board/daytrade-score-board.component';
+import { PokerhandComponent } from './pokerhand/pokerhand.component';
+
+import { MlBatchCardComponent } from './ml-batch-card/ml-batch-card.component';
+
+import { EasyOrdersEditorComponent } from './easy-orders-editor/easy-orders-editor.component';
+import { StocklistCleanupComponent } from './stocklist-cleanup/stocklist-cleanup.component';
+import { StocklistComponent } from './stocklist/stocklist.component';
+import { PortfolioManagementComponent } from './portfolio-management/portfolio-management.component';
+import { PortfolioInfoComponent } from './portfolio-info/portfolio-info.component';
+import { OrdersListComponent } from './orders-list/orders-list.component';
+import { FindBuyComponent } from './find-buy/find-buy.component';
+import { DetermineHedgeComponent } from './determine-hedge/determine-hedge.component';
 
 @NgModule({
   declarations: [
@@ -89,6 +100,17 @@ import { NeuroCardComponent } from './neuro-card/neuro-card.component';
     HeaderComponent,
     RedirectLoginDialogComponent,
     NeuroCardComponent,
+    DaytradeScoreBoardComponent,
+    PokerhandComponent,
+    MlBatchCardComponent,
+    EasyOrdersEditorComponent,
+    StocklistCleanupComponent,
+    StocklistComponent,
+    PortfolioManagementComponent,
+    PortfolioInfoComponent,
+    OrdersListComponent,
+    FindBuyComponent,
+    DetermineHedgeComponent,
   ],
   entryComponents: [
     LoginDialogComponent,
@@ -103,15 +125,13 @@ import { NeuroCardComponent } from './neuro-card/neuro-card.component';
     BrowserAnimationsModule,
     FormsModule,
     ReactiveFormsModule,
-    HttpModule,
     HttpClientModule,
     RouterModule.forRoot(routes),
     ChartModule,
-    FlexLayoutModule,
     OverviewModule,
     SettingsModule,
     MachineLearningModule,
-    SharedModule
+    SharedModule,
   ],
   providers: [
     BacktestService,

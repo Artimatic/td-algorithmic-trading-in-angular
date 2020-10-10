@@ -7,7 +7,7 @@ import * as XLSX from 'xlsx';
   styleUrls: ['./xls-import.component.css']
 })
 export class XlsImportComponent implements OnInit {
-  @ViewChild('fileInput') fileInput;
+  @ViewChild('fileInput', {static: false}) fileInput;
   @Output() onImport: EventEmitter<any> = new EventEmitter();
   constructor() { }
 

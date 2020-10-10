@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { DaytradeRecommendation } from './backtest.service';
+import { DaytradeRecommendation, Indicators } from './backtest.service';
 import DecisionService from '../mean-reversion/reversion-decision.service';
 
 class AlgoService {
@@ -20,7 +20,7 @@ class AlgoService {
   }
 
   checkMfi(mfi: number): DaytradeRecommendation {
-    if (mfi < 14) {
+    if (mfi < 20) {
       return DaytradeRecommendation.Bullish;
     } else if (mfi > 80) {
       return DaytradeRecommendation.Bearish;
@@ -28,17 +28,17 @@ class AlgoService {
     return DaytradeRecommendation.Neutral;
   }
 
-  checkRocMomentum(mfi: number,
+  checkRocMomentum(mfiPrevious: number, mfi: number,
     roc10: number, roc10Previous: number,
     roc70: number, roc70Previous: number): DaytradeRecommendation {
     if (roc10Previous >= 0 && roc10 < 0) {
-      if (mfi > 42) {
+      if (mfiPrevious > mfi) {
         return DaytradeRecommendation.Bearish;
       }
     }
 
     if (roc70Previous <= 0 && roc70 > 0) {
-      if (mfi < 75) {
+      if (mfi < 65 && mfiPrevious < mfi) {
         return DaytradeRecommendation.Bullish;
       }
     }
@@ -47,11 +47,11 @@ class AlgoService {
   }
 
   checkBBand(price: number, low: number, high: number, mfi: number): DaytradeRecommendation {
-    if (price <= low && mfi < 20) {
+    if (price <= low && mfi < 40) {
       return DaytradeRecommendation.Bullish;
     }
 
-    if (price >= high && mfi > 80) {
+    if (price >= high && mfi > 60) {
       return DaytradeRecommendation.Bearish;
     }
 
@@ -73,11 +73,7 @@ class AlgoService {
     return counter;
   }
 
-  checkRocCrossover(roc10Previous: number, roc10: number, roc70Previous: number, roc70: number): DaytradeRecommendation {
-    if (roc10Previous > 0 && roc10 < 0) {
-      return DaytradeRecommendation.Bearish;
-    }
-
+  checkRocCrossover(roc70Previous: number, roc70: number): DaytradeRecommendation {
     if (roc70Previous > 0 && roc70 < 0) {
       return DaytradeRecommendation.Bearish;
     }
@@ -90,15 +86,66 @@ class AlgoService {
 
   checkMfiTrend(mfiPrevious: number, mfi: number): DaytradeRecommendation {
     const change = DecisionService.getPercentChange(mfi, mfiPrevious);
-
-    if (change > 0.03) {
+    if (change > 0.3) {
       return DaytradeRecommendation.Bullish;
-    } else if (change < -0.03) {
+    } else if (change < -0.3) {
       return DaytradeRecommendation.Bearish;
     }
 
     return DaytradeRecommendation.Neutral;
   }
+
+  checkMacd(indicator: Indicators, previousIndicator: Indicators): DaytradeRecommendation {
+    if (previousIndicator) {
+      const macd = indicator.macd[2];
+      const prevMacd = previousIndicator.macd[2];
+
+      if (macd[macd.length - 1] > 0 && prevMacd[prevMacd.length - 1] <= 0) {
+        return DaytradeRecommendation.Bullish;
+      } else if (macd[macd.length - 1] <= 0 && prevMacd[prevMacd.length - 1] > 0) {
+        return DaytradeRecommendation.Bearish;
+      }
+    }
+    return DaytradeRecommendation.Neutral;
+  }
+
+  checkMacdDaytrade(indicator: Indicators, roc10Previous: number, roc10: number): DaytradeRecommendation {
+    const macd = indicator.macd[2];
+
+    if (roc10Previous > 0 && roc10 < 0) {
+      if (macd[macd.length - 1] <= 0) {
+        return DaytradeRecommendation.Bearish;
+      }
+    }
+
+    if (roc10Previous < 0 && roc10 > 0) {
+      if (macd[macd.length - 1] > 0) {
+        return DaytradeRecommendation.Bullish;
+      }
+    }
+
+    return DaytradeRecommendation.Neutral;
+  }
+
+  checkDemark9(demark9Indicator): DaytradeRecommendation {
+    if (demark9Indicator.perfectSell) {
+      return DaytradeRecommendation.Bearish;
+    } else if (demark9Indicator.perfectBuy) {
+      return DaytradeRecommendation.Bullish;
+    }
+    return DaytradeRecommendation.Neutral;
+  }
+
+  checkMfiLow(mfiLow: number, mfi: number): DaytradeRecommendation {
+    const change = DecisionService.getPercentChange(mfi, mfiLow);
+
+    if (change < 0.03 && change > -0.03) {
+      return DaytradeRecommendation.Bullish;
+    }
+
+    return DaytradeRecommendation.Neutral;
+  }
+
 }
 
 export default new AlgoService();

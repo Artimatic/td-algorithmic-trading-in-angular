@@ -1,17 +1,21 @@
 import * as moment from 'moment';
 import * as _ from 'lodash';
 
-import DecisionService from '../mean-reversion/reversion-decision.service';
 import QuoteService from '../quote/quote.service';
 import BacktestService from '../backtest/backtest.service';
-import { BacktestResults, Indicators } from '../backtest/backtest.service';
+import { BacktestResults } from '../backtest/backtest.service';
 import PortfolioService from '../portfolio/portfolio.service';
+import PredictionService from './prediction.service';
 
-class IntradayPredicationService {
+class IntradayPredicationService extends PredictionService {
 
-  modelName = 'model10';
+  modelName = 'model2020-04-02';
 
-  train(symbol, startDate, endDate, trainingSize) {
+  constructor() {
+    super(15, 0.001);
+  }
+
+  train(symbol, startDate, endDate, trainingSize, featureUse) {
     return PortfolioService.getIntradayV3(symbol, moment(startDate).valueOf(), moment(endDate).valueOf())
       .then((data) => {
         console.log('Got quotes ', data[0].date, data[data.length - 1].date);
@@ -31,31 +35,23 @@ class IntradayPredicationService {
           });
       })
       .then((results: BacktestResults) => {
-        const signals = results.signals;
-        console.log('Got backtest: ', signals[0].date, signals[signals.length - 1].date);
+        const finalDataSet = this.processBacktestResults(results, featureUse);
+        const modelName = featureUse ? featureUse.join() : this.modelName;
 
-        const finalDataSet = [];
-        signals.forEach((signal, idx) => {
-          if (this.withinBounds(idx, signals.length)) {
-            finalDataSet.push(this.buildFeatureSet(signals, signal, idx));
-          }
-        });
-        console.log('Data set size: ', finalDataSet.length);
-        return BacktestService.trainCustomModel(symbol, this.modelName, finalDataSet, trainingSize);
+        // return BacktestService.trainTensorModel(symbol, modelName, finalDataSet, trainingSize, moment().format('YYYY-MM-DD'));
+        return BacktestService.trainCustomModel(symbol, modelName, finalDataSet, trainingSize, moment().format('YYYY-MM-DD'));
       });
   }
 
-  activate(symbol) {
+  activate(symbol, featureUse) {
     let price = null;
     let openingPrice = null;
-    let previousClose = null;
     let indicator = null;
     return PortfolioService.getIntradayV3(symbol, moment().subtract({ days: 1 }).valueOf(), moment().valueOf())
       .then((quotes) => {
         const subQuotes = quotes.slice(quotes.length - 80, quotes.length);
         price = quotes[quotes.length - 1].close;
         openingPrice = quotes[0].close;
-        previousClose = quotes[quotes.length - 15].close;
         return BacktestService.initStrategy(subQuotes);
       })
       .then((indicators) => {
@@ -68,112 +64,18 @@ class IntradayPredicationService {
         return indicator;
       })
       .then((signal) => {
-        const inputData = this.buildInputSet(openingPrice, previousClose, signal);
-        console.log('input data: ', inputData);
-        return BacktestService.activateCustomModel(symbol, this.modelName, inputData.input);
+        const inputData = this.buildInputSet(openingPrice, signal, featureUse);
+        const modelName = featureUse ? featureUse.join() : this.modelName;
+
+        return BacktestService.activateCustomModel(symbol, modelName, inputData.input, moment().format('YYYY-MM-DD'));
       });
   }
 
-  withinBounds(index, totalLength) {
-    return index > 15 && (index + 16 < totalLength);
-  }
-
-  comparePrices(price, close) {
-    if (close < price) {
-      return -1;
-    } else if (close > price) {
-      return 1;
+  buildInputSet(openingPrice, currentSignal, featureUse) {
+    if (!featureUse) {
+      featureUse = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
     }
 
-    return 0;
-  }
-
-  convertBBand(currentSignal) {
-    if (currentSignal.bband80 && currentSignal.bband80.length === 3 &&
-      currentSignal.bband80[0].length > 0 &&
-      currentSignal.bband80[2].length > 0) {
-      const lower = currentSignal.bband80[0][0];
-      const upper = currentSignal.bband80[2][0];
-      const currentClose = currentSignal.close;
-      if (currentClose > upper) {
-        return 1;
-      } if (currentClose < lower) {
-        return -1;
-      }
-      return 0;
-    } else {
-      throw new Error('BBand Missing');
-    }
-  }
-
-  getOutput(currentClose, futureClose) {
-    if (DecisionService.getPercentChange(currentClose, futureClose) > 0.005) {
-      return 1;
-    }
-
-    return 0;
-  }
-
-  convertRecommendations(signal: Indicators) {
-    const input = [];
-    if (signal && signal.recommendation) {
-      if (signal.recommendation.recommendation && signal.recommendation.recommendation.toLowerCase() === 'buy') {
-        input.push(1);
-      } else if (signal.recommendation.recommendation && signal.recommendation.recommendation.toLowerCase() === 'sell') {
-        input.push(-1);
-      } else {
-        input.push(0);
-      }
-
-      if (signal.recommendation.mfi && signal.recommendation.mfi.toLowerCase() === 'bullish') {
-        input.push(1);
-      } else if (signal.recommendation.mfi && signal.recommendation.mfi.toLowerCase() === 'bearish') {
-        input.push(-1);
-      } else {
-        input.push(0);
-      }
-
-      if (signal.recommendation.roc && signal.recommendation.roc.toLowerCase() === 'bullish') {
-        input.push(1);
-      } else if (signal.recommendation.roc && signal.recommendation.roc.toLowerCase() === 'bearish') {
-        input.push(-1);
-      } else {
-        input.push(0);
-      }
-
-      if (signal.recommendation.bband && signal.recommendation.bband.toLowerCase() === 'bullish') {
-        input.push(1);
-      } else if (signal.recommendation.bband && signal.recommendation.bband.toLowerCase() === 'bearish') {
-        input.push(-1);
-      } else {
-        input.push(0);
-      }
-
-      if (signal.recommendation.vwma && signal.recommendation.vwma.toLowerCase() === 'bullish') {
-        input.push(1);
-      } else if (signal.recommendation.vwma && signal.recommendation.vwma.toLowerCase() === 'bearish') {
-        input.push(-1);
-      } else {
-        input.push(0);
-      }
-    } else {
-      console.log('Missing recommendation: ', signal);
-    }
-
-    return input;
-  }
-
-  buildFeatureSet(signals, currentSignal, currentIndex) {
-    const futureClose = signals[currentIndex + 15].close;
-    const closePrice = currentSignal.close;
-
-    const dataSetObj = this.buildInputSet(signals[0].close, signals[currentIndex - 5].close, currentSignal);
-
-    dataSetObj.output = [this.getOutput(closePrice, futureClose)];
-    return dataSetObj;
-  }
-
-  buildInputSet(openingPrice, previousClose, currentSignal) {
     const dataSetObj = {
       date: null,
       input: null,
@@ -181,24 +83,19 @@ class IntradayPredicationService {
     };
 
     const close = currentSignal.close;
-    // const hour = Number(moment(currentSignal.date).format('HH'));
-
     dataSetObj.date = currentSignal.date;
-    dataSetObj.input = [
-      _.round(DecisionService.getPercentChange(openingPrice, close) * 1000, 0),
-      _.round(DecisionService.getPercentChange(previousClose, close) * 1000, 0)
-    ]
-      // .concat(this.comparePrices(currentSignal.vwma, close))
-      // .concat(this.comparePrices(currentSignal.high, close))
-      // .concat(this.comparePrices(currentSignal.low, close))
-      .concat(this.convertRecommendations(currentSignal))
-      .concat([this.convertBBand(currentSignal)])
-      .concat([_.round(DecisionService.getPercentChange(close, currentSignal.vwma) * 1000, 0)])
-      .concat([_.round(DecisionService.getPercentChange(close, currentSignal.high) * 1000, 0)])
-      .concat([_.round(DecisionService.getPercentChange(close, currentSignal.low) * 1000, 0)])
-      .concat([_.round(currentSignal.mfiLeft, 0)])
-      .concat([_.round(currentSignal.rsi, 0)]);
 
+    const input = []
+      .concat(this.comparePrices(currentSignal.vwma, close))
+      .concat(this.convertRecommendations(currentSignal));
+
+    dataSetObj.input = [];
+
+    featureUse.forEach((value, idx) => {
+      if ((value === '1' || value === 1) && input[idx] !== undefined) {
+        dataSetObj.input.push(input[idx]);
+      }
+    });
     return dataSetObj;
   }
 }

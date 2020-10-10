@@ -11,9 +11,10 @@ import * as moment from 'moment-timezone';
 import * as _ from 'lodash';
 import { Holding } from '../shared/models';
 import { GlobalSettingsService } from '../settings/global-settings.service';
-import { TradeService } from '../shared/services/trade.service';
+import { TradeService, AlgoQueueItem } from '../shared/services/trade.service';
 import { OrderRow } from '../shared/models/order-row';
 import { FormControl, Validators } from '@angular/forms';
+import { MenuItem } from 'primeng/components/common/menuitem';
 
 @Component({
   selector: 'app-shopping-list',
@@ -22,6 +23,7 @@ import { FormControl, Validators } from '@angular/forms';
 })
 export class ShoppingListComponent implements OnInit, OnDestroy {
   defaultInterval = 70800;
+  simultaneousOrderLimit = 3;
   spy: SmartOrder;
   tlt: SmartOrder;
 
@@ -29,6 +31,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
   interval: number;
 
   alive: boolean;
+  displayOrderDialog: boolean;
 
   sub: Subscription;
 
@@ -39,6 +42,8 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
 
   simpleCards: SmartOrder[];
   mlCards: SmartOrder[];
+
+  multibuttonOptions: MenuItem[];
 
   constructor(public cartService: CartService,
     public scoreKeeperService: ScoreKeeperService,
@@ -143,6 +148,24 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
           duration: 2000,
         });
       });
+
+    this.multibuttonOptions = [
+      {
+        label: 'Delete Orders', icon: 'pi pi-trash', command: () => {
+          this.stopAndDeleteOrders();
+        }
+      },
+      {
+        label: 'Close Opened DayTrades', icon: 'pi pi-sign-out', command: () => {
+          this.closeAllTrades();
+        }
+      },
+      {
+        label: 'Load Example Orders', icon: 'pi pi-shopping-cart', command: () => {
+          this.loadExamples();
+        }
+      }
+    ];
   }
 
   ngOnDestroy() {
@@ -172,21 +195,32 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
+        if (this.sub) {
+          this.sub.unsubscribe();
+        }
         const concat = this.cartService.sellOrders.concat(this.cartService.buyOrders);
-
         this.queueAlgos(concat.concat(this.cartService.otherOrders));
       }
     });
   }
 
   queueAlgos(orders: SmartOrder[]) {
+    const mlStartTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 15:55`, 'America/New_York');
+    let mlStopTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 16:00`, 'America/New_York');
+    this.globalSettingsService.setStartTimes();
+    console.log(`New queue set to start at ${moment(this.globalSettingsService.startTime).format()}`);
     this.alive = true;
     let lastIndex = 0;
-    const limit = 10;
+    const limit = this.simultaneousOrderLimit > orders.length ? orders.length : this.simultaneousOrderLimit;
 
     _.forEach(orders, (order: SmartOrder) => {
-      order.init = true;
       order.stopped = false;
+      const queueItem: AlgoQueueItem = {
+        symbol: order.holding.symbol,
+        reset: true
+      };
+
+      this.tradeService.algoQueue.next(queueItem);
     });
 
     this.sub = TimerObservable.create(0, this.interval)
@@ -201,7 +235,12 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
           moment().isBefore(moment(this.globalSettingsService.stopTime))) {
           let executed = 0;
           while (executed < limit && lastIndex < orders.length) {
-            this.tradeService.algoQueue.next(orders[lastIndex].holding.symbol);
+            const queueItem: AlgoQueueItem = {
+              symbol: orders[lastIndex].holding.symbol,
+              reset: false
+            };
+
+            this.tradeService.algoQueue.next(queueItem);
             lastIndex++;
             executed++;
           }
@@ -218,6 +257,23 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
           }
           this.interval = moment().subtract(5, 'minutes').diff(moment(this.globalSettingsService.startTime), 'milliseconds');
           console.log('new interval: ', this.interval);
+        }
+
+        if ((moment().isAfter(moment(mlStartTime)) &&
+          moment().isBefore(moment(mlStopTime)))) {
+          orders.forEach((order: SmartOrder) => {
+            if (order.side.toLowerCase() !== 'daytrade') {
+              const queueItem: AlgoQueueItem = {
+                symbol: order.holding.symbol,
+                reset: false,
+                triggerMlBuySell: true
+              };
+              this.tradeService.algoQueue.next(queueItem);
+            }
+          });
+          mlStopTime = mlStartTime;
+
+          setTimeout(this.globalSettingsService.initTradeDate, 3600000);
         }
       });
   }
@@ -288,9 +344,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
           useStopLoss: row.StopLoss || null,
           useTrailingStopLoss: row.TrailingStopLoss || null,
           useTakeProfit: row.TakeProfit || null,
-          buyCloseSellOpen: row.BuyCloseSellOpen || null,
           sellAtClose: row.SellAtClose || null,
-          yahooData: row.YahooData || null,
           orderSize: row.OrderSize * 1 || null
         };
         this.cartService.addToCart(order);
@@ -351,5 +405,9 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
           duration: 2000,
         });
       });
+  }
+
+  showOrderDialog() {
+    this.displayOrderDialog = true;
   }
 }

@@ -1,4 +1,4 @@
-import * as express from 'express';
+const express = require('express');
 const router = express.Router();
 
 import ReversionController from './reversion.controller';

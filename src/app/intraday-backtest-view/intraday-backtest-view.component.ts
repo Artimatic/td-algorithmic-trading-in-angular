@@ -86,8 +86,6 @@ export class IntradayBacktestViewComponent implements OnInit {
           useStopLoss: row.StopLoss || null,
           useTrailingStopLoss: row.TrailingStopLoss || null,
           useTakeProfit: row.TakeProfit || null,
-          buyCloseSellOpen: row.BuyCloseSellOpen || null,
-          yahooData: row.YahooData || null,
           sellAtClose: row.SellAtClose || null,
           orderSize: row.OrderSize * 1 || null,
         };

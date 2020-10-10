@@ -1,0 +1,12 @@
+<div class="portfolio-management">
+  <p-steps [model]="steps" [(activeIndex)]="activeIndex" [readonly]="false"></p-steps>
+  <div *ngIf="activeIndex===0">
+    <app-portfolio-info></app-portfolio-info>
+  </div>
+  <div *ngIf="activeIndex===1">
+    <app-find-buy></app-find-buy>
+  </div>
+  <div *ngIf="activeIndex===2">
+    <app-determine-hedge></app-determine-hedge>
+  </div>
+</div>

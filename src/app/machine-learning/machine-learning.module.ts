@@ -14,6 +14,8 @@ import { DropdownModule } from 'primeng/dropdown';
 import { CardModule } from 'primeng/card';
 import { TableModule } from 'primeng/table';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { SharedModule } from '../shared/shared.module';
+import { MlTimeperiodsComponent } from './ml-timeperiods/ml-timeperiods.component';
 
 const routes: Routes =
   [
@@ -39,16 +41,18 @@ const routes: Routes =
     DropdownModule,
     CardModule,
     TableModule,
-    ProgressSpinnerModule
+    ProgressSpinnerModule,
+    SharedModule
   ],
   declarations: [
     TimelineViewComponent,
     PrecogComponent,
     MachineLearningPageComponent,
-    AskModelComponent
+    AskModelComponent,
+    MlTimeperiodsComponent,
   ],
   exports: [
-    MachineLearningPageComponent
+    MachineLearningPageComponent,
   ],
   providers: [
     BacktestService

@@ -3,6 +3,7 @@ import * as _ from 'lodash';
 import BaseController from '../templates/base.controller';
 import TrainingService from './training.service';
 import IntradayPredicationService from './intraday-prediction.service';
+import DailyPredicationService from './daily-prediction.service';
 
 class MachineLearningController extends BaseController {
 
@@ -23,7 +24,7 @@ class MachineLearningController extends BaseController {
   }
 
   testV2Model(request, response) {
-    TrainingService.testModel(request.query.symbol, request.query.startDate, request.query.endDate)
+    TrainingService.testModel(request.query.symbol, request.query.startDate, request.query.endDate, request.query.trainingSize)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
@@ -34,18 +35,41 @@ class MachineLearningController extends BaseController {
   }
 
   trainV3(request, response) {
+    const features = request.query.features ? request.query.features.split(',') : null;
+
     IntradayPredicationService.train(request.query.symbol,
       request.query.startDate,
       request.query.endDate,
-      request.query.trainingSize)
+      request.query.trainingSize,
+      features)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
+  trainDailyV3(request, response) {
+    const features = request.query.features ? request.query.features.split(',') : null;
+
+    DailyPredicationService.train(request.query.symbol,
+      request.query.startDate,
+      request.query.endDate,
+      request.query.trainingSize,
+      features)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data));
+  }
+
   activateV3(request, response) {
-    IntradayPredicationService.activate(request.query.symbol)
+    const features = request.query.features ? request.query.features.split(',') : null;
+
+    IntradayPredicationService.activate(request.query.symbol, features)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+  activateDailyV3(request, response) {
+    const features = request.query.features ? request.query.features.split(',') : null;
+
+    DailyPredicationService.activate(request.query.symbol, features)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data));
   }
 }
 

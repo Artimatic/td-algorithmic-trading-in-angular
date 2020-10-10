@@ -1,45 +1,42 @@
 import { Injectable } from '@angular/core';
-import { Http, Headers, RequestOptions, Response } from '@angular/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/operator/map';
+import { map } from 'rxjs/operators';
 
 import { AuthenticationService } from './authentication.service';
 import { Holding } from '../models';
 import * as _ from 'lodash';
 import { GlobalSettingsService, Brokerage } from '../../settings/global-settings.service';
+import { MatSnackBar } from '@angular/material';
 
 @Injectable()
 export class PortfolioService {
   constructor(
-    private http: Http,
+    private http: HttpClient,
     private authenticationService: AuthenticationService,
-    private globalSettingsService: GlobalSettingsService) {
+    private globalSettingsService: GlobalSettingsService,
+    public snackBar: MatSnackBar) {
   }
 
-  getPortfolio(): Observable<Holding[]> {
-    const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.getToken() });
-    const options = new RequestOptions({ headers: headers });
+  getPortfolio(): Observable<any> {
+    const headers = new HttpHeaders({ 'Authorization': 'Bearer ' + this.authenticationService.getToken() });
+    const options = { headers: headers };
 
-    return this.http.get('/api/portfolio/positions/', options)
-      .map((response: Response) => {
-        return response.json().results;
-      });
+    return this.http.get('/api/portfolio/positions/', options);
   }
 
   getTdPortfolio(): Observable<any> {
     const options = {
       params: {
-        accountId: this.authenticationService.selectedTdaAccount.accountId
+        accountId: this.getAccountId()
       }
     };
-    return this.http.get('/api/portfolio/v2/positions/', options)
-      .map((response: Response) => response.json());
+    return this.http.get('/api/portfolio/v2/positions/', options);
   }
 
   getResource(url: string): Observable<any> {
     const body = { instrument: url };
-    return this.http.post('/api/portfolio/resources', body)
-      .map((response: Response) => response.json());
+    return this.http.post('/api/portfolio/resources', body);
   }
 
   sell(holding: Holding, quantity: number, price: number, type: string): Observable<any> {
@@ -62,8 +59,8 @@ export class PortfolioService {
     if (quantity === 0) {
       throw new Error('Order Quantity is 0');
     }
-    const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.getToken() });
-    const options = new RequestOptions({ headers: headers });
+    const headers = new HttpHeaders({ 'Authorization': 'Bearer ' + this.authenticationService.getToken() });
+    const options = { headers: headers };
     const body = {
       'account': this.authenticationService.myAccount.account,
       'url': holding.instrument,
@@ -76,18 +73,15 @@ export class PortfolioService {
       body['price'] = price;
     }
 
-    return this.http.post('/api/portfolio/sell', body, options)
-      .map((response: Response) => {
-        return response.json();
-      });
+    return this.http.post('/api/portfolio/sell', body, options);
   }
 
   buyRh(holding: Holding, quantity: number, price: number, type: string): Observable<any> {
     if (quantity === 0) {
       throw new Error('Order Quantity is 0');
     }
-    const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.getToken() });
-    const options = new RequestOptions({ headers: headers });
+    const headers = new HttpHeaders({ 'Authorization': 'Bearer ' + this.authenticationService.getToken() });
+    const options = { headers: headers };
     const body = {
       'account': this.authenticationService.myAccount.account,
       'url': holding.instrument,
@@ -97,10 +91,7 @@ export class PortfolioService {
       'type': type
     };
 
-    return this.http.post('/api/portfolio/buy', body, options)
-      .map((response: Response) => {
-        return response.json();
-      });
+    return this.http.post('/api/portfolio/buy', body, options);
   }
 
   extendedHoursBuy(holding: Holding, quantity: number, price: number): Observable<any> {
@@ -115,8 +106,8 @@ export class PortfolioService {
     if (quantity === 0) {
       throw new Error('Order Quantity is 0');
     }
-    const headers = new Headers({ 'Authorization': 'Bearer ' + this.authenticationService.getToken() });
-    const options = new RequestOptions({ headers: headers });
+    const headers = new HttpHeaders({ 'Authorization': 'Bearer ' + this.authenticationService.getToken() });
+    const options = { headers: headers };
     const body = {
       'account': this.authenticationService.myAccount.account,
       'url': holding.instrument,
@@ -127,31 +118,26 @@ export class PortfolioService {
       'extendedHour': true
     };
 
-    return this.http.post('/api/portfolio/buy', body, options)
-      .map((response: Response) => {
-        return response.json();
-      });
+    return this.http.post('/api/portfolio/buy', body, options);
   }
 
   getInstruments(symbol: string): Observable<any> {
     const body = { symbol: symbol };
-    return this.http.post('/api/portfolio/instruments', body)
-      .map((response: Response) => response.json());
+    return this.http.post('/api/portfolio/instruments', body);
   }
 
   getQuote(symbol: string): Observable<any> {
     const options = {
       params: {
         symbol,
-        accountId: this.authenticationService.selectedTdaAccount.accountId
+        accountId: this.getAccountId()
       }
     };
 
-    return this.http.get('/api/portfolio/quote', options)
-      .map((response: Response) => response.json());
+    return this.http.get('/api/portfolio/quote', options);
   }
 
-  getPrice(symbol: string): Observable<any> {
+  getPrice(symbol: string): Observable<number> {
     const options: any = {
       params: {
         symbol
@@ -159,12 +145,15 @@ export class PortfolioService {
     };
 
     if (this.authenticationService.selectedTdaAccount) {
-      options.params.accountId = this.authenticationService.selectedTdaAccount.accountId;
+      options.params.accountId = this.getAccountId();
     }
     return this.http.get('/api/portfolio/quote', options)
-      .map((response: Response) => {
-        return _.round(response.json().askPrice, 2);
-      });
+      .pipe(
+        map((response) => {
+          console.log('getprice: ', response);
+          return _.round(response['askPrice'], 2);
+        })
+      );
   }
 
   sendTdBuy(holding: Holding, quantity: number, price: number, extended: boolean): Observable<any> {
@@ -174,31 +163,43 @@ export class PortfolioService {
       price: price,
       type: 'LIMIT',
       extendedHours: extended,
-      accountId: this.authenticationService.selectedTdaAccount.accountId
+      accountId: this.getAccountId()
     };
     return this.http.post('/api/portfolio/v2/buy', body);
   }
 
   sendTdSell(holding: Holding, quantity: number, price: number, extended: boolean): Observable<any> {
+
     const body = {
       symbol: holding.symbol,
       quantity: quantity,
       price: price,
       type: 'MARKET',
       extendedHours: extended,
-      accountId: this.authenticationService.selectedTdaAccount.accountId
+      accountId: this.getAccountId()
     };
     return this.http.post('/api/portfolio/v2/sell', body);
   }
 
   getTdBalance(): Observable<any> {
+    const accountId = this.getAccountId();
     const options = {
       params: {
-        accountId: this.authenticationService.selectedTdaAccount.accountId
+        accountId
       }
     };
 
-    return this.http.get('/api/portfolio/balance', options)
-      .map((response: Response) => response.json());
+    return this.http.get('/api/portfolio/balance', options);
+  }
+
+  getAccountId() {
+    if (!this.authenticationService.selectedTdaAccount) {
+      this.snackBar.open('Login Missing - Please log in with TD Ameritrade account', 'Dismiss', {
+        duration: 5000,
+      });
+      return null;
+    } else {
+      return this.authenticationService.selectedTdaAccount.accountId;
+    }
   }
 }

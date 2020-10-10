@@ -1,0 +1,25 @@
+<p-table [value]="scoreTable">
+  <ng-template pTemplate="header" let-columns>
+    <tr>
+      <th>
+        Stock
+      </th>
+      <th>
+        Profit/Loss
+      </th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-rowData>
+    <tr>
+      <td>
+        {{rowData.stock}}
+      </td>
+      <td>
+        {{rowData.profit | currency}}
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="summary">
+    Total Profit/Loss: {{ this.totalScore | currency }}
+  </ng-template>
+</p-table>

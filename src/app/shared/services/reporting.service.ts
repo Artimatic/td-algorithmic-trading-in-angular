@@ -14,6 +14,7 @@ export class ReportingService {
     const currentTime = moment().format('DD.MM.YYYY hh:mm');
     const log = {time: currentTime, symbol: symbol, message: message};
     this.logs.push(log);
+    return log;
   }
 
   exportAuditHistory() {

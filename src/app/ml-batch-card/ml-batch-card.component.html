@@ -1,0 +1,69 @@
+<p-card>
+  <div class="banner" *ngIf="error">
+    <div class="banner-content">
+      ERROR: {{error}}
+    </div>
+  </div>
+  <div class="banner-warning" *ngIf="warning">
+    <div class="banner-content-warning">
+      WARNING: {{warning}}
+    </div>
+  </div>
+  <mat-horizontal-stepper [linear]="false" #stepper="matHorizontalStepper">
+    <mat-step [stepControl]="firstFormGroup">
+      <form [formGroup]="firstFormGroup">
+        <ng-template matStepLabel>Edit Order</ng-template>
+        <h3>Machine Learning Batch Order</h3>
+        <h4>Current Brokerage: {{globalSettingsService.brokerage}}</h4>
+        <section>
+          <mat-grid-list cols="4" rowHeight="25px">
+            <mat-grid-tile [colspan]="2" [rowspan]="1">
+              <mat-form-field>
+                <input matInput placeholder="Amount (rounded up)" type="number" formControlName="amount" required>
+                <span matPrefix>$&nbsp;</span>
+                <span matSuffix>.00</span>
+              </mat-form-field>
+            </mat-grid-tile>
+            <mat-grid-tile [colspan]="2" [rowspan]="2">
+              <mat-slide-toggle [formControl]="testing" (change)="setTest()">
+                Test Mode
+              </mat-slide-toggle>
+            </mat-grid-tile>
+          </mat-grid-list>
+        </section>
+        <div>
+          <button mat-button matStepperNext>
+            Next
+          </button>
+        </div>
+      </form>
+    </mat-step>
+    <mat-step [stepControl]="secondFormGroup">
+      <ng-template matStepLabel>Place Order</ng-template>
+      <mat-card>
+        <div *ngIf="live">
+          <mat-chip color="warn" selected="true">LIVE</mat-chip>
+        </div>
+        <div *ngIf="!live">
+          <button mat-raised-button disabled>STALLED</button>
+        </div>
+        <div>
+          Orders Submitted: {{ holdingCount}} shares
+        </div>
+        <div class="toolbar-content" fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px"
+          fxLayoutGap.xs="0">
+          <div fxFlex="5%">
+            <mat-card-header>
+              <mat-card-title>RNN Algo</mat-card-title>
+            </mat-card-header>
+          </div>
+        </div>
+        <mat-card-actions>
+          <button mat-raised-button color="warn" (click)="resetStepper(stepper)">STOP</button>
+          <button mat-button color="warn" (click)="openDialog()">GO LIVE</button>
+          <button mat-button color="primary" (click)="trainModel()">Train Model</button>
+        </mat-card-actions>
+      </mat-card>
+    </mat-step>
+  </mat-horizontal-stepper>
+</p-card>

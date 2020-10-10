@@ -6,7 +6,7 @@
     <div class="p-col">
       <form [formGroup]="form" novalidate>
         <mat-form-field>
-          <input matInput formControlName="query" placeholder="Enter ticker symbol" (keyup.enter)="train()"/>
+          <input matInput formControlName="query" placeholder="Enter ticker symbol" (keyup.enter)="train()" />
         </mat-form-field>
       </form>
     </div>
@@ -19,28 +19,34 @@
       </p-dropdown>
     </div>
     <div *ngIf="!isLoading">
-      <button pButton type="button" label="Train" class="ui-button-secondary" (click)="train()"></button>
-      <button pButton type="button" label="Score" class="ui-button-secondary" (click)="score()"></button>
-      <button pButton type="button" label="Activate" (click)="activate()"></button>
+      <button pButton type="button" label="Train" class="ui-button-success" (click)="train()"></button>
+      <button pButton type="button" label="Activate" class="ui-button-warn" (click)="activate()"></button>
       <button pButton type="button" label="Random" (click)="random()"></button>
     </div>
   </div>
-  <div class="load-spinner" *ngIf="isLoading">
-    <p-progressSpinner [style]="{width: '50px', height: '50px'}" strokeWidth="8" fill="#EEEEEE" animationDuration="5s">
-    </p-progressSpinner>
-  </div>
-  <p-table [columns]="cols" [value]="modelResults">
+
+  <p-table #dt [columns]="cols" [value]="modelResults" [paginator]="true" [rows]="100" dataKey="symbol"
+    selectionMode="single" (onRowSelect)="onRowSelect($event)">
+    <ng-template pTemplate="caption">
+      <div class="global-filter">
+        <i class="fa fa-search" style="margin:4px 4px 0 0"></i>
+        <input type="text" pInputText size="50" placeholder="Filter By Algorithm"
+          (input)="dt.filterGlobal($event.target.value, 'contains')" style="width:auto">
+      </div>
+      <app-default-order-lists class="default-orders-button" [prefillOrderForm]="prefillOrderForm"></app-default-order-lists>
+    </ng-template>
     <ng-template pTemplate="header" let-columns>
       <tr>
-        <th *ngFor="let col of columns">
+        <th *ngFor="let col of columns" [pSortableColumn]="col.field">
           {{col.header}}
+          <p-sortIcon [field]="col.field"></p-sortIcon>
         </th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-rowData let-columns="columns">
-      <tr>
-        <td *ngFor="let col of columns">
-          {{rowData[col.field]}}
+      <tr [pSelectableRow]="rowData">
+        <td *ngFor="let col of columns" class="table-cell">
+          <div class="data-cell">{{rowData[col.field]}}</div>
         </td>
       </tr>
     </ng-template>

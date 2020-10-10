@@ -31,7 +31,7 @@ enum Sentiment {
   styleUrls: ['./ml-card.component.css']
 })
 export class MlCardComponent implements OnInit {
-  @ViewChild('stepper') stepper;
+  @ViewChild('stepper', { static: false }) stepper;
 
   sub: Subscription;
 
@@ -42,6 +42,7 @@ export class MlCardComponent implements OnInit {
 
   bullishPlay: FormControl;
   bearishPlay: FormControl;
+  selectedModel: FormControl;
   settings: FormControl;
 
   error: string;
@@ -64,6 +65,11 @@ export class MlCardComponent implements OnInit {
 
   testing = new FormControl();
 
+  multiplierPreference: FormControl;
+  multiplierList: number[];
+
+  stockConstant = 'SPY';
+
   constructor(private _formBuilder: FormBuilder,
     private portfolioService: PortfolioService,
     private daytradeService: DaytradeService,
@@ -74,14 +80,6 @@ export class MlCardComponent implements OnInit {
     public dialog: MatDialog) { }
 
   ngOnInit() {
-    this.startTime = moment.tz('3:55pm', 'h:mma', 'America/New_York');
-    this.stopTime = moment.tz('6:00pm', 'h:mma', 'America/New_York');
-
-    this.holdingCount = 0;
-
-    this.interval = 300000;
-    this.reportWaitInterval = 180000;
-
     this.live = false;
     this.alive = true;
     this.longOnly.setValue(false);
@@ -89,8 +87,20 @@ export class MlCardComponent implements OnInit {
     this.inverse.setValue(false);
     this.testing.setValue(false);
 
+    this.multiplierList = [
+      1,
+      2,
+      3,
+      4,
+      5
+    ];
+
+    this.multiplierPreference = new FormControl();
+    this.multiplierPreference.setValue(1);
+
     this.firstFormGroup = this._formBuilder.group({
-      amount: [500, Validators.required]
+      amount: [1000, Validators.required],
+      symbol: []
     });
 
     this.secondFormGroup = this._formBuilder.group({
@@ -105,15 +115,50 @@ export class MlCardComponent implements OnInit {
       Validators.required
     ]);
 
-    this.settings = new FormControl('closePositions', [
+    this.selectedModel = new FormControl('V2', [
+      Validators.required
+    ]);
+
+    this.settings = new FormControl('openPositions', [
       Validators.required
     ]);
 
     this.setup();
   }
 
+  getTrainingStock() {
+    if (this.bullishPlay.value === 'CUSTOM' && this.firstFormGroup.value.symbol) {
+      return this.firstFormGroup.value.symbol;
+    } else {
+      return 'SPY';
+    }
+  }
+
+  getBullPick() {
+    if (this.bullishPlay.value === 'CUSTOM' && this.firstFormGroup.value.symbol) {
+      return this.firstFormGroup.value.symbol;
+    } else {
+      return this.bullishPlay.value;
+    }
+  }
+
   trainModel() {
-    this.backtestService.runLstmV2('VTI', moment().subtract({ day: 1 }).format('YYYY-MM-DD'), moment().subtract({ day: 300 }).format('YYYY-MM-DD')).subscribe();
+    if (this.selectedModel.value === 'V3') {
+      this.backtestService.runLstmV3(this.getTrainingStock(),
+        moment().subtract({ day: 1 }).format('YYYY-MM-DD'),
+        moment().subtract({ day: 365 }).format('YYYY-MM-DD'),
+        0.7,
+        '0,0,1,0,0,1,1,1,1,1,1,0,0')
+        .subscribe(() => {
+          this.sendActivation().subscribe();
+        });
+    } else {
+      this.backtestService.runLstmV2(this.getTrainingStock(),
+        moment().subtract({ day: 1 }).format('YYYY-MM-DD'),
+        moment().subtract({ day: 50 }).format('YYYY-MM-DD')).subscribe(() => {
+          this.sendActivation().subscribe();
+        });
+    }
   }
 
   getTradeDay() {
@@ -131,6 +176,7 @@ export class MlCardComponent implements OnInit {
 
   goLive() {
     this.setup();
+    this.trainModel();
     this.alive = true;
     this.sub = TimerObservable.create(0, this.interval)
       .takeWhile(() => this.alive)
@@ -141,7 +187,7 @@ export class MlCardComponent implements OnInit {
           momentInst.isBefore(this.stopTime) || this.testing.value) {
           this.alive = false;
           this.pendingResults = true;
-          this.backtestService.activateLstmV2('VTI')
+          this.sendActivation()
             .subscribe((data: any) => {
               console.log('rnn data: ', this.getTradeDay(), data);
 
@@ -151,7 +197,9 @@ export class MlCardComponent implements OnInit {
                 this.pendingResults = false;
               }
             }, error => {
-              console.log('ML activation failed. Trying again.');
+              console.log('ML activation failed. Trying other models.');
+              this.stockConstant = this.stockConstant === 'SPY' ? 'VOO' : 'SPY';
+              this.activateOtherModel();
               this.alive = true;
             });
         }
@@ -212,17 +260,17 @@ export class MlCardComponent implements OnInit {
     switch (bet.summary) {
       case Sentiment.Bullish:
         if (this.settings.value === 'closePositions') {
-          this.sellAll(this.getOrder(this.inverse.value ? this.bullishPlay.value :  this.bearishPlay.value));
+          this.sellAll(this.getOrder(this.inverse.value ? this.getBullPick() : this.bearishPlay.value));
         } else if (this.settings.value === 'openPositions') {
-          this.buy(this.getOrder(this.inverse.value ? this.bearishPlay.value : this.bullishPlay.value), _.divide(bet.bullishOpen, bet.total));
+          this.buy(this.getOrder(this.inverse.value ? this.bearishPlay.value : this.getBullPick()), _.divide(bet.bullishOpen, bet.total));
         }
 
         break;
       case Sentiment.Bearish:
         if (this.settings.value === 'closePositions') {
-          this.sellAll(this.getOrder(this.inverse.value ? this.bearishPlay.value : this.bullishPlay.value));
+          this.sellAll(this.getOrder(this.inverse.value ? this.bearishPlay.value : this.getBullPick()));
         } else if (this.settings.value === 'openPositions' && !this.longOnly.value) {
-          this.buy(this.getOrder(this.inverse.value ? this.bullishPlay.value : this.bearishPlay.value), _.divide(bet.bearishOpen, bet.total));
+          this.buy(this.getOrder(this.inverse.value ? this.getBullPick() : this.bearishPlay.value), _.divide(bet.bearishOpen, bet.total));
         }
         break;
       default:
@@ -292,7 +340,7 @@ export class MlCardComponent implements OnInit {
   }
 
   initiateBuy(modifier: number, totalBuyAmount: number, bid: number, order: SmartOrder) {
-    const quantity = _.floor(modifier * this.calculateQuantity(totalBuyAmount, bid));
+    const quantity = _.floor(modifier * this.calculateQuantity(totalBuyAmount, bid)) * this.multiplierPreference.value;
     const buyOrder = this.daytradeService.createOrder(order.holding, 'Buy', quantity, bid, moment().unix());
     const log = `ORDER SENT ${buyOrder.side} ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
 
@@ -315,15 +363,11 @@ export class MlCardComponent implements OnInit {
     this.stop();
   }
 
-  test() {
-    this.portfolioService.getTdBalance().toPromise().then(data => { console.log(data); });
-  }
-
   calculateQuantity(betSize: number, price: number) {
     return _.floor(_.divide(betSize, price));
   }
 
-  openDialog(): void {
+  goLiveClick(): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '250px',
       data: { title: 'Confirm', message: 'Are you sure you want to execute this order?' }
@@ -355,8 +399,15 @@ export class MlCardComponent implements OnInit {
   }
 
   setup() {
+    this.startTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 15:55`, 'America/New_York');
+    this.stopTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 16:00`, 'America/New_York');
+
     this.holdingCount = 0;
     this.warning = '';
+    this.holdingCount = 0;
+
+    this.interval = 300000;
+    this.reportWaitInterval = 180000;
   }
 
   setTest() {
@@ -372,5 +423,19 @@ export class MlCardComponent implements OnInit {
     } else {
       this.firstFormGroup.enable();
     }
+  }
+
+  sendActivation() {
+    if (this.selectedModel.value === 'V3') {
+      return this.backtestService.activateLstmV3(this.getTrainingStock(), '0,0,1,0,0,1,1,1,1,1,1,0,0');
+    }
+    return this.backtestService.activateLstmV2(this.getTrainingStock());
+  }
+
+  activateOtherModel() {
+    if (this.selectedModel.value === 'V3') {
+      return this.backtestService.activateLstmV2(this.getTrainingStock());
+    }
+    return this.backtestService.activateLstmV3(this.getTrainingStock(), '0,0,1,0,0,1,1,1,1,1,1,0,0');
   }
 }

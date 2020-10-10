@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { BacktestService } from './backtest.service';
-import { AuthenticationService } from './authentication.service';
 import { PortfolioService } from './portfolio.service';
 import { OrderPref } from '../enums/order-pref.enum';
 import { SmartOrder } from '../models/smart-order';
@@ -16,7 +15,6 @@ import { GlobalSettingsService, Brokerage } from '../../settings/global-settings
 export class DaytradeService {
 
   constructor(private backtestService: BacktestService,
-    private authenticationService: AuthenticationService,
     private portfolioService: PortfolioService,
     private indicatorsService: IndicatorsService,
     private cartService: CartService,
@@ -69,12 +67,8 @@ export class DaytradeService {
       TakeProfit: false,
       TrailingStopLoss: false,
       StopLoss: false,
-      MeanReversion1: false,
-      Mfi: false,
-      SpyMomentum: false,
-      BuyCloseSellOpen: false,
       SellAtClose: false,
-      useYahooData: false
+      MlBuySellAtClose: false
     };
 
     if (preferences) {
@@ -86,26 +80,14 @@ export class DaytradeService {
           case OrderPref.StopLoss:
             config.StopLoss = true;
             break;
-          case OrderPref.MeanReversion1:
-            config.MeanReversion1 = true;
-            break;
-          case OrderPref.Mfi:
-            config.Mfi = true;
-            break;
-          case OrderPref.SpyMomentum:
-            config.SpyMomentum = true;
-            break;
-          case OrderPref.BuyCloseSellOpen:
-            config.BuyCloseSellOpen = true;
-            break;
           case OrderPref.SellAtClose:
             config.SellAtClose = true;
             break;
-          case OrderPref.useYahooData:
-            config.useYahooData = true;
-            break;
           case OrderPref.TrailingStopLoss:
             config.TrailingStopLoss = true;
+            break;
+          case OrderPref.MlBuySellAtClose:
+            config.MlBuySellAtClose = true;
             break;
         }
       });
@@ -158,17 +140,13 @@ export class DaytradeService {
   }
 
   sendSell(sellOrder: SmartOrder, type: string, resolve: Function, reject: Function, handleNotFound: Function): SmartOrder {
-    if (this.globalSettingsService.brokerage === Brokerage.Robinhood) {
-      return this.sendRhSell(sellOrder, type, resolve, reject, handleNotFound);
-    } else if (this.globalSettingsService.brokerage === Brokerage.Td) {
+    if (this.globalSettingsService.brokerage === Brokerage.Td) {
       return this.sendTdSell(sellOrder, type, resolve, reject, handleNotFound);
     }
   }
 
   closePosition(sellOrder: SmartOrder, type: string, resolve: Function, reject: Function, handleNotFound: Function): SmartOrder {
-    if (this.globalSettingsService.brokerage === Brokerage.Robinhood) {
-      return this.closeRhPosition(sellOrder, type, resolve, reject, handleNotFound);
-    } else if (this.globalSettingsService.brokerage === Brokerage.Td) {
+    if (this.globalSettingsService.brokerage === Brokerage.Td) {
       return this.closeTdPosition(sellOrder, type, resolve, reject, handleNotFound);
     }
   }
@@ -248,86 +226,6 @@ export class DaytradeService {
         } else {
           handleNotFound();
         }
-      });
-    return sellOrder;
-  }
-
-  sendRhSell(sellOrder: SmartOrder, type: string, resolve: Function, reject: Function, handleNotFound: Function): SmartOrder {
-    this.authenticationService.getPortfolioAccount().subscribe(account => {
-      this.portfolioService.getPortfolio()
-        .subscribe(result => {
-          const foundPosition = result.find((pos) => {
-            return pos.instrument === sellOrder.holding.instrument;
-          });
-
-          if (foundPosition) {
-            const positionCount = Number(foundPosition.quantity);
-            if (positionCount === 0) {
-              handleNotFound();
-            } else {
-              sellOrder.quantity = sellOrder.quantity < positionCount ? sellOrder.quantity : positionCount;
-
-              let price = sellOrder.price;
-
-              if (type === 'market') {
-                price = null;
-              }
-
-              this.portfolioService.sell(sellOrder.holding, sellOrder.quantity, price, type).subscribe(
-                response => {
-                  resolve(response);
-                },
-                error => {
-                  reject(error);
-                });
-            }
-          } else {
-            handleNotFound();
-          }
-        });
-    },
-      error => {
-        reject();
-      });
-    return sellOrder;
-  }
-
-  closeRhPosition(sellOrder: SmartOrder, type: string, resolve: Function, reject: Function, handleNotFound: Function): SmartOrder {
-    this.authenticationService.getPortfolioAccount().subscribe(account => {
-      this.portfolioService.getPortfolio()
-        .subscribe(result => {
-          const foundPosition = result.find((pos) => {
-            return pos.instrument === sellOrder.holding.instrument;
-          });
-
-          if (foundPosition) {
-            const positionCount = Number(foundPosition.quantity);
-            if (positionCount === 0) {
-              handleNotFound();
-            } else {
-              sellOrder.quantity = positionCount;
-
-              let price = sellOrder.price;
-
-              if (type === 'market') {
-                price = null;
-              }
-
-              this.portfolioService.sell(sellOrder.holding, sellOrder.quantity, price, type).subscribe(
-                response => {
-                  resolve(response);
-                },
-                error => {
-                  reject(error);
-                });
-            }
-          } else {
-            handleNotFound();
-          }
-        });
-    },
-      error => {
-        reject();
       });
     return sellOrder;
   }

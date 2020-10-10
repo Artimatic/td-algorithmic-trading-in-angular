@@ -242,10 +242,11 @@ export class BacktestService {
     return this.http.get(`${BASE_URL}api/backtest/analysis-status`);
   }
 
-  getRnn(symbol: string, to: string = null, from: string = null): Observable<any> {
+  getRnn(symbol: string, to: string = null, modelName: number[] = null): Observable<any> {
     const body = {
       symbol,
-      to
+      to,
+      modelName: modelName.join()
     };
 
     return this.http.post(`${BASE_URL}api/backtest/rnn-status`, body, {});
@@ -270,17 +271,37 @@ export class BacktestService {
     return this.http.post(`${BASE_URL}api/backtest/rnn-activate`, data, {});
   }
 
-  runLstmV2(symbol: string, endDate: string = null, startDate: string = null): Observable<any> {
+  runLstmV2(symbol: string, endDate: string = null, startDate: string = null, trainingSize = 0.7): Observable<any> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     const options = {
       headers: headers,
       params: {
         symbol,
         startDate,
-        endDate
+        endDate,
+        trainingSize: String(trainingSize)
       }
     };
     return this.http.get(`${BASE_URL}api/machine-learning/test-model`, options);
+  }
+
+  runLstmV3(symbol: string,
+    endDate: string = null,
+    startDate: string = null,
+    trainingSize: number,
+    features: string): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const options = {
+      headers: headers,
+      params: {
+        symbol,
+        startDate,
+        endDate,
+        trainingSize: String(trainingSize),
+        features
+      }
+    };
+    return this.http.get(`${BASE_URL}api/machine-learning/v3/train-daily`, options);
   }
 
   activateLstmV2(symbol: string): Observable<any> {
@@ -293,6 +314,19 @@ export class BacktestService {
     };
 
     return this.http.get(`${BASE_URL}api/machine-learning/guess-activate`, options);
+  }
+
+  activateLstmV3(symbol: string, features: string): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const options = {
+      headers: headers,
+      params: {
+        symbol,
+        features
+      }
+    };
+
+    return this.http.get(`${BASE_URL}api/machine-learning/v3/activate-daily`, options);
   }
 
   getDaytradeIndicators(quotes: any, period: number, stddev: number, mfiPeriod: number,

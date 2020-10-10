@@ -1,0 +1,22 @@
+<p-table [value]="backtest">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>Start Time</th>
+      <th>End Time</th>
+      <th>Algorithm</th>
+      <th>Guesses</th>
+      <th>Correct</th>
+      <th>Percent Correct</th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-backtest>
+    <tr>
+      <td>{{backtest.startTime}}</td>
+      <td>{{backtest.endTime}}</td>
+      <td>{{backtest.algorithm}}</td>
+      <td>{{backtest.guesses}}</td>
+      <td>{{holding.correct}}</td>
+      <td>{{holding.percentCorrect}}</td>
+    </tr>
+  </ng-template>
+</p-table>

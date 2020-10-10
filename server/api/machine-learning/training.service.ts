@@ -121,7 +121,7 @@ class TrainingService {
               const quote = val[val.length - 2]; // TODO CHANGE TO -1
               const intraday = intradayQuotes[idx].candles;
               const datetime =  intraday[intraday.length - 2].datetime;
-              if (moment(datetime).diff(moment(quote.date), 'days') !== 1) {
+              if (moment(datetime).diff(moment(quote.date), 'days') > 1) {
                 console.log(moment(quote.date).diff(moment(datetime), 'days'), quote.date, moment(datetime).format());
                 console.log(`The dates ${moment(quote.date).format()} ${moment(datetime).format()} are incorrect`);
               }
@@ -136,11 +136,50 @@ class TrainingService {
       });
   }
 
+  buildDailyQuotes(symbol, startDate, endDate) {
+    return QuoteService.getDailyQuotes(symbol, endDate, startDate)
+      .then(quotes => {
+        return PortfolioService.getIntradayV2(symbol, 1, 'minute', 1)
+          .then(intradayQuotes => {
+              let quote = quotes[quotes.length - 1];
+              const intradayCandles = intradayQuotes.candles;
+              const datetime =  intradayCandles[intradayCandles.length - 2].datetime;
+
+              if (moment(datetime).diff(moment(quote.date), 'days') > 1) {
+                console.log(moment(quote.date).diff(moment(datetime), 'days'), quote.date, moment(datetime).format());
+                console.log(`The dates ${moment(quote.date).format()} ${moment(datetime).format()} are incorrect`);
+              } else if (moment(datetime).diff(moment(quote.date), 'days') < 1) {
+
+                const currentQuote = this.processIntraday(intradayCandles);
+                const currentVolume = this.getVolume(intradayCandles);
+
+                currentQuote.date = moment(intradayCandles[intradayCandles.length - 2].datetime).toISOString();
+                currentQuote.volume = currentVolume;
+                currentQuote.symbol = symbol;
+                quotes[quotes.length - 1] = currentQuote;
+              } else {
+                const currentQuote = this.processIntraday(intradayCandles);
+                const currentVolume = this.getVolume(intradayCandles);
+
+                currentQuote.date = moment(intradayCandles[intradayCandles.length - 2].datetime).toISOString();
+                currentQuote.volume = currentVolume;
+                currentQuote.symbol = symbol;
+                quotes = quotes.concat(currentQuote);
+              }
+
+              console.log('Yesterday: ', moment(quotes[quotes.length - 2].date).format(), 'Today: ', moment(quotes[quotes.length - 1].date).format());
+
+            return quotes;
+          });
+      });
+  }
+
+  getVolume(intradayQuotes) {
+    return intradayQuotes.reduce((accumulator, currentValue) => accumulator + currentValue.volume, 0);
+  }
+
   buildTrainingData(quote, intradayQuotes) {
     const currentQuote = this.processIntraday(intradayQuotes);
-    console.log('intraday quote: ', currentQuote);
-    console.log('previous quote: ', quote);
-
     return this.compareQuotes(quote, currentQuote);
   }
 
@@ -177,9 +216,9 @@ class TrainingService {
     }, accumulator);
   }
 
-  testModel(symbol, startDate, endDate) {
+  testModel(symbol, startDate, endDate, trainingSize = 0.7) {
     console.log('start - end: ', startDate, endDate);
-    return BacktestService.trainV2Model(symbol, endDate, startDate);
+    return BacktestService.trainV2Model(symbol, endDate, startDate, trainingSize);
   }
 
   async activateModel(symbol, startDate) {

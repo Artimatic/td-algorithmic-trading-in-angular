@@ -7,7 +7,7 @@ const RobinHoodApi = require('robinhood-api');
 const robinhood = new RobinHoodApi();
 
 import QuoteService from '../quote/quote.service';
-import configurations from '../../config/environment';
+import * as configurations from '../../config/environment';
 
 const robinhoodDevice = {
   deviceToken: configurations.robinhood.deviceId
@@ -289,12 +289,12 @@ class PortfolioService {
       });
   }
 
-  getIntradayV2(symbol) {
+  getIntradayV2(symbol, period = 2, frequencyType = 'minute', frequency = 1) {
     return this.renewTDAuth(null)
-      .then(() => this.getTDIntradayV2(symbol));
+      .then(() => this.getTDIntradayV2(symbol, period, frequencyType, frequency));
   }
 
-  getTDIntradayV2(symbol) {
+  getTDIntradayV2(symbol, period, frequencyType, frequency) {
     const accountId = configurations.tdameritrade.accountId;
 
     const query = `${tdaUrl}marketdata/${symbol}/pricehistory`;
@@ -303,11 +303,11 @@ class PortfolioService {
       qs: {
         apikey: this.tdaKey[accountId],
         periodType: 'day',
-        period: 2,
-        frequencyType: 'minute',
-        frequency: 1,
+        period,
+        frequencyType,
+        frequency,
         endDate: Date.now(),
-        needExtendedHoursData: true
+        needExtendedHoursData: false
       },
       headers: {
         Authorization: `Bearer ${this.access_token[accountId]}`

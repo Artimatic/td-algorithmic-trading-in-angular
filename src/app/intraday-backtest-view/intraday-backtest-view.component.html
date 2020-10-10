@@ -41,10 +41,10 @@
         <ng-template pTemplate="body" let-stock>
           <tr>
             <td>{{stock.symbol}}</td>
-            <td>{{scoreKeeperService.profitLossHash[stock.symbol]}}%</td>
+            <td class="table-cell">{{scoreKeeperService.profitLossHash[stock.symbol]}}%</td>
             <td>{{stock.price | currency}}</td>
-            <td>{{scoreKeeperService.winlossHash[stock.symbol]?.wins}}</td>
-            <td>{{scoreKeeperService.winlossHash[stock.symbol]?.total}}</td>
+            <td class="table-cell">{{scoreKeeperService.winlossHash[stock.symbol]?.wins}}</td>
+            <td class="table-cell">{{scoreKeeperService.winlossHash[stock.symbol]?.total}}</td>
           </tr>
         </ng-template>
       </p-table>
@@ -76,15 +76,15 @@
       </div>
       <app-score-board [title]="'Total'" [score]="scoreKeeperService.total"></app-score-board>
       <div *ngFor="let sell of cartService.sellOrders">
-        <app-bb-card [order]="sell" [tearDown]="sell.stopped" [init]="sell.init">
+        <app-bb-card [order]="sell" [tearDown]="sell.stopped">
         </app-bb-card>
       </div>
       <div *ngFor="let buy of cartService.buyOrders">
-        <app-bb-card [order]="buy" [tearDown]="buy.stopped" [init]="buy.init">
+        <app-bb-card [order]="buy" [tearDown]="buy.stopped">
         </app-bb-card>
       </div>
       <div *ngFor="let other of cartService.otherOrders">
-        <app-bb-card [order]="other" [tearDown]="other.stopped" [init]="other.init">
+        <app-bb-card [order]="other" [tearDown]="other.stopped">
         </app-bb-card>
       </div>
     </div>
