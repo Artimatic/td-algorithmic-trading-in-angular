@@ -2,7 +2,7 @@
   "compileOnSave": false,
   "compilerOptions": {
     "importHelpers": true,
-    "outDir": "./dist",
+    "outDir": "./dist/public",
     "sourceMap": true,
     "declaration": false,
     "module": "commonjs",
