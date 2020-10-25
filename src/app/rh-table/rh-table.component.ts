@@ -139,6 +139,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       { field: 'upperResistance', header: 'Upper Resistance' },
       { field: 'lowerResistance', header: 'Lower Resistance' },
       { field: 'impliedMovement', header: 'Implied Movement' },
+      { field: 'bearishProbability', header: 'Probability of Bear Profit' },
+      { field: 'bullishProbability', header: 'Probability of Bull Profit' },
 
       { field: 'macdBearishShortTerm', header: 'MACD Bearish Short Term' },
       { field: 'macdBearishMidTerm', header: 'MACD Bearish Mid Term' },
@@ -190,6 +192,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       { field: 'sellSignals', header: 'Sell' },
       { field: 'strongsellSignals', header: 'Strong Sell' },
       { field: 'impliedMovement', header: 'Implied Movement' },
+      { field: 'bearishProbability', header: 'Probability of Bear Profit' },
+      { field: 'bullishProbability', header: 'Probability of Bull Profit' },
       { field: 'macdBearishMidTerm', header: 'MACD Bearish Mid Term' },
       { field: 'macdBullishMidTerm', header: 'MACD Bullish Mid Term' },
       { field: 'mfiBearishMidTerm', header: 'MFI Bearish Mid Term' },
@@ -343,6 +347,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       case 'daily-indicators':
         const indicatorsCb = (param) => {
           return this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, 'daily-indicators')
+            .pipe(take(1))
             .map(
               (testResults: BacktestResponse) => {
                 if (testResults) {
@@ -353,6 +358,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                   const indicatorResults: BacktestResponse = testResults;
 
                   const lastSignal = indicatorResults.signals[indicatorResults.signals.length - 1];
+                  const bullishSignals = [];
+                  const bearishSignals = [];
                   for (const indicator in lastSignal.recommendation) {
                     if (lastSignal.recommendation.hasOwnProperty(indicator)) {
                       const result = {
@@ -361,8 +368,10 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                       };
                       if (lastSignal.recommendation[indicator] === 'Bullish') {
                         result.recommendation = 'Buy';
+                        bullishSignals.push(indicator);
                       } else if (lastSignal.recommendation[indicator] === 'Bearish') {
                         result.recommendation = 'Sell';
+                        bearishSignals.push(indicator);
                       }
 
                       const tableObj = {
@@ -373,6 +382,15 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                       this.updateAlgoReport(tableObj);
                     }
                   }
+
+
+                  this.getProbability(bullishSignals, bearishSignals, testResults.signals)
+                    .subscribe((data) => {
+                      this.findAndUpdateIndicatorScore(param.ticker, {
+                        bullishProbability: data.bullishProbability,
+                        bearishProbability: data.bearishProbability
+                      }, this.stockList);
+                    });
 
                   setTimeout(() => {
                     this.getImpliedMovement(testResults);
@@ -501,6 +519,10 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
   roundNumber(num) {
     return _.round(num, 2);
+  }
+
+  getProbability(bullishIndicators: string[], bearishIndicators: string[], signals: any) {
+    return this.dailyBacktestService.getPop(bullishIndicators, bearishIndicators, signals);
   }
 
   async iterateAlgoParams(algoParams: any[], callback: Function) {
@@ -727,21 +749,24 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   executeBacktests() {
-    this.bufferSubject.subscribe(() => {
-      const backtest = this.backtestBuffer[0];
-      this.callChainSub.add(backtest.sub
-        .pipe(take(1))
-        .subscribe(() => {
-          this.backtestBuffer.shift();
-          this.triggerNextBacktest();
-        }, error => {
-          this.snackBar.open(`Error on ${backtest.stock}`, 'Dismiss');
-          console.log(`Error on ${backtest.stock}`, error);
-          this.incrementProgress();
-          this.backtestBuffer.shift();
-          this.triggerNextBacktest();
-        }));
-    });
+    this.bufferSubject = new Subject();
+
+    this.bufferSubject
+      .subscribe(() => {
+        const backtest = this.backtestBuffer[0];
+        this.callChainSub.add(backtest.sub
+          .pipe(take(1))
+          .subscribe(() => {
+            this.backtestBuffer.shift();
+            this.triggerNextBacktest();
+          }, error => {
+            this.snackBar.open(`Error on ${backtest.stock}`, 'Dismiss');
+            console.log(`Error on ${backtest.stock}`, error);
+            this.incrementProgress();
+            this.backtestBuffer.shift();
+            this.triggerNextBacktest();
+          }));
+      });
 
     this.triggerNextBacktest();
   }

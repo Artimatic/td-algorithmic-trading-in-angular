@@ -20,4 +20,14 @@ export class DailyBacktestService {
 
     return this.http.post(`${BASE_URL}api/backtest/score-signals`, data, {});
   }
+
+  getPop(bullishIndicators: string[], bearishIndicators: string[], signals: any): Observable<any> {
+    const data = {
+      bullishActiveIndicators: bullishIndicators,
+      bearishActiveIndicators: bearishIndicators,
+      signals
+    };
+
+    return this.http.post(`${BASE_URL}api/backtest/pop`, data, {});
+  }
 }

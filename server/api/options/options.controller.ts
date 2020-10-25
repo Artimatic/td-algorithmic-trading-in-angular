@@ -9,7 +9,7 @@ class OptionsController extends BaseController {
 
     getImpliedMove(request, response) {
         return optionsService.calculateImpliedMove(request.query.accountId,
-            request.query.symbol,
+            request.query.symbol.toUpperCase(),
             request.query.strikeCount,
             request.query.optionType,
             request.query.minExpiration)

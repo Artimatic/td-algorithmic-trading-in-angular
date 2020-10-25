@@ -16,6 +16,6 @@ module.exports = function(app) {
 
   app.route('/*')
     .get(function(req, res) {
-      res.sendfile('dist/index.html');
+      res.sendfile('dist/public/index.html');
   });
 };
