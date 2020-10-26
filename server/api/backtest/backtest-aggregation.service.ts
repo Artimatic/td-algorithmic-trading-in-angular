@@ -143,11 +143,8 @@ class BacktestAggregationService {
     });
 
     bearishActiveIndicators.forEach(indicator => {
-      console.log(indicator);
-
       if (indicatorsTable[indicator]) {
         const prob = _.round(indicatorsTable[indicator].bearishProfitable / indicatorsTable[indicator].bearishSignals, 2);
-        console.log(indicatorsTable[indicator].bearishProfitable , indicatorsTable[indicator].bearishSignals, prob);
         if (!bearishProbability) {
           bearishProbability = 1;
         }
