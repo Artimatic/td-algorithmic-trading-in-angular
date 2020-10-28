@@ -154,7 +154,7 @@ export class MlCardComponent implements OnInit {
         });
     } else {
       this.backtestService.runLstmV2(this.getTrainingStock(),
-        moment().subtract({ day: 1 }).format('YYYY-MM-DD'),
+        moment().subtract({ day: 2 }).format('YYYY-MM-DD'),
         moment().subtract({ day: 50 }).format('YYYY-MM-DD')).subscribe(() => {
           this.sendActivation().subscribe();
         });
