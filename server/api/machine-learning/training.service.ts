@@ -82,6 +82,7 @@ class TrainingService {
             vxx &&
             iwm &&
             hyg &&
+            target &&
             spyData.date === target.date &&
             qqq.date === target.date &&
             tlt.date === target.date &&
@@ -110,8 +111,6 @@ class TrainingService {
             dataSetObj.output = target.output;
 
             finalDataSet.push(dataSetObj);
-          } else {
-            console.log('Error: ', spyData.date, qqq.date, tlt.date, gld.date, vxx.date, iwm.date, hyg.date, ' does not match ', target.date);
           }
         });
 
