@@ -1196,8 +1196,16 @@ class BacktestService {
       },
     };
 
+    console.log('send req');
     return RequestPromise(options)
-      .then(data => JSON.parse(data));
+      .then(data => JSON.parse(data))
+      .then(data => {
+        console.log('received data ');
+        return data;
+      })
+      .catch(error => {
+        console.log('Error getting ', url);
+      });
   }
 
   runRNN(symbol, endDate, startDate, response) {

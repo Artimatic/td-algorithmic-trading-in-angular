@@ -13,6 +13,7 @@ module.exports = function(app) {
   app.use('/api/options', require('./api/options'));
   app.use('/api/machine-learning', require('./api/machine-learning'));
   app.use('/api/bonds', require('./api/bonds'));
+  app.use('/api/sms', require('./api/sms'));
 
   app.route('/*')
     .get(function(req, res) {

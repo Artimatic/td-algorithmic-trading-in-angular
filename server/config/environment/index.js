@@ -44,5 +44,9 @@ module.exports = {
     goliath: _.get(credentials, 'default.goliathUrl', _.get(credentials, 'goliathUrl', null)),
     armadillo: _.get(credentials, 'default.armadilloUrl', _.get(credentials, 'armadilloUrl', null)),
     tiingo: 'https://api.tiingo.com/'
+  },
+  twilio: {
+    key: _.get(credentials, 'default.twilio.key', _.get(credentials, 'twilio.key', null)),
+    id: _.get(credentials, 'default.twilio.id', _.get(credentials, 'twilio.id', null))
   }
 };

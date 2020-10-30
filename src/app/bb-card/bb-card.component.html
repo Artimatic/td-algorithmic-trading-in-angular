@@ -58,6 +58,11 @@
             </mat-option>
           </mat-select>
         </mat-form-field>
+        <mat-form-field>
+          <input matInput type="string" placeholder="Phone" formControlName="phoneNumber" required>
+        </mat-form-field>
+        <p-selectButton [options]="smsOptions" [formControl]="smsOption"></p-selectButton>
+
         <div>
           <button mat-button matStepperNext>Next</button>
         </div>
