@@ -1,0 +1,89 @@
+<p-card>
+  <mat-horizontal-stepper [linear]="false" #stepper="matHorizontalStepper">
+    <mat-step>
+      <form>
+        <ng-template matStepLabel>Edit Order</ng-template>
+        <mat-form-field>
+          <mat-label>Stock</mat-label>
+          <input matInput [formControl]="stockFormControl" placeholder="Ex. MSFT">
+          <mat-error *ngIf="stockFormControl.hasError('stock') && !stockFormControl.hasError('required')">
+            Please enter a valid symbol
+          </mat-error>
+          <mat-error *ngIf="stockFormControl.hasError('required')">
+            Stock is <strong>required</strong>
+          </mat-error>
+        </mat-form-field>
+        <mat-form-field hintLabel="Max number of messages">
+          <input matInput type="number" placeholder="Max Messages"
+            [formControl]="maxMessages" required>
+        </mat-form-field>
+        <mat-form-field>
+          <input matInput type="string" placeholder="Phone" [formControl]="phoneNumber" required>
+        </mat-form-field>
+        <p-selectButton [options]="buySellOptions" [formControl]="buySellOption"></p-selectButton>
+        <div>
+          <label matTooltip="Start time">
+            Start
+          </label>
+          <span>&nbsp;</span>
+          <timepicker [(ngModel)]="startTime" [ngModelOptions]="{standalone: true}" [showMeridian]="true"></timepicker>
+        </div>
+        <div>
+          <label matTooltip="Stop time">
+            Stop
+          </label>
+          <span>&nbsp;</span>
+          <timepicker [(ngModel)]="stopTime" [ngModelOptions]="{standalone: true}" [showMeridian]="true"></timepicker>
+        </div>
+        <div>
+          <button mat-button matStepperNext>Next</button>
+        </div>
+      </form>
+    </mat-step>
+    <mat-step>
+      <ng-template matStepLabel>Place Order</ng-template>
+      <mat-card>
+        <div *ngIf="live">
+          <mat-chip color="warn" selected="true">LIVE</mat-chip>
+        </div>
+        <div *ngIf="!live">
+          <button mat-raised-button disabled>STALLED</button>
+        </div>
+        <div class="toolbar-content" fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px"
+          fxLayoutGap.xs="0">
+          <div fxFlex="5%">
+            <mat-card-header>
+              <mat-card-subtitle>
+                <h5>SMS Card</h5>
+              </mat-card-subtitle>
+            </mat-card-header>
+          </div>
+          <div fxFlex="95%">
+            <div class="order-log">
+              <mat-grid-list cols="3" rowHeight="150px">
+                <mat-grid-tile *ngFor="let tile of tiles" [colspan]="tile.cols" [rowspan]="tile.rows">
+                  <table>
+                    <tr *ngFor="let order of tile.orders">
+                      <td>{{order.signalTime}}</td>
+                      <td>{{order.action}}</td>
+                      <td>{{order.quantity}}@</td>
+                      <td>${{order.price}}</td>
+                      <td> on {{order.timeSubmitted}}</td>
+                    </tr>
+                  </table>
+                </mat-grid-tile>
+              </mat-grid-list>
+            </div>
+          </div>
+        </div>
+        <mat-card-actions>
+          <button mat-raised-button color="warn" (click)="resetStepper(stepper)">STOP</button>
+          <button mat-button color="warn" (click)="openDialog()">GO LIVE</button>
+          <mat-slide-toggle [formControl]="testing" (change)="setTest()">
+            Test Mode
+          </mat-slide-toggle>
+        </mat-card-actions>
+      </mat-card>
+    </mat-step>
+  </mat-horizontal-stepper>
+</p-card>

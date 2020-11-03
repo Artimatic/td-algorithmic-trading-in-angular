@@ -150,7 +150,6 @@ export class PortfolioService {
     return this.http.get('/api/portfolio/quote', options)
       .pipe(
         map((response) => {
-          console.log('getprice: ', response);
           return _.round(response['askPrice'], 2);
         })
       );

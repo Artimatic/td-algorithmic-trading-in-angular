@@ -8,7 +8,6 @@ import { GlobalSettingsService, Brokerage } from '../global-settings.service';
 })
 export class SettingControlsComponent {
   ismeridian = true;
-
   constructor(public globalSettingsService: GlobalSettingsService) { }
 
   toggleMode(): void {
@@ -25,5 +24,9 @@ export class SettingControlsComponent {
 
   toggleBacktesting(): void {
     this.globalSettingsService.backtesting = !this.globalSettingsService.backtesting;
+  }
+
+  toggleAutostart(): void {
+    this.globalSettingsService.autostart = !this.globalSettingsService.autostart;
   }
 }

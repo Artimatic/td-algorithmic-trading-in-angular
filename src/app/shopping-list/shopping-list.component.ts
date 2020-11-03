@@ -198,10 +198,14 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
         if (this.sub) {
           this.sub.unsubscribe();
         }
-        const concat = this.cartService.sellOrders.concat(this.cartService.buyOrders);
-        this.queueAlgos(concat.concat(this.cartService.otherOrders));
+        this.triggerStart();
       }
     });
+  }
+
+  triggerStart() {
+    const concat = this.cartService.sellOrders.concat(this.cartService.buyOrders);
+    this.queueAlgos(concat.concat(this.cartService.otherOrders));
   }
 
   queueAlgos(orders: SmartOrder[]) {
@@ -273,7 +277,12 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
           });
           mlStopTime = mlStartTime;
 
-          setTimeout(this.globalSettingsService.initTradeDate, 3600000);
+          setTimeout(this.globalSettingsService.initGlobalSettings, 888000);
+          if (this.globalSettingsService.autostart) {
+            setTimeout(() => {
+              this.triggerStart();
+            }, 8880000);
+          }
         }
       });
   }

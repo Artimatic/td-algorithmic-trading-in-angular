@@ -21,7 +21,7 @@ class ServerSmsService {
   }
 
   sendSellSms(phoneNumber: string, stock: string, price: number, quantity: number) {
-    this.sendSms(phoneNumber, true, stock, price, quantity);
+    this.sendSms(phoneNumber, false, stock, price, quantity);
   }
 }
 
