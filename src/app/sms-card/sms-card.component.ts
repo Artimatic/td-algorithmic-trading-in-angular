@@ -37,6 +37,7 @@ export class SmsCardComponent implements OnInit {
   startTime;
   stopTime;
   sub;
+  messagesSent = 0;
 
   constructor(private backtestService: BacktestService,
     private portfolioService: PortfolioService,
@@ -78,6 +79,8 @@ export class SmsCardComponent implements OnInit {
     this.alive = true;
     this.live = true;
     this.stepper.next();
+    this.interval = this.defaultInterval;
+    this.messagesSent = 0;
 
     this.sub = TimerObservable.create(0, this.interval)
       .takeWhile(() => this.alive)
@@ -137,10 +140,14 @@ export class SmsCardComponent implements OnInit {
   }
 
   async processAnalysis(analysis, price, time) {
-    if (analysis.recommendation.toLowerCase() === 'buy') {
-      this.clientSmsService.sendBuySms(this.stockFormControl.value, this.phoneNumber.value, price, 1).subscribe();
-    } else if (analysis.recommendation.toLowerCase() === 'sell') {
-      this.clientSmsService.sendSellSms(this.stockFormControl.value, this.phoneNumber.value, price, 1).subscribe();
+    if (analysis.recommendation.toLowerCase() === 'buy' && (this.buySellOption.value === 'buy_sell' || this.buySellOption.value === 'buy_only')) {
+      this.clientSmsService.sendBuySms(this.stockFormControl.value, this.phoneNumber.value, price, 1).subscribe(() => {
+        this.messagesSent++;
+      });
+    } else if (analysis.recommendation.toLowerCase() === 'sell' && (this.buySellOption.value === 'buy_sell' || this.buySellOption.value === 'sell_only')) {
+      this.clientSmsService.sendSellSms(this.stockFormControl.value, this.phoneNumber.value, price, 1).subscribe(() => {
+        this.messagesSent++;
+      });
     }
   }
 
@@ -172,6 +179,7 @@ export class SmsCardComponent implements OnInit {
 
   setup() {
     this.interval = this.defaultInterval;
+    this.messagesSent = 0;
     setTimeout(() => {
       this.startTime = this.globalSettingsService.startTime;
       this.stopTime = this.globalSettingsService.stopTime;

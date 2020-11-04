@@ -277,7 +277,9 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
           });
           mlStopTime = mlStartTime;
 
-          setTimeout(this.globalSettingsService.initGlobalSettings, 888000);
+          setTimeout(() => {
+            this.globalSettingsService.initGlobalSettings();
+          }, 888000);
           if (this.globalSettingsService.autostart) {
             setTimeout(() => {
               this.triggerStart();
