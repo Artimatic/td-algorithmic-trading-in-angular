@@ -43,10 +43,10 @@
     <mat-step>
       <ng-template matStepLabel>Place Order</ng-template>
       <mat-card>
-        <div *ngIf="live">
+        <div *ngIf="alive">
           <mat-chip color="warn" selected="true">LIVE</mat-chip>
         </div>
-        <div *ngIf="!live">
+        <div *ngIf="!alive">
           <button mat-raised-button disabled>STALLED</button>
         </div>
         <div class="toolbar-content" fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px"

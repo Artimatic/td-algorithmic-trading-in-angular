@@ -20,7 +20,6 @@ export class SmsCardComponent implements OnInit {
   @ViewChild('stepper', { static: false }) stepper;
 
   alive: boolean;
-  live: boolean;
 
   firstFormGroup: FormGroup;
   stockFormControl: FormControl;
@@ -48,7 +47,6 @@ export class SmsCardComponent implements OnInit {
     public dialog: MatDialog) { }
 
   ngOnInit() {
-    this.live = false;
     this.alive = true;
 
     this.buySellOption = new FormControl();
@@ -77,7 +75,6 @@ export class SmsCardComponent implements OnInit {
 
   goLive() {
     this.alive = true;
-    this.live = true;
     this.stepper.next();
     this.interval = this.defaultInterval;
     this.messagesSent = 0;
@@ -149,10 +146,14 @@ export class SmsCardComponent implements OnInit {
         this.messagesSent++;
       });
     }
+    if (this.messagesSent >= this.maxMessages) {
+      this.stop();
+    }
   }
 
   resetStepper(stepper) {
     stepper.selectedIndex = 0;
+    this.stop();
   }
 
   openDialog(): void {
@@ -184,5 +185,10 @@ export class SmsCardComponent implements OnInit {
       this.startTime = this.globalSettingsService.startTime;
       this.stopTime = this.globalSettingsService.stopTime;
     }, 10000);
+  }
+
+  stop() {
+    this.alive = false;
+    this.sub = null;
   }
 }
