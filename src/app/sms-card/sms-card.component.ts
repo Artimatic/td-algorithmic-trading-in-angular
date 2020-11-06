@@ -146,7 +146,7 @@ export class SmsCardComponent implements OnInit {
         this.messagesSent++;
       });
     }
-    if (this.messagesSent >= this.maxMessages) {
+    if (this.messagesSent >= this.maxMessages.value) {
       this.stop();
     }
   }
