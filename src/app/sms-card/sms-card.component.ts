@@ -83,7 +83,6 @@ export class SmsCardComponent implements OnInit {
       .takeWhile(() => this.alive)
       .subscribe(async () => {
         this.interval = 900000;
-
         if (moment().isAfter(moment(this.startTime)) &&
           moment().isBefore(moment(this.stopTime))) {
           this.interval = this.defaultInterval;
@@ -110,7 +109,7 @@ export class SmsCardComponent implements OnInit {
 
         if (moment().isAfter(moment(this.stopTime)) &&
           moment().isBefore(moment(this.stopTime).add(2, 'minutes'))) {
-          this.alive = false;
+          this.stop();
         }
       });
   }
@@ -190,5 +189,6 @@ export class SmsCardComponent implements OnInit {
   stop() {
     this.alive = false;
     this.sub = null;
+    this.setup();
   }
 }
