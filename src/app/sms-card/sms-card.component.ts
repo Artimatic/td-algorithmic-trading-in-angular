@@ -180,15 +180,17 @@ export class SmsCardComponent implements OnInit {
   setup() {
     this.interval = this.defaultInterval;
     this.messagesSent = 0;
-    setTimeout(() => {
-      this.startTime = this.globalSettingsService.startTime;
-      this.stopTime = this.globalSettingsService.stopTime;
-    }, 10000);
+    this.setDates();
   }
 
   stop() {
     this.alive = false;
     this.sub = null;
     this.setup();
+  }
+
+  setDates() {
+    this.startTime = this.globalSettingsService.startTime;
+    this.stopTime = this.globalSettingsService.stopTime;
   }
 }

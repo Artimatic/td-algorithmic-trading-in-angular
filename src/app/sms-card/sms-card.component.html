@@ -14,29 +14,14 @@
           </mat-error>
         </mat-form-field>
         <mat-form-field hintLabel="Max number of messages">
-          <input matInput type="number" placeholder="Max Messages"
-            [formControl]="maxMessages" required>
+          <input matInput type="number" placeholder="Max Messages" [formControl]="maxMessages" required>
         </mat-form-field>
         <mat-form-field>
           <input matInput type="string" placeholder="Phone" [formControl]="phoneNumber" required>
         </mat-form-field>
         <p-selectButton [options]="buySellOptions" [formControl]="buySellOption"></p-selectButton>
         <div>
-          <label matTooltip="Start time">
-            Start
-          </label>
-          <span>&nbsp;</span>
-          <timepicker [(ngModel)]="startTime" [ngModelOptions]="{standalone: true}" [showMeridian]="true"></timepicker>
-        </div>
-        <div>
-          <label matTooltip="Stop time">
-            Stop
-          </label>
-          <span>&nbsp;</span>
-          <timepicker [(ngModel)]="stopTime" [ngModelOptions]="{standalone: true}" [showMeridian]="true"></timepicker>
-        </div>
-        <div>
-          <button mat-button matStepperNext>Next</button>
+          <button mat-button matStepperNext (click)="setDates()">Next</button>
         </div>
       </form>
     </mat-step>
@@ -60,19 +45,22 @@
           </div>
           <div fxFlex="95%">
             <div class="order-log">
-              <mat-grid-list cols="3" rowHeight="150px">
-                <mat-grid-tile *ngFor="let tile of tiles" [colspan]="tile.cols" [rowspan]="tile.rows">
-                  <table>
-                    <tr *ngFor="let order of tile.orders">
-                      <td>{{order.signalTime}}</td>
-                      <td>{{order.action}}</td>
-                      <td>{{order.quantity}}@</td>
-                      <td>${{order.price}}</td>
-                      <td> on {{order.timeSubmitted}}</td>
-                    </tr>
-                  </table>
-                </mat-grid-tile>
-              </mat-grid-list>
+              <div>
+                <label matTooltip="Start time">
+                  Start
+                </label>
+                <span>&nbsp;</span>
+                <timepicker [(ngModel)]="startTime" [ngModelOptions]="{standalone: true}" [showMeridian]="true">
+                </timepicker>
+              </div>
+              <div>
+                <label matTooltip="Stop time">
+                  Stop
+                </label>
+                <span>&nbsp;</span>
+                <timepicker [(ngModel)]="stopTime" [ngModelOptions]="{standalone: true}" [showMeridian]="true">
+                </timepicker>
+              </div>
             </div>
           </div>
         </div>

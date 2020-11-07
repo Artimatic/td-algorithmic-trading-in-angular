@@ -87,8 +87,20 @@ class AlgoService {
   checkMfiTrend(mfiPrevious: number, mfi: number): DaytradeRecommendation {
     const change = DecisionService.getPercentChange(mfi, mfiPrevious);
     if (change > 0.3) {
-      return DaytradeRecommendation.Bullish;
+      return DaytradeRecommendation.Bearish;
     } else if (change < -0.3) {
+      return DaytradeRecommendation.Bullish;
+    }
+
+    return DaytradeRecommendation.Neutral;
+  }
+
+  checkMfiDivergence(mfiPrevious: number, mfi: number, roc10Previous: number, roc10: number): DaytradeRecommendation {
+    const mfiChange = Math.abs(DecisionService.getPercentChange(mfi, mfiPrevious));
+    const roc10Change = Math.abs(DecisionService.getPercentChange(roc10, roc10Previous));
+    if (mfiChange > 0.1 && roc10Change > 0.3 && mfiPrevious < mfi && roc10Previous > roc10) {
+      return DaytradeRecommendation.Bullish;
+    } else if (mfiChange > 0.1 && roc10Change > 0.3 && mfiPrevious > mfi && roc10Previous < roc10) {
       return DaytradeRecommendation.Bearish;
     }
 
