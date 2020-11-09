@@ -193,13 +193,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       { field: 'strongsellSignals', header: 'Strong Sell' },
       { field: 'impliedMovement', header: 'Implied Movement' },
       { field: 'bearishProbability', header: 'Probability of Bear Profit' },
-      { field: 'bullishProbability', header: 'Probability of Bull Profit' },
-      { field: 'macdBearishMidTerm', header: 'MACD Bearish Mid Term' },
-      { field: 'macdBullishMidTerm', header: 'MACD Bullish Mid Term' },
-      { field: 'mfiBearishMidTerm', header: 'MFI Bearish Mid Term' },
-      { field: 'mfiBullishMidTerm', header: 'MFI Bullish Mid Term' },
-      { field: 'demark9BearishMidTerm', header: 'Demark9 Bearish Mid Term' },
-      { field: 'demark9BullishMidTerm', header: 'Demark9 Bullish Mid Term' }
+      { field: 'bullishProbability', header: 'Probability of Bull Profit' }
     ];
 
     this.selectedRecommendation = ['strongbuy', 'buy', 'sell', 'strongsell'];

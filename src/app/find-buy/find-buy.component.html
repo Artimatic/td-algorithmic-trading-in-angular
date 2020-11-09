@@ -1,9 +1,10 @@
-<button pButton type="button" label="Recommend a Stock" class="ui-button-success" (click)="findStock()">
-</button>
-
 <p-table [value]="potentialBuys" [paginator]="true" [rows]="20" dataKey="name" selectionMode="single"
   (onRowSelect)="onRowSelect($event)">
   <ng-template pTemplate="caption">
+    <div class="find-recommendation-btn">
+      <button pButton type="button" label="Recommend a Stock" class="ui-button-success" (click)="findStock()">
+      </button>
+    </div>
     <app-default-order-lists class="default-orders-button" [prefillOrderForm]="prefillOrderForm">
     </app-default-order-lists>
   </ng-template>

@@ -6,6 +6,7 @@ import { take } from 'rxjs/operators';
 import { GlobalSettingsService } from '../settings/global-settings.service';
 import * as _ from 'lodash';
 import { SmartOrder } from '@shared/models/smart-order';
+import { FormControl, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-determine-hedge',
@@ -13,57 +14,70 @@ import { SmartOrder } from '@shared/models/smart-order';
   styleUrls: ['./determine-hedge.component.css']
 })
 export class DetermineHedgeComponent implements OnInit {
-
+  loading = false;
+  hedgeStock: FormControl;
+  indicatorStocks = [];
+  cols = [];
   constructor(private portfolioService: PortfolioService,
     private backtestService: BacktestService,
     private globalSettingsService: GlobalSettingsService,
     private cartService: CartService) { }
 
   ngOnInit() {
-    const hedge = {
-      stock: 'VXX',
-      allocation: 0.1
-    };
+    this.cols = [
+      { field: 'name', header: 'Name' },
+      { field: 'recommendation', header: 'Recommendation' }
+    ];
+
+    this.hedgeStock = new FormControl('TLT', [
+      Validators.required
+    ]);
+  }
+
+  determineHedge() {
+    this.loading = true;
+    this.indicatorStocks = [];
 
     this.getTechnicals('SPY')
       .pipe(take(1))
       .subscribe(spyRecommendation => {
-        if (spyRecommendation === 'bearish') {
-          this.resolveHedge(hedge, 0.2);
-        } else {
+        const handled = this.handleRecommendation('SPY', spyRecommendation, 0.7);
+        if (!handled) {
           this.getTechnicals('QQQ')
             .pipe(take(1))
-            .subscribe(qqqRecommendation => {
-              if (qqqRecommendation === 'bearish') {
-                this.resolveHedge(hedge, 0.2);
-              } else {
+            .subscribe(qqqRecom => {
+              const handled = this.handleRecommendation('QQQ', qqqRecom, 0.7);
+              if (!handled) {
                 this.getTechnicals('IWM')
                   .pipe(take(1))
-                  .subscribe(iwmRecommendation => {
-                    if (iwmRecommendation === 'bearish') {
-                      this.resolveHedge(hedge, 0.2);
-                    } else {
+                  .subscribe(iwmRecom => {
+                    const handled = this.handleRecommendation('IWM', iwmRecom, 0.6);
+                    if (!handled) {
                       this.getTechnicals('HYG')
                         .pipe(take(1))
-                        .subscribe(hygRecommendation => {
-                          if (hygRecommendation === 'bearish') {
-                            this.resolveHedge(hedge, 0.2);
-                          } else {
+                        .subscribe(hygRecom => {
+                          const handled = this.handleRecommendation('HYG', hygRecom, 0.6);
+                          if (!handled) {
                             this.getTechnicals('VXX')
                               .pipe(take(1))
                               .subscribe(vxxRecommendation => {
-                                if (vxxRecommendation === 'bullish') {
-                                  this.resolveHedge(hedge, 0.2);
+                                vxxRecommendation = vxxRecommendation.toUpperCase();
+                                if (vxxRecommendation === 'BULLISH') {
+                                  this.indicatorStocks.push({ name: 'VXX', recommendation: 'Bullish' });
+                                  this.resolveHedge(0.7);
+                                } else if (vxxRecommendation === 'BEARISH') {
+                                  this.indicatorStocks.push({ name: 'VXX', recommendation: 'Bearish' });
+                                  this.resolveHedge(0);
                                 } else {
                                   this.globalSettingsService.get10y2ySpread()
                                     .subscribe(spreadData => {
                                       const changePercent = Number(spreadData.QuickQuoteResult.QuickQuote.change_pct);
                                       if (changePercent < -3) {
-                                        this.resolveHedge(hedge, 0.2);
+                                        this.resolveHedge(0.6);
                                       } else if (changePercent < 0) {
-                                        this.resolveHedge(hedge, 0.1);
+                                        this.resolveHedge(0.3);
                                       } else {
-                                        this.resolveHedge(hedge, 0);
+                                        this.resolveHedge(0);
                                       }
                                     });
                                 }
@@ -76,6 +90,21 @@ export class DetermineHedgeComponent implements OnInit {
             });
         }
       });
+  }
+
+  handleRecommendation(name: string, recommendation: string, allocation: number) {
+    recommendation = recommendation.toUpperCase();
+    if (recommendation === 'BEARISH') {
+      this.indicatorStocks.push({ name: name, recommendation: 'Bearish' });
+      this.resolveHedge(allocation);
+      return true;
+    } else if (recommendation === 'BULLISH') {
+      this.indicatorStocks.push({ name: name, recommendation: 'Bullish' });
+      this.resolveHedge(0);
+      return true;
+    } else {
+      return null;
+    }
   }
 
   getTechnicals(stock: string) {
@@ -119,21 +148,22 @@ export class DetermineHedgeComponent implements OnInit {
     }
   }
 
-  resolveHedge(hedge, allocation) {
-    hedge.allocation = allocation;
+  resolveHedge(allocation) {
     this.portfolioService.getTdBalance().subscribe((balance) => {
       const cash = balance.availableFundsNonMarginableTrade;
       const longMarketValue = balance.longMarketValue;
 
       this.portfolioService.getTdPortfolio().subscribe((data) => {
-        const vxxHolding = data.find((holding) => holding.instrument.symbol === 'VXX');
-        const vxxHoldingMarketValue = vxxHolding ? vxxHolding.marketValue : 0;
-        const actualAllocation = vxxHoldingMarketValue / longMarketValue;
+        const hedgeHolding = data.find((holding) => holding.instrument.symbol === this.hedgeStock.value);
+        const hedgeHoldingMarketValue = hedgeHolding ? hedgeHolding.marketValue : 0;
+        const actualAllocation = hedgeHoldingMarketValue / longMarketValue;
         if (actualAllocation < allocation) {
-          this.portfolioBuy('VXX', allocation - actualAllocation, cash);
-        } else {
-          this.portfolioSell('VXX', longMarketValue * allocation, vxxHolding.marketValue);
+          this.portfolioBuy(this.hedgeStock.value, allocation - actualAllocation, cash);
+        } else if (hedgeHolding){
+          this.portfolioSell(this.hedgeStock.value, longMarketValue * allocation, hedgeHolding.marketValue);
         }
+
+        this.loading = false;
       });
     });
   }
