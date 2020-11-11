@@ -21,10 +21,7 @@ export class AuthenticationService {
   constructor(private http: HttpClient, private dialog: MatDialog, public snackBar: MatSnackBar) { }
 
   openLoginDialog(): void {
-    this.dialog.open(RedirectLoginDialogComponent, {
-      width: '500px',
-      height: '500px'
-    });
+    this.dialog.open(RedirectLoginDialogComponent, {width: '650px'});
   }
 
   getToken() {

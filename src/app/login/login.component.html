@@ -1,84 +1,83 @@
-<div class="login-container" fxLayout="column" fxLayoutAlign="center center">
-  <p-selectButton [options]="loginForms" [(ngModel)]="selectedLogin"></p-selectButton>
-  <form name="robinhoodLogin" *ngIf="selectedLogin==='robinhood'" (ngSubmit)="login()" #f="ngForm" novalidate>
-    <div class="form-group">
-      <mat-form-field class="login-input">
-        <input matInput placeholder="Username" name="username" [(ngModel)]="model.username" #username="ngModel"
-          required>
-      </mat-form-field>
-    </div>
-    <div class="form-group">
-      <mat-form-field class="login-input">
-        <input matInput placeholder="Password" [type]="hide ? 'password' : 'text'" name="password"
-          [(ngModel)]="model.password" #password="ngModel" required>
-        <mat-icon matSuffix (click)="hide = !hide">{{hide ? 'visibility' : 'visibility_off'}}</mat-icon>
-      </mat-form-field>
-    </div>
-    <div class="form-group" *ngIf="mfa">
-      <mat-form-field class="login-input">
-        <input matInput placeholder="Authentication Code" type="number" name="code" [(ngModel)]="model.code"
-          #code="ngModel" required>
-      </mat-form-field>
-    </div>
-    <div class="form-group">
-      <div *ngIf="loading">
-        <mat-spinner></mat-spinner>
+<div class="p-grid p-justify-center login-container">
+  <div class="p-col ui-g-12 ui-md-4 ui-md-offset-4">
+    <p-selectButton [options]="loginForms" [(ngModel)]="selectedLogin"></p-selectButton>
+    <form name="robinhoodLogin" *ngIf="selectedLogin==='robinhood'" (ngSubmit)="login()" #f="ngForm" novalidate>
+      <div>
+        <mat-form-field class="login-input">
+          <input matInput placeholder="Username" name="username" [(ngModel)]="model.username" #username="ngModel"
+            required>
+        </mat-form-field>
       </div>
-      <span *ngIf="!loading">
-        <button mat-raised-button type="submit">Next</button>
-      </span>
-    </div>
-    <div *ngIf="error" class="alert alert-danger">{{error}}</div>
-  </form>
-  <form name="tdaLogin" *ngIf="selectedLogin==='tda'" (ngSubmit)="saveTdaLogin(tdaForm)" [formGroup]="tdaForm">
-    <div class="form-group">
-      <mat-form-field class="login-input">
-        <input matInput placeholder="Account ID" type="text" name="accountId" formControlName="accountId" required>
-      </mat-form-field>
-    </div>
-    <div class="form-group">
-      <mat-form-field class="login-input">
-        <input matInput placeholder="Consumer Key" [type]="hide ? 'password' : 'text'" name="consumerKey"
-        formControlName="consumerKey" required>
-        <mat-icon matSuffix (click)="hide = !hide">{{hide ? 'visibility' : 'visibility_off'}}</mat-icon>
-      </mat-form-field>
-    </div>
-    <div class="form-group">
-      <mat-form-field class="login-input">
-        <textarea matInput placeholder="Refresh Token"
-                  formControlName="refreshToken"
-                  name="refreshToken" required></textarea>
-      </mat-form-field>
-    </div>
-    <div class="form-group">
-      <div *ngIf="loading">
-        <mat-spinner></mat-spinner>
+      <div>
+        <mat-form-field class="login-input">
+          <input matInput placeholder="Password" [type]="hide ? 'password' : 'text'" name="password"
+            [(ngModel)]="model.password" #password="ngModel" required>
+          <mat-icon matSuffix (click)="hide = !hide">{{hide ? 'visibility' : 'visibility_off'}}</mat-icon>
+        </mat-form-field>
       </div>
-      <span *ngIf="!loading">
-        <button mat-raised-button type="submit" [disabled]="!tdaForm.valid">Save</button>
-      </span>
+      <div *ngIf="mfa">
+        <mat-form-field class="login-input">
+          <input matInput placeholder="Authentication Code" type="number" name="code" [(ngModel)]="model.code"
+            #code="ngModel" required>
+        </mat-form-field>
+      </div>
+      <div>
+        <div *ngIf="loading">
+          <mat-spinner></mat-spinner>
+        </div>
+        <span *ngIf="!loading">
+          <button mat-raised-button type="submit">Next</button>
+        </span>
+      </div>
+      <div *ngIf="error" class="alert alert-danger">{{error}}</div>
+    </form>
+    <form name="tdaLogin" *ngIf="selectedLogin==='tda'" (ngSubmit)="saveTdaLogin(tdaForm)" [formGroup]="tdaForm">
+      <div>
+        <mat-form-field class="login-input">
+          <input matInput placeholder="Account ID" type="text" name="accountId" formControlName="accountId" required>
+        </mat-form-field>
+      </div>
+      <div>
+        <mat-form-field class="login-input">
+          <input matInput placeholder="Consumer Key" [type]="hide ? 'password' : 'text'" name="consumerKey"
+            formControlName="consumerKey" required>
+          <mat-icon matSuffix (click)="hide = !hide">{{hide ? 'visibility' : 'visibility_off'}}</mat-icon>
+        </mat-form-field>
+      </div>
+      <div>
+        <mat-form-field class="login-input">
+          <textarea matInput placeholder="Refresh Token" formControlName="refreshToken" name="refreshToken"
+            required></textarea>
+        </mat-form-field>
+      </div>
+      <div>
+        <div *ngIf="loading">
+          <mat-spinner></mat-spinner>
+        </div>
+        <span *ngIf="!loading">
+          <button mat-raised-button type="submit" [disabled]="!tdaForm.valid" class="save-btn">Save</button>
+        </span>
 
-      <h3>Available Accounts</h3>
-      <div class="available-accounts">
-        <p-listbox [options]="authenticationService.tdaAccounts"
-                   [(ngModel)]="selectedItem"
-                   [ngModelOptions]="{standalone: true}"
-                   [listStyle]="{'max-height':'250px'}">
-          <ng-template let-account pTemplate="item">
-            <div class="item-container">
-              <div class="item-title">{{account.accountId}}</div>
-              <div class="action-icon">
-                <mat-icon matSuffix (click)="removeAccount(account)">close</mat-icon>
-                <mat-icon matSuffix (click)="selectAccount(account)">check</mat-icon>
+        <h3>Available Accounts</h3>
+        <div class="available-accounts">
+          <p-listbox [options]="authenticationService.tdaAccounts" [(ngModel)]="selectedItem"
+            [ngModelOptions]="{standalone: true}" [listStyle]="{'max-height':'250px'}">
+            <ng-template let-account pTemplate="item">
+              <div class="item-container">
+                <div class="item-title">{{account.accountId}}</div>
+                <div class="action-icon">
+                  <mat-icon matSuffix (click)="removeAccount(account)">close</mat-icon>
+                  <mat-icon matSuffix (click)="selectAccount(account)">check</mat-icon>
+                </div>
               </div>
-            </div>
-          </ng-template>
-          <p-footer>
-            Selected: {{authenticationService?.selectedTdaAccount?.accountId||'none'}}
-          </p-footer>
-        </p-listbox>
+            </ng-template>
+            <p-footer>
+              Selected: {{authenticationService?.selectedTdaAccount?.accountId||'none'}}
+            </p-footer>
+          </p-listbox>
+        </div>
       </div>
-    </div>
-    <div *ngIf="error" class="alert alert-danger">{{error}}</div>
-  </form>
+      <div *ngIf="error" class="alert alert-danger">{{error}}</div>
+    </form>
+  </div>
 </div>

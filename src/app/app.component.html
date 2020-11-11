@@ -2,15 +2,10 @@
   <mat-sidenav class="side-nav" mode="side" opened>
     <mat-list role="list">
       <mat-nav-list role="listitem">
-        <app-reporting></app-reporting>
+        <div class="app-title">Robinhood Merchant</div>
       </mat-nav-list>
       <mat-nav-list role="listitem">
-        <a routerLink="/overview" matTooltip="Login">
-          <button mat-button class="nav-item">
-            <mat-icon>home</mat-icon>
-            Login
-          </button>
-        </a>
+        <app-reporting></app-reporting>
       </mat-nav-list>
       <mat-nav-list role="listitem">
         <a routerLink="/trade-view" matTooltip="trade">
@@ -32,7 +27,7 @@
         <a routerLink="/research" matTooltip="Run backtesting on stocks">
           <button mat-button class="nav-item">
             <mat-icon>assessment</mat-icon>
-            Daily Recommendations
+            Recommendations
           </button>
         </a>
       </mat-nav-list>
@@ -48,7 +43,7 @@
         <a routerLink="/deep-analysis/machine-learning" matTooltip="deep analysis">
           <button mat-button class="nav-item">
             <mat-icon>trending_up</mat-icon>
-            Daytrade Training
+            Machine Learning
           </button>
         </a>
       </mat-nav-list>
@@ -62,9 +57,6 @@
             Machine Learning Service
           </mat-chip>
         </mat-chip-list>
-      </mat-nav-list>
-      <mat-nav-list role="listitem">
-        <app-todo-list></app-todo-list>
       </mat-nav-list>
     </mat-list>
 

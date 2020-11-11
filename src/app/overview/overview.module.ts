@@ -14,6 +14,6 @@ import { LoginComponent } from '../login/login.component';
     ReactiveFormsModule,
     SharedModule
   ],
-  exports: [TodoListComponent]
+  exports: [TodoListComponent, LoginComponent]
 })
 export class OverviewModule { }
