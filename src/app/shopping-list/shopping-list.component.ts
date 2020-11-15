@@ -56,6 +56,8 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
     private tradeService: TradeService) { }
 
   ngOnInit() {
+    this.globalSettingsService.initGlobalSettings();
+
     this.mlCards = [];
     this.interval = this.defaultInterval;
 
@@ -211,7 +213,6 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
   queueAlgos(orders: SmartOrder[]) {
     const mlStartTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 15:55`, 'America/New_York');
     let mlStopTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 16:00`, 'America/New_York');
-    this.globalSettingsService.setStartTimes();
     console.log(`New queue set to start at ${moment(this.globalSettingsService.startTime).format()}`);
     this.alive = true;
     let lastIndex = 0;
