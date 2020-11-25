@@ -211,6 +211,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
   }
 
   queueAlgos(orders: SmartOrder[]) {
+    this.globalSettingsService.setStartTimes();
     const mlStartTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 15:55`, 'America/New_York');
     let mlStopTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 16:00`, 'America/New_York');
     console.log(`New queue set to start at ${moment(this.globalSettingsService.startTime).format()}`);
