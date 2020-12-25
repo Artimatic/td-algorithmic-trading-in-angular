@@ -8,9 +8,26 @@ import { Holding } from '../models';
 import * as _ from 'lodash';
 import { GlobalSettingsService, Brokerage } from '../../settings/global-settings.service';
 import { MatSnackBar } from '@angular/material';
+import { Subject } from 'rxjs';
+
+export interface PortfolioInfoHolding {
+  name: string;
+  pl: number;
+  netLiq: number;
+  shares: number;
+  alloc: number;
+  recommendation: string;
+  buyReasons: string;
+  sellReasons: string;
+  buyConfidence: number;
+  sellConfidence: number;
+}
 
 @Injectable()
 export class PortfolioService {
+  portfolioSubject: Subject<PortfolioInfoHolding> = new Subject();
+  portfolio;
+
   constructor(
     private http: HttpClient,
     private authenticationService: AuthenticationService,

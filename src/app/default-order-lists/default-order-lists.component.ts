@@ -26,7 +26,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges {
   firstFormGroup: FormGroup;
   addOrderFormGroup: FormGroup;
   private amountChange = new Subject<string>();
-
+  isLoading = false;
   sides: SelectItem[];
   errorMsg: string;
 
@@ -45,7 +45,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges {
         distinctUntilChanged()
       )
       .subscribe(value => {
-        this.firstFormGroup.value.amount = value;
+        this.firstFormGroup.controls['amount'].setValue(value);
         this.changedSelection(this.selectedList);
       });
 
@@ -213,7 +213,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges {
       defaultSide = this.prefillOrderForm.side;
       defaultSymbol = this.prefillOrderForm.holding.symbol;
     }
-    const initAllocation = this.templateOrders && this.templateOrders.length ? _.round(1 / this.templateOrders.length, 2) : 1;
+    const initAllocation = 1;
     this.addOrderFormGroup = this._formBuilder.group({
       allocation: [initAllocation, Validators.required],
       symbol: [defaultSymbol, Validators.required],
@@ -237,5 +237,21 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges {
 
   updatedAmount(query: string) {
     this.amountChange.next(query);
+  }
+
+  getPortfolioTotal() {
+    this.isLoading = true;
+    this.portfolioService.getTdBalance().subscribe((data) => {
+      this.updatedAmount(data.liquidationValue);
+      this.isLoading = false;
+    });
+  }
+
+  getCashBalance() {
+    this.isLoading = true;
+    this.portfolioService.getTdBalance().subscribe((data) => {
+      this.updatedAmount(data.cashAvailableForTrading);
+      this.isLoading = false;
+    });
   }
 }

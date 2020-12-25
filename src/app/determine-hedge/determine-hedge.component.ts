@@ -29,7 +29,7 @@ export class DetermineHedgeComponent implements OnInit {
       { field: 'recommendation', header: 'Recommendation' }
     ];
 
-    this.hedgeStock = new FormControl('TLT', [
+    this.hedgeStock = new FormControl('VXX', [
       Validators.required
     ]);
   }
@@ -150,7 +150,7 @@ export class DetermineHedgeComponent implements OnInit {
 
   resolveHedge(allocation) {
     this.portfolioService.getTdBalance().subscribe((balance) => {
-      const cash = balance.availableFundsNonMarginableTrade;
+      const cash = balance.cashAvailableForTrading;
       const longMarketValue = balance.longMarketValue;
 
       this.portfolioService.getTdPortfolio().subscribe((data) => {
@@ -171,7 +171,7 @@ export class DetermineHedgeComponent implements OnInit {
   portfolioBuy(stock, desiredAllocation, cash) {
     this.portfolioService.getPrice(stock).subscribe((price) => {
       this.portfolioService.getTdBalance().subscribe((data) => {
-        const allocation = data.availableFundsNonMarginableTrade >= desiredAllocation ? desiredAllocation : data.availableFundsNonMarginableTrade;
+        const allocation = data.cashAvailableForTrading >= desiredAllocation ? desiredAllocation : data.cashAvailableForTrading;
         const quantity = this.getQuantity(price, allocation, cash);
 
         const order = this.buildOrder(stock, quantity, price, 'Buy');

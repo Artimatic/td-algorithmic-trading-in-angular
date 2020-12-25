@@ -38,6 +38,7 @@
     "angular-highcharts": "^9.0.11",
     "body-parser": "^1.18.2",
     "boom": "^6.0.0",
+    "chart.js": "^2.9.4",
     "compression": "^1.7.1",
     "cookie-parser": "^1.4.3",
     "core-js": "^2.6.1",
@@ -109,7 +110,7 @@
     "typescript": "^3.5.3"
   },
   "engines": {
-    "node": ">=8.9.0"
+    "node": ">=12.18.3"
   },
   "babel": {
     "presets": [
