@@ -1,5 +1,4 @@
 import { TestBed, inject } from '@angular/core/testing';
-import { HttpModule } from '@angular/http';
 
 import { DaytradeService } from './daytrade.service';
 import { BacktestService } from './backtest.service';
@@ -10,7 +9,7 @@ import { SmartOrder } from '../models/smart-order';
 describe('DaytradeService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [HttpModule],
+      imports: [],
       providers: [DaytradeService, BacktestService, AuthenticationService, PortfolioService]
     });
   });

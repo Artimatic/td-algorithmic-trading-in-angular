@@ -1,5 +1,5 @@
-import * as path from 'path';
-import * as _ from 'lodash';
+const path = require('path');
+const _ = require('lodash');
 let credentials;
 try {
   credentials = require('./credentials');
@@ -11,7 +11,7 @@ try {
 // ============================================
 
 const defaultPort = _.get(credentials, 'default.port', _.get(credentials, 'port', null)) || 9000;
-export default {
+module.exports = {
   env: process.env.NODE_ENV,
 
   // Root path of server
@@ -44,5 +44,9 @@ export default {
     goliath: _.get(credentials, 'default.goliathUrl', _.get(credentials, 'goliathUrl', null)),
     armadillo: _.get(credentials, 'default.armadilloUrl', _.get(credentials, 'armadilloUrl', null)),
     tiingo: 'https://api.tiingo.com/'
+  },
+  twilio: {
+    key: _.get(credentials, 'default.twilio.key', _.get(credentials, 'twilio.key', null)),
+    id: _.get(credentials, 'default.twilio.id', _.get(credentials, 'twilio.id', null))
   }
 };

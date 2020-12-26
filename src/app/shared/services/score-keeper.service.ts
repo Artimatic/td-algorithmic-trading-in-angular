@@ -19,6 +19,7 @@ export class ScoreKeeperService {
   costEstimates: ScoringIndex<number> = {};
   total = 0;
   lossTally: ScoringIndex<number> = {};
+  percentReturns = {};
 
   constructor(private reportingService: ReportingService) { }
 
@@ -99,24 +100,32 @@ export class ScoreKeeperService {
   }
 
   determineLossTallyModifier(stock: string) {
-    switch (this.lossTally[stock]) {
-      case 1:
-        return 0.8;
-      case 2:
-        return 0.6;
-      case 3:
-        return 0.3;
-      case 4:
-        return 0.25;
-      case 5:
-        return 0.2;
-      default:
-        if (this.lossTally[stock] > 5) {
-          return 0.10;
-        } else {
+    if (this.lossTally[stock]) {
+      switch (this.lossTally[stock]) {
+        case 1:
           return 0.5;
-        }
+        case 2:
+          return 0.75;
+        case 3:
+          return 0.95;
+        default:
+          if (this.lossTally[stock] > 3) {
+            return 0.25;
+          }
+      }
     }
+
+    if (this.winlossHash[stock]) {
+      const difference = this.winlossHash[stock].wins - this.winlossHash[stock].losses;
+      if (difference > 3) {
+        return 1;
+      } else if (difference > 2) {
+        return 0.8;
+      } else if (difference > 1) {
+        return 0.6;
+      }
+    }
+    return 0.5;
   }
 
   determineExistingPositionModifier(existingPositionSize: number, sizeLimit: number): number {
@@ -138,5 +147,9 @@ export class ScoreKeeperService {
 
   resetProfitLoss(stock: string) {
     this.profitLossHash[stock] = 0;
+  }
+
+  addReturns(stock: string, returns: number) {
+    this.percentReturns[stock] = returns;
   }
 }

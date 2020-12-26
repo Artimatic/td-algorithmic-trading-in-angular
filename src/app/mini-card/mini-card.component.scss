@@ -1,0 +1,40 @@
+.close-icon {
+  font-size: 1.5em;
+  top: 16px;
+  left: 80px;
+  cursor: pointer;
+  opacity: .5;
+  position: relative
+}
+
+.close-icon:focus, .close-icon:hover {
+  color: #000;
+  opacity: .75;
+}
+
+.mini-card-container {
+  margin: 5px;
+}
+
+.detail-list {
+  list-style-type:none;
+  padding: 0;
+}
+
+.card-content {
+  width: 125px;
+  height: 130px;
+}
+
+.mini-card-button {
+  margin: 1px;
+}
+
+.mini-card-input {
+  .ui-inputgroup{
+    input {
+      width: 3em;
+      height: 2.5em;
+    }
+  }
+}

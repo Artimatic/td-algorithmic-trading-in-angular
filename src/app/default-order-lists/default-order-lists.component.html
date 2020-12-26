@@ -1,0 +1,64 @@
+<p-dialog header="Add Orders" [(visible)]="display" [appendTo]="'body'"
+  [contentStyle]="{width:'500px', 'max-height': '600px'}" [draggable]="true" [dismissableMask]="true"
+  [responsive]="true" (onShow)="onShow()" (onHide)="onHide()">
+  <div class="ui-g">
+    <div class="ui-g-6">
+      <p-listbox [options]="defaultLists" [(ngModel)]="selectedList" (onChange)="changedSelection($event.value)">
+      </p-listbox>
+    </div>
+    <div class="ui-g-6">
+      <div *ngIf="isLoading">
+        <p-progressSpinner></p-progressSpinner>
+      </div>
+      <div *ngIf="!isLoading">
+        <div class="add-button">
+          <button pButton type="button" label="Add to Cart" class="ui-button-success"
+            (click)="addSelectedList()"></button>
+        </div>
+        <div class="add-button">
+          <button pButton type="button" label="Cash Balance" class="ui-button-info" (click)="getCashBalance()"></button>
+        </div>
+        <div class="add-button">
+          <button pButton type="button" label="Portfolio Total" class="ui-button-secondary"
+            (click)="getPortfolioTotal()"></button>
+        </div>
+        <form [formGroup]="firstFormGroup">
+          <div class="ui-inputgroup">
+            <span class="ui-inputgroup-addon">$</span>
+            <input type="text" #searchBox id="search-box" pInputText placeholder="Amount"
+              (input)="updatedAmount(searchBox.value)" formControlName="amount">
+            <span class="ui-inputgroup-addon">.00</span>
+          </div>
+        </form>
+        <div class="card-form">
+          <p-card [style]="{height: '130px'}">
+            <form [formGroup]="addOrderFormGroup">
+              <div class="order-form-item">
+                <input type="text" pInputText placeholder="Stock" formControlName="symbol">
+                <p-dropdown [options]="sides" formControlName="side"
+                  [style]="{'minWidth':'50px', 'width':'93px', 'margin-left':'5px'}"></p-dropdown>
+              </div>
+              <div class="order-form-item">
+                <label>Allocation</label>
+                <p-spinner formControlName="allocation"
+                  [inputStyle]="{'width': '5em', 'height': '2em', 'margin-left': '5px'}" [step]="0.1" [min]="0"
+                  [max]="1">
+                </p-spinner>
+              </div>
+            </form>
+            <div class="order-form-item">
+              <button pButton type="button" icon="pi pi-plus-circle" (click)="addCustomList()"
+                class="ui-button-success"></button>
+              <div *ngIf="errorMsg" class="error-message">{{errorMsg}}</div>
+            </div>
+          </p-card>
+        </div>
+        <div *ngFor="let order of templateOrders" class="order-form-item">
+          <app-mini-card [order]="order" (delete)="delete($event)"></app-mini-card>
+        </div>
+      </div>
+    </div>
+  </div>
+</p-dialog>
+
+<button type="button" *ngIf="!hideButton" (click)="showDialog()" pButton icon="pi pi-list" label="Add"></button>

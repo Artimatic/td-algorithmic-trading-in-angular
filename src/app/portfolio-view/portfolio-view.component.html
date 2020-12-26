@@ -1,16 +1,3 @@
-<mat-accordion>
-  <mat-expansion-panel>
-      <mat-expansion-panel-header>
-          <mat-panel-title>
-              Import Orders
-          </mat-panel-title>
-      </mat-expansion-panel-header>
-      <app-xls-import (onImport)="import($event)"></app-xls-import>
-  </mat-expansion-panel>
-</mat-accordion>
-<button mat-icon-button (click)="refresh()">
-  <mat-icon>autorenew</mat-icon>
-</button>
 <button mat-icon-button (click)="sidenav.open()">
   <mat-icon>add_shopping_cart</mat-icon>
 </button>

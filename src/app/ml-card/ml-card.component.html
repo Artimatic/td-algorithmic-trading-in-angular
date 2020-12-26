@@ -1,4 +1,4 @@
-<mat-card>
+<p-card>
   <div class="banner" *ngIf="error">
     <div class="banner-content">
       ERROR: {{error}}
@@ -15,11 +15,20 @@
         <ng-template matStepLabel>Edit Order</ng-template>
         <mat-chip color="primary" selected>{{ bullishPlay.value }}</mat-chip>
         <mat-chip color="warn" selected>{{ bearishPlay.value }}</mat-chip>
-        <h2>Machine Learning Algo</h2>
+        <h3>Machine Learning</h3>
         <p>Use RNN model to determine whether go bullish or bearish after hours.</p>
-        <h3>Current Brokerage: {{globalSettingsService.brokerage}}</h3>
+        <h4>Current Brokerage: {{globalSettingsService.brokerage}}</h4>
         <section>
-          <mat-grid-list cols="8" rowHeight="25px">
+          <mat-grid-list cols="4" rowHeight="25px">
+            <mat-grid-tile [colspan]="2" [rowspan]="1">
+              <mat-form-field>
+                <mat-label>Model</mat-label>
+                <mat-select [formControl]="selectedModel">
+                  <mat-option value="V2">Version 2</mat-option>
+                  <mat-option value="V3">Version 3</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </mat-grid-tile>
             <mat-grid-tile [colspan]="2" [rowspan]="1">
               <mat-form-field>
                 <input matInput placeholder="Amount (rounded up)" type="number" formControlName="amount" required>
@@ -35,7 +44,14 @@
                   <mat-option value="SPY">SPY</mat-option>
                   <mat-option value="QQQ">QQQ</mat-option>
                   <mat-option value="TQQQ">TQQQ</mat-option>
+                  <mat-option value="CUSTOM">Custom</mat-option>
                 </mat-select>
+              </mat-form-field>
+            </mat-grid-tile>
+            <mat-grid-tile [colspan]="2" [rowspan]="1" [hidden]="bullishPlay.value !== 'CUSTOM'">
+              <mat-form-field hintLabel="Symbol">
+                <input matInput type="text" placeholder="Symbol"
+                  formControlName="symbol" required>
               </mat-form-field>
             </mat-grid-tile>
             <mat-grid-tile [colspan]="2" [rowspan]="1">
@@ -59,6 +75,15 @@
                 </mat-select>
               </mat-form-field>
             </mat-grid-tile>
+            <mat-grid-tile [colspan]="2" [rowspan]="1">
+              <mat-form-field>
+                <mat-select placeholder="Multiplier" [formControl]="multiplierPreference" name="multiplier">
+                  <mat-option *ngFor="let mulitiplier of multiplierList" [value]="mulitiplier">
+                    {{ mulitiplier }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </mat-grid-tile>
             <mat-grid-tile [colspan]="2" [rowspan]="2">
               <mat-slide-toggle [formControl]="testing" (change)="setTest()">
                 Test Mode
@@ -73,6 +98,13 @@
               <mat-slide-toggle [formControl]="allIn" [disabled]="globalSettingsService.brokerage==='Robinhood'" (change)="activateAllIn()">
                 <a matTooltip="Buy with all available balance">
                   All In
+                </a>
+              </mat-slide-toggle>
+            </mat-grid-tile>
+            <mat-grid-tile [colspan]="2" [rowspan]="2">
+              <mat-slide-toggle [formControl]="inverse">
+                <a matTooltip="Inverse play">
+                  Inverse
                 </a>
               </mat-slide-toggle>
             </mat-grid-tile>
@@ -104,30 +136,13 @@
               <mat-card-title>RNN Algo</mat-card-title>
             </mat-card-header>
           </div>
-          <div fxFlex="95%">
-            <div class="order-log">
-              <mat-grid-list cols="3" rowHeight="150px">
-                <mat-grid-tile *ngFor="let tile of tiles" [colspan]="tile.cols" [rowspan]="tile.rows">
-                  <table>
-                    <tr *ngFor="let order of tile.orders">
-                      <!-- <td>{{order.signalTime}}</td>
-                      <td>{{order.action}}</td>
-                      <td>{{order.quantity}}@</td>
-                      <td>${{order.price}}</td>
-                      <td> on {{order.timeSubmitted}}</td> -->
-                    </tr>
-                  </table>
-                </mat-grid-tile>
-              </mat-grid-list>
-            </div>
-          </div>
         </div>
         <mat-card-actions>
           <button mat-raised-button color="warn" (click)="resetStepper(stepper)">STOP</button>
-          <button mat-button color="warn" (click)="openDialog()">GO LIVE</button>
+          <button mat-button color="warn" (click)="goLiveClick()">GO LIVE</button>
           <button mat-button color="primary" (click)="trainModel()">Train Model</button>
         </mat-card-actions>
       </mat-card>
     </mat-step>
   </mat-horizontal-stepper>
-</mat-card>
+</p-card>

@@ -4,6 +4,8 @@ import * as Boom from 'boom';
 import BaseController from '../templates/base.controller';
 
 import BacktestService from './backtest.service';
+import MfiService from './mfi.service';
+import BacktestAggregationService from './backtest-aggregation.service';
 
 class BacktestController extends BaseController {
 
@@ -38,6 +40,11 @@ class BacktestController extends BaseController {
             break;
           case 'daily-roc':
             BacktestService.evaluateDailyRocMfiTrend(request.body.ticker, request.body.end, request.body.start)
+              .then((data) => BaseController.requestGetSuccessHandler(response, data))
+              .catch((err) => BaseController.requestErrorHandler(response, err));
+            break;
+          case 'daily-indicators':
+            BacktestService.initDailyStrategy(request.body.ticker, request.body.end, request.body.start, request.body.parameters)
               .then((data) => BaseController.requestGetSuccessHandler(response, data))
               .catch((err) => BaseController.requestErrorHandler(response, err));
             break;
@@ -105,7 +112,27 @@ class BacktestController extends BaseController {
     if (_.isEmpty(request.body)) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     } else {
-      BacktestService.getMfi(request.body.high, request.body.low, request.body.close, request.body.volume, request.body.period)
+      MfiService.getMfi(request.body.high, request.body.low, request.body.close, request.body.volume, request.body.period)
+        .then((data) => BaseController.requestGetSuccessHandler(response, data))
+        .catch((err) => BaseController.requestErrorHandler(response, err));
+    }
+  }
+
+  getMacd(request, response) {
+    if (_.isEmpty(request.body)) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    } else {
+      BacktestService.getMacd(request.body.real, request.body.shortPeriod, request.body.longPeriod, request.body.signalPeriod)
+        .then((data) => BaseController.requestGetSuccessHandler(response, data))
+        .catch((err) => BaseController.requestErrorHandler(response, err));
+    }
+  }
+
+  getRsi(request, response) {
+    if (_.isEmpty(request.body)) {
+      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
+    } else {
+      BacktestService.getRsi(request.body.real, request.body.period)
         .then((data) => BaseController.requestGetSuccessHandler(response, data))
         .catch((err) => BaseController.requestErrorHandler(response, err));
     }
@@ -170,7 +197,7 @@ class BacktestController extends BaseController {
   }
 
   getRNNPrediction(request, response) {
-    BacktestService.checkRNNStatus(request.body.symbol, request.body.to)
+    BacktestService.checkRNNStatus(request.body.symbol, request.body.to, request.body.modelName)
       .then((data) => { response.json(data); })
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
@@ -198,8 +225,7 @@ class BacktestController extends BaseController {
   }
 
   getDaytradeIndicators(request, response) {
-    BacktestService.getDaytradeIndicators(request.body.quotes, request.body.period, request.body.stddev,
-      request.body.mfiPeriod, request.body.vwmaPeriod)
+    BacktestService.getDaytradeIndicators(request.body.quotes, request.body.period)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
@@ -212,38 +238,46 @@ class BacktestController extends BaseController {
       !request.body.parameters) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     }
-    BacktestService.runDaytradeBacktest(request.body.symbol,
-                                        request.body.currentDate,
-                                        request.body.startDate,
-                                        request.body.parameters, response);
-
+    response.status(200).send(BacktestService.runDaytradeBacktest(request.body.symbol,
+      request.body.currentDate,
+      request.body.startDate,
+      request.body.parameters));
   }
 
   getDaytrade(request, response) {
     if (_.isEmpty(request.body) ||
-        !request.body.indicators ||
-        !request.body.parameters) {
+      !request.body.indicators ||
+      !request.body.parameters) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     }
     BacktestService.getDaytrade(request.body.price,
-                                request.body.paidPrice,
-                                request.body.indicators,
-                                request.body.parameters, response);
+      request.body.paidPrice,
+      request.body.indicators,
+      request.body.parameters, response);
 
   }
 
   calibrateDaytrade(request, response) {
     if (_.isEmpty(request.body) ||
-        !request.body.symbols ||
-        !request.body.currentDate ||
-        !request.body.startDate) {
+      !request.body.symbols ||
+      !request.body.currentDate ||
+      !request.body.startDate) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     }
     BacktestService.calibrateDaytrade(request.body.symbols,
-                                      request.body.currentDate,
-                                      request.body.startDate,
-                                      response);
+      request.body.currentDate,
+      request.body.startDate,
+      response);
+  }
 
+  scoreSignals(request, response) {
+    const data = BacktestAggregationService.getSignalResults(request.body.signals);
+    BaseController.requestGetSuccessHandler(response, data);
+  }
+
+  getProbabilityOfProfit(request, response) {
+    const data = BacktestAggregationService.getProbabilityOfProfit(request.body.bullishActiveIndicators, request.body.bearishActiveIndicators, request.body.signals);
+    BaseController.requestGetSuccessHandler(response, data);
   }
 }
 

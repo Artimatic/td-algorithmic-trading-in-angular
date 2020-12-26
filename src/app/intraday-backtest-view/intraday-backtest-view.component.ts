@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CartService } from '../shared/services/cart.service';
 import { SmartOrder } from '../shared/models/smart-order';
-import { ScoreKeeperService, BacktestService } from '../shared';
+import { ScoreKeeperService, BacktestService, PortfolioService } from '../shared';
 
 import * as moment from 'moment-timezone';
 import * as _ from 'lodash';
@@ -21,6 +21,8 @@ export class IntradayBacktestViewComponent implements OnInit {
   progressPct = 0;
   progress = 0;
   backtestsCtr: number;
+  cols: any[];
+  stocks: any[];
 
   constructor(
     public cartService: CartService,
@@ -28,12 +30,38 @@ export class IntradayBacktestViewComponent implements OnInit {
     private backtestService: BacktestService,
     public snackBar: MatSnackBar,
     private todoService: TodoService,
-    public globalSettingsService: GlobalSettingsService
+    public globalSettingsService: GlobalSettingsService,
+    private portfolioService: PortfolioService
   ) { }
 
   ngOnInit() {
     this.todoService.setIntradayBacktest();
     this.backtestsCtr = 0;
+    this.cols = [
+      { field: 'symbol', header: 'symbol' },
+      { field: 'price', header: 'price' },
+      { field: 'result', header: 'result' }
+    ];
+    this.stocks = [];
+  }
+
+  addResult(symbol, price) {
+    const result = {
+      symbol,
+      price,
+      result: this.scoreKeeperService.percentReturns[symbol]
+    };
+    this.stocks.push(result);
+  }
+
+  sort() {
+    this.stocks.forEach((stock, idx) => {
+      this.stocks[idx].result = this.scoreKeeperService.profitLossHash[stock.symbol];
+    });
+
+    this.stocks = this.stocks.sort((a, b) => {
+      return b.result - a.result;
+    });
   }
 
   async import(file, trigger = false) {
@@ -58,8 +86,6 @@ export class IntradayBacktestViewComponent implements OnInit {
           useStopLoss: row.StopLoss || null,
           useTrailingStopLoss: row.TrailingStopLoss || null,
           useTakeProfit: row.TakeProfit || null,
-          buyCloseSellOpen: row.BuyCloseSellOpen || null,
-          yahooData: row.YahooData || null,
           sellAtClose: row.SellAtClose || null,
           orderSize: row.OrderSize * 1 || null,
         };
@@ -68,6 +94,10 @@ export class IntradayBacktestViewComponent implements OnInit {
         if (trigger) {
           setTimeout(() => {
             this.backtestService.triggerBacktest.next(order.holding.symbol);
+            this.portfolioService.getPrice(order.holding.symbol)
+              .subscribe((quote) => {
+                this.addResult(order.holding.symbol, quote);
+              });
           }, 500);
         }
 

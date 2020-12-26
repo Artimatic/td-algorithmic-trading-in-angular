@@ -1,11 +1,10 @@
-import * as express from 'express';
+const express = require('express');
 const handler = require('./quote.router');
 
 const router = express.Router();
 
 router.post('/', handler.quote);
 router.post('/current', handler.currentQuote);
-router.post('/iex', handler.IEXIntraday);
 router.post('/raw', handler.rawQuote);
 router.post('/intraday', handler.intraday);
 router.post('/intraday2', handler.intradayv2);

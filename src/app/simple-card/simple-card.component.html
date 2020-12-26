@@ -1,4 +1,4 @@
-<mat-card>
+<p-card>
   <span class="delete-me">
     <button mat-icon-button>
       <a (click)="delete()" matTooltip="delete order">
@@ -23,7 +23,7 @@
         <mat-chip>{{order.holding.symbol}}</mat-chip>
         <p>{{order.holding.name}}</p>
         <mat-form-field>
-          <mat-label>Bull</mat-label>
+          <mat-label>Stock</mat-label>
           <mat-select formControlName="selectedOrder" (selectionChange)=selectStock($event)>
             <mat-option value="UPRO">UPRO</mat-option>
             <mat-option value="SPY">SPY</mat-option>
@@ -35,8 +35,9 @@
             <mat-option value="SHY">SHY</mat-option>
           </mat-select>
         </mat-form-field>
-        <mat-form-field hintLabel="Quantity">
-          <input matInput type="number" placeholder="Quantity" formControlName="quantity" required>
+        <mat-form-field hintLabel="Quantity" [hidden]="preferences.value === 'Sell positions at Open'">
+          <input matInput type="number" placeholder="Quantity"
+            formControlName="quantity" required>
         </mat-form-field>
         <mat-form-field>
           <mat-select placeholder="Preferences" [formControl]="preferences" name="preferences">
@@ -99,8 +100,11 @@
           <button mat-button color="warn" (click)="openDialog()">GO LIVE</button>
           <button mat-button color="primary" (click)="buy()">Buy</button>
           <button mat-button color="accent" (click)="sell()">Sell</button>
+          <mat-slide-toggle [formControl]="testing" (change)="setTest()">
+            Test Mode
+          </mat-slide-toggle>
         </mat-card-actions>
       </mat-card>
     </mat-step>
   </mat-horizontal-stepper>
-</mat-card>
+</p-card>

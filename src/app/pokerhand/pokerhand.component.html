@@ -1,0 +1,18 @@
+<div class="ui-g">
+  <div class="ui-g-2" *ngFor="let order of cartService.otherOrders" class="single-card"
+    [class.card-hover]="mouseOver === order.holding.symbol" (mouseover)="onHoverOver(order)" (mouseout)="onHoverAway()">
+    <app-mini-card [order]="order" [canEdit]="true" (delete)="delete(order)" (updatedOrder)="updateOrder(order)">
+    </app-mini-card>
+  </div>
+  <div class="ui-g-2" *ngFor="let order of cartService.buyOrders" class="single-card"
+    [class.card-hover]="mouseOver === order.holding.symbol" (mouseover)="onHoverOver(order)" (mouseout)="onHoverAway()">
+    <app-mini-card [order]="order" [canEdit]="true" (delete)="delete(order)" (updatedOrder)="updateOrder(order)">
+    </app-mini-card>
+  </div>
+
+  <div class="ui-g-2" *ngFor="let order of cartService.sellOrders" class="single-card"
+    [class.card-hover]="mouseOver === order.holding.symbol" (mouseover)="onHoverOver(order)" (mouseout)="onHoverAway()">
+    <app-mini-card [order]="order" [canEdit]="true" (delete)="delete(order)" (updatedOrder)="updateOrder(order)">
+    </app-mini-card>
+  </div>
+</div>

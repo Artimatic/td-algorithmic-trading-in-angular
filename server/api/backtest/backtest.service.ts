@@ -10,8 +10,9 @@ import ReversionService from '../mean-reversion/reversion.service';
 import DecisionService from '../mean-reversion/reversion-decision.service';
 import BaseErrors from '../../components/errors/baseErrors';
 import * as tulind from 'tulind';
-import configurations from '../../config/environment';
+import * as configurations from '../../config/environment';
 import AlgoService from './algo.service';
+import MfiService from './mfi.service';
 
 const dataServiceUrl = configurations.apps.goliath;
 const mlServiceUrl = configurations.apps.armadillo;
@@ -32,8 +33,9 @@ export interface DaytradeParameters {
 export interface Indicators {
   vwma: number;
   mfiLeft: number;
-  bband80: number;
+  bband80: any[];
   mfiPrevious?: number;
+  macd?: number;
   roc10?: number;
   roc10Previous?: number;
   roc70?: number;
@@ -41,6 +43,9 @@ export interface Indicators {
   close?: number;
   recommendation?: Recommendation;
   action?: string;
+  date?: string;
+  demark9?: any;
+  mfiLow?: number;
 }
 
 export interface DaytradeAlgos {
@@ -56,6 +61,10 @@ export interface Recommendation {
   bband?: DaytradeRecommendation;
   vwma?: DaytradeRecommendation;
   mfiTrade?: DaytradeRecommendation;
+  macd?: DaytradeRecommendation;
+  demark9?: DaytradeRecommendation;
+  mfiLow?: DaytradeRecommendation;
+  mfiDivergence?: DaytradeRecommendation;
 }
 
 export enum DaytradeRecommendation {
@@ -104,10 +113,6 @@ class BacktestService {
     return tulind.indicators.sma.indicator([real], [period]);
   }
 
-  getMfi(high, low, close, volume, period) {
-    return tulind.indicators.mfi.indicator([high, low, close, volume], [period]);
-  }
-
   getRateOfChange(real, period) {
     return tulind.indicators.roc.indicator([real], [period]);
   }
@@ -116,8 +121,44 @@ class BacktestService {
     return tulind.indicators.vwma.indicator([close, volume], [period]);
   }
 
-  getDaytradeIndicators(quotes, period,
-    stddev, mfiPeriod, vwmaPeriod) {
+  getMacd(real, shortPeriod, longPeriod, signalPeriod) {
+    return tulind.indicators.macd.indicator([real], [shortPeriod, longPeriod, signalPeriod]);
+  }
+
+  getRsi(real, period) {
+    return tulind.indicators.rsi.indicator([real], [period]);
+  }
+
+  getDemark9(close, high, low) {
+    let perfectSell = true;
+    let perfectBuy = true;
+    for (let i = 4; i < 10; i++) {
+      if (perfectSell) {
+        if (close[i] < close[i - 4]) {
+          perfectSell = false;
+        }
+      }
+      if (perfectBuy) {
+        if (close[i] > close[i - 4]) {
+          perfectBuy = false;
+        }
+      }
+    }
+
+    if (perfectSell) {
+      if ((high[11] < high[10] || high[11] < high[9]) || close[12] < close[8]) {
+        perfectSell = false;
+      }
+    }
+    if (perfectBuy) {
+      if ((low[11] > low[10] || low[11] > low[9]) || close[12] > close[8]) {
+        perfectBuy = false;
+      }
+    }
+    return { perfectSell, perfectBuy };
+  }
+
+  getDaytradeIndicators(quotes, period) {
     let indicators: Indicators = {
       vwma: null,
       mfiLeft: null,
@@ -222,19 +263,22 @@ class BacktestService {
       });
   }
 
-  runDaytradeBacktest(symbol, currentDate, startDate, parameters, response) {
-    this.initDaytradeStrategy(symbol, startDate, currentDate, parameters)
+  runDaytradeBacktest(symbol, currentDate, startDate, parameters): BacktestResults {
+    return this.initDaytradeStrategy(symbol, startDate, currentDate, parameters)
       .then(indicators => {
         const testResults = this.backtestIndicators(this.getDaytradeRecommendation,
           indicators,
           parameters);
 
-        response.status(200).send(testResults);
+        return testResults;
       });
   }
 
   getDaytrade(price: number, paidPrice: number, indicator: Indicators, parameters, response) {
-    let recommendation;
+    let recommendation = {
+      recommendation: OrderType.None
+    };
+
     const avgPrice = paidPrice;
 
     const isAtLimit = this.determineStopProfit(avgPrice, price,
@@ -259,12 +303,14 @@ class BacktestService {
       mfi: DaytradeRecommendation.Neutral,
       roc: DaytradeRecommendation.Neutral,
       bband: DaytradeRecommendation.Neutral,
-      vwma: DaytradeRecommendation.Neutral
+      vwma: DaytradeRecommendation.Neutral,
+      macd: DaytradeRecommendation.Neutral,
+      demark9: DaytradeRecommendation.Neutral
     };
 
     const mfiRecommendation = AlgoService.checkMfi(indicator.mfiLeft);
 
-    const rocMomentumRecommendation = AlgoService.checkRocMomentum(indicator.mfiLeft,
+    const rocMomentumRecommendation = AlgoService.checkRocMomentum(indicator.mfiPrevious, indicator.mfiLeft,
       indicator.roc10, indicator.roc10Previous,
       indicator.roc70, indicator.roc70Previous);
 
@@ -274,11 +320,17 @@ class BacktestService {
 
     const vwmaRecommendation = AlgoService.checkVwma(price, indicator.vwma);
 
+    const macdRecommendation = AlgoService.checkMacdDaytrade(indicator, indicator.roc10Previous, indicator.roc10);
+
+    const demark9Recommendation = AlgoService.checkDemark9(indicator.demark9);
+
     counter = AlgoService.countRecommendation(mfiRecommendation, counter);
     counter = AlgoService.countRecommendation(rocMomentumRecommendation, counter);
     counter = AlgoService.countRecommendation(bbandRecommendation, counter);
+    counter = AlgoService.countRecommendation(macdRecommendation, counter);
+    counter = AlgoService.countRecommendation(demark9Recommendation, counter);
 
-    if (counter.bearishCounter === 0 && counter.bullishCounter > 0) {
+    if (counter.bullishCounter > counter.bearishCounter) {
       if (vwmaRecommendation !== DaytradeRecommendation.Bearish) {
         recommendations.recommendation = OrderType.Buy;
       } else {
@@ -291,6 +343,9 @@ class BacktestService {
     recommendations.mfi = mfiRecommendation;
     recommendations.roc = rocMomentumRecommendation;
     recommendations.bband = bbandRecommendation;
+    recommendations.demark9 = demark9Recommendation;
+    recommendations.macd = macdRecommendation;
+
     return recommendations;
   }
 
@@ -314,10 +369,12 @@ class BacktestService {
       buy: [],
       history: [],
       net: 0,
-      total: 0
+      total: 0,
+      profitableTrades: 0,
+      returns: 0
     };
 
-    _.forEach(indicators, (indicator) => {
+    indicators.forEach((indicator, idx) => {
       if (indicator.close) {
         let orderType = OrderType.None;
         const avgPrice = this.estimateAverageBuyOrderPrice(orders);
@@ -328,7 +385,9 @@ class BacktestService {
           orderType = OrderType.Sell;
           indicator.recommendation = { recommendation: OrderType.Sell };
         } else {
-          const recommendation: Recommendation = recommendationFn(indicator.close, indicator);
+          const recommendation: Recommendation = recommendationFn(indicator.close,
+            indicator,
+            idx > 0 ? indicators[idx - 1] : null);
 
           orderType = recommendation.recommendation;
           indicator.recommendation = recommendation;
@@ -339,15 +398,16 @@ class BacktestService {
       }
     });
 
-    const lastRecommendation =  this.getIndicatorAction(indicators[indicators.length - 1].recommendation.recommendation);
+    const lastRecommendation = this.getIndicatorAction(indicators[indicators.length - 1].recommendation.recommendation);
 
     const ordersResults = {
       algo: '',
       orderHistory: orders.history,
       net: orders.net,
-      returns: (orders.net / orders.total),
+      returns: orders.returns,
       total: orders.total,
       invested: orders.total,
+      profitableTrades: orders.profitableTrades,
       totalTrades: orders.trades,
       recommendation: lastRecommendation
     };
@@ -379,7 +439,7 @@ class BacktestService {
 
         const lossThreshold = 0.05;
         const profitThreshold = 0.05;
-        const mfiRange = [20, 80];
+        const mfiRange = [20, 75];
         const fields = ['leftRange', 'rightRange', 'totalTrades', 'net', 'avgTrade', 'returns'];
         let count = 0;
         let leftRange = -1;
@@ -430,15 +490,46 @@ class BacktestService {
 
     return QuoteService.queryForIntraday(symbol, startDate, currentDate)
       .then(quotes => {
-        console.log('quotes ', quotes.length);
+        if (quotes.length === 0) {
+          console.log(`No quotes returned for ${startDate} - ${currentDate}`);
+        }
+
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);
           if (idx > minQuotes) {
-            const q = _.slice(quotes, idx - minQuotes, idx);
+            const q = quotes.slice(idx - minQuotes, idx);
             getIndicatorQuotes.push(this.initStrategy(q));
           }
         });
         return Promise.all(getIndicatorQuotes);
+      });
+  }
+
+  initDailyStrategy(symbol, currentDate, startDate, parameters = { minQuotes: 80 }) {
+    const minQuotes = parameters.minQuotes;
+    const getIndicatorQuotes = [];
+
+    return this.getData(symbol, currentDate, startDate)
+      .then(quotes => {
+        _.forEach(quotes, (value, key) => {
+          const idx = Number(key);
+
+          if (idx > minQuotes) {
+            const q = quotes.slice(idx - minQuotes, idx);
+            getIndicatorQuotes.push(this.initStrategy(q));
+          }
+        });
+
+        return Promise.all(getIndicatorQuotes);
+      })
+      .then(indicators => {
+        let testResults;
+        testResults = this.backtestIndicators(this.getAllRecommendations,
+          indicators,
+          parameters);
+
+        testResults.algo = 'All indicators';
+        return testResults;
       });
   }
 
@@ -475,7 +566,7 @@ class BacktestService {
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);
           if (idx > minQuotes) {
-            const q = _.slice(quotes, idx - minQuotes, idx);
+            const q = quotes.slice(idx - minQuotes, idx);
             getIndicatorQuotes.push(this.initMAIndicators(q));
           }
         });
@@ -559,7 +650,7 @@ class BacktestService {
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);
           if (idx > minQuotes) {
-            const q = _.slice(quotes, idx - minQuotes, idx);
+            const q = quotes.slice(idx - minQuotes, idx);
             getIndicatorQuotes.push(this.initMAIndicators(q));
           }
         });
@@ -652,7 +743,8 @@ class BacktestService {
       buy: [],
       history: [],
       net: 0,
-      total: 0
+      total: 0,
+      returns: 0
     };
 
     _.forEach(indicators, (indicator) => {
@@ -782,20 +874,25 @@ class BacktestService {
 
   calcTrade(orders, dayQuote, orderType, avgPrice) {
     if (orderType && orderType.toLowerCase() === 'sell') {
-      // Sell
-      orders.trades++;
       if (orders.buy.length > 0) {
+        orders.trades++;
         const len = orders.buy.length;
         const profit = (dayQuote.close - avgPrice) * len;
-
+        if (profit > 0) {
+          if (orders.profitableTrades) {
+            orders.profitableTrades++;
+          } else {
+            orders.profitableTrades = 1;
+          }
+        }
         orders.total += (avgPrice * len);
         orders.net += profit;
+        orders.returns += profit / (avgPrice * len);
         dayQuote.signal = 'sell';
         orders.history.push(dayQuote);
         orders.buy = [];
       }
     } else if (orderType && orderType.toLowerCase() === 'buy') {
-      // Buy
       orders.buy.push(dayQuote.close);
       dayQuote.signal = 'buy';
       orders.history.push(dayQuote);
@@ -810,12 +907,12 @@ class BacktestService {
   }
 
   getSubArray(reals, period) {
-    return _.slice(reals, reals.length - (period + 1));
+    return reals.slice(reals.length - (period + 1));
   }
 
   getSubArrayShift(reals, period, modifier) {
     const length = reals.length + modifier;
-    return _.slice(reals, length - (period + 1), length);
+    return reals.slice(length - (period + 1), length);
   }
 
   processQuotes(quotes) {
@@ -850,14 +947,14 @@ class BacktestService {
     return this.getBBands(indicators.reals, bbandPeriod, 2)
       .then((bband80) => {
         currentQuote.bband80 = bband80;
-        const quotes10Day = this.getSubArray(indicators.reals, 10);
-        return this.getRateOfChange(quotes10Day, 10);
+        const quotes10Day = this.getSubArray(indicators.reals, 24);
+        return this.getRateOfChange(quotes10Day, 24);
       })
       .then((roc10) => {
         const rocLen = roc10[0].length - 1;
         currentQuote.roc10 = _.round(roc10[0][rocLen], 4);
 
-        return this.getRateOfChange(this.getSubArrayShift(indicators.reals, 10, -2), 10);
+        return this.getRateOfChange(this.getSubArrayShift(indicators.reals, 24, -1), 24);
       })
       .then((roc10Previous) => {
         const rocLen = roc10Previous[0].length - 1;
@@ -869,13 +966,13 @@ class BacktestService {
         const rocLen = roc70[0].length - 1;
         currentQuote.roc70 = _.round(roc70[0][rocLen], 4);
 
-        return this.getRateOfChange(this.getSubArrayShift(indicators.reals, 70, -2), 70);
+        return this.getRateOfChange(this.getSubArrayShift(indicators.reals, 70, -1), 70);
       })
       .then((roc70Previous) => {
         const rocLen = roc70Previous[0].length - 1;
         currentQuote.roc70Previous = _.round(roc70Previous[0][rocLen], 4);
 
-        return this.getMfi(this.getSubArray(indicators.highs, 14),
+        return MfiService.getMfi(this.getSubArray(indicators.highs, 14),
           this.getSubArray(indicators.lows, 14),
           this.getSubArray(indicators.reals, 14),
           this.getSubArray(indicators.volumes, 14),
@@ -890,7 +987,37 @@ class BacktestService {
       .then(vwma => {
         const vwmaLen = vwma[0].length - 1;
         currentQuote.vwma = _.round(vwma[0][vwmaLen], 3);
-
+        return this.getMacd(indicators.reals, 12, 26, 9);
+      })
+      .then(macd => {
+        currentQuote.macd = macd;
+        return this.getRsi(this.getSubArray(indicators.reals, 14), 14);
+      })
+      .then(rsi => {
+        currentQuote.rsi = rsi;
+        return this.getDemark9(this.getSubArray(indicators.reals, 13),
+          this.getSubArray(indicators.highs, 13),
+          this.getSubArray(indicators.lows, 13));
+      })
+      .then(demark9 => {
+        currentQuote.demark9 = demark9;
+        return MfiService.getMfiLow(indicators.highs,
+          indicators.lows,
+          indicators.reals,
+          indicators.volumes,
+          14);
+      })
+      .then(mfiLow => {
+        currentQuote.mfiLow = mfiLow;
+        return MfiService.getMfi(this.getSubArrayShift(indicators.highs, 14, -1),
+          this.getSubArrayShift(indicators.lows, 14, -1),
+          this.getSubArrayShift(indicators.reals, 14, -1),
+          this.getSubArrayShift(indicators.volumes, 14, -1),
+          14);
+      })
+      .then((mfiPrevious) => {
+        const len = mfiPrevious[0].length - 1;
+        currentQuote.mfiPrevious = _.round(mfiPrevious[0][len], 3);
         return currentQuote;
       });
   }
@@ -910,7 +1037,7 @@ class BacktestService {
         // })
         // .then((sma70) => {
         //   currentQuote.sma70 = sma70[0][sma70[0].length - 1];
-        return this.getRateOfChange(this.getSubArray(indicators.reals, 10), 10);
+        return this.getRateOfChange(this.getSubArray(indicators.reals, 24), 24);
       })
       .then((roc10) => {
         const rocLen = roc10[0].length - 1;
@@ -925,7 +1052,7 @@ class BacktestService {
         // .then((roc5) => {
         //   const rocLen = roc5[0].length - 1;
         //   currentQuote.roc5 = _.round(roc5[0][rocLen], 3);
-        return this.getMfi(this.getSubArray(indicators.highs, 14),
+        return MfiService.getMfi(this.getSubArray(indicators.highs, 14),
           this.getSubArray(indicators.lows, 14),
           this.getSubArray(indicators.reals, 14),
           this.getSubArray(indicators.volumes, 14),
@@ -1051,7 +1178,7 @@ class BacktestService {
       });
   }
 
-  getTrainingData(symbol, endDate, startDate) {
+  getTrainingData(symbol, endDate, startDate, useClosePrice = false) {
     const to = moment(endDate).format('YYYY-MM-DD');
     const from = moment(startDate).format('YYYY-MM-DD');
 
@@ -1065,11 +1192,16 @@ class BacktestService {
         ticker: symbol,
         to,
         from,
-        save: false
+        save: false,
+        useClosePrice
       },
     };
 
-    return RequestPromise(options);
+    return RequestPromise(options)
+      .then(data => JSON.parse(data))
+      .catch(error => {
+        console.log('Error getTrainingData', error);
+      });
   }
 
   runRNN(symbol, endDate, startDate, response) {
@@ -1098,7 +1230,6 @@ class BacktestService {
 
     this.getTrainingData(symbol, today, yesterday)
       .then((trainingData) => {
-        trainingData = JSON.parse(trainingData);
         const URI = `${mlServiceUrl}api/activate`;
 
         const options = {
@@ -1121,11 +1252,11 @@ class BacktestService {
     response.status(200).send();
   }
 
-  checkRNNStatus(symbol, endDate) {
+  checkRNNStatus(symbol, endDate, modelName) {
     const to = moment(endDate).format('YYYY-MM-DD');
 
     const URI = `${dataServiceUrl}precog/prediction?` +
-      `symbol=${symbol}&date=${to}`;
+      `symbol=${symbol}&date=${to}&modelName=${modelName}`;
 
     const options = {
       method: 'GET',
@@ -1241,13 +1372,13 @@ class BacktestService {
     const currentQuote = quotes[quotes.length - 1];
     const indicators = this.processQuotes(quotes);
 
-    const quotes10Day = this.getSubArray(indicators.reals, 10);
-    return this.getRateOfChange(quotes10Day, 10)
+    const quotes10Day = this.getSubArray(indicators.reals, 24);
+    return this.getRateOfChange(quotes10Day, 24)
       .then((roc10) => {
         const rocLen = roc10[0].length - 1;
         currentQuote.roc10 = _.round(roc10[0][rocLen], 4);
 
-        return this.getRateOfChange(this.getSubArrayShift(indicators.reals, 10, -3), 10);
+        return this.getRateOfChange(this.getSubArrayShift(indicators.reals, 24, -1), 24);
       })
       .then((roc10Previous) => {
         const rocLen = roc10Previous[0].length - 1;
@@ -1259,13 +1390,13 @@ class BacktestService {
         const rocLen = roc70[0].length - 1;
         currentQuote.roc70 = _.round(roc70[0][rocLen], 4);
 
-        return this.getRateOfChange(this.getSubArrayShift(indicators.reals, 70, -3), 70);
+        return this.getRateOfChange(this.getSubArrayShift(indicators.reals, 70, -1), 70);
       })
       .then((roc70Previous) => {
         const rocLen = roc70Previous[0].length - 1;
         currentQuote.roc70Previous = _.round(roc70Previous[0][rocLen], 4);
 
-        return this.getMfi(this.getSubArray(indicators.highs, 14),
+        return MfiService.getMfi(this.getSubArray(indicators.highs, 14),
           this.getSubArray(indicators.lows, 14),
           this.getSubArray(indicators.reals, 14),
           this.getSubArray(indicators.volumes, 14),
@@ -1274,7 +1405,57 @@ class BacktestService {
       .then((mfiLeft) => {
         const len = mfiLeft[0].length - 1;
         currentQuote.mfiLeft = _.round(mfiLeft[0][len], 3);
-        return this.getMfi(this.getSubArrayShift(indicators.highs, 14, -10),
+        return MfiService.getMfi(this.getSubArrayShift(indicators.highs, 14, -10),
+          this.getSubArrayShift(indicators.lows, 14, -10),
+          this.getSubArrayShift(indicators.reals, 14, -10),
+          this.getSubArrayShift(indicators.volumes, 14, -10),
+          14);
+      })
+      .then((mfiPrevious) => {
+        const len = mfiPrevious[0].length - 1;
+        currentQuote.mfiPrevious = _.round(mfiPrevious[0][len], 3);
+        return currentQuote;
+      });
+  }
+
+  getMachineLearningIndicators(quotes) {
+    const currentQuote = quotes[quotes.length - 1];
+    const indicators = this.processQuotes(quotes);
+
+    const quotes10Day = this.getSubArray(indicators.reals, 24);
+    return this.getRateOfChange(quotes10Day, 24)
+      .then((roc10) => {
+        const rocLen = roc10[0].length - 1;
+        currentQuote.roc10 = _.round(roc10[0][rocLen], 4);
+
+        return this.getRateOfChange(this.getSubArrayShift(indicators.reals, 24, -1), 24);
+      })
+      .then((roc10Previous) => {
+        const rocLen = roc10Previous[0].length - 1;
+        currentQuote.roc10Previous = _.round(roc10Previous[0][rocLen], 4);
+
+        return this.getRateOfChange(this.getSubArray(indicators.reals, 70), 70);
+      })
+      .then((roc70) => {
+        const rocLen = roc70[0].length - 1;
+        currentQuote.roc70 = _.round(roc70[0][rocLen], 4);
+
+        return this.getRateOfChange(this.getSubArrayShift(indicators.reals, 70, -1), 70);
+      })
+      .then((roc70Previous) => {
+        const rocLen = roc70Previous[0].length - 1;
+        currentQuote.roc70Previous = _.round(roc70Previous[0][rocLen], 4);
+
+        return MfiService.getMfi(this.getSubArray(indicators.highs, 14),
+          this.getSubArray(indicators.lows, 14),
+          this.getSubArray(indicators.reals, 14),
+          this.getSubArray(indicators.volumes, 14),
+          14);
+      })
+      .then((mfiLeft) => {
+        const len = mfiLeft[0].length - 1;
+        currentQuote.mfiLeft = _.round(mfiLeft[0][len], 3);
+        return MfiService.getMfi(this.getSubArrayShift(indicators.highs, 14, -10),
           this.getSubArrayShift(indicators.lows, 14, -10),
           this.getSubArrayShift(indicators.reals, 14, -10),
           this.getSubArrayShift(indicators.volumes, 14, -10),
@@ -1297,8 +1478,7 @@ class BacktestService {
       mfiTrade: DaytradeRecommendation.Neutral
     };
 
-    const rocCrossoverRecommendation = AlgoService.checkRocCrossover(indicator.roc10, indicator.roc10Previous,
-      indicator.roc70, indicator.roc70Previous);
+    const rocCrossoverRecommendation = AlgoService.checkRocCrossover(indicator.roc70Previous, indicator.roc70);
 
     const mfiTrendRecommendation = AlgoService.checkMfiTrend(indicator.mfiPrevious, indicator.mfiLeft);
 
@@ -1306,11 +1486,58 @@ class BacktestService {
     recommendations.mfiTrade = mfiTrendRecommendation;
 
     if (recommendations.roc === DaytradeRecommendation.Bullish &&
-      recommendations.mfiTrade === DaytradeRecommendation.Bearish) {
-      recommendations.recommendation = OrderType.Sell;
-    } else if (recommendations.roc === DaytradeRecommendation.Bearish &&
       recommendations.mfiTrade === DaytradeRecommendation.Bullish) {
       recommendations.recommendation = OrderType.Buy;
+    } else if (recommendations.roc === DaytradeRecommendation.Bearish &&
+      recommendations.mfiTrade === DaytradeRecommendation.Bearish) {
+      recommendations.recommendation = OrderType.Sell;
+    }
+
+    return recommendations;
+  }
+
+  getAllRecommendations(price: number, indicator: Indicators, previousIndicator: Indicators): Recommendation {
+    const recommendations: Recommendation = {
+      recommendation: OrderType.None,
+      mfi: DaytradeRecommendation.Neutral,
+      mfiLow: DaytradeRecommendation.Neutral,
+      vwma: DaytradeRecommendation.Neutral,
+      mfiTrade: DaytradeRecommendation.Neutral,
+      macd: DaytradeRecommendation.Neutral,
+      demark9: DaytradeRecommendation.Neutral,
+      mfiDivergence: DaytradeRecommendation.Neutral
+    };
+
+    const rocCrossoverRecommendation = AlgoService.checkRocCrossover(indicator.roc70Previous, indicator.roc70);
+
+    const mfiTrendRecommendation = AlgoService.checkMfiTrend(indicator.mfiPrevious, indicator.mfiLeft);
+
+    const mfiRecommendation = AlgoService.checkMfi(indicator.mfiLeft);
+
+    const macdRecommendation = AlgoService.checkMacd(indicator, previousIndicator);
+
+    const demark9Recommendation = AlgoService.checkDemark9(indicator.demark9);
+
+    const mfiLowRecommendation = AlgoService.checkMfiLow(indicator.mfiLow, indicator.mfiLeft);
+
+    const mfiDivergenceRecommendation = AlgoService.checkMfiDivergence(indicator.mfiPrevious, indicator.mfiLeft, indicator.roc10Previous, indicator.roc10);
+
+    recommendations.roc = rocCrossoverRecommendation;
+    recommendations.mfiTrade = mfiTrendRecommendation;
+    recommendations.macd = macdRecommendation;
+    recommendations.mfi = mfiRecommendation;
+    recommendations.demark9 = demark9Recommendation;
+    recommendations.mfiLow = mfiLowRecommendation;
+    recommendations.mfiDivergence = mfiDivergenceRecommendation;
+
+    if (recommendations.demark9 === DaytradeRecommendation.Bullish ||
+      recommendations.mfiTrade === DaytradeRecommendation.Bullish ||
+      recommendations.macd === DaytradeRecommendation.Bullish) {
+      recommendations.recommendation = OrderType.Buy;
+    } else if (recommendations.demark9 === DaytradeRecommendation.Bearish ||
+      recommendations.mfiTrade === DaytradeRecommendation.Bearish ||
+      recommendations.macd === DaytradeRecommendation.Bearish) {
+      recommendations.recommendation = OrderType.Sell;
     }
 
     return recommendations;
@@ -1318,10 +1545,10 @@ class BacktestService {
 
   evaluateDailyRocMfiTrend(symbol, currentDate, startDate) {
     const getIndicatorQuotes = [];
-    const minQuotes = 71;
+    const minQuotes = 100;
     const parameters = {
-      lossThreshold: 0.05,
-      profitThreshold: 1,
+      lossThreshold: null,
+      profitThreshold: null,
       minQuotes: 81
     };
     return this.getData(symbol, currentDate, startDate)
@@ -1329,7 +1556,7 @@ class BacktestService {
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);
           if (idx > minQuotes) {
-            const q = _.slice(quotes, idx - minQuotes, idx);
+            const q = quotes.slice(idx - minQuotes, idx);
             getIndicatorQuotes.push(this.getRocMfiTrend(q));
           }
         });
@@ -1360,6 +1587,119 @@ class BacktestService {
     Promise.all(quotesPromises).then(function (indicators) {
       response.status(200).send(indicators);
     });
+  }
+
+  trainV2Model(symbol, endDate, startDate, trainingSize) {
+    const to = moment(endDate).format('YYYY-MM-DD');
+    const from = moment(startDate).format('YYYY-MM-DD');
+    console.log('from - to: ', from, to);
+
+    const URI = `${mlServiceUrl}api/test-model?`;
+
+    const options = {
+      method: 'GET',
+      uri: URI,
+      qs: {
+        symbol,
+        to,
+        from,
+        trainingSize
+      }
+    };
+
+    return RequestPromise(options)
+      .catch((error) => {
+        console.log('Error: ', error);
+      });
+  }
+
+  trainCustomModel(symbol, modelName, trainingData, trainingSize, date) {
+    const URI = `${mlServiceUrl}api/train-custom`;
+
+    const options = {
+      method: 'POST',
+      uri: URI,
+      body: {
+        symbol,
+        modelName,
+        trainingData,
+        trainingSize,
+        to: date
+      },
+      json: true
+    };
+
+    return RequestPromise(options)
+      .catch((error) => {
+        console.log('train-custom error: ', error.message);
+      });
+  }
+
+  trainTensorModel(symbol, modelName, trainingData, trainingSize, date) {
+    const URI = `${mlServiceUrl}api/tensor/train-model`;
+
+    const options = {
+      method: 'POST',
+      uri: URI,
+      body: {
+        symbol,
+        modelName,
+        trainingData,
+        trainingSize,
+        to: date
+      },
+      json: true
+    };
+
+    return RequestPromise(options)
+      .catch((error) => {
+        console.log('train-custom error: ', error.message);
+      });
+  }
+
+  activateV2Model(symbol, startDate, trainingData) {
+    const today = moment(startDate).format('YYYY-MM-DD');
+
+    const URI = `${mlServiceUrl}api/v2/activate`;
+
+    const options = {
+      method: 'POST',
+      uri: URI,
+      body: {
+        symbol,
+        input: trainingData[trainingData.length - 1].input,
+        round: false,
+        to: today
+      },
+      json: true
+    };
+
+    return RequestPromise(options)
+      .catch((error) => {
+        console.log('Error: ', error);
+      });
+  }
+
+  activateCustomModel(symbol, modelName: string, input, to) {
+    const URI = `${mlServiceUrl}api/activate-custom`;
+
+    const options = {
+      method: 'POST',
+      uri: URI,
+      body: {
+        symbol,
+        modelName,
+        input,
+        to,
+        round: false
+      },
+      json: true
+    };
+
+    return RequestPromise(options)
+      .catch((error) => {
+        console.log('Error: ', error);
+      });
   }
 }
 

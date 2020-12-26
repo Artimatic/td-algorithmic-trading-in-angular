@@ -31,10 +31,9 @@ enum Sentiment {
   styleUrls: ['./ml-card.component.css']
 })
 export class MlCardComponent implements OnInit {
-  @ViewChild('stepper') stepper;
+  @ViewChild('stepper', { static: false }) stepper;
 
   sub: Subscription;
-  checkReportSub: Subscription;
 
   alive: boolean;
   live: boolean;
@@ -43,6 +42,7 @@ export class MlCardComponent implements OnInit {
 
   bullishPlay: FormControl;
   bearishPlay: FormControl;
+  selectedModel: FormControl;
   settings: FormControl;
 
   error: string;
@@ -56,6 +56,7 @@ export class MlCardComponent implements OnInit {
   secondFormGroup: FormGroup;
   longOnly = new FormControl();
   allIn = new FormControl();
+  inverse = new FormControl();
 
   startTime: moment.Moment;
   stopTime: moment.Moment;
@@ -63,6 +64,11 @@ export class MlCardComponent implements OnInit {
   tiles;
 
   testing = new FormControl();
+
+  multiplierPreference: FormControl;
+  multiplierList: number[];
+
+  stockConstant = 'SPY';
 
   constructor(private _formBuilder: FormBuilder,
     private portfolioService: PortfolioService,
@@ -74,22 +80,27 @@ export class MlCardComponent implements OnInit {
     public dialog: MatDialog) { }
 
   ngOnInit() {
-    this.startTime = moment.tz('5:01pm', 'h:mma', 'America/New_York');
-    this.stopTime = moment.tz('6:00pm', 'h:mma', 'America/New_York');
-
-    this.holdingCount = 0;
-
-    this.interval = 600000;
-    this.reportWaitInterval = 180000;
-
     this.live = false;
     this.alive = true;
     this.longOnly.setValue(false);
     this.allIn.setValue(false);
+    this.inverse.setValue(false);
     this.testing.setValue(false);
 
+    this.multiplierList = [
+      1,
+      2,
+      3,
+      4,
+      5
+    ];
+
+    this.multiplierPreference = new FormControl();
+    this.multiplierPreference.setValue(1);
+
     this.firstFormGroup = this._formBuilder.group({
-      amount: [500, Validators.required]
+      amount: [1000, Validators.required],
+      symbol: []
     });
 
     this.secondFormGroup = this._formBuilder.group({
@@ -104,15 +115,50 @@ export class MlCardComponent implements OnInit {
       Validators.required
     ]);
 
-    this.settings = new FormControl('closePositions', [
+    this.selectedModel = new FormControl('V2', [
+      Validators.required
+    ]);
+
+    this.settings = new FormControl('openPositions', [
       Validators.required
     ]);
 
     this.setup();
   }
 
+  getTrainingStock() {
+    if (this.bullishPlay.value === 'CUSTOM' && this.firstFormGroup.value.symbol) {
+      return this.firstFormGroup.value.symbol;
+    } else {
+      return 'SPY';
+    }
+  }
+
+  getBullPick() {
+    if (this.bullishPlay.value === 'CUSTOM' && this.firstFormGroup.value.symbol) {
+      return this.firstFormGroup.value.symbol;
+    } else {
+      return this.bullishPlay.value;
+    }
+  }
+
   trainModel() {
-    this.backtestService.runRnn('SPY', moment().subtract({ day: 1 }).format('YYYY-MM-DD'), moment().subtract({ day: 300 }).format('YYYY-MM-DD')).subscribe();
+    if (this.selectedModel.value === 'V3') {
+      this.backtestService.runLstmV3(this.getTrainingStock(),
+        moment().subtract({ day: 1 }).format('YYYY-MM-DD'),
+        moment().subtract({ day: 365 }).format('YYYY-MM-DD'),
+        0.7,
+        '0,0,1,0,0,1,1,1,1,1,1,0,0')
+        .subscribe(() => {
+          this.sendActivation().subscribe();
+        });
+    } else {
+      this.backtestService.runLstmV2(this.getTrainingStock(),
+        moment().subtract({ day: 2 }).format('YYYY-MM-DD'),
+        moment().subtract({ day: 90 }).format('YYYY-MM-DD')).subscribe(() => {
+          this.sendActivation().subscribe();
+        });
+    }
   }
 
   getTradeDay() {
@@ -130,6 +176,7 @@ export class MlCardComponent implements OnInit {
 
   goLive() {
     this.setup();
+    this.trainModel();
     this.alive = true;
     this.sub = TimerObservable.create(0, this.interval)
       .takeWhile(() => this.alive)
@@ -139,34 +186,27 @@ export class MlCardComponent implements OnInit {
         if (momentInst.isAfter(this.startTime) &&
           momentInst.isBefore(this.stopTime) || this.testing.value) {
           this.alive = false;
-          this.backtestService.activateRnn('SPY', this.getTradeDay())
-            .subscribe(() => {
-              this.pendingResults = true;
-              this.checkReportSub = TimerObservable.create(0, this.reportWaitInterval)
-                .takeWhile(() => this.pendingResults && this.live)
-                .subscribe(() => {
-                  this.backtestService.getRnn('SPY', this.getTradeDay())
-                    .subscribe((data: any) => {
-                      console.log('rnn data: ', this.getTradeDay(), data);
+          this.pendingResults = true;
+          this.sendActivation()
+            .subscribe((data: any) => {
+              console.log('rnn data: ', this.getTradeDay(), data);
 
-                      if (data) {
-                        const bet = this.determineBet(data);
-                        this.placeBet(bet);
-                        this.pendingResults = false;
-                      }
-                    }, error => { });
-                });
+              if (data) {
+                const bet = this.determineBet(data);
+                this.placeBet(bet);
+                this.pendingResults = false;
+              }
             }, error => {
-              console.log('error: ', error);
-              this.setWarning(error);
-              this.stop();
+              console.log('ML activation failed. Trying other models.');
+              this.stockConstant = this.stockConstant === 'SPY' ? 'VOO' : 'SPY';
+              this.activateOtherModel();
+              this.alive = true;
             });
         }
       });
   }
 
-  determineBet(predictionResults) {
-    const predictions = predictionResults[0].results;
+  determineBet(prediction) {
     const bet: Bet = {
       total: 0,
       bearishOpen: 0,
@@ -174,14 +214,12 @@ export class MlCardComponent implements OnInit {
       summary: Sentiment.Neutral
     };
 
-    _.forEach(predictions, (prediction) => {
-      if (prediction.nextOutput > 0.55) {
-        bet.bullishOpen++;
-      } else if (prediction.nextOutput < 0.45) {
-        bet.bearishOpen++;
-      }
-      bet.total++;
-    });
+    if (prediction.nextOutput > 0.55) {
+      bet.bullishOpen++;
+    } else if (prediction.nextOutput < 0.45) {
+      bet.bearishOpen++;
+    }
+    bet.total++;
 
     const bullishRatio = _.floor(_.divide(bet.bullishOpen, bet.total), 2);
     const bearishRatio = _.floor(_.divide(bet.bearishOpen, bet.total), 2);
@@ -202,70 +240,37 @@ export class MlCardComponent implements OnInit {
   }
 
   getOrder(symbol: string) {
-    return this.portfolioService.getInstruments(symbol).map((response) => {
-      const instruments = response.results[0];
-      const newHolding: Holding = {
-        instrument: instruments.url,
-        symbol: instruments.symbol,
-        name: instruments.name
-      };
+    const newHolding: Holding = {
+      instrument: null,
+      symbol,
+    };
 
-      const order: SmartOrder = {
-        holding: newHolding,
-        quantity: 0,
-        price: 0,
-        submitted: false,
-        pending: false,
-        side: 'DayTrade',
-      };
-
-      return order;
-    });
+    const order: SmartOrder = {
+      holding: newHolding,
+      quantity: 0,
+      price: 0,
+      submitted: false,
+      pending: false,
+      side: 'DayTrade',
+    };
+    return order;
   }
 
   placeBet(bet: Bet) {
     switch (bet.summary) {
       case Sentiment.Bullish:
         if (this.settings.value === 'closePositions') {
-          this.getOrder(this.bearishPlay.value).subscribe((order) => {
-            this.sellAll(order);
-          },
-            (error) => {
-              this.snackBar.open(`Error getting instruments for ${this.bearishPlay}`, 'Dismiss', {
-                duration: 2000,
-              });
-            });
+          this.sellAll(this.getOrder(this.inverse.value ? this.getBullPick() : this.bearishPlay.value));
         } else if (this.settings.value === 'openPositions') {
-          this.getOrder(this.bullishPlay.value).subscribe((order) => {
-            this.buy(order, _.divide(bet.bullishOpen, bet.total));
-          },
-            (error) => {
-              this.snackBar.open(`Error getting instruments for ${this.bullishPlay}`, 'Dismiss', {
-                duration: 2000,
-              });
-            });
+          this.buy(this.getOrder(this.inverse.value ? this.bearishPlay.value : this.getBullPick()), _.divide(bet.bullishOpen, bet.total));
         }
 
         break;
       case Sentiment.Bearish:
-          if (this.settings.value === 'closePositions') {
-            this.getOrder(this.bullishPlay.value).subscribe((order) => {
-              this.sellAll(order);
-            },
-              (error) => {
-                this.snackBar.open(`Error getting instruments for ${this.bullishPlay}`, 'Dismiss', {
-                  duration: 2000,
-                });
-              });
-          } else if (this.settings.value === 'openPositions' && !this.longOnly.value) {
-          this.getOrder(this.bearishPlay.value).subscribe((order) => {
-            this.buy(order, _.divide(bet.bearishOpen, bet.total));
-          },
-            (error) => {
-              this.snackBar.open(`Error getting instruments for ${this.bearishPlay}`, 'Dismiss', {
-                duration: 2000,
-              });
-            });
+        if (this.settings.value === 'closePositions') {
+          this.sellAll(this.getOrder(this.inverse.value ? this.bearishPlay.value : this.getBullPick()));
+        } else if (this.settings.value === 'openPositions' && !this.longOnly.value) {
+          this.buy(this.getOrder(this.inverse.value ? this.getBullPick() : this.bearishPlay.value), _.divide(bet.bearishOpen, bet.total));
         }
         break;
       default:
@@ -335,7 +340,7 @@ export class MlCardComponent implements OnInit {
   }
 
   initiateBuy(modifier: number, totalBuyAmount: number, bid: number, order: SmartOrder) {
-    const quantity = _.floor(modifier * this.calculateQuantity(totalBuyAmount, bid));
+    const quantity = _.floor(modifier * this.calculateQuantity(totalBuyAmount, bid)) * this.multiplierPreference.value;
     const buyOrder = this.daytradeService.createOrder(order.holding, 'Buy', quantity, bid, moment().unix());
     const log = `ORDER SENT ${buyOrder.side} ${buyOrder.holding.symbol} ${buyOrder.quantity} ${buyOrder.price}`;
 
@@ -358,15 +363,11 @@ export class MlCardComponent implements OnInit {
     this.stop();
   }
 
-  test() {
-    this.portfolioService.getTdBalance().toPromise().then(data => { console.log(data); });
-  }
-
   calculateQuantity(betSize: number, price: number) {
     return _.floor(_.divide(betSize, price));
   }
 
-  openDialog(): void {
+  goLiveClick(): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '250px',
       data: { title: 'Confirm', message: 'Are you sure you want to execute this order?' }
@@ -398,8 +399,15 @@ export class MlCardComponent implements OnInit {
   }
 
   setup() {
+    this.startTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 15:55`, 'America/New_York');
+    this.stopTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 16:00`, 'America/New_York');
+
     this.holdingCount = 0;
     this.warning = '';
+    this.holdingCount = 0;
+
+    this.interval = 300000;
+    this.reportWaitInterval = 180000;
   }
 
   setTest() {
@@ -415,5 +423,19 @@ export class MlCardComponent implements OnInit {
     } else {
       this.firstFormGroup.enable();
     }
+  }
+
+  sendActivation() {
+    if (this.selectedModel.value === 'V3') {
+      return this.backtestService.activateLstmV3(this.getTrainingStock(), '0,0,1,0,0,1,1,1,1,1,1,0,0');
+    }
+    return this.backtestService.activateLstmV2(this.getTrainingStock());
+  }
+
+  activateOtherModel() {
+    if (this.selectedModel.value === 'V3') {
+      return this.backtestService.activateLstmV2(this.getTrainingStock());
+    }
+    return this.backtestService.activateLstmV3(this.getTrainingStock(), '0,0,1,0,0,1,1,1,1,1,1,0,0');
   }
 }

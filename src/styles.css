@@ -14,3 +14,17 @@ button.nav-item {
 .mat-checkbox-layout {
   white-space: pre-wrap !important;
 }
+
+.table-cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -o-text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.app-title {
+  color: #0F9117;
+  font-weight: 700;
+  padding: 0 0 0 3px;
+}

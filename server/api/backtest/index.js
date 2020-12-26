@@ -1,4 +1,4 @@
-import * as express from 'express';
+const express = require('express');
 import * as handler from './backtest.router';
 import BacktestController from './backtest.controller';
 
@@ -10,6 +10,8 @@ router.post('/chart', handler.getMeanReversionChart);
 router.post('/bbands', handler.bollingerBands);
 router.post('/sma', handler.sma);
 router.post('/roc', handler.roc);
+router.post('/rsi', BacktestController.getRsi);
+router.post('/macd', BacktestController.getMacd);
 router.post('/infov2', handler.infoV2);
 router.post('/infov2chart', handler.infoV2Chart);
 router.post('/timeline', handler.timeline);
@@ -27,5 +29,7 @@ router.post('/daytrade-indicators', BacktestController.getDaytradeIndicators);
 router.post('/daytrade-backtest', BacktestController.getDaytradeBacktest);
 router.post('/daytrade-recommendation', BacktestController.getDaytrade);
 router.post('/daytrade-calibrate', BacktestController.calibrateDaytrade);
+router.post('/score-signals', BacktestController.scoreSignals);
+router.post('/pop', BacktestController.getProbabilityOfProfit);
 
 module.exports = router;

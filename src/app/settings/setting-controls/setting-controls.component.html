@@ -1,6 +1,14 @@
 <div class="setting-controls-container">
   <mat-grid-list cols="4" rowHeight="50px">
     <mat-grid-tile>
+      <label matTooltip="Orders trade date">
+        Date
+      </label>
+      <span>&nbsp;</span>
+      <input type="date" [ngModel]="globalSettingsService.tradeDate | date:'yyyy-MM-dd'"
+        (ngModelChange)="globalSettingsService.tradeDate = $event">
+    </mat-grid-tile>
+    <mat-grid-tile>
       <label matTooltip="Orders start time">
         Start
       </label>
@@ -22,6 +30,13 @@
       <timepicker [(ngModel)]="globalSettingsService.stopTime" [showMeridian]="ismeridian"></timepicker>
     </mat-grid-tile>
     <mat-grid-tile>
+      <div class="dropdown-selection">
+        <p-dropdown appendTo="body" [options]="globalSettingsService.daytradeAlgoSelection"
+          [(ngModel)]="globalSettingsService.daytradeAlgo" placeholder="Select a daytrade algorithm">
+        </p-dropdown>
+      </div>
+    </mat-grid-tile>
+    <mat-grid-tile>
       <label matTooltip="Max loss threshold. Buying will stop if met.">
         Loss threshold
       </label>
@@ -41,6 +56,13 @@
         Backtesting:
       </label>
       <mat-slide-toggle (change)="toggleBacktesting()">
+      </mat-slide-toggle>
+    </mat-grid-tile>
+    <mat-grid-tile>
+      <label matTooltip="Autostart on/off">
+        Auto Start Trading:
+      </label>
+      <mat-slide-toggle (change)="toggleAutostart()">
       </mat-slide-toggle>
     </mat-grid-tile>
   </mat-grid-list>

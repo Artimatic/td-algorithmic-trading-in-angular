@@ -56,7 +56,8 @@
         </mat-grid-tile>
         <mat-grid-tile>
           <div *ngIf="isLoading">
-            <mat-spinner></mat-spinner>
+            <p-progressSpinner [style]="{width: '50px', height: '50px'}" strokeWidth="8" fill="#EEEEEE"
+              animationDuration="5s"></p-progressSpinner>
           </div>
           <span *ngIf="!isLoading">
             <button mat-raised-button color="primary" (click)="findTimeline()">find</button>

@@ -1,0 +1,9 @@
+<p-messages [(value)]="messages"></p-messages>
+<div class="actions">
+  <button type="button" pButton (click)="cleanStockList()" label="Clean Stock List" class="ui-button-success"></button>
+</div>
+<div class="clean-stock-list">
+  <div *ngFor="let stock of cleanList">
+    '{{stock}}',
+  </div>
+</div>

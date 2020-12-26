@@ -3,16 +3,24 @@ import { CommonModule } from '@angular/common';
 import { PrecogComponent } from './precog/precog.component';
 import { MachineLearningPageComponent } from './machine-learning-page/machine-learning-page.component';
 import { BacktestService } from '../shared';
-import { MatSnackBarModule, MatCardModule, MatFormFieldModule, MatGridListModule, MatProgressSpinnerModule, MatInputModule, MatExpansionModule } from '@angular/material';
+import { MatSnackBarModule, MatCardModule, MatFormFieldModule, MatGridListModule, MatInputModule, MatExpansionModule } from '@angular/material';
 import { ChartModule } from 'angular-highcharts';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Routes, RouterModule } from '@angular/router';
 import { TimelineViewComponent } from './timeline-view/timeline-view.component';
+import { AskModelComponent } from './ask-model/ask-model.component';
+import { ButtonModule } from 'primeng/button';
+import { DropdownModule } from 'primeng/dropdown';
+import { CardModule } from 'primeng/card';
+import { TableModule } from 'primeng/table';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { SharedModule } from '../shared/shared.module';
+import { MlTimeperiodsComponent } from './ml-timeperiods/ml-timeperiods.component';
 
 const routes: Routes =
   [
     {
-      path: 'timeline', component: TimelineViewComponent
+      path: 'machine-learning', component: MachineLearningPageComponent
     }
   ];
 
@@ -28,16 +36,23 @@ const routes: Routes =
     MatFormFieldModule,
     MatInputModule,
     MatGridListModule,
-    MatProgressSpinnerModule,
-    MatExpansionModule
+    MatExpansionModule,
+    ButtonModule,
+    DropdownModule,
+    CardModule,
+    TableModule,
+    ProgressSpinnerModule,
+    SharedModule
   ],
   declarations: [
     TimelineViewComponent,
     PrecogComponent,
-    MachineLearningPageComponent
+    MachineLearningPageComponent,
+    AskModelComponent,
+    MlTimeperiodsComponent,
   ],
   exports: [
-    MachineLearningPageComponent
+    MachineLearningPageComponent,
   ],
   providers: [
     BacktestService

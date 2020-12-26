@@ -7,4 +7,5 @@ export interface Order {
     submitted: boolean;
     pending: boolean;
     side: string;
+    amount?: number;
 }

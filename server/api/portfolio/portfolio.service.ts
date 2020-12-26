@@ -1,11 +1,13 @@
 import * as request from 'request-promise';
 import * as Robinhood from 'robinhood';
 import * as _ from 'lodash';
+import * as moment from 'moment';
+
 const RobinHoodApi = require('robinhood-api');
 const robinhood = new RobinHoodApi();
 
 import QuoteService from '../quote/quote.service';
-import configurations from '../../config/environment';
+import * as configurations from '../../config/environment';
 
 const robinhoodDevice = {
   deviceToken: configurations.robinhood.deviceId
@@ -246,7 +248,7 @@ class PortfolioService {
   }
 
   getIntraday(symbol, accountId) {
-    if (!this.access_token[accountId]) {
+    if (!accountId || !this.access_token[accountId]) {
       return this.renewTDAuth(accountId)
         .then(() => this.getTDIntraday(symbol, accountId));
     } else {
@@ -259,6 +261,10 @@ class PortfolioService {
   }
 
   getTDIntraday(symbol, accountId) {
+    if (!accountId) {
+      accountId = configurations.tdameritrade.accountId;
+    }
+
     const query = `${tdaUrl}marketdata/${symbol}/pricehistory`;
     const options = {
       uri: query,
@@ -280,6 +286,70 @@ class PortfolioService {
       .then((data) => {
         const response = this.processTDData(data);
         return QuoteService.convertTdIntraday(response.candles);
+      });
+  }
+
+  getIntradayV2(symbol, period = 2, frequencyType = 'minute', frequency = 1) {
+    return this.renewTDAuth(null)
+      .then(() => this.getTDIntradayV2(symbol, period, frequencyType, frequency));
+  }
+
+  getTDIntradayV2(symbol, period, frequencyType, frequency) {
+    const accountId = configurations.tdameritrade.accountId;
+
+    const query = `${tdaUrl}marketdata/${symbol}/pricehistory`;
+    const options = {
+      uri: query,
+      qs: {
+        apikey: this.tdaKey[accountId],
+        periodType: 'day',
+        period,
+        frequencyType,
+        frequency,
+        endDate: Date.now(),
+        needExtendedHoursData: false
+      },
+      headers: {
+        Authorization: `Bearer ${this.access_token[accountId]}`
+      }
+    };
+
+    return request.get(options)
+      .then((data) => {
+        return this.processTDData(data);
+      });
+  }
+
+  getIntradayV3(symbol, startDate = moment().subtract({ days: 1 }).valueOf(), endDate = moment().valueOf()) {
+    return this.renewTDAuth(null)
+      .then(() => this.getTDIntradayV3(symbol, moment(startDate).valueOf(), moment(endDate).valueOf()));
+  }
+
+  getTDIntradayV3(symbol, startDate, endDate) {
+    const accountId = configurations.tdameritrade.accountId;
+
+    const query = `${tdaUrl}marketdata/${symbol}/pricehistory`;
+    const options = {
+      uri: query,
+      qs: {
+        apikey: this.tdaKey[accountId],
+        periodType: 'day',
+        period: 2,
+        frequencyType: 'minute',
+        frequency: 1,
+        startDate,
+        endDate,
+        needExtendedHoursData: false
+      },
+      headers: {
+        Authorization: `Bearer ${this.access_token[accountId]}`
+      }
+    };
+
+    return request.get(options)
+      .then((data) => {
+        const response = this.processTDData(data);
+        return QuoteService.convertTdIntradayV2(symbol, response.candles);
       });
   }
 
@@ -383,7 +453,7 @@ class PortfolioService {
   renewExpiredTDAccessTokenAndGetQuote(symbol, accountId) {
     return this.getTDAccessToken(accountId)
       .then((token) => {
-        return this.getTDMarketData(symbol, accountId)
+        return this.getTDMarketData(symbol, accountId || configurations.tdameritrade.accountId)
           .then(this.processTDData);
       });
   }
@@ -482,7 +552,6 @@ class PortfolioService {
         session: extendedHours ? 'SEAMLESS' : 'NORMAL',
         duration: 'DAY',
         orderStrategyType: 'SINGLE',
-        price: price,
         taxLotMethod: 'LIFO',
         orderLegCollection: [
           {
@@ -496,6 +565,10 @@ class PortfolioService {
         ]
       }
     };
+
+    if (type === 'limit') {
+      options.body['price'] = price;
+    }
 
     return request.post(options);
   }
@@ -558,6 +631,37 @@ class PortfolioService {
     this.refreshToken[accountId] = null;
     this.tdaKey[accountId] = null;
     response.status(200).send({});
+  }
+
+  getOptionsStraddle(accountId, symbol, strikeCount, optionType = 'S') {
+    if (!accountId) {
+      accountId = configurations.tdameritrade.accountId;
+    }
+
+    const query = `${tdaUrl}marketdata/chains`;
+    const options = {
+      uri: query,
+      qs: {
+        symbol,
+        strikeCount,
+        includeQuotes: true,
+        strategy: 'STRADDLE',
+        interval: 0,
+        range: 'SNK',
+        optionType
+      },
+      headers: {
+        Authorization: `Bearer ${this.access_token[accountId]}`
+      }
+    };
+
+    return this.renewTDAuth(accountId)
+      .then(() => {
+        return request.get(options)
+          .then((data) => {
+            return this.processTDData(data);
+          });
+      });
   }
 }
 

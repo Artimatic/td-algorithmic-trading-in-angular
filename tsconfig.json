@@ -2,7 +2,7 @@
   "compileOnSave": false,
   "compilerOptions": {
     "importHelpers": true,
-    "outDir": "./dist",
+    "outDir": "./dist/public",
     "sourceMap": true,
     "declaration": false,
     "module": "commonjs",
@@ -17,7 +17,10 @@
       "es2017",
       "dom"
     ],
-    "baseUrl": "./"
+    "baseUrl": "./",
+    "paths": {
+      "@shared/*": ["src/app/shared/*"]
+    }
   },
   "exclude": [
     "node_modules/*",

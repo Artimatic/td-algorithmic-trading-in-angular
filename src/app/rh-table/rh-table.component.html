@@ -1,7 +1,7 @@
 <app-product-view #product></app-product-view>
 
 <h3 class="table-title">Stocks</h3>
-<p-table #dt [columns]="selectedColumns" [value]="currentList" [paginator]="true" [rows]="100" selectionMode="single"
+<p-table #dt [columns]="selectedColumns" [value]="currentList" [paginator]="true" [rows]="10" selectionMode="single"
   [(selection)]="selectedStock" dataKey="stock">
   <ng-template pTemplate="caption">
     <div class="ui-g">
@@ -20,8 +20,9 @@
       <div class="ui-g-4">
         <div class="table-settings">
           <div class="global-filter">
-              <i class="fa fa-search" style="margin:4px 4px 0 0"></i>
-              <input type="text" pInputText size="50" placeholder="Global Filter" (input)="dt.filterGlobal($event.target.value, 'contains')" style="width:auto">
+            <i class="fa fa-search" style="margin:4px 4px 0 0"></i>
+            <input type="text" pInputText size="50" placeholder="Global Filter"
+              (input)="dt.filterGlobal($event.target.value, 'contains')" style="width:auto">
           </div>
           <div class="date-picker">
             End Date
@@ -41,7 +42,8 @@
       <div class="ui-g-4">
         <div class="table-filters">
           <p-multiSelect class="filter" [options]="recommendations" [(ngModel)]="selectedRecommendation"
-            defaultLabel="All Recommendations" (onChange)="filter()" selectedItemsLabel="{0} recommendations selected"></p-multiSelect>
+            defaultLabel="All Recommendations" (onChange)="filter()" selectedItemsLabel="{0} recommendations selected">
+          </p-multiSelect>
           <p-multiSelect class="filter" [options]="cols" [(ngModel)]="selectedColumns" optionLabel="header"
             selectedItemsLabel="{0} columns selected" [style]="{minWidth: '200px'}" defaultLabel="Choose Columns">
           </p-multiSelect>
@@ -58,11 +60,12 @@
         {{col.header}}
         <p-sortIcon [field]="col.field"></p-sortIcon>
       </th>
+      <th>Actions</th>
     </tr>
   </ng-template>
   <ng-template pTemplate="body" let-element let-columns="columns">
     <tr [pSelectableRow]="element">
-      <td *ngFor="let col of selectedColumns" [ngSwitch]="col.field">
+      <td *ngFor="let col of selectedColumns" [ngSwitch]="col.field" class="table-cell">
         <span *ngSwitchCase="'returns'">
           {{element[col.field] | percent}}
         </span>
@@ -72,15 +75,23 @@
         <span *ngSwitchCase="'lastPrice'">
           {{element.lastVolume | currency}}
         </span>
+        <span *ngSwitchCase="'impliedMovement'">
+          {{element?.impliedMovement | percent}}
+        </span>
         <span *ngSwitchDefault>
           {{element[col.field]}}
         </span>
+      </td>
+      <td>
+        <button pButton (click)="addOrder(selectedStock)" [disabled]="!selectedStock">
+          Add Order
+        </button>
       </td>
     </tr>
   </ng-template>
   <ng-template pTemplate="emptymessage" let-columns>
     <tr class="empty-table">
-      <td [attr.colspan]="columns.length">
+      <td [attr.colspan]="columns.length + 1">
         No stocks found
       </td>
     </tr>

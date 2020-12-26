@@ -1,0 +1,50 @@
+<p-table [columns]="cols" [value]="holdings" [paginator]="true" [rows]="20" dataKey="name" selectionMode="single"
+  (onRowSelect)="onRowSelect($event)" [resizableColumns]="true" columnResizeMode="expand">
+  <ng-template pTemplate="caption">
+    <div class="ui-g">
+      <div class="ui-g-4">
+        <h2>Portfolio Management</h2>
+      </div>
+      <div class="ui-g-4">
+        <app-default-order-lists class="default-orders-button" [prefillOrderForm]="prefillOrderForm">
+        </app-default-order-lists>
+      </div>
+      <div class="ui-g-4">
+        <button pButton type="button" icon="pi pi-refresh" iconPos="left" (click)="refresh()"></button>
+      </div>
+    </div>
+  </ng-template>
+  <ng-template pTemplate="header" let-columns>
+    <tr>
+      <th *ngFor="let col of columns" pResizableColumn>
+        {{col.header}}
+      </th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-holding>
+    <tr [pSelectableRow]="holding">
+      <td class="table-cell">{{holding.name}}</td>
+      <td class="table-cell">{{holding.pl | currency}}</td>
+      <td class="table-cell">{{holding.netLiq | currency}}</td>
+      <td class="table-cell">{{holding.shares}}</td>
+      <td class="table-cell">{{holding.alloc | percent }}</td>
+      <td class="table-cell">{{holding.recommendation}}</td>
+      <td class="table-cell">{{holding.buyReasons}}</td>
+      <td class="table-cell">{{holding.buyConfidence}}</td>
+      <td class="table-cell">{{holding.sellReasons}}</td>
+      <td class="table-cell">{{holding.sellConfidence}}</td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="emptymessage" let-columns>
+    <tr>
+      <td [attr.colspan]="columns.length">
+        <div class="no-positions">
+          No positions found.
+          <button pButton type="button" icon="pi pi-refresh" iconPos="left" (click)="refresh()"></button>
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
+
+<app-pokerhand></app-pokerhand>
