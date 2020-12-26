@@ -75,7 +75,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
   lastTriggeredTime: string;
 
-  smsOptions: SelectItem[];;
+  smsOptions: SelectItem[];
   smsOption;
 
   constructor(private _formBuilder: FormBuilder,

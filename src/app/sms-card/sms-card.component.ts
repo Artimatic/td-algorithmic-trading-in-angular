@@ -26,7 +26,7 @@ export class SmsCardComponent implements OnInit {
   maxMessages: FormControl;
   phoneNumber: FormControl;
   testing: FormControl;
-  buySellOptions: SelectItem[];;
+  buySellOptions: SelectItem[];
   buySellOption;
 
   interval = 60000;
@@ -94,7 +94,7 @@ export class SmsCardComponent implements OnInit {
                 .then((quote) => {
                   return this.daytradeService.addQuote(intraday, quote);
                 });
-            })
+            });
 
           const timestamps = _.get(data, 'chart.result[0].timestamp');
           const dataLength = timestamps.length;

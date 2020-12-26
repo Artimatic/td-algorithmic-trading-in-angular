@@ -41,23 +41,23 @@ export class DetermineHedgeComponent implements OnInit {
     this.getTechnicals('SPY')
       .pipe(take(1))
       .subscribe(spyRecommendation => {
-        const handled = this.handleRecommendation('SPY', spyRecommendation, 0.7);
-        if (!handled) {
+        const hedgededSpy = this.handleRecommendation('SPY', spyRecommendation, 0.7);
+        if (!hedgededSpy) {
           this.getTechnicals('QQQ')
             .pipe(take(1))
             .subscribe(qqqRecom => {
-              const handled = this.handleRecommendation('QQQ', qqqRecom, 0.7);
-              if (!handled) {
+              const hedgededQqq = this.handleRecommendation('QQQ', qqqRecom, 0.7);
+              if (!hedgededQqq) {
                 this.getTechnicals('IWM')
                   .pipe(take(1))
                   .subscribe(iwmRecom => {
-                    const handled = this.handleRecommendation('IWM', iwmRecom, 0.6);
-                    if (!handled) {
+                    const hedgededIwm = this.handleRecommendation('IWM', iwmRecom, 0.6);
+                    if (!hedgededIwm) {
                       this.getTechnicals('HYG')
                         .pipe(take(1))
                         .subscribe(hygRecom => {
-                          const handled = this.handleRecommendation('HYG', hygRecom, 0.6);
-                          if (!handled) {
+                          const hedgededHyg = this.handleRecommendation('HYG', hygRecom, 0.6);
+                          if (!hedgededHyg) {
                             this.getTechnicals('VXX')
                               .pipe(take(1))
                               .subscribe(vxxRecommendation => {
@@ -159,7 +159,7 @@ export class DetermineHedgeComponent implements OnInit {
         const actualAllocation = hedgeHoldingMarketValue / longMarketValue;
         if (actualAllocation < allocation) {
           this.portfolioBuy(this.hedgeStock.value, allocation - actualAllocation, cash);
-        } else if (hedgeHolding){
+        } else if (hedgeHolding) {
           this.portfolioSell(this.hedgeStock.value, longMarketValue * allocation, hedgeHolding.marketValue);
         }
 

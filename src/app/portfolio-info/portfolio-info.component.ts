@@ -196,8 +196,8 @@ export class PortfolioInfoComponent implements OnInit {
     const currentDate = moment().format('YYYY-MM-DD');
     const startDate = moment().subtract(365, 'days').format('YYYY-MM-DD');
 
-    this.portfolioService.getTdBalance().subscribe((data) => {
-      const totalValue = data.liquidationValue
+    this.portfolioService.getTdBalance().subscribe((balance) => {
+      const totalValue = balance.liquidationValue;
       this.portfolioService.getTdPortfolio().subscribe((data) => {
         if (data) {
           data.forEach((holding) => {

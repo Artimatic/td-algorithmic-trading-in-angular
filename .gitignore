@@ -40,15 +40,6 @@ testem.log
 # System Files
 .DS_Store
 Thumbs.db
-ITA_analysis_2017-01-13-2015-01-07.csv
-AGR_analysis_2018-01-11-2015-01-11.csv
-ADS_analysis_2018-01-11-2015-01-11.csv
-ADBE_analysis_2018-01-11-2015-01-11.csv
-ABX_analysis_2018-01-11-2015-01-11.csv
-ABT_analysis_2018-01-11-2015-01-11.csv
-ABCB_analysis_2018-01-11-2015-01-11.csv
-AA_analysis_2018-01-11-2015-01-11.csv
-AAPL_analysis_2018-01-11-2015-01-11.csv
 .vscode/settings.json
 server/config/environment/credentials.js
 
