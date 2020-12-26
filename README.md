@@ -14,16 +14,6 @@ Run `ng generate component component-name` to generate a new component. You can 
 ```
 export default {
     port: 9000,
-    yahoo: { 
-      key: 'SOMEYAHOOKEY', // Necessary for historical backtesting
-      secret: 'SOMESECRET'
-    },
-    alpha: {
-        key: 'SOMEALPHAVANTAGEKEY' // Necessary for daytrading. Provides intraday historical quotes
-    },
-    robinhood: {
-        deviceId: 'device_token' // Your Robinhood device token. Grab it from your Robinhood login. NOTE: Keep this safe.
-    },
     /*
     * This App is using TD Ameritrade's API for real time quotes. You will need to sign up for both a trading 
     * account and Developer account.
@@ -39,7 +29,11 @@ export default {
         accountId: 'ACCOUNTI_D
     },
     goliathUrl: 'http://localhost:8100/', // Data service local address https://github.com/Artimatic/station-data-service
-    armadilloUrl: 'http://localhost:3000/' // Machine Learning service local address https://github.com/Artimatic/robinhood-algorithmic-trading-in-angular
+    armadilloUrl: 'http://localhost:3000/', // Machine Learning service local address https://github.com/Artimatic/robinhood-algorithmic-trading-in-angular
+    twilio: { // For SMS functionality
+      key: 'KEY',
+      id: 'ID'
+    }
 };
 
 ```
