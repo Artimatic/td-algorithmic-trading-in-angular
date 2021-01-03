@@ -2,7 +2,7 @@
   <mat-sidenav class="side-nav" mode="side" opened>
     <mat-list role="list">
       <mat-nav-list role="listitem">
-        <div class="app-title">Robinhood Merchant</div>
+        <div class="app-title">Algo Trader</div>
       </mat-nav-list>
       <mat-nav-list role="listitem">
         <app-reporting></app-reporting>
@@ -50,10 +50,10 @@
       <mat-nav-list class="mat-chip-list-stacked" role="listitem">
         <h3>Online Status:</h3>
         <mat-chip-list multiple>
-          <mat-chip color="primary" [selected]="dataStatus" (click)="checkStatus()" matTooltip="Station Data Service">
+          <mat-chip color="primary" [selected]="dataStatus" (click)="checkStatus()" matTooltip="{{dataText}}">
             Data Service
           </mat-chip>
-          <mat-chip color="primary" [selected]="mlStatus" (click)="checkStatus()" matTooltip="Station Analysis Service">
+          <mat-chip color="primary" [selected]="mlStatus" (click)="checkStatus()" matTooltip="{{mlText}}">
             Machine Learning Service
           </mat-chip>
         </mat-chip-list>
