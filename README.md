@@ -6,11 +6,9 @@ Run `ng generate component component-name` to generate a new component. You can 
 
 ## Install
 * Create file 'credentials.js' in '\server\config\environment\credentials.js'
-* Get Yahoo developer credentials: https://developer.yahoo.com/apps/create/
-* Get AlphaVantage credentials: https://www.alphavantage.co/support/
 * Get Access to TD Ameritrade. Both a trading account and Developer account are necessary 
 *  for API access: https://developer.tdameritrade.com/apis
-* Add Yahoo Finance app and AlphaVantage api and TD Ameritrade credentials to credentials.js: 
+* Add TD Ameritrade credentials to credentials.js: 
 ```
 export default {
     port: 9000,
@@ -70,7 +68,11 @@ Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protrac
 
 #### Research Backtest Screener
 
-Requires quotes-in-spring to be set up on the same machine.
+Requires station-data-service to be set up and running. https://github.com/Artimatic/station-data-service
+
+#### Machine Learning functionalities
+
+Requires station-analysis-service to be set up and running. https://github.com/Artimatic/station-analysis-service
 
 ## Demo
 https://chaddaily.herokuapp.com/trade-view
