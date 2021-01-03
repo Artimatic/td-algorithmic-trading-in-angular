@@ -74,3 +74,6 @@ Requires quotes-in-spring to be set up on the same machine.
 
 ## Demo
 https://chaddaily.herokuapp.com/trade-view
+
+screen shots:
+https://imgur.com/a/wNKn2fw
