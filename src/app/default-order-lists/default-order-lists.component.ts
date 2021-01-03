@@ -250,7 +250,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges {
   getCashBalance() {
     this.isLoading = true;
     this.portfolioService.getTdBalance().subscribe((data) => {
-      this.updatedAmount(data.cashAvailableForTrading);
+      this.updatedAmount(data.cashBalance || data.cashAvailableForTrading);
       this.isLoading = false;
     });
   }
