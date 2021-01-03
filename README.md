@@ -60,8 +60,10 @@ Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protrac
 
 ## User Guide
 
+## User Guide
+
 #### Order Import Excel Example
-|symbol | quantity | price | side | OrderSize | Stop | Target | StopLoss | SellAtClose | TakeProfit|
+|symbol | quantity | price | side | OrderSize | Stop | Target | StopLoss | MeanReversion1 | SpyMomentum | YahooData | SellAtClose | TakeProfit|
 |----- | :-------------: | :-------------: | :-------------: |:-------------: |:-------------: |:-------------: |:-------------: |:-------------: |:-------------: |:-------------:|:-------------: |-----:|
 |TSLA | 2 | 319.88 | DayTrade | 1 | -0.007 | 0.005 | 1 | 1 | 1 | 0 | 1| 1|
 |MSFT | 4 | 112.03 | DayTrade | 2 | -0.007 | 0.005 | 1 | 1 | 1 | 0 | 1| 1|
