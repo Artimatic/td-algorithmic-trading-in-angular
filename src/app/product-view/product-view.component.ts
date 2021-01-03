@@ -54,7 +54,7 @@ export class ProductViewComponent implements OnInit {
           break;
         }
         default: {
-          this.loadChart(chart);
+          this.loadDefaultChart(chart, chart.algorithm);
           break;
         }
       }
@@ -195,7 +195,7 @@ export class ProductViewComponent implements OnInit {
       let action = day.action;
       if (indicator) {
         const recommendation = day.recommendation[indicator].toUpperCase();
-        switch(recommendation) {
+        switch (recommendation) {
           case 'BEARISH': {
             action = 'STRONGSELL';
             break;
@@ -228,7 +228,7 @@ export class ProductViewComponent implements OnInit {
     this.algo.getBacktestEvaluation(data.symbol, pastDate, currentDate, data.algorithm)
       .map(result => {
         if (result.signals > defaultPeriod) {
-          result.signals = result.signals.slice(result.signals.length - defaultPeriod, result.signals.length)
+          result.signals = result.signals.slice(result.signals.length - defaultPeriod, result.signals.length);
         }
         this.initDefaultResults(data.symbol, result, result.signals, indicator);
       })
