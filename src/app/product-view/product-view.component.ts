@@ -54,7 +54,7 @@ export class ProductViewComponent implements OnInit {
           break;
         }
         default: {
-          this.loadChart(chart);
+          this.loadDefaultChart(chart, chart.algorithm);
           break;
         }
       }
