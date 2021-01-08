@@ -22,6 +22,7 @@ export class ChartDialogComponent implements OnInit {
   smaForm: FormGroup;
   algorithms: AlgorithmSelection[] = [
     { value: 'mfi', viewValue: 'Money Flow Index' },
+    { value: 'demark9', viewValue: 'demark9' },
     { value: 'mfiLow', viewValue: 'Money Flow Index Low' },
     { value: 'mfiDivergence', viewValue: 'MFI Divergence' },
     { value: 'mfiTrade', viewValue: 'MFI Trade' },
