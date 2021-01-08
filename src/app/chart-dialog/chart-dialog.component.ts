@@ -25,6 +25,7 @@ export class ChartDialogComponent implements OnInit {
     { value: 'mfiLow', viewValue: 'Money Flow Index Low' },
     { value: 'mfiDivergence', viewValue: 'MFI Divergence' },
     { value: 'mfiTrade', viewValue: 'MFI Trade' },
+    { value: 'macd', viewValue: 'MACD' },
     { value: 'sma', viewValue: 'Moving Average' },
     { value: 'bollingerband', viewValue: 'Bollinger Band' },
     { value: 'bollingerbandmfi', viewValue: 'Bollinger Band and MFI' },
