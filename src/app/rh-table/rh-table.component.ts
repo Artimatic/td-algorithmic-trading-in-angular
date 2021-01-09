@@ -712,8 +712,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     };
 
     const dialogRef = this.dialog.open(ChartDialogComponent, {
-      width: '500px',
-      height: '500px',
+      width: '250px',
+      height: '250px',
       data: { chartData: params }
     });
 
@@ -724,9 +724,11 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
         this.globalSettingsService.fastAvg = result.params.fastAvg;
         this.globalSettingsService.slowAvg = result.params.slowAvg;
       }
-      this.globalSettingsService.selectedAlgo = result.algorithm;
 
-      this.algo.currentChart.next(result);
+      if (result && result.algorithm) {
+        this.globalSettingsService.selectedAlgo = result.algorithm;
+        this.algo.currentChart.next(result);
+      }
     });
   }
 

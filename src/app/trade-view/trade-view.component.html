@@ -1,8 +1,11 @@
-<mat-tab-group [ngClass]="{'robinhood': globalSettingsService.brokerage==='Robinhood', 'td': globalSettingsService.brokerage==='TD Ameritrade'}">
-  <mat-tab label="Ordering">
+<div class="trade-view-container">
+  <mat-tab-group
+    [ngClass]="{'robinhood': globalSettingsService.brokerage==='Robinhood', 'td': globalSettingsService.brokerage==='TD Ameritrade'}">
+    <mat-tab label="Ordering">
       <app-shopping-list></app-shopping-list>
-  </mat-tab>
-  <mat-tab label="Terminal View">
-    <app-terminal-view></app-terminal-view>
-  </mat-tab>
-</mat-tab-group>
+    </mat-tab>
+    <mat-tab label="Terminal View">
+      <app-terminal-view></app-terminal-view>
+    </mat-tab>
+  </mat-tab-group>
+</div>
