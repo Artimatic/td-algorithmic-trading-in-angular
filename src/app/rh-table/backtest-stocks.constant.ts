@@ -13,6 +13,20 @@ function createParam(ticker: string): AlgoParam {
 }
 
 export const stockList = [
+  'CGC',
+  'ACB',
+  'YOLO',
+  'FCEL',
+  'TPIC',
+  'ALB',
+  'RUN',
+  'SPWR',
+  'DQ',
+  'CNRG',
+  'LIT',
+  'PBW',
+  'TAN',
+  'ICLN',
   'PLUG',
   'NGA',
   'SKLZ',
