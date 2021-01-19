@@ -515,20 +515,22 @@ class BacktestService {
           const idx = Number(key);
 
           if (idx > minQuotes) {
-            const q = quotes.slice(idx - minQuotes, idx);
+            const q = quotes.slice(idx - minQuotes, idx + 1);
             getIndicatorQuotes.push(this.initStrategy(q));
           }
         });
 
         return Promise.all(getIndicatorQuotes);
       })
-      .then(indicators => {
+      .then((indicators: Indicators[]) => {
         let testResults;
+
         testResults = this.backtestIndicators(this.getAllRecommendations,
           indicators,
           parameters);
 
         testResults.algo = 'All indicators';
+
         return testResults;
       });
   }

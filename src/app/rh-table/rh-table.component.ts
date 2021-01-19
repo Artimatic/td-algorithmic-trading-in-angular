@@ -139,6 +139,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       { field: 'upperResistance', header: 'Upper Resistance' },
       { field: 'lowerResistance', header: 'Lower Resistance' },
       { field: 'impliedMovement', header: 'Implied Movement' },
+      { field: 'previousImpliedMovement', header: 'Previous IM' },
       { field: 'bearishProbability', header: 'Probability of Bear Profit' },
       { field: 'bullishProbability', header: 'Probability of Bull Profit' },
 
@@ -192,6 +193,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       { field: 'sellSignals', header: 'Sell' },
       { field: 'strongsellSignals', header: 'Strong Sell' },
       { field: 'impliedMovement', header: 'Implied Movement' },
+      { field: 'previousImpliedMovement', header: 'Previous IM' },
       { field: 'bearishProbability', header: 'Probability of Bear Profit' },
       { field: 'bullishProbability', header: 'Probability of Bull Profit' }
     ];
@@ -358,7 +360,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                     if (lastSignal.recommendation.hasOwnProperty(indicator)) {
                       const result = {
                         algo: String(indicator),
-                        recommendation: 'Neutral'
+                        recommendation: 'Neutral',
+                        previousImpliedMovement: null
                       };
                       if (lastSignal.recommendation[indicator] === 'Bullish') {
                         result.recommendation = 'Buy';
@@ -368,6 +371,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                         bearishSignals.push(indicator);
                       }
 
+                      result.previousImpliedMovement = this.getPreviousImpliedMove(indicatorResults.signals[indicatorResults.signals.length - 2]);
+
                       const tableObj = {
                         ...indicatorResults,
                         ...result
@@ -376,7 +381,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                       this.updateAlgoReport(tableObj);
                     }
                   }
-
 
                   this.getProbability(bullishSignals, bearishSignals, testResults.signals)
                     .subscribe((data) => {
@@ -409,6 +413,10 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
         this.iterateAlgoParams(algoParams, callback);
         break;
     }
+  }
+
+  private getPreviousImpliedMove(signal) {
+    return signal.impliedMovement;
   }
 
   scoreSignals(stock, signals) {
