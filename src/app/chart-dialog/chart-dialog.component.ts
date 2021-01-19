@@ -21,15 +21,19 @@ export interface AlgorithmSelection {
 export class ChartDialogComponent implements OnInit {
   smaForm: FormGroup;
   algorithms: AlgorithmSelection[] = [
+    { value: 'all', viewValue: 'All Algorithms' },
     { value: 'mfi', viewValue: 'Money Flow Index' },
+    { value: 'demark9', viewValue: 'demark9' },
     { value: 'mfiLow', viewValue: 'Money Flow Index Low' },
+    { value: 'mfiDivergence', viewValue: 'MFI Divergence' },
+    { value: 'mfiTrade', viewValue: 'MFI Trade' },
+    { value: 'macd', viewValue: 'MACD' },
     { value: 'sma', viewValue: 'Moving Average' },
     { value: 'bollingerband', viewValue: 'Bollinger Band' },
     { value: 'bollingerbandmfi', viewValue: 'Bollinger Band and MFI' },
     { value: 'macrossover', viewValue: 'Moving Average Crossover' },
-    { value: 'daily-roc', viewValue: 'Rate of Change/MFI Divergence' },
-    { value: 'findresistance', viewValue: 'Moving Average Resistance' },
-    { value: 'all', viewValue: 'All Algorithms' }
+    { value: 'daily-roc', viewValue: 'Rate of Change' },
+    { value: 'findresistance', viewValue: 'Moving Average Resistance' }
   ];
 
   selectedAlgo = 'bollingerbandmfi';
