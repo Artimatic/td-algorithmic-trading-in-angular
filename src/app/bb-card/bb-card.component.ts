@@ -1,4 +1,4 @@
-import { Component, OnChanges, Input, OnInit, ViewChild, SimpleChanges } from '@angular/core';
+import { Component, OnChanges, Input, OnInit, ViewChild, SimpleChanges, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material';
 import 'rxjs/add/operator/takeWhile';
@@ -37,7 +37,7 @@ import { ClientSmsService } from '@shared/services/client-sms.service';
   templateUrl: './bb-card.component.html',
   styleUrls: ['./bb-card.component.css']
 })
-export class BbCardComponent implements OnInit, OnChanges {
+export class BbCardComponent implements OnInit, OnChanges, OnDestroy  {
   @ViewChild('stepper', { static: false }) stepper;
   @Input() order: SmartOrder;
   @Input() tearDown: boolean;
@@ -1061,5 +1061,9 @@ export class BbCardComponent implements OnInit, OnChanges {
         this.orderingService.executeMlOrder(this.order.holding.symbol, orderQuantity);
       }
     }
+  }
+
+  ngOnDestroy() {
+    this.order = null;
   }
 }
