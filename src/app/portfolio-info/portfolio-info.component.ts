@@ -225,7 +225,7 @@ export class PortfolioInfoComponent implements OnInit {
 
   checkForStopLoss() {
     this.holdings.forEach(val => {
-      if (_.divide(val.pl, val.netLiq) < -0.3) {
+      if (_.divide(val.pl, val.netLiq) < -0.07) {
         this.portfolioSell(val);
       }
     });
