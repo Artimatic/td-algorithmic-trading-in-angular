@@ -203,7 +203,7 @@ export class CartService {
       lossThreshold: -0.01,
       profitTarget: 0.05,
       trailingStop: -0.003,
-      useStopLoss: true,
+      useStopLoss: false,
       useTrailingStopLoss: false,
       useTakeProfit: false,
       sellAtClose: false

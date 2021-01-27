@@ -77,3 +77,6 @@ Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protrac
 #### Research Backtest Screener
 
 Requires quotes-in-spring to be set up on the same machine.
+
+## Demo
+https://chaddaily.herokuapp.com/trade-view

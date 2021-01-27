@@ -274,6 +274,11 @@ class BacktestController extends BaseController {
     const data = BacktestAggregationService.getSignalResults(request.body.signals);
     BaseController.requestGetSuccessHandler(response, data);
   }
+
+  getProbabilityOfProfit(request, response) {
+    const data = BacktestAggregationService.getProbabilityOfProfit(request.body.bullishActiveIndicators, request.body.bearishActiveIndicators, request.body.signals);
+    BaseController.requestGetSuccessHandler(response, data);
+  }
 }
 
 export default new BacktestController();

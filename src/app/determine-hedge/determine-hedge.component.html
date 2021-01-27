@@ -1,3 +1,21 @@
-<p>
-  determine-hedge works!
-</p>
+<p-table [columns]="cols" [value]="indicatorStocks" [paginator]="true" [rows]="10">
+  <ng-template pTemplate="caption">
+    <input pInputText type="text" placeholder="Hedge Stock" [formControl]="hedgeStock" required>
+    <div class="run-button">
+      <button pButton type="button" label="Run Hedging Algorithm" (click)="determineHedge()"></button>
+    </div>
+  </ng-template>
+  <ng-template pTemplate="header" let-columns>
+    <tr>
+      <th *ngFor="let col of columns">
+        {{col.header}}
+      </th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-holding>
+    <tr [pSelectableRow]="holding">
+      <td class="table-cell">{{holding.name}}</td>
+      <td class="table-cell">{{holding.recommendation}}</td>
+    </tr>
+  </ng-template>
+</p-table>

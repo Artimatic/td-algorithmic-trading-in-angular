@@ -16,37 +16,52 @@ class TrainingService {
     let qqqDataSet: TrainingData[];
     let tltDataSet: TrainingData[];
     let gldDataSet: TrainingData[];
-    let usoDataSet: TrainingData[];
+    let vxxDataSet: TrainingData[];
     let iwmDataSet: TrainingData[];
     let hygDataSet: TrainingData[];
 
+    console.log('Getting SPY');
     return BacktestService.getTrainingData('SPY', endDate, startDate, false)
       .then(spyData => {
         spyDataSet = spyData;
+        console.log('Getting QQQ');
+
         return BacktestService.getTrainingData('QQQ', endDate, startDate, false);
       })
       .then(qqqData => {
         qqqDataSet = qqqData;
+        console.log('Getting TLT');
+
         return BacktestService.getTrainingData('TLT', endDate, startDate, false);
       })
       .then(tltData => {
         tltDataSet = tltData;
+        console.log('Getting GLD');
+
         return BacktestService.getTrainingData('GLD', endDate, startDate, false);
       })
       .then(gldData => {
         gldDataSet = gldData;
-        return BacktestService.getTrainingData('USO', endDate, startDate, false);
+        console.log('Getting VXX');
+
+        return BacktestService.getTrainingData('VXX', endDate, startDate, false);
       })
-      .then(usoData => {
-        usoDataSet = usoData;
+      .then(vxxData => {
+        vxxDataSet = vxxData;
+        console.log('Getting IWM');
+
         return BacktestService.getTrainingData('IWM', endDate, startDate, false);
       })
       .then(iwmData => {
         iwmDataSet = iwmData;
+        console.log('Getting HYG');
+
         return BacktestService.getTrainingData('HYG', endDate, startDate, false);
       })
       .then(hygData => {
         hygDataSet = hygData;
+        console.log('Getting', symbol);
+
         return BacktestService.getTrainingData(symbol, endDate, startDate, false);
       })
       .then((targetData: any[]) => {
@@ -56,15 +71,23 @@ class TrainingService {
           const qqq = qqqDataSet[idx];
           const tlt = tltDataSet[idx];
           const gld = gldDataSet[idx];
-          const uso = usoDataSet[idx];
+          const vxx = vxxDataSet[idx];
           const iwm = iwmDataSet[idx];
           const hyg = hygDataSet[idx];
 
-          if (spyData.date === target.date &&
+          if (spyData &&
+            qqq &&
+            tlt &&
+            gld &&
+            vxx &&
+            iwm &&
+            hyg &&
+            target &&
+            spyData.date === target.date &&
             qqq.date === target.date &&
             tlt.date === target.date &&
             gld.date === target.date &&
-            uso.date === target.date &&
+            vxx.date === target.date &&
             iwm.date === target.date &&
             hyg.date === target.date) {
             const dataSetObj = {
@@ -80,7 +103,7 @@ class TrainingService {
               .concat(qqq.input.slice(1))
               .concat(tlt.input.slice(1))
               .concat(gld.input.slice(1))
-              .concat(uso.input.slice(1))
+              .concat(vxx.input.slice(1))
               .concat(iwm.input.slice(1))
               .concat(hyg.input.slice(1))
               .concat(target.input.slice(1));
@@ -88,8 +111,6 @@ class TrainingService {
             dataSetObj.output = target.output;
 
             finalDataSet.push(dataSetObj);
-          } else {
-            console.log(spyData.date, qqq.date, tlt.date, gld.date, uso.date, iwm.date, hyg.date, ' does not match ', target.date);
           }
         });
 
@@ -98,7 +119,7 @@ class TrainingService {
   }
 
   trainWithIntraday(symbol) {
-    const stocks = ['SPY', 'QQQ', 'TLT', 'GLD', 'USO', 'IWM', 'HYG', symbol];
+    const stocks = ['SPY', 'QQQ', 'TLT', 'GLD', 'VXX', 'IWM', 'HYG', symbol];
     const intradayQuotesPromises = [];
     const quotesPromises = [];
     const endDate = moment();
@@ -141,7 +162,7 @@ class TrainingService {
       .then(quotes => {
         return PortfolioService.getIntradayV2(symbol, 1, 'minute', 1)
           .then(intradayQuotes => {
-              let quote = quotes[quotes.length - 1];
+              const quote = quotes[quotes.length - 1];
               const intradayCandles = intradayQuotes.candles;
               const datetime =  intradayCandles[intradayCandles.length - 2].datetime;
 

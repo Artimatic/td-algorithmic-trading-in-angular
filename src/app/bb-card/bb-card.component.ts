@@ -1,4 +1,4 @@
-import { Component, OnChanges, Input, OnInit, ViewChild, SimpleChanges } from '@angular/core';
+import { Component, OnChanges, Input, OnInit, ViewChild, SimpleChanges, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material';
 import 'rxjs/add/operator/takeWhile';
@@ -29,13 +29,15 @@ import { GlobalSettingsService } from '../settings/global-settings.service';
 import { TradeService, AlgoQueueItem } from '../shared/services/trade.service';
 import { OrderingService } from '@shared/services/ordering.service';
 import { GlobalTaskQueueService } from '@shared/services/global-task-queue.service';
+import { SelectItem } from 'primeng/components/common/selectitem';
+import { ClientSmsService } from '@shared/services/client-sms.service';
 
 @Component({
   selector: 'app-bb-card',
   templateUrl: './bb-card.component.html',
   styleUrls: ['./bb-card.component.css']
 })
-export class BbCardComponent implements OnInit, OnChanges {
+export class BbCardComponent implements OnInit, OnChanges, OnDestroy  {
   @ViewChild('stepper', { static: false }) stepper;
   @Input() order: SmartOrder;
   @Input() tearDown: boolean;
@@ -73,6 +75,9 @@ export class BbCardComponent implements OnInit, OnChanges {
 
   lastTriggeredTime: string;
 
+  smsOptions: SelectItem[];
+  smsOption;
+
   constructor(private _formBuilder: FormBuilder,
     private backtestService: BacktestService,
     private daytradeService: DaytradeService,
@@ -86,6 +91,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     private machineLearningService: MachineLearningService,
     private orderingService: OrderingService,
     private globalTaskQueueService: GlobalTaskQueueService,
+    private clientSmsService: ClientSmsService,
     public dialog: MatDialog) { }
 
   ngOnInit() {
@@ -111,6 +117,12 @@ export class BbCardComponent implements OnInit, OnChanges {
         }
       }
     });
+
+    this.smsOptions = [
+      { label: 'No SMS', value: 'none' },
+      { label: 'Only send SMS', value: 'only_sms' },
+      { label: 'Send order and SMS', value: 'order_sms' }
+    ];
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -158,13 +170,17 @@ export class BbCardComponent implements OnInit, OnChanges {
     this.multiplierPreference = new FormControl();
     this.multiplierPreference.setValue(1);
 
+    this.smsOption = new FormControl();
+    this.smsOption.setValue('none');
+
     this.firstFormGroup = this._formBuilder.group({
       quantity: [this.order.quantity, Validators.required],
       lossThreshold: [this.order.lossThreshold || -0.005, Validators.required],
       trailingStop: [this.order.trailingStop || -0.002, Validators.required],
       profitTarget: [{ value: this.order.profitTarget || 0.01, disabled: false }, Validators.required],
       orderSize: [this.order.orderSize || this.daytradeService.getDefaultOrderSize(this.order.quantity), Validators.required],
-      orderType: [this.order.side, Validators.required]
+      orderType: [this.order.side, Validators.required],
+      phoneNumber: ['']
     });
 
     this.secondFormGroup = this._formBuilder.group({
@@ -541,7 +557,7 @@ export class BbCardComponent implements OnInit, OnChanges {
     if (buyOrder) {
       const log = `ORDER SENT ${buyOrder.side} ${buyOrder.quantity} ${buyOrder.holding.symbol}@${buyOrder.price}`;
 
-      if (this.live) {
+      if (this.live && this.smsOption !== 'only_sms') {
         const resolve = (response) => {
           this.incrementBuy(buyOrder);
 
@@ -560,6 +576,7 @@ export class BbCardComponent implements OnInit, OnChanges {
         this.incrementBuy(buyOrder);
         console.log(`${moment(buyOrder.signalTime).format('hh:mm')} ${log}`);
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
+        this.clientSmsService.sendBuySms(buyOrder.holding.symbol, this.firstFormGroup.value.phoneNumber, buyOrder.price, buyOrder.quantity).subscribe();
       }
     }
     return buyOrder;
@@ -568,7 +585,7 @@ export class BbCardComponent implements OnInit, OnChanges {
   sendSell(sellOrder: SmartOrder) {
     if (sellOrder) {
       const log = `ORDER SENT ${sellOrder.side} ${sellOrder.quantity} ${sellOrder.holding.symbol}@${sellOrder.price}`;
-      if (this.live) {
+      if (this.live && this.smsOption !== 'only_sms') {
         this.incrementSell(sellOrder);
 
         const resolve = (response) => {
@@ -601,6 +618,7 @@ export class BbCardComponent implements OnInit, OnChanges {
 
         console.log(`${moment(sellOrder.signalTime).format('hh:mm')} ${log}`);
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
+        this.clientSmsService.sendSellSms(sellOrder.holding.symbol, this.firstFormGroup.value.phoneNumber, sellOrder.price, sellOrder.quantity).subscribe();
       }
     }
     return sellOrder;
@@ -609,7 +627,7 @@ export class BbCardComponent implements OnInit, OnChanges {
   sendStopLoss(order: SmartOrder) {
     if (order) {
       const log = `MARKET ORDER SENT ${order.side} ${order.quantity} ${order.holding.symbol}@${order.price}`;
-      if (this.live) {
+      if (this.live && this.smsOption !== 'only_sms') {
 
         const resolve = (response) => {
           this.incrementSell(order);
@@ -644,6 +662,8 @@ export class BbCardComponent implements OnInit, OnChanges {
         }
         console.log(`${moment(order.signalTime).format('hh:mm')} ${log}`);
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
+
+        this.clientSmsService.sendSellSms(order.holding.symbol, this.firstFormGroup.value.phoneNumber, order.price, order.quantity).subscribe();
       }
     }
     return order;
@@ -1041,5 +1061,9 @@ export class BbCardComponent implements OnInit, OnChanges {
         this.orderingService.executeMlOrder(this.order.holding.symbol, orderQuantity);
       }
     }
+  }
+
+  ngOnDestroy() {
+    this.order = null;
   }
 }

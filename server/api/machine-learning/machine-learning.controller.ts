@@ -14,7 +14,10 @@ class MachineLearningController extends BaseController {
   getTrainingDataSetV2(request, response) {
     TrainingService.train(request.query.symbol, request.query.startDate, request.query.endDate)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
-      .catch((err) => BaseController.requestErrorHandler(response, err));
+      .catch((err) => {
+        console.log('Error getTrainingDataSetV2: ', err);
+        return BaseController.requestErrorHandler(response, err);
+      });
   }
 
   activateWithIntradayData(request, response) {

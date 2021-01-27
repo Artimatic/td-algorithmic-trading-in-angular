@@ -68,6 +68,9 @@ import { PortfolioInfoComponent } from './portfolio-info/portfolio-info.componen
 import { OrdersListComponent } from './orders-list/orders-list.component';
 import { FindBuyComponent } from './find-buy/find-buy.component';
 import { DetermineHedgeComponent } from './determine-hedge/determine-hedge.component';
+import { SmsCardComponent } from './sms-card/sms-card.component';
+import { TimepickerModule } from 'ngx-bootstrap/timepicker';
+import { PieAlloctComponent } from './pie-alloct/pie-alloct.component';
 
 @NgModule({
   declarations: [
@@ -111,6 +114,8 @@ import { DetermineHedgeComponent } from './determine-hedge/determine-hedge.compo
     OrdersListComponent,
     FindBuyComponent,
     DetermineHedgeComponent,
+    SmsCardComponent,
+    PieAlloctComponent,
   ],
   entryComponents: [
     LoginDialogComponent,
@@ -132,6 +137,7 @@ import { DetermineHedgeComponent } from './determine-hedge/determine-hedge.compo
     SettingsModule,
     MachineLearningModule,
     SharedModule,
+    TimepickerModule.forRoot(),
   ],
   providers: [
     BacktestService,

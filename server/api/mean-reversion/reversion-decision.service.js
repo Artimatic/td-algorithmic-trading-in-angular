@@ -128,14 +128,14 @@ class DecisionService {
       return (currentPrice - boughtPrice) / boughtPrice;
     }
   }
-  
+
   fractionToPrice(fraction) {
     return math.round(math.eval(fraction), 2);
   }
 
   calcReturns(decisions, deviation, startDate) {
     const results = decisions.reduce((orders, day) => {
-      if (moment(day.date).isAfter(moment(startDate).subtract(1, 'day').format())) { 
+      if (moment(day.date).isAfter(moment(startDate).subtract(1, 'day').format())) {
         if (this.triggerCondition(day.close, day.shortTermAvg, day.longTermAvg, deviation)) {
           if (day.trending === this.trends.down) {
             orders.trades++;

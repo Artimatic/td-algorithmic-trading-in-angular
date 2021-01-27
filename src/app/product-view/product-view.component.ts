@@ -26,6 +26,7 @@ export class ProductViewComponent implements OnInit {
     this.algo.currentChart.subscribe((chart: ChartParam) => {
       switch (chart.algorithm) {
         case 'mfi': {
+          this.loadMfi(chart);
           break;
         }
         case 'sma': {
@@ -48,8 +49,12 @@ export class ProductViewComponent implements OnInit {
           this.loadFindResistanceChart(chart);
           break;
         }
+        case 'all': {
+          this.loadDefaultChart(chart, null);
+          break;
+        }
         default: {
-          this.loadChart(chart);
+          this.loadDefaultChart(chart, chart.algorithm);
           break;
         }
       }
@@ -144,7 +149,7 @@ export class ProductViewComponent implements OnInit {
   loadChart(data: ChartParam) {
     this.resolving = true;
     const currentDate = moment(data.date).format('YYYY-MM-DD');
-    const pastDate = moment(data.date).subtract(800, 'days').format('YYYY-MM-DD');
+    const pastDate = moment(data.date).subtract(365, 'days').format('YYYY-MM-DD');
 
     this.algo.getBacktestEvaluation(data.symbol, pastDate, currentDate, data.algorithm)
       .map(result => {
@@ -176,6 +181,73 @@ export class ProductViewComponent implements OnInit {
 
       this.initChart(symbol, time, seriesData);
     });
+  }
+
+  initDefaultResults(symbol, result, signals, indicator: string) {
+    if (indicator) {
+      result.algo = indicator;
+    }
+    this.backtestResults = [result];
+    const time = [];
+    const seriesData = [];
+
+    signals.forEach(day => {
+      let action = day.action;
+      if (indicator) {
+        const recommendation = day.recommendation[indicator].toUpperCase();
+        switch (recommendation) {
+          case 'BEARISH': {
+            action = 'STRONGSELL';
+            break;
+          }
+          case 'BULLISH': {
+            action = 'STRONGBUY';
+            break;
+          }
+          default: {
+            action = 'INDETERMINANT';
+            break;
+          }
+        }
+      }
+      time.push(day.date);
+      const signal = this.buildSignal(action, day.close, day.volume);
+      seriesData.push(signal);
+
+      this.initChart(symbol, time, seriesData);
+    });
+  }
+
+  loadDefaultChart(data: ChartParam, indicator: string) {
+    const defaultPeriod = 500;
+    data.algorithm = 'daily-indicators';
+    this.resolving = true;
+    const currentDate = moment(data.date).format('YYYY-MM-DD');
+    const pastDate = moment(data.date).subtract(defaultPeriod, 'days').format('YYYY-MM-DD');
+
+    this.algo.getBacktestEvaluation(data.symbol, pastDate, currentDate, data.algorithm)
+      .map(result => {
+        if (result.signals > defaultPeriod) {
+          result.signals = result.signals.slice(result.signals.length - defaultPeriod, result.signals.length);
+        }
+        this.initDefaultResults(data.symbol, result, result.signals, indicator);
+      })
+      .subscribe(
+        response => {
+          this.stock = data.symbol;
+          this.resolving = false;
+        },
+        err => {
+          this.resolving = false;
+          this.snackBar.open(`Error: ${err}`, 'Dismiss', {
+            duration: 20000,
+          });
+        }
+      );
+  }
+
+  loadMfi(data: ChartParam) {
+    this.loadDefaultChart(data, 'mfi');
   }
 
   loadSma(data: ChartParam, endDate): void {

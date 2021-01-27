@@ -22,13 +22,13 @@
       </ng-template>
       <ng-template pTemplate="body" let-result>
           <tr>
-              <td>{{result.algo}}</td>
-              <td>{{result.invested | currency}}</td>
-              <td>{{result.lastPrice | currency}}</td>
-              <td>{{result.lastVolume | number}}</td>
-              <td>{{result.recommendation}}</td>
-              <td>{{result.totalTrades | number}}</td>
-              <td>{{result.returns | percent}}</td>
+              <td class="table-cell">{{result.algo}}</td>
+              <td class="table-cell">{{result.invested | currency}}</td>
+              <td class="table-cell">{{result.lastPrice | currency}}</td>
+              <td class="table-cell">{{result.lastVolume | number}}</td>
+              <td class="table-cell">{{result.recommendation}}</td>
+              <td class="table-cell">{{result.totalTrades | number}}</td>
+              <td class="table-cell">{{result.returns | percent}}</td>
           </tr>
       </ng-template>
   </p-table>

@@ -1,8 +1,12 @@
-<h1 mat-dialog-title>Missing TD Ameritrade Credential</h1>
+<h1 mat-dialog-title class="app-title">Algo Trader</h1>
+<div class="welcome-text">
+  <label>Welcome Back!</label>
+  <p>Please provide your TDA credentials.</p>
+</div>
+
 <div mat-dialog-content>
-  <p>TDA credential are used for retrieving historical, live quotes, and trading on TDA.</p>
+  <app-login></app-login>
 </div>
 <div mat-dialog-actions>
-  <button mat-button (click)="closeDialog()">No Thanks</button>
-  <button mat-button cdkFocusInitial (click)="redirectToLogin()">Go to Login</button>
+  <button mat-button class="login-action" (click)="closeDialog()">Continue</button>
 </div>

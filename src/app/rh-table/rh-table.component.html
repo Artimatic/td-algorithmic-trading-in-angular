@@ -65,7 +65,7 @@
   </ng-template>
   <ng-template pTemplate="body" let-element let-columns="columns">
     <tr [pSelectableRow]="element">
-      <td *ngFor="let col of selectedColumns" [ngSwitch]="col.field">
+      <td *ngFor="let col of selectedColumns" [ngSwitch]="col.field" class="table-cell">
         <span *ngSwitchCase="'returns'">
           {{element[col.field] | percent}}
         </span>
@@ -77,6 +77,9 @@
         </span>
         <span *ngSwitchCase="'impliedMovement'">
           {{element?.impliedMovement | percent}}
+        </span>
+        <span *ngSwitchCase="'previousImpliedMovement'">
+          {{element?.previousImpliedMovement | percent}}
         </span>
         <span *ngSwitchDefault>
           {{element[col.field]}}

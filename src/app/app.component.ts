@@ -16,7 +16,9 @@ import { GlobalTaskQueueService } from '@shared/services/global-task-queue.servi
 })
 export class AppComponent implements OnInit, AfterViewInit {
   dataStatus: boolean;
+  dataText = 'OFFLINE';
   mlStatus: boolean;
+  mlText = 'OFFLINE';
 
   constructor(private backtestService: BacktestService,
     private authenticationService: AuthenticationService,
@@ -42,9 +44,11 @@ export class AppComponent implements OnInit, AfterViewInit {
           switch (data.status) {
             case 'UP':
               this.dataStatus = true;
+              this.dataText = 'ONLINE';
               break;
-            case 'DOWN':
+            default:
               this.dataStatus = false;
+              this.dataText = 'OFFLINE';
               break;
           }
         }
@@ -60,9 +64,11 @@ export class AppComponent implements OnInit, AfterViewInit {
           switch (data.status) {
             case 'UP':
               this.mlStatus = true;
+              this.mlText = 'ONLINE';
               break;
-            case 'DOWN':
+            default:
               this.mlStatus = false;
+              this.mlText = 'OFFLINE';
               break;
           }
         }

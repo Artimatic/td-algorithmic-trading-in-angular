@@ -2,18 +2,13 @@
   <mat-sidenav class="side-nav" mode="side" opened>
     <mat-list role="list">
       <mat-nav-list role="listitem">
+        <div class="app-title">Algo Trader</div>
+      </mat-nav-list>
+      <mat-nav-list role="listitem">
         <app-reporting></app-reporting>
       </mat-nav-list>
       <mat-nav-list role="listitem">
-        <a routerLink="/overview" matTooltip="overview">
-          <button mat-button class="nav-item">
-            <mat-icon>home</mat-icon>
-            Home
-          </button>
-        </a>
-      </mat-nav-list>
-      <mat-nav-list role="listitem">
-        <a routerLink="/trade-view" matTooltip="trade">
+        <a routerLink="/trade-view" matTooltip="Buy/sell stocks">
           <button mat-button class="nav-item">
             <mat-icon>shop</mat-icon>
             Live Trading
@@ -21,15 +16,15 @@
         </a>
       </mat-nav-list>
       <mat-nav-list role="listitem">
-        <a routerLink="/portfolio-managment" matTooltip="Manage your portfolio">
+        <a routerLink="/portfolio-managment" matTooltip="Manage your TD Ameritrade portfolio">
           <button mat-button class="nav-item">
-            <mat-icon>work</mat-icon>
-            Portfolio
+            <mat-icon>account_balance</mat-icon>
+            Portfolio Management
           </button>
         </a>
       </mat-nav-list>
       <mat-nav-list role="listitem">
-        <a routerLink="/research" matTooltip="Run backtesting on stocks">
+        <a routerLink="/research" matTooltip="Run backtesting on stocks, get buy/sell recommendations">
           <button mat-button class="nav-item">
             <mat-icon>assessment</mat-icon>
             Recommendations
@@ -37,42 +32,31 @@
         </a>
       </mat-nav-list>
       <mat-nav-list role="listitem">
-        <a routerLink="/backtest" matTooltip="Backtesting on day trading">
+        <a routerLink="/backtest" matTooltip="Backtesting the daytrading functionality">
           <button mat-button class="nav-item">
             <mat-icon>archive</mat-icon>
-            Backtest Intraday
+            Daytrade Backtest
           </button>
         </a>
       </mat-nav-list>
       <mat-nav-list role="listitem">
-        <a routerLink="/deep-analysis/machine-learning" matTooltip="deep analysis">
+        <a routerLink="/deep-analysis/machine-learning" matTooltip="Machine learning functions">
           <button mat-button class="nav-item">
             <mat-icon>trending_up</mat-icon>
-            Market Analysis
-          </button>
-        </a>
-      </mat-nav-list>
-      <mat-nav-list role="listitem">
-        <a routerLink="/portfolio-managment" matTooltip="Portfolio Management">
-          <button mat-button class="nav-item">
-            <mat-icon>account_balance</mat-icon>
-            Portfolio Management
+            Machine Learning
           </button>
         </a>
       </mat-nav-list>
       <mat-nav-list class="mat-chip-list-stacked" role="listitem">
         <h3>Online Status:</h3>
         <mat-chip-list multiple>
-          <mat-chip color="primary" [selected]="dataStatus" (click)="checkStatus()" matTooltip="Station Data Service">
+          <mat-chip color="primary" [selected]="dataStatus" (click)="checkStatus()" matTooltip="{{dataText}}">
             Data Service
           </mat-chip>
-          <mat-chip color="primary" [selected]="mlStatus" (click)="checkStatus()" matTooltip="Station Analysis Service">
+          <mat-chip color="primary" [selected]="mlStatus" (click)="checkStatus()" matTooltip="{{mlText}}">
             Machine Learning Service
           </mat-chip>
         </mat-chip-list>
-      </mat-nav-list>
-      <mat-nav-list role="listitem">
-        <app-todo-list></app-todo-list>
       </mat-nav-list>
     </mat-list>
 

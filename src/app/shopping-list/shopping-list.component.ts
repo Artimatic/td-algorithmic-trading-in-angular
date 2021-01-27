@@ -56,6 +56,8 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
     private tradeService: TradeService) { }
 
   ngOnInit() {
+    this.globalSettingsService.initGlobalSettings();
+
     this.mlCards = [];
     this.interval = this.defaultInterval;
 
@@ -198,16 +200,20 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
         if (this.sub) {
           this.sub.unsubscribe();
         }
-        const concat = this.cartService.sellOrders.concat(this.cartService.buyOrders);
-        this.queueAlgos(concat.concat(this.cartService.otherOrders));
+        this.triggerStart();
       }
     });
   }
 
+  triggerStart() {
+    const concat = this.cartService.sellOrders.concat(this.cartService.buyOrders);
+    this.queueAlgos(concat.concat(this.cartService.otherOrders));
+  }
+
   queueAlgos(orders: SmartOrder[]) {
+    this.globalSettingsService.setStartTimes();
     const mlStartTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 15:55`, 'America/New_York');
     let mlStopTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 16:00`, 'America/New_York');
-    this.globalSettingsService.setStartTimes();
     console.log(`New queue set to start at ${moment(this.globalSettingsService.startTime).format()}`);
     this.alive = true;
     let lastIndex = 0;
@@ -273,7 +279,14 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
           });
           mlStopTime = mlStartTime;
 
-          setTimeout(this.globalSettingsService.initTradeDate, 3600000);
+          setTimeout(() => {
+            this.globalSettingsService.initGlobalSettings();
+          }, 888000);
+          if (this.globalSettingsService.autostart) {
+            setTimeout(() => {
+              this.triggerStart();
+            }, 8880000);
+          }
         }
       });
   }

@@ -44,6 +44,8 @@ import { MiniCardComponent } from '../mini-card/mini-card.component';
 import { DefaultOrderListsComponent } from '../default-order-lists/default-order-lists.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { StepsModule } from 'primeng/steps';
+import { ChartModule } from 'primeng/chart';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
 const materialModules = [
   MatMenuModule,
@@ -88,6 +90,8 @@ const primeModules = [
   MessagesModule,
   MessageModule,
   StepsModule,
+  ChartModule,
+  ProgressSpinnerModule
 ];
 
 @NgModule({

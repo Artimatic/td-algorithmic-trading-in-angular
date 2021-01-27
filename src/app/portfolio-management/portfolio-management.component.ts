@@ -35,8 +35,11 @@ export class PortfolioManagementComponent implements OnInit {
       command: () => {
         this.activeIndex = 3;
       }
-    }
-    ];
+    }];
+    this.activeIndex = 0;
   }
 
+  nextStep() {
+    this.activeIndex++;
+  }
 }

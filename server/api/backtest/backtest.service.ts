@@ -64,6 +64,7 @@ export interface Recommendation {
   macd?: DaytradeRecommendation;
   demark9?: DaytradeRecommendation;
   mfiLow?: DaytradeRecommendation;
+  mfiDivergence?: DaytradeRecommendation;
 }
 
 export enum DaytradeRecommendation {
@@ -514,20 +515,22 @@ class BacktestService {
           const idx = Number(key);
 
           if (idx > minQuotes) {
-            const q = quotes.slice(idx - minQuotes, idx);
+            const q = quotes.slice(idx - minQuotes, idx + 1);
             getIndicatorQuotes.push(this.initStrategy(q));
           }
         });
 
         return Promise.all(getIndicatorQuotes);
       })
-      .then(indicators => {
+      .then((indicators: Indicators[]) => {
         let testResults;
+
         testResults = this.backtestIndicators(this.getAllRecommendations,
           indicators,
           parameters);
 
         testResults.algo = 'All indicators';
+
         return testResults;
       });
   }
@@ -1197,7 +1200,10 @@ class BacktestService {
     };
 
     return RequestPromise(options)
-      .then(data => JSON.parse(data));
+      .then(data => JSON.parse(data))
+      .catch(error => {
+        console.log('Error getTrainingData', error);
+      });
   }
 
   runRNN(symbol, endDate, startDate, response) {
@@ -1500,7 +1506,8 @@ class BacktestService {
       vwma: DaytradeRecommendation.Neutral,
       mfiTrade: DaytradeRecommendation.Neutral,
       macd: DaytradeRecommendation.Neutral,
-      demark9: DaytradeRecommendation.Neutral
+      demark9: DaytradeRecommendation.Neutral,
+      mfiDivergence: DaytradeRecommendation.Neutral
     };
 
     const rocCrossoverRecommendation = AlgoService.checkRocCrossover(indicator.roc70Previous, indicator.roc70);
@@ -1515,12 +1522,15 @@ class BacktestService {
 
     const mfiLowRecommendation = AlgoService.checkMfiLow(indicator.mfiLow, indicator.mfiLeft);
 
+    const mfiDivergenceRecommendation = AlgoService.checkMfiDivergence(indicator.mfiPrevious, indicator.mfiLeft, indicator.roc10Previous, indicator.roc10);
+
     recommendations.roc = rocCrossoverRecommendation;
     recommendations.mfiTrade = mfiTrendRecommendation;
     recommendations.macd = macdRecommendation;
     recommendations.mfi = mfiRecommendation;
     recommendations.demark9 = demark9Recommendation;
     recommendations.mfiLow = mfiLowRecommendation;
+    recommendations.mfiDivergence = mfiDivergenceRecommendation;
 
     if (recommendations.demark9 === DaytradeRecommendation.Bullish ||
       recommendations.mfiTrade === DaytradeRecommendation.Bullish ||
