@@ -101,7 +101,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   selectedColumns: any[];
   selectedStock: any;
   twoOrMoreSignalsOnly: boolean;
-
+  tickerList = [];
+  tickerBlacklist = {};
   signalScoreTable = [];
 
   private callChainSub: Subscription;
@@ -118,6 +119,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     private dailyBacktestService: DailyBacktestService) { }
 
   ngOnInit() {
+    this.tickerList = Stocks;
     this.bufferSubject = new Subject();
     this.backtestBuffer = [];
     this.callChainSub = new Subscription();
@@ -211,6 +213,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   async getData(algoParams, selectedAlgo = null) {
+
     const currentDate = moment(this.endDate).format('YYYY-MM-DD');
     const startDate = moment(this.endDate).subtract(1000, 'days').format('YYYY-MM-DD');
 
@@ -529,7 +532,11 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
   async iterateAlgoParams(algoParams: any[], callback: Function) {
     for (let i = 0; i < algoParams.length; i++) {
-      this.backtestBuffer.push({ stock: algoParams[i].ticker, sub: callback(algoParams[i]) });
+      if (this.isBlackListed(algoParams[i].ticker)) {
+        this.snackBar.open(`Skipping blacklisted ticker: ${algoParams[i].ticker}`, 'Dismiss');
+      } else {
+        this.backtestBuffer.push({ stock: algoParams[i].ticker, sub: callback(algoParams[i]) });
+      }
     }
     this.executeBacktests();
   }
@@ -700,9 +707,10 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   runDefaultBacktest() {
-    this.interval = 0;
+    this.resetTable();
 
-    this.getData(Stocks, 'daily-indicators');
+    this.interval = 0;
+    this.getData(this.tickerList, 'daily-indicators');
 
     this.progress = 0;
   }
@@ -769,6 +777,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
             this.incrementProgress();
             this.backtestBuffer.shift();
             this.triggerNextBacktest();
+            this.addToBlackList(backtest.stock);
           }));
       });
 
@@ -781,7 +790,20 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
+  isBlackListed(ticker: string) {
+    return this.tickerBlacklist[ticker];
+  }
+
+  resetTable() {
+    this.currentList = [];
+  }
+
+  addToBlackList(ticker: string) {
+    this.tickerBlacklist[ticker] = true;
+  }
+
   ngOnDestroy() {
     this.callChainSub.unsubscribe();
+    this.resetTable();
   }
 }

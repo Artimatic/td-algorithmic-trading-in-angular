@@ -326,7 +326,6 @@ export const stockList = [
   'DBX',
   'OSTK',
   'PLNT',
-  'MYL',
   'YELP',
   'MCHP',
   'JWN',
