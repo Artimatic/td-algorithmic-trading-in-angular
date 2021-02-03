@@ -84,12 +84,13 @@ class AlgoService {
     return DaytradeRecommendation.Neutral;
   }
 
-  checkMfiTrend(mfiPrevious: number, mfi: number): DaytradeRecommendation {
+  checkMfiTrend(mfiPrevious: number, mfi: number, roc10Previous: number, roc10: number): DaytradeRecommendation {
     const change = DecisionService.getPercentChange(mfi, mfiPrevious);
-    if (change > 0.3) {
-      return DaytradeRecommendation.Bearish;
-    } else if (change < -0.3) {
+    const changeRoc = Math.abs(DecisionService.getPercentChange(roc10, roc10Previous));
+    if (change > 0.2 && roc10 > roc10Previous && changeRoc > 0.1) {
       return DaytradeRecommendation.Bullish;
+    } else if (change < -0.2 && roc10Previous > roc10 && changeRoc > 0.1) {
+      return DaytradeRecommendation.Bearish;
     }
 
     return DaytradeRecommendation.Neutral;
@@ -98,12 +99,13 @@ class AlgoService {
   checkMfiDivergence(mfiPrevious: number, mfi: number, roc10Previous: number, roc10: number): DaytradeRecommendation {
     const mfiChange = Math.abs(DecisionService.getPercentChange(mfi, mfiPrevious));
     const roc10Change = Math.abs(DecisionService.getPercentChange(roc10, roc10Previous));
-    if (mfiChange > 0.1 && roc10Change > 0.3 && mfiPrevious < mfi && roc10Previous > roc10) {
-      return DaytradeRecommendation.Bullish;
-    } else if (mfiChange > 0.1 && roc10Change > 0.3 && mfiPrevious > mfi && roc10Previous < roc10) {
-      return DaytradeRecommendation.Bearish;
+    if (mfiChange > 0.15 && roc10Change > 0.1) {
+      if (mfiPrevious < mfi && roc10Previous > roc10) {
+        return DaytradeRecommendation.Bullish;
+      } else if (mfiPrevious > mfi && roc10Previous < roc10) {
+        return DaytradeRecommendation.Bearish;
+      }
     }
-
     return DaytradeRecommendation.Neutral;
   }
 
