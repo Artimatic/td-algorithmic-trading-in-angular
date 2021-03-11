@@ -1482,7 +1482,7 @@ class BacktestService {
 
     const rocCrossoverRecommendation = AlgoService.checkRocCrossover(indicator.roc70Previous, indicator.roc70);
 
-    const mfiTrendRecommendation = AlgoService.checkMfiTrend(indicator.mfiPrevious, indicator.mfiLeft);
+    const mfiTrendRecommendation = AlgoService.checkMfiTrend(indicator.mfiPrevious, indicator.mfiLeft, null, null);
 
     recommendations.roc = rocCrossoverRecommendation;
     recommendations.mfiTrade = mfiTrendRecommendation;
