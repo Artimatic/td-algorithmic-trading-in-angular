@@ -516,7 +516,7 @@ class BacktestService {
 
           if (idx > minQuotes) {
             const q = quotes.slice(idx - minQuotes, idx + 1);
-            if (q.date === getIndicatorQuotes[getIndicatorQuotes.length - 1]) {
+            if (moment(q.date).format('YYYY MM DD') === moment(getIndicatorQuotes[getIndicatorQuotes.length - 1]).format('YYYY MM DD') ) {
               getIndicatorQuotes.pop();
             }
             getIndicatorQuotes.push(this.initStrategy(q));
