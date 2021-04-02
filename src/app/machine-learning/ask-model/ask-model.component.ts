@@ -66,9 +66,10 @@ export class AskModelComponent implements OnInit, OnDestroy {
     });
 
     this.models = [
+      { name: 'Calibrate daily model', code: 'calibrate_daily' },
       { name: 'Open Price Up', code: 'open_price_up' },
       { name: 'Predict Next 30 minutes', code: 'predict_30' },
-      { name: 'Calibrate model', code: 'calibrate' }
+      { name: 'Calibrate intraday model', code: 'calibrate' }
     ];
 
     this.cols = [
@@ -114,6 +115,10 @@ export class AskModelComponent implements OnInit, OnDestroy {
       }
       case 'calibrate': {
         this.calibrateOne();
+        break;
+      }
+      case 'calibrate_daily': {
+        this.calibrateDaily();
         break;
       }
     }
@@ -278,6 +283,27 @@ export class AskModelComponent implements OnInit, OnDestroy {
         }
       }, error => {
         this.isLoading = false;
+      });
+  }
+
+  calibrateDaily() {
+    this.machineLearningService.trainPredictDailyV4(this.form.value.query.toUpperCase(),
+      moment().subtract({ day: 1 }).format('YYYY-MM-DD'),
+      moment().subtract({ day: 365 }).format('YYYY-MM-DD'),
+      0.7,
+      this.globalSettingsService.daytradeAlgo,
+      2,
+      0.003
+    )
+      .subscribe((data) => {
+        console.log('result: ', data);
+        // this.machineLearningService.activateDailyV4(this.form.value.query.toUpperCase(),
+        // this.globalSettingsService.daytradeAlgo,
+        // 2,
+        // 0.5
+        // ).subscribe((activateResults) => {
+        //   console.log('activateResults: ', activateResults);
+        // });
       });
   }
 

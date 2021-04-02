@@ -3,9 +3,8 @@ import DecisionService from '../mean-reversion/reversion-decision.service';
 import * as _ from 'lodash';
 
 export default class PredictionService {
-
-  outputRange;
-  outputLimit;
+  outputRange: number;
+  outputLimit: number;
 
   constructor(range, limit) {
     this.outputRange = range;
