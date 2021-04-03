@@ -340,9 +340,9 @@ export class AskModelComponent implements OnInit, OnDestroy {
           .pipe(take(1))
           .subscribe((activation) => {
             this.isLoading = false;
-            console.log('activated: ', data);
             data[0].nextOutput = activation.nextOutput;
-            this.modelResults.push(data);
+            console.log('activated: ', data);
+            this.addTableItem(data);
           }, error => {
             console.log('error: ', error);
             this.isLoading = false;
