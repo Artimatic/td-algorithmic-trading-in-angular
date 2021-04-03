@@ -24,7 +24,7 @@ class VariableDailyPredicationService extends PredictionService {
 
   getModelName(featureUse) {
     const modelName = featureUse ? featureUse.join() : this.modelName;
-    return 'daily_' + this.outputRange + modelName;
+    return 'daily_' + this.outputRange + '_'+ this.outputLimit;
   }
 
   buildInputSet(openingPrice, currentSignal, featureUse) {
@@ -48,8 +48,10 @@ class VariableDailyPredicationService extends PredictionService {
     // 1,0,1,0,1,1,1,1,1,1,1,0,0: 5
     // 1,1,1,1,1,1,1,1,1,1,1,1,1
     const input = [
-      _.round(DecisionService.getPercentChange(openingPrice, close) * 1000, 0),
-      _.round(currentSignal.macd[2][currentSignal.macd[2].length - 1] * 1000)
+      // _.round(DecisionService.getPercentChange(openingPrice, close) * 1000, 0),
+      // _.round(currentSignal.macd[2][currentSignal.macd[2].length - 1] * 1000)
+      (openingPrice > close) ? 0 : 1,
+      (currentSignal.mfiLeft > 75) ? 0 : 1
     ]
       .concat(this.comparePrices(currentSignal.vwma, close))
       .concat(this.comparePrices(currentSignal.high, close))
@@ -108,7 +110,7 @@ class VariableDailyPredicationService extends PredictionService {
       })
       .then((signal) => {
         const inputData = this.buildInputSet(openingPrice, signal, featureUse);
-
+        console.log('activate model: ', this.getModelName(featureUse));
         return BacktestService.activateCustomModel(symbol, this.getModelName(featureUse), inputData.input, moment().format('YYYY-MM-DD'));
       });
   }

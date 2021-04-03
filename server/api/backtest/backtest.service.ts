@@ -1633,7 +1633,7 @@ class BacktestService {
       },
       json: true
     };
-
+    console.log('model name: ', modelName);
     return RequestPromise(options)
       .catch((error) => {
         console.log('train-custom error: ', error.message);
