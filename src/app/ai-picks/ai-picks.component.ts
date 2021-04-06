@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { MachineLearningService } from '@shared/index';
 import { AiPicksService } from '@shared/services';
-import { take } from 'rxjs/operators';
 import * as moment from 'moment';
 
 @Component({
@@ -46,7 +45,6 @@ export class AiPicksComponent implements OnInit {
       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
       range,
       limit)
-      .pipe(take(1))
       .subscribe((activation) => {
         if (!activation || !activation.nextOutput) {
           this.trainAndActivate(symbol, range, limit, isBuy);
