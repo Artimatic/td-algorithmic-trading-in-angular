@@ -194,12 +194,12 @@ class TrainingService {
             return quotes;
           })
           .catch(err => {
-            console.log('Error on PortfolioService.getIntradayV2: ', err)
+            console.log('Error on PortfolioService.getIntradayV2: ', err);
             return err;
           });
       })
       .catch(err => {
-        console.log('Error on QuoteService.getDailyQuotes: ', err)
+        console.log('Error on QuoteService.getDailyQuotes: ', err);
         return err;
       });
   }

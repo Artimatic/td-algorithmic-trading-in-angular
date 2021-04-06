@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MachineLearningService } from '@shared/index';
 import { AiPicksService } from '@shared/services';
 import * as moment from 'moment';
@@ -8,7 +8,7 @@ import * as moment from 'moment';
   templateUrl: './ai-picks.component.html',
   styleUrls: ['./ai-picks.component.css']
 })
-export class AiPicksComponent implements OnInit {
+export class AiPicksComponent implements OnInit, OnDestroy {
   buys = [
   ];
 
@@ -53,7 +53,7 @@ export class AiPicksComponent implements OnInit {
             nextOutput: activation.nextOutput,
             day: range,
             symbol
-          }
+          };
           if (isBuy) {
             this.buys.push(this.createListObject(data));
           } else {
@@ -83,7 +83,7 @@ export class AiPicksComponent implements OnInit {
   }
 
   createListObject(data) {
-    return { label: data.symbol, value: { algorithm: data.day, prediction: data.nextOutput } }
+    return { label: data.symbol, value: { algorithm: data.day, prediction: data.nextOutput } };
   }
 
   ngOnDestroy() {

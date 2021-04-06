@@ -5,7 +5,6 @@ import BacktestService from '../backtest/backtest.service';
 import { BacktestResults } from '../backtest/backtest.service';
 import PredictionService from './prediction.service';
 import TrainingService from './training.service';
-import DecisionService from '../mean-reversion/reversion-decision.service';
 
 class VariableDailyPredicationService extends PredictionService {
   modelName = 'model2021-04-01';
@@ -22,9 +21,8 @@ class VariableDailyPredicationService extends PredictionService {
     this.outputLimit = limit;
   }
 
-  getModelName(featureUse) {
-    const modelName = featureUse ? featureUse.join() : this.modelName;
-    return 'daily_' + this.outputRange + '_'+ this.outputLimit;
+  getModelName() {
+    return 'daily_' + this.outputRange + '_' + this.outputLimit;
   }
 
   buildInputSet(openingPrice, currentSignal, featureUse) {
@@ -83,7 +81,7 @@ class VariableDailyPredicationService extends PredictionService {
     return BacktestService.initDailyStrategy(symbol, moment(endDate).valueOf(), moment(startDate).valueOf(), { minQuotes: 80 })
       .then((results: BacktestResults) => {
         const finalDataSet = this.processBacktestResults(results, featureUse);
-        return BacktestService.trainCustomModel(symbol, this.getModelName(featureUse), finalDataSet, trainingSize, moment().format('YYYY-MM-DD'));
+        return BacktestService.trainCustomModel(symbol, this.getModelName(), finalDataSet, trainingSize, moment().format('YYYY-MM-DD'));
       });
   }
 
