@@ -78,7 +78,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
       { field: 'algorithm', header: 'Algorithm' },
       { field: 'guesses', header: 'Guesses' },
       { field: 'correct', header: 'Correct' },
-      { field: 'score', header: 'Score' },
+      { field: 'score', header: 'Score', type: 'percent'},
       { field: 'nextOutput', header: 'Next Output' }
     ];
 
@@ -316,6 +316,8 @@ export class AskModelComponent implements OnInit, OnDestroy {
   }
 
   calibrateDaily() {
+    this.isLoading = true;
+
     const settings = this.form.value.customSettings.split(',');
     const range = settings[0] || 2;
     const limit = settings[1] || 0.003;
@@ -347,6 +349,9 @@ export class AskModelComponent implements OnInit, OnDestroy {
             console.log('error: ', error);
             this.isLoading = false;
           });
+      }, error => {
+        console.log('error: ', error);
+        this.isLoading = false;
       });
   }
 

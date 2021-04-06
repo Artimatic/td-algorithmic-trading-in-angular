@@ -18,6 +18,7 @@ import { OptionsDataService } from '../shared/options-data.service';
 import { Subscription, Observable, Subject } from 'rxjs';
 import { DailyBacktestService } from '@shared/daily-backtest.service';
 import { take } from 'rxjs/operators';
+import { AiPicksService } from '@shared/services/ai-picks.service';
 
 export interface Algo {
   value: string;
@@ -116,7 +117,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     private portfolioService: PortfolioService,
     private globalSettingsService: GlobalSettingsService,
     private optionsDataService: OptionsDataService,
-    private dailyBacktestService: DailyBacktestService) { }
+    private dailyBacktestService: DailyBacktestService,
+    private aiPicksService: AiPicksService) { }
 
   ngOnInit() {
     this.tickerList = Stocks;
@@ -746,6 +748,14 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
         this.algo.currentChart.next(result);
       }
     });
+  }
+
+  runAi(element: Stock) {
+    if (element.recommendation === 'Bearish') {
+      this.aiPicksService.tickerSellRecommendationQueue.next(element.stock);
+    } else {
+      this.aiPicksService.tickerBuyRecommendationQueue.next(element.stock);
+    }
   }
 
   getImpliedMovement(stock: Stock) {

@@ -71,6 +71,7 @@ import { DetermineHedgeComponent } from './determine-hedge/determine-hedge.compo
 import { SmsCardComponent } from './sms-card/sms-card.component';
 import { TimepickerModule } from 'ngx-bootstrap/timepicker';
 import { PieAlloctComponent } from './pie-alloct/pie-alloct.component';
+import { AiPicksComponent } from './ai-picks/ai-picks.component';
 
 @NgModule({
   declarations: [
@@ -116,6 +117,7 @@ import { PieAlloctComponent } from './pie-alloct/pie-alloct.component';
     DetermineHedgeComponent,
     SmsCardComponent,
     PieAlloctComponent,
+    AiPicksComponent,
   ],
   entryComponents: [
     LoginDialogComponent,

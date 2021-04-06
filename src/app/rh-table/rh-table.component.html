@@ -12,6 +12,9 @@
           <button mat-button (click)="openChartDialog(selectedStock, endDate)" [disabled]="!selectedStock">
             Chart
           </button>
+          <button mat-button (click)="runAi(selectedStock)" [disabled]="!selectedStock">
+            Run Machine Learning
+          </button>
           <button mat-button color="primary" (click)="runDefaultBacktest()">Run Default
             Backtest
           </button>
@@ -106,3 +109,4 @@
     Average Returns: {{algoReport.averageReturns}}%
   </ng-template>
 </p-table>
+<app-ai-picks></app-ai-picks>

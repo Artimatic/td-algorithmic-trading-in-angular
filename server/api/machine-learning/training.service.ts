@@ -164,7 +164,8 @@ class TrainingService {
           .then(intradayQuotes => {
               const quote = quotes[quotes.length - 1];
               const intradayCandles = intradayQuotes.candles;
-              const datetime =  intradayCandles[intradayCandles.length - 2].datetime;
+              const secondToLastIntradayCandle = intradayCandles[intradayCandles.length - 2];
+              const datetime =  secondToLastIntradayCandle.datetime;
 
               if (moment(datetime).diff(moment(quote.date), 'days') > 1) {
                 console.log(moment(quote.date).diff(moment(datetime), 'days'), quote.date, moment(datetime).format());
@@ -174,7 +175,7 @@ class TrainingService {
                 const currentQuote = this.processIntraday(intradayCandles);
                 const currentVolume = this.getVolume(intradayCandles);
 
-                currentQuote.date = moment(intradayCandles[intradayCandles.length - 2].datetime).toISOString();
+                currentQuote.date = moment(secondToLastIntradayCandle.datetime).toISOString();
                 currentQuote.volume = currentVolume;
                 currentQuote.symbol = symbol;
                 quotes[quotes.length - 1] = currentQuote;
@@ -182,7 +183,7 @@ class TrainingService {
                 const currentQuote = this.processIntraday(intradayCandles);
                 const currentVolume = this.getVolume(intradayCandles);
 
-                currentQuote.date = moment(intradayCandles[intradayCandles.length - 2].datetime).toISOString();
+                currentQuote.date = moment(secondToLastIntradayCandle.datetime).toISOString();
                 currentQuote.volume = currentVolume;
                 currentQuote.symbol = symbol;
                 quotes = quotes.concat(currentQuote);
@@ -191,7 +192,15 @@ class TrainingService {
               console.log('Yesterday: ', moment(quotes[quotes.length - 2].date).format(), 'Today: ', moment(quotes[quotes.length - 1].date).format());
 
             return quotes;
+          })
+          .catch(err => {
+            console.log('Error on PortfolioService.getIntradayV2: ', err)
+            return err;
           });
+      })
+      .catch(err => {
+        console.log('Error on QuoteService.getDailyQuotes: ', err)
+        return err;
       });
   }
 

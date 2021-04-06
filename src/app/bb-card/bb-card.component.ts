@@ -1065,5 +1065,6 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy  {
 
   ngOnDestroy() {
     this.order = null;
+    this.tradeService.algoQueue.unsubscribe();
   }
 }
