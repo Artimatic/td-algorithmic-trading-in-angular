@@ -25,7 +25,7 @@ export class AiPicksComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.aiPicksService.tickerBuyRecommendationQueue.subscribe(stock => {
       if (this.buys.length < this.buysLimit) {
-        this.activate(stock, 2, 0.01, true);
+        this.activate(stock, 15, 0.01, true);
       } else {
         this.aiPicksService.tickerBuyRecommendationQueue.unsubscribe();
       }
@@ -33,7 +33,7 @@ export class AiPicksComponent implements OnInit, OnDestroy {
 
     this.aiPicksService.tickerSellRecommendationQueue.subscribe(stock => {
       if (this.sells.length < this.sellsLimit) {
-        this.activate(stock, 2, 0.01, false);
+        this.activate(stock, 15, 0.01, false);
       } else {
         this.aiPicksService.tickerSellRecommendationQueue.unsubscribe();
       }
