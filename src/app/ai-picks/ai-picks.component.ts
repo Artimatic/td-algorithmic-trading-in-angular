@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MachineLearningService } from '@shared/index';
 import { AiPicksService } from '@shared/services';
 import * as moment from 'moment';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-ai-picks',
@@ -24,30 +25,31 @@ export class AiPicksComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.aiPicksService.tickerBuyRecommendationQueue.subscribe(stock => {
-      if (this.buys.length < this.buysLimit) {
-        this.activate(stock, 15, 0.01, true);
-      } else {
-        this.aiPicksService.tickerBuyRecommendationQueue.unsubscribe();
-      }
+      this.getPredictions(stock, true);
     });
 
     this.aiPicksService.tickerSellRecommendationQueue.subscribe(stock => {
-      if (this.sells.length < this.sellsLimit) {
-        this.activate(stock, 15, 0.01, false);
-      } else {
-        this.aiPicksService.tickerSellRecommendationQueue.unsubscribe();
-      }
+      this.getPredictions(stock, false);
     });
   }
 
-  activate(symbol: string, range, limit, isBuy: boolean) {
+  getPredictions(stock, isBuy) {
+    const SixtyDayPrediction = () => this.activate(stock, 60, 0.01, isBuy, () => {});
+    const ThirtyDayPrediction = () => this.activate(stock, 30, 0.01, isBuy, SixtyDayPrediction);
+    const FifteenDayPrediction = () => this.activate(stock, 15, 0.01, isBuy, ThirtyDayPrediction);
+    const FiveDayPrediction = () => this.activate(stock, 5, 0.01, isBuy, FifteenDayPrediction);
+
+    FiveDayPrediction();
+  }
+
+  activate(symbol: string, range, limit, isBuy: boolean, cb: () => void) {
     this.machineLearningService.activateDailyV4(symbol,
       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
       range,
       limit)
       .subscribe((activation) => {
         if (!activation || !activation.nextOutput) {
-          this.trainAndActivate(symbol, range, limit, isBuy);
+          this.trainAndActivate(symbol, range, limit, isBuy, cb);
         } else {
           const data = {
             nextOutput: activation.nextOutput,
@@ -59,13 +61,14 @@ export class AiPicksComponent implements OnInit, OnDestroy {
           } else {
             this.sells.push(this.createListObject(data));
           }
+          cb();
         }
       }, error => {
         console.log('error: ', error);
       });
   }
 
-  trainAndActivate(symbol, range, limit, isBuy) {
+  trainAndActivate(symbol, range, limit, isBuy, cb: () => void) {
     this.machineLearningService.trainPredictDailyV4(symbol,
       moment().subtract({ day: 1 }).format('YYYY-MM-DD'),
       moment().subtract({ day: 365 }).format('YYYY-MM-DD'),
@@ -75,7 +78,7 @@ export class AiPicksComponent implements OnInit, OnDestroy {
       limit
     )
       .subscribe((data) => {
-        this.activate(symbol, range, limit, isBuy);
+        this.activate(symbol, range, limit, isBuy, cb);
         console.log('training results: ', data);
       }, error => {
         console.log('error: ', error);

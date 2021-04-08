@@ -751,7 +751,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   runAi(element: Stock) {
-    if (element.recommendation === 'Bearish') {
+    if (element.sellSignals.length > element.buySignals.length) {
       this.aiPicksService.tickerSellRecommendationQueue.next(element.stock);
     } else {
       this.aiPicksService.tickerBuyRecommendationQueue.next(element.stock);

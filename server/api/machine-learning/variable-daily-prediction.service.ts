@@ -108,8 +108,7 @@ class VariableDailyPredicationService extends PredictionService {
       })
       .then((signal) => {
         const inputData = this.buildInputSet(openingPrice, signal, featureUse);
-        console.log('activate model: ', this.getModelName(featureUse));
-        return BacktestService.activateCustomModel(symbol, this.getModelName(featureUse), inputData.input, moment().format('YYYY-MM-DD'));
+        return BacktestService.activateCustomModel(symbol, this.getModelName(), inputData.input, moment().format('YYYY-MM-DD'));
       });
   }
 }
