@@ -2,7 +2,6 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MachineLearningService } from '@shared/index';
 import { AiPicksService } from '@shared/services';
 import * as moment from 'moment';
-import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-ai-picks',
@@ -48,7 +47,7 @@ export class AiPicksComponent implements OnInit, OnDestroy {
       range,
       limit)
       .subscribe((activation) => {
-        if (!activation || !activation.nextOutput) {
+        if (!activation)) {
           this.trainAndActivate(symbol, range, limit, isBuy, cb);
         } else {
           const data = {
