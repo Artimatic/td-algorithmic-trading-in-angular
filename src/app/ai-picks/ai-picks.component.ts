@@ -47,7 +47,7 @@ export class AiPicksComponent implements OnInit, OnDestroy {
       range,
       limit)
       .subscribe((activation) => {
-        if (!activation)) {
+        if (!activation) {
           this.trainAndActivate(symbol, range, limit, isBuy, cb);
         } else {
           const data = {
