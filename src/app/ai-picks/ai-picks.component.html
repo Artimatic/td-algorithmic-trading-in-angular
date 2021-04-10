@@ -7,8 +7,9 @@
         <div class="ui-helper-clearfix">
           <div class="ui-g">
             <div class="ui-g-12">Symbol: <b>{{buy.label}}</b></div>
-            <div class="ui-g-12">Day: <b>{{buy.value.algorithm}}</b></div>
-            <div class="ui-g-12">Prediction: <b>{{buy.value.prediction}}</b></div>
+            <div class="ui-g-12" *ngFor="let prediction of buy.value">
+              Day {{prediction.algorithm}}: <b>{{prediction.prediction}}</b>
+            </div>
           </div>
         </div>
       </ng-template>
@@ -21,8 +22,9 @@
         <div class="ui-helper-clearfix">
           <div class="ui-g">
             <div class="ui-g-12">Symbol: <b>{{sell.label}}</b></div>
-            <div class="ui-g-12">Day: <b>{{sell.value.algorithm}}</b></div>
-            <div class="ui-g-12">Prediction: <b>{{sell.value.prediction}}</b></div>
+            <div class="ui-g-12" *ngFor="let prediction of sell.value">
+              Day {{prediction.algorithm}}: <b>{{prediction.prediction}}</b>
+            </div>
           </div>
         </div>
       </ng-template>
