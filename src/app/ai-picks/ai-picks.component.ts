@@ -107,7 +107,7 @@ export class AiPicksComponent implements OnInit, OnDestroy {
     if (index >= 0) {
       this.sells[index].value.push(predictionData);
     } else {
-      const sellItem = this.createListObject(symbol, predictionData)
+      const sellItem = this.createListObject(symbol, predictionData);
       this.sells.push(sellItem);
     }
   }
@@ -115,11 +115,11 @@ export class AiPicksComponent implements OnInit, OnDestroy {
   addBuyPick(symbol: string, predictionData: AiPicksPredictionData) {
     const isBuyPick = (element: AiPicksData) => element.label === symbol;
 
-    const index = this.sells.findIndex(isBuyPick);
+    const index = this.buys.findIndex(isBuyPick);
     if (index >= 0) {
       this.buys[index].value.push(predictionData);
     } else {
-      const item = this.createListObject(symbol, predictionData)
+      const item = this.createListObject(symbol, predictionData);
       this.buys.push(item);
     }
   }
