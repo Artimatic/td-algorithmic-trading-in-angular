@@ -17,6 +17,7 @@ export class AiPicksComponent implements OnInit, OnDestroy {
 
   buysLimit = 3;
   sellsLimit = 3;
+  isLoading = false;
 
   constructor(private aiPicksService: AiPicksService,
     private machineLearningService: MachineLearningService
@@ -42,6 +43,7 @@ export class AiPicksComponent implements OnInit, OnDestroy {
   }
 
   activate(symbol: string, range, limit, isBuy: boolean, cb: () => void) {
+    this.isLoading = true;
     this.machineLearningService.activateDailyV4(symbol,
       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
       range,
@@ -62,12 +64,16 @@ export class AiPicksComponent implements OnInit, OnDestroy {
           }
           cb();
         }
+        this.isLoading = false;
       }, error => {
         console.log('error: ', error);
+        this.isLoading = false;
       });
   }
 
   trainAndActivate(symbol, range, limit, isBuy, cb: () => void) {
+    this.isLoading = true;
+
     this.machineLearningService.trainPredictDailyV4(symbol,
       moment().subtract({ day: 1 }).format('YYYY-MM-DD'),
       moment().subtract({ day: 365 }).format('YYYY-MM-DD'),
@@ -79,8 +85,10 @@ export class AiPicksComponent implements OnInit, OnDestroy {
       .subscribe((data) => {
         this.activate(symbol, range, limit, isBuy, cb);
         console.log('training results: ', data);
+        this.isLoading = false;
       }, error => {
         console.log('error: ', error);
+        this.isLoading = false;
       });
   }
 

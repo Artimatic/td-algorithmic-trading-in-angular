@@ -393,6 +393,10 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                         bullishProbability: data.bullishProbability,
                         bearishProbability: data.bearishProbability
                       }, this.stockList);
+
+                      if(data.bullishProbability > 0.5 || data.bearishProbability > 0.5) {
+                        this.runAi({...testResults, buySignals: bullishSignals, sellSignals: bearishSignals});
+                      }
                     });
 
                   setTimeout(() => {
@@ -400,6 +404,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                   }, 10000);
                 }
                 this.incrementProgress();
+
               });
         };
         this.iterateAlgoParams(algoParams, indicatorsCb);
@@ -751,10 +756,12 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   runAi(element: Stock) {
-    if (element.sellSignals.length > element.buySignals.length) {
-      this.aiPicksService.tickerSellRecommendationQueue.next(element.stock);
-    } else {
-      this.aiPicksService.tickerBuyRecommendationQueue.next(element.stock);
+    if (element.sellSignals && element.buySignals) {
+      if (element.sellSignals.length > element.buySignals.length) {
+        this.aiPicksService.tickerSellRecommendationQueue.next(element.stock);
+      } else if (element.sellSignals.length < element.buySignals.length) {
+        this.aiPicksService.tickerBuyRecommendationQueue.next(element.stock);
+      }
     }
   }
 
@@ -780,7 +787,9 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
           .pipe(take(1))
           .subscribe(() => {
             this.backtestBuffer.shift();
-            this.triggerNextBacktest();
+            setTimeout(() => {
+              this.triggerNextBacktest();
+            }, 10000);
           }, error => {
             this.snackBar.open(`Error on ${backtest.stock}`, 'Dismiss');
             console.log(`Error on ${backtest.stock}`, error);
