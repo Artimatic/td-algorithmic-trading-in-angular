@@ -6,7 +6,9 @@
       <ng-template let-buy pTemplate="item">
         <div class="ui-helper-clearfix">
           <div class="ui-g">
-            <div class="ui-g-12">Symbol: <b>{{buy.label}}</b></div>
+            <div class="ui-g-12">
+              <h5>{{buy.label}}</h5>
+            </div>
             <div class="ui-g-12" *ngFor="let prediction of buy.value">
               Day {{prediction.algorithm}}: <b>{{prediction.prediction}}</b>
             </div>
@@ -21,7 +23,9 @@
       <ng-template let-sell pTemplate="item">
         <div class="ui-helper-clearfix">
           <div class="ui-g">
-            <div class="ui-g-12">Symbol: <b>{{sell.label}}</b></div>
+            <div class="ui-g-12">
+              <h5>{{sell.label}}</h5>
+            </div>
             <div class="ui-g-12" *ngFor="let prediction of sell.value">
               Day {{prediction.algorithm}}: <b>{{prediction.prediction}}</b>
             </div>
