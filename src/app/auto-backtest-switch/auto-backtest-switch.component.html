@@ -1,0 +1,7 @@
+<div class="container">
+  <div class="item"><label>Auto run</label></div>
+  <div class="item">
+    <p-inputSwitch (onChange)="handleChange($event)" [(ngModel)]="checked"></p-inputSwitch>
+  </div>
+  <div class="item"><span>Next run: {{nextBacktestDate}}</span></div>
+</div>

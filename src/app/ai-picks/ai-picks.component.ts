@@ -38,6 +38,11 @@ export class AiPicksComponent implements OnInit, OnDestroy {
     this.aiPicksService.tickerSellRecommendationQueue.subscribe(stock => {
       this.getPredictions(stock, false);
     });
+
+    this.aiPicksService.clearLists.subscribe(() => {
+      this.buys = [];
+      this.sells = [];
+    });
   }
 
   getPredictions(stock, isBuy) {
@@ -131,5 +136,6 @@ export class AiPicksComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.aiPicksService.tickerBuyRecommendationQueue.unsubscribe();
     this.aiPicksService.tickerSellRecommendationQueue.unsubscribe();
+    this.aiPicksService.clearLists.unsubscribe();
   }
 }

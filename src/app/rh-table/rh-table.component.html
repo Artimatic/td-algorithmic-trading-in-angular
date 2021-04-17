@@ -53,6 +53,9 @@
           <mat-checkbox class="filter" [(ngModel)]="twoOrMoreSignalsOnly" (change)="filter()">
             Only show if two or more signals
           </mat-checkbox>
+          <div class="filter">
+            <app-auto-backtest-switch (switchActivate)="autoActivate()"></app-auto-backtest-switch>
+          </div>
         </div>
       </div>
     </div>

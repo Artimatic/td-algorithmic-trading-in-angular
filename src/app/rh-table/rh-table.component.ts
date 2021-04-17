@@ -131,7 +131,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       { value: 'sell', label: 'Sell' },
       { value: 'strongsell', label: 'Strong Sell' }
     ];
-    this.endDate = moment(this.endDate).format('YYYY-MM-DD');
+    this.endDate = moment(this.globalSettingsService.backtestDate).format('YYYY-MM-DD');
+
     this.cols = [
       { field: 'stock', header: 'Stock' },
       { field: 'returns', header: 'Returns' },
@@ -819,6 +820,10 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
   addToBlackList(ticker: string) {
     this.tickerBlacklist[ticker] = true;
+  }
+
+  autoActivate() {
+    this.runDefaultBacktest();
   }
 
   ngOnDestroy() {

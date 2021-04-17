@@ -72,6 +72,7 @@ import { SmsCardComponent } from './sms-card/sms-card.component';
 import { TimepickerModule } from 'ngx-bootstrap/timepicker';
 import { PieAlloctComponent } from './pie-alloct/pie-alloct.component';
 import { AiPicksComponent } from './ai-picks/ai-picks.component';
+import { AutoBacktestSwitchComponent } from './auto-backtest-switch/auto-backtest-switch.component';
 
 @NgModule({
   declarations: [
@@ -118,6 +119,7 @@ import { AiPicksComponent } from './ai-picks/ai-picks.component';
     SmsCardComponent,
     PieAlloctComponent,
     AiPicksComponent,
+    AutoBacktestSwitchComponent,
   ],
   entryComponents: [
     LoginDialogComponent,

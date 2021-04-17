@@ -7,6 +7,7 @@ import { Subject } from 'rxjs';
 export class AiPicksService {
   tickerBuyRecommendationQueue: Subject<string> = new Subject();
   tickerSellRecommendationQueue: Subject<string> = new Subject();
+  clearLists: Subject<boolean> = new Subject();
 
   constructor() { }
 }
