@@ -33,7 +33,7 @@ export class AutoBacktestSwitchComponent implements OnInit {
 
   getBacktestDateTime() {
     const nextDateTime = this.globalSettingsService.getNextTradeDate().add({ hour: 17 });
-    this.interval = moment(nextDateTime).diff(moment(), 'milliseconds');
+    this.interval = moment(nextDateTime).diff(moment().tz('America/New_York'), 'milliseconds');
     console.log('date: ', nextDateTime, this.interval);
     return nextDateTime.format('LLL');
   }
