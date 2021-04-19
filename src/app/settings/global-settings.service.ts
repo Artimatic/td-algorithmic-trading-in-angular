@@ -62,12 +62,13 @@ export class GlobalSettingsService {
 
   getNextTradeDate() {
     const day = moment().tz('America/New_York').day();
+    const time = moment().set({hour: 0, minute: 0});
     if (day === 6) {
-      return moment().add({ day: 2 });
+      return time.add({ day: 2 });
     } else if (day === 0) {
-      return moment().add({ day: 1 });
+      return time.add({ day: 1 });
     } else if (moment().isAfter(moment.tz('4:00pm', 'h:mma', 'America/New_York'))) {
-      return moment().add({ day: 1 });
+      return time.add({ day: 1 });
     }
     return moment().tz('America/New_York');
   }
