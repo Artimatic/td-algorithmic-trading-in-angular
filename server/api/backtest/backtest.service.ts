@@ -512,14 +512,18 @@ class BacktestService {
     return this.getData(symbol, currentDate, startDate)
       .then(quotes => {
         _.forEach(quotes, (value, key) => {
-          const idx = Number(key);
+          if (value) {
+            const idx = Number(key);
 
-          if (idx > minQuotes) {
-            const q = quotes.slice(idx - minQuotes, idx + 1);
-            if (moment(q.date).format('YYYY MM DD') === moment(getIndicatorQuotes[getIndicatorQuotes.length - 1]).format('YYYY MM DD') ) {
-              getIndicatorQuotes.pop();
+            if (idx > minQuotes) {
+              if (moment(value.date).format('YYYY MM DD') === moment(quotes[idx - 1].date).format('YYYY MM DD')) {
+                quotes.splice(idx, 1);
+              } else {
+                const q = quotes.slice(idx - minQuotes, idx + 1);
+
+                getIndicatorQuotes.push(this.initStrategy(q));
+              }
             }
-            getIndicatorQuotes.push(this.initStrategy(q));
           }
         });
 
@@ -1633,7 +1637,7 @@ class BacktestService {
       },
       json: true
     };
-
+    console.log('model name: ', modelName);
     return RequestPromise(options)
       .catch((error) => {
         console.log('train-custom error: ', error.message);

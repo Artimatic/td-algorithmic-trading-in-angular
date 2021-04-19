@@ -12,6 +12,9 @@
           <button mat-button (click)="openChartDialog(selectedStock, endDate)" [disabled]="!selectedStock">
             Chart
           </button>
+          <button mat-button (click)="runAi(selectedStock)" [disabled]="!selectedStock">
+            Run Machine Learning
+          </button>
           <button mat-button color="primary" (click)="runDefaultBacktest()">Run Default
             Backtest
           </button>
@@ -50,6 +53,9 @@
           <mat-checkbox class="filter" [(ngModel)]="twoOrMoreSignalsOnly" (change)="filter()">
             Only show if two or more signals
           </mat-checkbox>
+          <div class="filter">
+            <app-auto-backtest-switch (switchActivate)="autoActivate()"></app-auto-backtest-switch>
+          </div>
         </div>
       </div>
     </div>
@@ -106,3 +112,4 @@
     Average Returns: {{algoReport.averageReturns}}%
   </ng-template>
 </p-table>
+<app-ai-picks></app-ai-picks>

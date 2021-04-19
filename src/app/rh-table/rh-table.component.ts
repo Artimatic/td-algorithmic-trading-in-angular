@@ -18,6 +18,7 @@ import { OptionsDataService } from '../shared/options-data.service';
 import { Subscription, Observable, Subject } from 'rxjs';
 import { DailyBacktestService } from '@shared/daily-backtest.service';
 import { take } from 'rxjs/operators';
+import { AiPicksService } from '@shared/services/ai-picks.service';
 
 export interface Algo {
   value: string;
@@ -116,7 +117,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     private portfolioService: PortfolioService,
     private globalSettingsService: GlobalSettingsService,
     private optionsDataService: OptionsDataService,
-    private dailyBacktestService: DailyBacktestService) { }
+    private dailyBacktestService: DailyBacktestService,
+    private aiPicksService: AiPicksService) { }
 
   ngOnInit() {
     this.tickerList = Stocks;
@@ -129,7 +131,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       { value: 'sell', label: 'Sell' },
       { value: 'strongsell', label: 'Strong Sell' }
     ];
-    this.endDate = moment(this.endDate).format('YYYY-MM-DD');
+    this.endDate = moment(this.globalSettingsService.backtestDate).format('YYYY-MM-DD');
+
     this.cols = [
       { field: 'stock', header: 'Stock' },
       { field: 'returns', header: 'Returns' },
@@ -391,6 +394,10 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                         bullishProbability: data.bullishProbability,
                         bearishProbability: data.bearishProbability
                       }, this.stockList);
+
+                      if (data.bullishProbability > 0.5 || data.bearishProbability > 0.5) {
+                        this.runAi({ ...testResults, buySignals: bullishSignals, sellSignals: bearishSignals });
+                      }
                     });
 
                   setTimeout(() => {
@@ -398,6 +405,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                   }, 10000);
                 }
                 this.incrementProgress();
+
               });
         };
         this.iterateAlgoParams(algoParams, indicatorsCb);
@@ -748,6 +756,16 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
+  runAi(element: Stock) {
+    if (element.sellSignals && element.buySignals) {
+      if (element.sellSignals.length > element.buySignals.length) {
+        this.aiPicksService.tickerSellRecommendationQueue.next(element.stock);
+      } else if (element.sellSignals.length < element.buySignals.length) {
+        this.aiPicksService.tickerBuyRecommendationQueue.next(element.stock);
+      }
+    }
+  }
+
   getImpliedMovement(stock: Stock) {
     const symbol = stock.stock;
     const foundStock = this.findStock(symbol, this.stockList);
@@ -770,7 +788,9 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
           .pipe(take(1))
           .subscribe(() => {
             this.backtestBuffer.shift();
-            this.triggerNextBacktest();
+            setTimeout(() => {
+              this.triggerNextBacktest();
+            }, 10000);
           }, error => {
             this.snackBar.open(`Error on ${backtest.stock}`, 'Dismiss');
             console.log(`Error on ${backtest.stock}`, error);
@@ -800,6 +820,10 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
   addToBlackList(ticker: string) {
     this.tickerBlacklist[ticker] = true;
+  }
+
+  autoActivate() {
+    this.runDefaultBacktest();
   }
 
   ngOnDestroy() {

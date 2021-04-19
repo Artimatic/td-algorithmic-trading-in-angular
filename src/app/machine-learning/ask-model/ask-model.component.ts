@@ -62,7 +62,8 @@ export class AskModelComponent implements OnInit, OnDestroy {
     this.endDate = new Date();
 
     this.form = this._formBuilder.group({
-      query: this.symbol
+      query: this.symbol,
+      customSettings: ''
     });
 
     this.models = [
@@ -77,14 +78,14 @@ export class AskModelComponent implements OnInit, OnDestroy {
       { field: 'algorithm', header: 'Algorithm' },
       { field: 'guesses', header: 'Guesses' },
       { field: 'correct', header: 'Correct' },
-      { field: 'score', header: 'Score' },
+      { field: 'score', header: 'Score', type: 'percent'},
       { field: 'nextOutput', header: 'Next Output' }
     ];
 
     this.modelResults = [];
     this.isLoading = false;
     this.setStartDate();
-    this.selectedModel = this.models[2];
+    this.selectedModel = this.models[0];
   }
 
   setStartDate() {
@@ -132,7 +133,35 @@ export class AskModelComponent implements OnInit, OnDestroy {
         this.activateOpenUp();
         break;
       }
+      case 'calibrate_daily': {
+        this.activateDaily();
+        break;
+      }
     }
+  }
+
+  activateDaily() {
+    this.isLoading = true;
+    const settings = this.form.value.customSettings.split(',');
+    const range = settings[0] || 2;
+    const limit = settings[1] || 0.003;
+    console.log('setting: ',  this.form.value.customSettings, settings);
+    const symbol = this.form.value.query;
+    this.machineLearningService.activateDailyV4(symbol,
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      range,
+      limit)
+      .pipe(take(1))
+      .subscribe((data) => {
+        this.isLoading = false;
+        console.log('daily: ', data);
+        data.algorithm = 'Daily Prediction';
+        data.symbol = symbol;
+        this.modelResults.push(data);
+      }, error => {
+        console.log('error: ', error);
+        this.isLoading = false;
+      });
   }
 
   trainOpenUp() {
@@ -287,23 +316,42 @@ export class AskModelComponent implements OnInit, OnDestroy {
   }
 
   calibrateDaily() {
-    this.machineLearningService.trainPredictDailyV4(this.form.value.query.toUpperCase(),
+    this.isLoading = true;
+
+    const settings = this.form.value.customSettings.split(',');
+    const range = settings[0] || 2;
+    const limit = settings[1] || 0.003;
+
+    console.log('setting: ',  this.form.value.customSettings, settings);
+    const symbol = this.form.value.query.toUpperCase();
+
+    this.machineLearningService.trainPredictDailyV4(symbol,
       moment().subtract({ day: 1 }).format('YYYY-MM-DD'),
       moment().subtract({ day: 365 }).format('YYYY-MM-DD'),
       0.7,
-      this.globalSettingsService.daytradeAlgo,
-      2,
-      0.003
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      range,
+      limit
     )
       .subscribe((data) => {
-        console.log('result: ', data);
-        // this.machineLearningService.activateDailyV4(this.form.value.query.toUpperCase(),
-        // this.globalSettingsService.daytradeAlgo,
-        // 2,
-        // 0.5
-        // ).subscribe((activateResults) => {
-        //   console.log('activateResults: ', activateResults);
-        // });
+        console.log('training results: ', data);
+        this.machineLearningService.activateDailyV4(symbol,
+          [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+          range,
+          limit)
+          .pipe(take(1))
+          .subscribe((activation) => {
+            this.isLoading = false;
+            data[0].nextOutput = activation.nextOutput;
+            console.log('activated: ', data);
+            this.addTableItem(data);
+          }, error => {
+            console.log('error: ', error);
+            this.isLoading = false;
+          });
+      }, error => {
+        console.log('error: ', error);
+        this.isLoading = false;
       });
   }
 

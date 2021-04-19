@@ -1,0 +1,37 @@
+<h3>Machine Learning Predictions</h3>
+<div class="p-grid">
+  <div class="p-col">
+    <h3>Buys</h3>
+    <p-listbox [options]="buys" [listStyle]="{'max-height':'250px'}">
+      <ng-template let-buy pTemplate="item">
+        <div class="ui-helper-clearfix">
+          <div class="ui-g">
+            <div class="ui-g-12">
+              <h5>{{buy.label}}</h5>
+            </div>
+            <div class="ui-g-12" *ngFor="let prediction of buy.value">
+              Day {{prediction.algorithm}}: <b>{{prediction.prediction}}</b>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+    </p-listbox>
+  </div>
+  <div class="p-col">
+    <h3>Sells</h3>
+    <p-listbox [options]="sells" [listStyle]="{'max-height':'250px'}">
+      <ng-template let-sell pTemplate="item">
+        <div class="ui-helper-clearfix">
+          <div class="ui-g">
+            <div class="ui-g-12">
+              <h5>{{sell.label}}</h5>
+            </div>
+            <div class="ui-g-12" *ngFor="let prediction of sell.value">
+              Day {{prediction.algorithm}}: <b>{{prediction.prediction}}</b>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+    </p-listbox>
+  </div>
+</div>

@@ -56,16 +56,20 @@ export class GlobalSettingsService {
   }
 
   initTradeDate() {
-    this.tradeDate = moment().tz('America/New_York');
-    const day = moment().tz('America/New_York').day();
-    if (day === 7) {
-      this.tradeDate = moment().add({ day: 2 });
-    } else if (day === 0) {
-      this.tradeDate = moment().add({ day: 1 });
-    } else if (moment().isAfter(moment.tz('4:00pm', 'h:mma', 'America/New_York'))) {
-      this.tradeDate = moment().add({ day: 1 });
-    }
+    this.tradeDate = this.getNextTradeDate();
     this.backtestDate = this.tradeDate.format('YYYY-MM-DD');
+  }
+
+  getNextTradeDate() {
+    const day = moment().tz('America/New_York').day();
+    if (day === 6) {
+      return moment().add({ day: 2 });
+    } else if (day === 0) {
+      return moment().add({ day: 1 });
+    } else if (moment().isAfter(moment.tz('4:00pm', 'h:mma', 'America/New_York'))) {
+      return moment().add({ day: 1 });
+    }
+    return moment().tz('America/New_York');
   }
 
   initGlobalSettings() {
