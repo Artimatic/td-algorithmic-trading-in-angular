@@ -823,6 +823,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   autoActivate() {
+    this.endDate = moment().format('YYYY-MM-DD');
     this.runDefaultBacktest();
   }
 
