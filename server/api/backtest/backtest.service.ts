@@ -374,6 +374,9 @@ class BacktestService {
       returns: 0
     };
 
+    let isMfiLowIdx = -1;
+    let isConsolidatingIdx = -1;
+
     indicators.forEach((indicator, idx) => {
       if (indicator.close) {
         let orderType = OrderType.None;
@@ -391,6 +394,16 @@ class BacktestService {
 
           orderType = recommendation.recommendation;
           indicator.recommendation = recommendation;
+
+          if (idx > 80) {
+            if (indicator.recommendation.mfiLow === DaytradeRecommendation.Bullish ||
+              indicator.recommendation.mfi === DaytradeRecommendation.Bullish) {
+              isMfiLowIdx = idx;
+              isConsolidatingIdx = -1;
+            } else if (isMfiLowIdx > -1 && (idx - isMfiLowIdx) < 30 && indicator.recommendation.demark9 === DaytradeRecommendation.Bullish) {
+              indicator.recommendation.mfiTrade = DaytradeRecommendation.Bullish;
+            }
+          }
         }
 
         orders = this.calcTrade(orders, indicator, orderType, avgPrice);
@@ -1519,8 +1532,6 @@ class BacktestService {
 
     const rocCrossoverRecommendation = AlgoService.checkRocCrossover(indicator.roc70Previous, indicator.roc70);
 
-    const mfiTrendRecommendation = AlgoService.checkMfiTrend(indicator.mfiPrevious, indicator.mfiLeft, indicator.roc10Previous, indicator.roc10);
-
     const mfiRecommendation = AlgoService.checkMfi(indicator.mfiLeft);
 
     const macdRecommendation = AlgoService.checkMacd(indicator, previousIndicator);
@@ -1532,7 +1543,6 @@ class BacktestService {
     const mfiDivergenceRecommendation = AlgoService.checkMfiDivergence(indicator.mfiPrevious, indicator.mfiLeft, indicator.roc10Previous, indicator.roc10);
 
     recommendations.roc = rocCrossoverRecommendation;
-    recommendations.mfiTrade = mfiTrendRecommendation;
     recommendations.macd = macdRecommendation;
     recommendations.mfi = mfiRecommendation;
     recommendations.demark9 = demark9Recommendation;
