@@ -104,8 +104,8 @@ export class ProductViewComponent implements OnInit {
     const pastDate = moment(data.date).subtract(800, 'days').format('YYYY-MM-DD');
 
     this.algo.getMaCrossOverBacktestChart(data.symbol, currentDate,
-                                          pastDate, data.params.fastAvg || 30,
-                                          data.params.slowAvg || 90)
+      pastDate, data.params.fastAvg || 30,
+      data.params.slowAvg || 90)
       .map(result => {
         this.initBacktestResults(data.symbol, result, result.signals);
       })
@@ -176,7 +176,7 @@ export class ProductViewComponent implements OnInit {
 
     signals.forEach(day => {
       time.push(day.date);
-      const signal = this.buildSignal(day.action, day.close, day.volume);
+      const signal = this.buildSignal(day.action, day.close, day.volume, '');
       seriesData.push(signal);
 
       this.initChart(symbol, time, seriesData);
@@ -211,7 +211,7 @@ export class ProductViewComponent implements OnInit {
         }
       }
       time.push(day.date);
-      const signal = this.buildSignal(action, day.close, day.volume);
+      const signal = this.buildSignal(action, day.close, day.volume, day.recommendation);
       seriesData.push(signal);
 
       this.initChart(symbol, time, seriesData);
@@ -334,7 +334,35 @@ export class ProductViewComponent implements OnInit {
       );
   }
 
-  buildSignal(action: string, close: number, volume: number) {
+  buildAlgoText(recommendations): string {
+    let sellText = '<br><b>Sells: </b>';
+    let buyText = '<br><b>Buys: </b>';
+
+    const sellsArr = [];
+    const buysArr = [];
+
+    for (const key in recommendations) {
+      if (recommendations[key].toLowerCase() !== 'neutral') {
+        if (recommendations[key].toLowerCase() === 'bullish') {
+          buysArr.push(key);
+        } else if (recommendations[key].toLowerCase() === 'bearish') {
+          sellsArr.push(key);
+        }
+      }
+    }
+
+    if (sellsArr.length > 0) {
+      sellText += sellsArr.join(',');
+    }
+
+    if (buysArr.length > 0) {
+      buyText += buysArr.join(',');
+    }
+
+    return buyText + sellText;
+  }
+
+  buildSignal(action: string, close: number, volume: number, recommendations: any) {
     switch (action) {
       case 'SELL':
         return {
@@ -344,7 +372,7 @@ export class ProductViewComponent implements OnInit {
             fillColor: 'pink',
             radius: 3
           },
-          name: '<br><b>Volume:</b> ' + volume
+          name: '<br><b>Volume:</b> ' + volume + this.buildAlgoText(recommendations)
         };
       case 'STRONGSELL':
         return {
@@ -354,7 +382,7 @@ export class ProductViewComponent implements OnInit {
             fillColor: 'red',
             radius: 6
           },
-          name: '<br><b>Volume:</b> ' + volume
+          name: '<br><b>Volume:</b> ' + volume + this.buildAlgoText(recommendations)
         };
       case 'BUY':
         return {
@@ -364,7 +392,7 @@ export class ProductViewComponent implements OnInit {
             fillColor: 'green',
             radius: 3
           },
-          name: '<br><b>Volume:</b> ' + volume
+          name: '<br><b>Volume:</b> ' + volume + this.buildAlgoText(recommendations)
         };
       case 'STRONGBUY':
         return {
@@ -374,7 +402,7 @@ export class ProductViewComponent implements OnInit {
             fillColor: 'green',
             radius: 6
           },
-          name: '<br><b>Volume:</b> ' + volume
+          name: '<br><b>Volume:</b> ' + volume + this.buildAlgoText(recommendations)
         };
       default:
         return {
@@ -447,7 +475,10 @@ export class ProductViewComponent implements OnInit {
         crosshairs: true,
         shared: true,
         formatter: function () {
-          return '<b>Date:</b>' + moment(this.x).format('YYYY-MM-DD') + '<br><b>Price:</b> ' + this.y + '<br>' + this.points[0].key;
+          return '<b>Date:</b>' +
+            moment(this.x).format('YYYY-MM-DD') +
+            '<br><b>Price:</b> ' +
+            this.y + '<br>' + this.points[0].key;
         }
       },
       plotOptions: {

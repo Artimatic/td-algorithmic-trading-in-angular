@@ -375,7 +375,6 @@ class BacktestService {
     };
 
     let isMfiLowIdx = -1;
-    let isConsolidatingIdx = -1;
 
     indicators.forEach((indicator, idx) => {
       if (indicator.close) {
@@ -399,7 +398,6 @@ class BacktestService {
             if (indicator.recommendation.mfiLow === DaytradeRecommendation.Bullish ||
               indicator.recommendation.mfi === DaytradeRecommendation.Bullish) {
               isMfiLowIdx = idx;
-              isConsolidatingIdx = -1;
             } else if (isMfiLowIdx > -1 && (idx - isMfiLowIdx) < 30 && indicator.recommendation.demark9 === DaytradeRecommendation.Bullish) {
               indicator.recommendation.mfiTrade = DaytradeRecommendation.Bullish;
             }
