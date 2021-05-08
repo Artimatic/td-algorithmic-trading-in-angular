@@ -375,6 +375,7 @@ class BacktestService {
     };
 
     let isMfiLowIdx = -1;
+    let isMfiHighIdx = -1;
 
     indicators.forEach((indicator, idx) => {
       if (indicator.close) {
@@ -400,6 +401,20 @@ class BacktestService {
               isMfiLowIdx = idx;
             } else if (isMfiLowIdx > -1 && (idx - isMfiLowIdx) < 30 && indicator.recommendation.demark9 === DaytradeRecommendation.Bullish) {
               indicator.recommendation.mfiTrade = DaytradeRecommendation.Bullish;
+              indicator.recommendation.recommendation = OrderType.Buy;
+            } else if (indicator.recommendation.mfi === DaytradeRecommendation.Bearish) {
+              isMfiHighIdx = idx;
+            } else if (isMfiHighIdx > -1 && (idx - isMfiHighIdx) < 3 && indicators[idx - 3].mfiLeft > indicator.mfiLeft && indicators[idx - 3].close > indicator.close) {
+              indicator.recommendation.mfiTrade = DaytradeRecommendation.Bearish;
+              indicator.recommendation.recommendation = OrderType.Sell;
+            }
+
+            if (Math.abs(indicators[idx - 8].mfiLeft - indicator.mfiLeft) < 4 && indicators[idx - 8].close > indicator.close) {
+              indicator.recommendation.mfiDivergence = DaytradeRecommendation.Bullish;
+              indicator.recommendation.recommendation = OrderType.Buy;
+            } else if (indicators[idx - 5].mfiLeft > indicator.mfiLeft && indicators[idx - 1].mfiLeft < indicator.mfiLeft && Math.abs(indicators[idx - 1].mfiLeft - indicator.mfiLeft) > 8) {
+              indicator.recommendation.mfiDivergence = DaytradeRecommendation.Bearish;
+              indicator.recommendation.recommendation = OrderType.Sell;
             }
           }
         }
@@ -1538,14 +1553,12 @@ class BacktestService {
 
     const mfiLowRecommendation = AlgoService.checkMfiLow(indicator.mfiLow, indicator.mfiLeft);
 
-    const mfiDivergenceRecommendation = AlgoService.checkMfiDivergence(indicator.mfiPrevious, indicator.mfiLeft, indicator.roc10Previous, indicator.roc10);
 
     recommendations.roc = rocCrossoverRecommendation;
     recommendations.macd = macdRecommendation;
     recommendations.mfi = mfiRecommendation;
     recommendations.demark9 = demark9Recommendation;
     recommendations.mfiLow = mfiLowRecommendation;
-    recommendations.mfiDivergence = mfiDivergenceRecommendation;
 
     if (recommendations.demark9 === DaytradeRecommendation.Bullish ||
       recommendations.mfiTrade === DaytradeRecommendation.Bullish ||
