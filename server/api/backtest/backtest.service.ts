@@ -404,12 +404,12 @@ class BacktestService {
               indicator.recommendation.recommendation = OrderType.Buy;
             } else if (indicator.recommendation.mfi === DaytradeRecommendation.Bearish) {
               isMfiHighIdx = idx;
-            } else if (isMfiHighIdx > -1 && (idx - isMfiHighIdx) < 3 && indicators[idx - 3].mfiLeft > indicator.mfiLeft && indicators[idx - 3].close > indicator.close) {
+            } else if (isMfiHighIdx > -1 && (idx - isMfiHighIdx) < 2 && indicators[idx - 3].mfiLeft > indicator.mfiLeft && indicators[idx - 3].close > indicator.close) {
               indicator.recommendation.mfiTrade = DaytradeRecommendation.Bearish;
               indicator.recommendation.recommendation = OrderType.Sell;
             }
 
-            if (Math.abs(indicators[idx - 8].mfiLeft - indicator.mfiLeft) < 4 && indicators[idx - 8].close > indicator.close) {
+            if (Math.abs(indicators[idx - 8].mfiLeft - indicator.mfiLeft) < 2 && indicators[idx - 8].close > indicator.close) {
               indicator.recommendation.mfiDivergence = DaytradeRecommendation.Bullish;
               indicator.recommendation.recommendation = OrderType.Buy;
             } else if (indicators[idx - 5].mfiLeft > indicator.mfiLeft && indicators[idx - 1].mfiLeft < indicator.mfiLeft && Math.abs(indicators[idx - 1].mfiLeft - indicator.mfiLeft) > 8) {

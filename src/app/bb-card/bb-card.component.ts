@@ -557,7 +557,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy  {
     if (buyOrder) {
       const log = `ORDER SENT ${buyOrder.side} ${buyOrder.quantity} ${buyOrder.holding.symbol}@${buyOrder.price}`;
 
-      if (this.live && this.smsOption !== 'only_sms') {
+      if (this.live && this.smsOption.value !== 'only_sms') {
         const resolve = (response) => {
           this.incrementBuy(buyOrder);
 
@@ -585,7 +585,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy  {
   sendSell(sellOrder: SmartOrder) {
     if (sellOrder) {
       const log = `ORDER SENT ${sellOrder.side} ${sellOrder.quantity} ${sellOrder.holding.symbol}@${sellOrder.price}`;
-      if (this.live && this.smsOption !== 'only_sms') {
+      if (this.live && this.smsOption.value !== 'only_sms') {
         this.incrementSell(sellOrder);
 
         const resolve = (response) => {
@@ -627,7 +627,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy  {
   sendStopLoss(order: SmartOrder) {
     if (order) {
       const log = `MARKET ORDER SENT ${order.side} ${order.quantity} ${order.holding.symbol}@${order.price}`;
-      if (this.live && this.smsOption !== 'only_sms') {
+      if (this.live && this.smsOption.value !== 'only_sms') {
 
         const resolve = (response) => {
           this.incrementSell(order);
