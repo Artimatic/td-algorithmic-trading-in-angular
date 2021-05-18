@@ -46,7 +46,7 @@ export class GlobalSettingsService {
   }
 
   setStartTimes() {
-    this.startTime = moment.tz(`${this.getTradeDate().format('YYYY-MM-DD')} 10:00`, 'America/New_York').toDate();
+    this.startTime = moment.tz(`${this.getTradeDate().format('YYYY-MM-DD')} 09:50`, 'America/New_York').toDate();
     this.sellAtCloseTime = moment.tz(`${this.getTradeDate().format('YYYY-MM-DD')} 15:40`, 'America/New_York').toDate();
     this.stopTime = moment.tz(`${this.getTradeDate().format('YYYY-MM-DD')} 15:50`, 'America/New_York').toDate();
   }
@@ -67,10 +67,10 @@ export class GlobalSettingsService {
       return time.add({ day: 2 });
     } else if (day === 0) {
       return time.add({ day: 1 });
-    } else if (moment().isAfter(moment.tz('4:00pm', 'h:mma', 'America/New_York'))) {
+    } else if (moment().isAfter(moment.tz('5:00pm', 'h:mma', 'America/New_York'))) {
       return time.add({ day: 1 });
     }
-    return moment().tz('America/New_York');
+    return time;
   }
 
   initGlobalSettings() {

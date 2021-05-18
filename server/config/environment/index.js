@@ -47,6 +47,7 @@ module.exports = {
   },
   twilio: {
     key: _.get(credentials, 'default.twilio.key', _.get(credentials, 'twilio.key', null)),
-    id: _.get(credentials, 'default.twilio.id', _.get(credentials, 'twilio.id', null))
+    id: _.get(credentials, 'default.twilio.id', _.get(credentials, 'twilio.id', null)),
+    num: _.get(credentials, 'default.twilio.num', _.get(credentials, 'twilio.num', null)),
   }
 };

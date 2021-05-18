@@ -1053,6 +1053,11 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy  {
       });
   }
 
+  testSms() {
+    this.clientSmsService.sendBuySms('TEST', this.firstFormGroup.value.phoneNumber, 1, 1).subscribe();
+    this.clientSmsService.sendSellSms('TEST', this.firstFormGroup.value.phoneNumber, 1, 1).subscribe();
+  }
+
   runMlBuySell() {
     if (this.config.MlBuySellAtClose) {
       const orderQuantity = this.firstFormGroup.value.quantity - this.buyCount;
