@@ -56,8 +56,18 @@ export class GlobalSettingsService {
   }
 
   initTradeDate() {
-    this.tradeDate = this.getNextTradeDate();
-    this.backtestDate = this.tradeDate.format('YYYY-MM-DD');
+    this.backtestDate = this.getLastTradeDate().format('YYYY-MM-DD');
+  }
+
+  getLastTradeDate() {
+    const day = moment().tz('America/New_York').day();
+    const time = moment().set({hour: 0, minute: 1});
+    if (day === 6) {
+      return time.subtract({ day: 1 });
+    } else if (day === 0) {
+      return time.subtract({ day: 1 });
+    }
+    return time;
   }
 
   getNextTradeDate() {
