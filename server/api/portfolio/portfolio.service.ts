@@ -18,9 +18,14 @@ const globalAccountId = configurations.tdameritrade.accountId;
 const apiUrl = 'https://api.robinhood.com/';
 const tdaUrl = 'https://api.tdameritrade.com/v1/';
 
+interface TokenInfo {
+  timestamp: number;
+  token: string;
+}
+
 class PortfolioService {
 
-  access_token = {};
+  access_token: { [key: string]: TokenInfo } = {};
   tdaKey = {};
   refreshToken = {};
 
@@ -246,16 +251,38 @@ class PortfolioService {
   }
 
   renewTDAuth(accountId) {
+    console.log('renewTDAuth ');
+
+    if (accountId === null) {
+      for (const id in this.access_token) {
+        if (id) {
+          accountId = id;
+        }
+      }
+    }
+
+    if (this.access_token[accountId]) {
+      const diffMinutes = moment().diff(moment(this.access_token[accountId].timestamp), 'minutes');
+      console.log('Found access token ', diffMinutes);
+
+      if (diffMinutes < 30) {
+        return Promise.resolve();
+      }
+    }
+
     return this.getTDAccessToken(accountId);
   }
 
   getIntraday(symbol, accountId) {
     if (!accountId || !this.access_token[accountId]) {
+      console.log('missing access token for ', accountId, this.access_token);
       return this.renewTDAuth(accountId)
         .then(() => this.getTDIntraday(symbol, accountId));
     } else {
       return this.getTDIntraday(symbol, accountId)
-        .catch(() => {
+        .catch((error) => {
+          console.log('Error retrieving access token ', error);
+
           return this.renewTDAuth(accountId)
             .then(() => this.getTDIntraday(symbol, accountId));
         });
@@ -280,7 +307,7 @@ class PortfolioService {
         needExtendedHoursData: false
       },
       headers: {
-        Authorization: `Bearer ${this.access_token[accountId]}`
+        Authorization: `Bearer ${this.access_token[accountId].token}`
       }
     };
 
@@ -312,7 +339,7 @@ class PortfolioService {
         needExtendedHoursData: false
       },
       headers: {
-        Authorization: `Bearer ${this.access_token[accountId]}`
+        Authorization: `Bearer ${this.access_token[accountId].token}`
       }
     };
 
@@ -344,7 +371,7 @@ class PortfolioService {
         needExtendedHoursData: false
       },
       headers: {
-        Authorization: `Bearer ${this.access_token[accountId]}`
+        Authorization: `Bearer ${this.access_token[accountId].token}`
       }
     };
 
@@ -357,11 +384,15 @@ class PortfolioService {
 
   getDailyQuotes(symbol, startDate, endDate, accountId) {
     if (!this.access_token[accountId]) {
+      console.log('missing access token');
+
       return this.renewTDAuth(accountId)
         .then(() => this.getTDDailyQuotes(symbol, startDate, endDate, accountId));
     } else {
       return this.getTDDailyQuotes(symbol, startDate, endDate, accountId)
-        .catch(() => {
+        .catch(error => {
+          console.log('Error retrieving access token ', error);
+
           return this.renewTDAuth(accountId)
             .then(() => this.getTDDailyQuotes(symbol, startDate, endDate, accountId));
         });
@@ -395,7 +426,7 @@ class PortfolioService {
         needExtendedHoursData: false
       },
       headers: {
-        Authorization: `Bearer ${this.access_token[accountId]}`
+        Authorization: `Bearer ${this.access_token[accountId].token}`
       }
     };
 
@@ -414,7 +445,7 @@ class PortfolioService {
         apikey: this.tdaKey[accountId]
       },
       headers: {
-        Authorization: `Bearer ${this.access_token[accountId]}`
+        Authorization: `Bearer ${this.access_token[accountId].token}`
       }
     };
     return request.get(options);
@@ -425,6 +456,7 @@ class PortfolioService {
   }
 
   getTDAccessToken(accountId) {
+    console.log('getting access token');
     let refreshToken;
     let key;
     if (!accountId ||
@@ -447,8 +479,12 @@ class PortfolioService {
     })
       .then(this.processTDData)
       .then(EASObject => {
-        this.access_token[accountId] = EASObject.access_token;
-        return this.access_token[accountId];
+        this.access_token[accountId] = {
+          token: EASObject.access_token,
+          timestamp: moment().valueOf()
+        };
+
+        return this.access_token[accountId].token;
       });
   }
 
@@ -484,7 +520,7 @@ class PortfolioService {
       'Accept': '*/*',
       'Accept-Encoding': 'gzip',
       'Accept-Language': 'en-US',
-      'Authorization': `Bearer ${this.access_token[accountId]}`,
+      'Authorization': `Bearer ${this.access_token[accountId].token}`,
       'Content-Type': 'application/json',
     };
 
@@ -540,7 +576,7 @@ class PortfolioService {
       'Accept': '*/*',
       'Accept-Encoding': 'gzip',
       'Accept-Language': 'en-US',
-      'Authorization': `Bearer ${this.access_token[accountId]}`,
+      'Authorization': `Bearer ${this.access_token[accountId].token}`,
       'Content-Type': 'application/json',
     };
 
@@ -603,7 +639,7 @@ class PortfolioService {
         fields: 'positions'
       },
       headers: {
-        Authorization: `Bearer ${this.access_token[accountId]}`
+        Authorization: `Bearer ${this.access_token[accountId].token}`
       }
     };
 
@@ -653,7 +689,7 @@ class PortfolioService {
         optionType
       },
       headers: {
-        Authorization: `Bearer ${this.access_token[accountId]}`
+        Authorization: `Bearer ${this.access_token[accountId].token}`
       }
     };
 

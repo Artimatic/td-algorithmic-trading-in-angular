@@ -539,18 +539,20 @@ class BacktestService {
 
     return this.getData(symbol, currentDate, startDate)
       .then(quotes => {
-        _.forEach(quotes, (value, key) => {
+        console.log('Found quotes ', quotes[0].date, ' to ', quotes[quotes.length - 1].date);
+        quotes.forEach((value, key) => {
           if (value) {
             const idx = Number(key);
 
             if (idx > minQuotes) {
-              if (moment(value.date).format('YYYY MM DD') === moment(quotes[idx - 1].date).format('YYYY MM DD')) {
-                quotes.splice(idx, 1);
-              } else {
-                const q = quotes.slice(idx - minQuotes, idx + 1);
-
-                getIndicatorQuotes.push(this.initStrategy(q));
+              if (moment(quotes[idx].date).format('YYYY MM DD') === moment(quotes[idx - 1].date).format('YYYY MM DD')) {
+                console.log('Found duplicate ', quotes[idx].date, quotes[idx - 1].date);
+                quotes.splice(idx - 1, 1);
+                console.log(quotes[idx - 1].date, quotes[idx].date);
               }
+              const q = quotes.slice(idx - minQuotes, idx + 1);
+
+              getIndicatorQuotes.push(this.initStrategy(q));
             }
           }
         });
