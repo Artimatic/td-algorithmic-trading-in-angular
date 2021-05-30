@@ -46,6 +46,8 @@ export interface Indicators {
   date?: string;
   demark9?: any;
   mfiLow?: number;
+  high?: number;
+  low?: number;
 }
 
 export interface DaytradeAlgos {
@@ -399,22 +401,29 @@ class BacktestService {
             if (indicator.recommendation.mfiLow === DaytradeRecommendation.Bullish ||
               indicator.recommendation.mfi === DaytradeRecommendation.Bullish) {
               isMfiLowIdx = idx;
-            } else if (isMfiLowIdx > -1 && (idx - isMfiLowIdx) < 30 && indicator.recommendation.demark9 === DaytradeRecommendation.Bullish) {
+            } else if (isMfiLowIdx > -1 && (idx - isMfiLowIdx) < 3 && indicator.recommendation.demark9 === DaytradeRecommendation.Bullish) {
               indicator.recommendation.mfiTrade = DaytradeRecommendation.Bullish;
               indicator.recommendation.recommendation = OrderType.Buy;
             } else if (indicator.recommendation.mfi === DaytradeRecommendation.Bearish) {
               isMfiHighIdx = idx;
-            } else if (isMfiHighIdx > -1 && (idx - isMfiHighIdx) < 2 && indicators[idx - 3].mfiLeft > indicator.mfiLeft && indicators[idx - 3].close > indicator.close) {
+            } else if (isMfiHighIdx > -1 && (idx - isMfiHighIdx) < 2 &&
+                indicators[idx - 3].mfiLeft > indicator.mfiLeft &&
+                indicators[idx - 3].high > indicator.high &&
+                indicators[idx - 2].high > indicator.high) {
               indicator.recommendation.mfiTrade = DaytradeRecommendation.Bearish;
               indicator.recommendation.recommendation = OrderType.Sell;
             }
 
-            if (Math.abs(indicators[idx - 8].mfiLeft - indicator.mfiLeft) < 2 && indicators[idx - 8].close > indicator.close) {
+            if (Math.abs(indicators[idx - 8].mfiLeft - indicator.mfiLeft) < 2 &&
+                indicators[idx - 8].high > indicator.high &&
+                indicators[idx - 3].high > indicator.high &&
+                indicators[idx - 2].high > indicator.high
+                ) {
               indicator.recommendation.mfiDivergence = DaytradeRecommendation.Bullish;
               indicator.recommendation.recommendation = OrderType.Buy;
             } else if (indicators[idx - 5].mfiLeft > indicator.mfiLeft &&
-              indicators[idx - 1].mfiLeft < indicator.mfiLeft &&
-              Math.abs(indicators[idx - 1].mfiLeft - indicator.mfiLeft) > 8) {
+                indicators[idx - 1].mfiLeft < indicator.mfiLeft &&
+                Math.abs(indicators[idx - 1].mfiLeft - indicator.mfiLeft) > 8) {
               indicator.recommendation.mfiDivergence = DaytradeRecommendation.Bearish;
               indicator.recommendation.recommendation = OrderType.Sell;
             }

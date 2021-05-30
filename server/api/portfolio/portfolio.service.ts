@@ -676,25 +676,24 @@ class PortfolioService {
       accountId = configurations.tdameritrade.accountId;
     }
 
-    const query = `${tdaUrl}marketdata/chains`;
-    const options = {
-      uri: query,
-      qs: {
-        symbol,
-        strikeCount,
-        includeQuotes: true,
-        strategy: 'STRADDLE',
-        interval: 0,
-        range: 'SNK',
-        optionType
-      },
-      headers: {
-        Authorization: `Bearer ${this.access_token[accountId].token}`
-      }
-    };
-
     return this.renewTDAuth(accountId)
       .then(() => {
+        const query = `${tdaUrl}marketdata/chains`;
+        const options = {
+          uri: query,
+          qs: {
+            symbol,
+            strikeCount,
+            includeQuotes: true,
+            strategy: 'STRADDLE',
+            interval: 0,
+            range: 'SNK',
+            optionType
+          },
+          headers: {
+            Authorization: `Bearer ${this.access_token[accountId].token}`
+          }
+        };
         return request.get(options)
           .then((data) => {
             return this.processTDData(data);

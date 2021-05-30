@@ -66,7 +66,9 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     totalReturns: 0,
     totalTrades: 0,
     averageReturns: 0,
-    averageTrades: 0
+    averageTrades: 0,
+    profitableTrades: 0,
+    successRate: 0
   };
 
   endDate: string;
@@ -138,7 +140,9 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       { field: 'returns', header: 'Returns' },
       { field: 'lastVolume', header: 'Last Volume' },
       { field: 'lastPrice', header: 'Last Price' },
+      { field: 'profitableTrades', header: 'Profitable Trades' },
       { field: 'totalTrades', header: 'Trades' },
+
       { field: 'buySignals', header: 'Buy' },
       { field: 'sellSignals', header: 'Sell' },
       { field: 'upperResistance', header: 'Upper Resistance' },
@@ -193,14 +197,15 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
     this.selectedColumns = [
       { field: 'stock', header: 'Stock' },
-      { field: 'strongbuySignals', header: 'Strong Buy' },
       { field: 'buySignals', header: 'Buy' },
       { field: 'sellSignals', header: 'Sell' },
-      { field: 'strongsellSignals', header: 'Strong Sell' },
+      { field: 'profitableTrades', header: 'Profitable Trades' },
+      { field: 'totalTrades', header: 'Trades' },
+      { field: 'returns', header: 'Returns' },
       { field: 'impliedMovement', header: 'Implied Movement' },
       { field: 'previousImpliedMovement', header: 'Previous IM' },
       { field: 'bearishProbability', header: 'Probability of Bear Profit' },
-      { field: 'bullishProbability', header: 'Probability of Bull Profit' }
+      { field: 'bullishProbability', header: 'Probability of Bull Profit' },
     ];
 
     this.selectedRecommendation = ['strongbuy', 'buy', 'sell', 'strongsell'];
@@ -226,7 +231,9 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       totalReturns: 0,
       totalTrades: 0,
       averageReturns: 0,
-      averageTrades: 0
+      averageTrades: 0,
+      profitableTrades: 0,
+      successRate: 0
     };
 
     const algorithm = selectedAlgo ? selectedAlgo : this.selectedAlgo;
@@ -358,6 +365,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
                   testResults.stock = symbol;
                   const indicatorResults: BacktestResponse = testResults;
+                  this.updateAlgoReport(indicatorResults);
 
                   const lastSignal = indicatorResults.signals[indicatorResults.signals.length - 1];
                   const bullishSignals = [];
@@ -384,7 +392,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                         ...result
                       };
                       this.addToList(tableObj);
-                      this.updateAlgoReport(tableObj);
                     }
                   }
 
@@ -405,7 +412,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                   }, 10000);
                 }
                 this.incrementProgress();
-
               });
         };
         this.iterateAlgoParams(algoParams, indicatorsCb);
@@ -559,10 +565,12 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   updateAlgoReport(result: Stock) {
-    this.algoReport.totalReturns += result.returns;
+    this.algoReport.totalReturns += (result.returns * 100);
     this.algoReport.totalTrades += result.totalTrades;
     this.algoReport.averageReturns = +((this.algoReport.totalReturns / this.totalStocks).toFixed(5));
     this.algoReport.averageTrades = +((this.algoReport.totalTrades / this.totalStocks).toFixed(5));
+    this.algoReport.profitableTrades += result.profitableTrades;
+    this.algoReport.successRate =  +((this.algoReport.profitableTrades / this.algoReport.totalTrades).toFixed(5));
   }
 
   filter() {

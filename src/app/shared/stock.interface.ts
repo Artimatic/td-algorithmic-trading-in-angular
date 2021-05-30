@@ -43,4 +43,5 @@ export interface Stock {
   bbandBullishShortTerm?: number;
   bbandBullishMidTerm?: number;
   bbandBullish?: number;
+  profitableTrades?: number;
 }
