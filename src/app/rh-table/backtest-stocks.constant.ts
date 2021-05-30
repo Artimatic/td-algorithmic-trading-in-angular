@@ -236,7 +236,7 @@ export const stockList = [
   'SCZ',
   'SHY',
   'SKX',
-  'SNE',
+  'XPO',
   'STLD',
   'STZ',
   'SWKS',
