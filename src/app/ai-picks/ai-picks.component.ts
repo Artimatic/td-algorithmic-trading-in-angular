@@ -46,8 +46,7 @@ export class AiPicksComponent implements OnInit, OnDestroy {
   }
 
   getPredictions(stock, isBuy) {
-    const SixtyDayPrediction = () => this.activate(stock, 60, 0.01, isBuy, () => { });
-    const ThirtyDayPrediction = () => this.activate(stock, 30, 0.01, isBuy, SixtyDayPrediction);
+    const ThirtyDayPrediction = () => this.activate(stock, 30, 0.01, isBuy, () => {});
     const FifteenDayPrediction = () => this.activate(stock, 15, 0.01, isBuy, ThirtyDayPrediction);
     const FiveDayPrediction = () => this.activate(stock, 5, 0.01, isBuy, FifteenDayPrediction);
 
@@ -96,7 +95,6 @@ export class AiPicksComponent implements OnInit, OnDestroy {
     )
       .subscribe((data) => {
         this.activate(symbol, range, limit, isBuy, cb);
-        console.log('training results: ', data);
         this.isLoading = false;
       }, error => {
         console.log('error: ', error);

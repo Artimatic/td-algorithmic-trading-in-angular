@@ -465,9 +465,27 @@ export const stockList = [
   'AUY'
 ];
 
+export const testList = [
+  'AAPL',
+  'SHOP',
+  'TSLA',
+  'CRM',
+  'MDB',
+  'KMB',
+  'GILD',
+  'SIX',
+  'DAL',
+  'DBX'
+];
+
+
 const Stocks: AlgoParam[] = [];
 
-for (const s of stockList) {
+// for (const s of stockList) {
+//   Stocks.push(createParam(s));
+// }
+
+for (const s of testList) {
   Stocks.push(createParam(s));
 }
 

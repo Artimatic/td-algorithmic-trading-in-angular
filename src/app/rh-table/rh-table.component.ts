@@ -402,7 +402,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                         bearishProbability: data.bearishProbability
                       }, this.stockList);
 
-                      if (data.bullishProbability > 0.5 || data.bearishProbability > 0.5) {
+                      if (data.bullishProbability > 0.4 || data.bearishProbability > 0.4) {
                         this.runAi({ ...testResults, buySignals: bullishSignals, sellSignals: bearishSignals });
                       }
                     });
