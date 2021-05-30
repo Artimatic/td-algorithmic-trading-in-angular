@@ -481,11 +481,7 @@ export const testList = [
 
 const Stocks: AlgoParam[] = [];
 
-// for (const s of stockList) {
-//   Stocks.push(createParam(s));
-// }
-
-for (const s of testList) {
+for (const s of stockList) {
   Stocks.push(createParam(s));
 }
 
