@@ -62,14 +62,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   selectedRecommendation: string[];
   stockList: Stock[] = [];
   currentList: Stock[] = [];
-  algoReport = {
-    totalReturns: 0,
-    totalTrades: 0,
-    averageReturns: 0,
-    averageTrades: 0,
-    profitableTrades: 0,
-    successRate: 0
-  };
+  algoReport = this.initAlgoReport();
 
   endDate: string;
   progressPct = 0;
@@ -220,6 +213,20 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
+  initAlgoReport() {
+    return {
+      totalReturns: 0,
+      totalTrades: 0,
+      averageReturns: 0,
+      averageTrades: 0,
+      profitableTrades: 0,
+      successRate: 0,
+      bullishCount: 0,
+      bearishCount: 0,
+      bullishBearishRatio: ''
+    };
+  }
+
   async getData(algoParams, selectedAlgo = null) {
 
     const currentDate = moment(this.endDate).format('YYYY-MM-DD');
@@ -227,14 +234,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
     this.progress = 0;
     this.totalStocks += algoParams.length;
-    this.algoReport = {
-      totalReturns: 0,
-      totalTrades: 0,
-      averageReturns: 0,
-      averageTrades: 0,
-      profitableTrades: 0,
-      successRate: 0
-    };
+    this.algoReport = this.initAlgoReport();
 
     const algorithm = selectedAlgo ? selectedAlgo : this.selectedAlgo;
 
@@ -380,9 +380,11 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                       if (lastSignal.recommendation[indicator] === 'Bullish') {
                         result.recommendation = 'Buy';
                         bullishSignals.push(indicator);
+                        this.addBullCount();
                       } else if (lastSignal.recommendation[indicator] === 'Bearish') {
                         result.recommendation = 'Sell';
                         bearishSignals.push(indicator);
+                        this.addBearCount();
                       }
 
                       result.previousImpliedMovement = this.getPreviousImpliedMove(indicatorResults.signals[indicatorResults.signals.length - 2]);
@@ -571,6 +573,16 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     this.algoReport.averageTrades = +((this.algoReport.totalTrades / this.totalStocks).toFixed(5));
     this.algoReport.profitableTrades += result.profitableTrades;
     this.algoReport.successRate =  +((this.algoReport.profitableTrades / this.algoReport.totalTrades).toFixed(5));
+  }
+
+  addBullCount() {
+    this.algoReport.bullishCount++;
+    this.algoReport.bullishBearishRatio = `${this.convertToPercent(this.algoReport.bullishCount, this.algoReport.bullishCount + this.algoReport.bearishCount)}/${this.convertToPercent(this.algoReport.bearishCount, this.algoReport.bullishCount + this.algoReport.bearishCount)}`;
+  }
+
+  addBearCount() {
+    this.algoReport.bearishCount++;
+    this.algoReport.bullishBearishRatio = `${this.convertToPercent(this.algoReport.bullishCount, this.algoReport.bullishCount + this.algoReport.bearishCount)}/${this.convertToPercent(this.algoReport.bearishCount, this.algoReport.bullishCount + this.algoReport.bearishCount)}`;
   }
 
   filter() {

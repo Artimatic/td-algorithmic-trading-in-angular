@@ -131,6 +131,17 @@ export class AiPicksComponent implements OnInit, OnDestroy {
     return { label: symbol, value: [predictionData] };
   }
 
+  removeFromBuyList(name) {
+    const idx = this.buys.findIndex(element => element === name);
+    this.buys.splice(idx, 1);
+  }
+
+  removeFromSellList(name) {
+    const idx = this.sells.findIndex(element => element === name);
+    this.sells.splice(idx, 1);
+  }
+
+
   ngOnDestroy() {
     this.aiPicksService.tickerBuyRecommendationQueue.unsubscribe();
     this.aiPicksService.tickerSellRecommendationQueue.unsubscribe();
