@@ -577,12 +577,19 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
   addBullCount() {
     this.algoReport.bullishCount++;
-    this.algoReport.bullishBearishRatio = `${this.convertToPercent(this.algoReport.bullishCount, this.algoReport.bullishCount + this.algoReport.bearishCount)}/${this.convertToPercent(this.algoReport.bearishCount, this.algoReport.bullishCount + this.algoReport.bearishCount)}`;
+    this.getBullishBearishRatio();
   }
 
   addBearCount() {
     this.algoReport.bearishCount++;
-    this.algoReport.bullishBearishRatio = `${this.convertToPercent(this.algoReport.bullishCount, this.algoReport.bullishCount + this.algoReport.bearishCount)}/${this.convertToPercent(this.algoReport.bearishCount, this.algoReport.bullishCount + this.algoReport.bearishCount)}`;
+    this.getBullishBearishRatio();
+  }
+
+  getBullishBearishRatio() {
+    const bullishRatio = this.convertToPercent(this.algoReport.bullishCount, this.algoReport.bullishCount + this.algoReport.bearishCount);
+    const bearishRatio = this.convertToPercent(this.algoReport.bearishCount, this.algoReport.bullishCount + this.algoReport.bearishCount);
+
+    this.algoReport.bullishBearishRatio = `${bullishRatio}/${bearishRatio}`;
   }
 
   filter() {
