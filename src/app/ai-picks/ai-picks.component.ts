@@ -132,12 +132,12 @@ export class AiPicksComponent implements OnInit, OnDestroy {
   }
 
   removeFromBuyList(name) {
-    const idx = this.buys.findIndex(element => element === name);
+    const idx = this.buys.findIndex(element => element.label === name);
     this.buys.splice(idx, 1);
   }
 
   removeFromSellList(name) {
-    const idx = this.sells.findIndex(element => element === name);
+    const idx = this.sells.findIndex(element => element.label === name);
     this.sells.splice(idx, 1);
   }
 
