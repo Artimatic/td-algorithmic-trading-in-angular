@@ -69,6 +69,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy  {
   indicators: Indicators;
   trailingHighPrice: number;
   preferences: FormControl;
+  subscriptions: Subscription[];
 
   multiplierPreference: FormControl;
   multiplierList: number[];
@@ -95,7 +96,8 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy  {
     public dialog: MatDialog) { }
 
   ngOnInit() {
-    this.tradeService.algoQueue.subscribe((item: AlgoQueueItem) => {
+    this.subscriptions = [];
+    const algoQueueSub = this.tradeService.algoQueue.subscribe((item: AlgoQueueItem) => {
       if (this.order.holding.symbol === item.symbol) {
         if (item.reset) {
           this.setup();
@@ -118,6 +120,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy  {
       }
     });
 
+    this.subscriptions.push(algoQueueSub);
     this.smsOptions = [
       { label: 'No SMS', value: 'none' },
       { label: 'Only send SMS', value: 'only_sms' },
@@ -205,18 +208,21 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy  {
 
     this.isBacktest = true;
 
-    this.backtestService.getYahooIntraday(this.order.holding.symbol)
+    const yahooSub = this.backtestService.getYahooIntraday(this.order.holding.symbol)
       .subscribe(
         result => {
-          this.backtestService.postIntraday(result).subscribe(
+          const postIntradaySub = this.backtestService.postIntraday(result).subscribe(
             status => {
               this.runServerSideBacktest();
             }, error => {
               this.runServerSideBacktest();
             });
+            this.subscriptions.push(postIntradaySub);
         }, error => {
           this.error = `Error getting quotes for ${this.order.holding.symbol}`;
         });
+
+    this.subscriptions.push(yahooSub);
   }
 
   initRun() {
@@ -265,7 +271,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy  {
     const currentDate = this.globalSettingsService.backtestDate;
     const futureDate = moment().add(1, 'days').format('YYYY-MM-DD');
 
-    this.backtestService.getDaytradeBacktest(this.order.holding.symbol,
+    const getDaytradeBacktestSub = this.backtestService.getDaytradeBacktest(this.order.holding.symbol,
       futureDate, currentDate,
       {
         lossThreshold: this.order.lossThreshold,
@@ -309,6 +315,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy  {
         }
       );
 
+    this.subscriptions.push(getDaytradeBacktestSub);
     this.tiles = this.daytradeService.buildTileList(this.orders);
 
     this.isBacktest = false;
@@ -576,7 +583,8 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy  {
         this.incrementBuy(buyOrder);
         console.log(`${moment(buyOrder.signalTime).format('hh:mm')} ${log}`);
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
-        this.clientSmsService.sendBuySms(buyOrder.holding.symbol, this.firstFormGroup.value.phoneNumber, buyOrder.price, buyOrder.quantity).subscribe();
+        const buySmsSub = this.clientSmsService.sendBuySms(buyOrder.holding.symbol, this.firstFormGroup.value.phoneNumber, buyOrder.price, buyOrder.quantity).subscribe();
+        this.subscriptions.push(buySmsSub);
       }
     }
     return buyOrder;
@@ -618,7 +626,8 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy  {
 
         console.log(`${moment(sellOrder.signalTime).format('hh:mm')} ${log}`);
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
-        this.clientSmsService.sendSellSms(sellOrder.holding.symbol, this.firstFormGroup.value.phoneNumber, sellOrder.price, sellOrder.quantity).subscribe();
+        const sellSmsSub = this.clientSmsService.sendSellSms(sellOrder.holding.symbol, this.firstFormGroup.value.phoneNumber, sellOrder.price, sellOrder.quantity).subscribe();
+        this.subscriptions.push(sellSmsSub);
       }
     }
     return sellOrder;
@@ -663,7 +672,8 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy  {
         console.log(`${moment(order.signalTime).format('hh:mm')} ${log}`);
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
 
-        this.clientSmsService.sendSellSms(order.holding.symbol, this.firstFormGroup.value.phoneNumber, order.price, order.quantity).subscribe();
+        const sellSmsSub = this.clientSmsService.sendSellSms(order.holding.symbol, this.firstFormGroup.value.phoneNumber, order.price, order.quantity).subscribe();
+        this.subscriptions.push(sellSmsSub);
       }
     }
     return order;
@@ -678,7 +688,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy  {
 
     if (!orderProcessed) {
       const daytradeType = this.firstFormGroup.value.orderType.toLowerCase();
-      this.backtestService.getDaytradeRecommendation(null, null, indicators, { minQuotes: 81 }).subscribe(
+      const getRecommendationSub = this.backtestService.getDaytradeRecommendation(null, null, indicators, { minQuotes: 81 }).subscribe(
         analysis => {
           this.processAnalysis(daytradeType, analysis, quotes.close[idx], timestamps[idx]);
           return null;
@@ -687,6 +697,8 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy  {
           this.error = 'Issue getting analysis.';
         }
       );
+
+      this.subscriptions.push(getRecommendationSub);
     }
   }
 
@@ -815,7 +827,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy  {
         const modifier = await this.globalSettingsService.globalModifier();
         orderQuantity = _.round(_.multiply(modifier, orderQuantity), 0);
 
-        this.machineLearningService
+        const trainingSub = this.machineLearningService
           .trainPredictNext30(this.order.holding.symbol.toUpperCase(),
             moment().add({ days: 1 }).format('YYYY-MM-DD'),
             moment().subtract({ days: 1 }).format('YYYY-MM-DD'),
@@ -832,7 +844,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy  {
                 if (machineResult.nextOutput > 0.5) {
                   if (orderQuantity > 0) {
                     setTimeout(() => {
-                      this.portfolioService.getPrice(this.order.holding.symbol)
+                      const getPriceSub = this.portfolioService.getPrice(this.order.holding.symbol)
                         .subscribe((price) => {
                           if (price > quote) {
                             const buyOrder = this.buildBuyOrder(orderQuantity,
@@ -845,12 +857,15 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy  {
                             console.log('Current price is too low. Actual: ', price, ' Expected: ', quote);
                           }
                         });
+                        this.subscriptions.push(getPriceSub);
                     }, 120000);
                   }
                 }
               });
           }, error => {
           });
+
+          this.subscriptions.push(trainingSub);
       }
     }
   }
@@ -1070,6 +1085,10 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy  {
 
   ngOnDestroy() {
     this.order = null;
-    this.tradeService.algoQueue.unsubscribe();
+    this.subscriptions.forEach(sub =>{
+      if (sub) {
+        sub.unsubscribe();
+      }
+    });
   }
 }

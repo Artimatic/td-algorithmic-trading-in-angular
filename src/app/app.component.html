@@ -2,10 +2,7 @@
   <mat-sidenav class="side-nav" mode="side" opened>
     <mat-list role="list">
       <mat-nav-list role="listitem">
-        <div class="app-title">Algo Trader</div>
-      </mat-nav-list>
-      <mat-nav-list role="listitem">
-        <app-reporting></app-reporting>
+        <div class="app-title">Algotrader</div>
       </mat-nav-list>
       <mat-nav-list role="listitem">
         <a routerLink="/trade-view" matTooltip="Buy/sell stocks">
@@ -51,12 +48,15 @@
         <h3>Online Status:</h3>
         <mat-chip-list multiple>
           <mat-chip color="primary" [selected]="dataStatus" (click)="checkStatus()" matTooltip="{{dataText}}">
-            Data Service
+            <span class="online-status-text">Data Service</span>
           </mat-chip>
           <mat-chip color="primary" [selected]="mlStatus" (click)="checkStatus()" matTooltip="{{mlText}}">
-            Machine Learning Service
+            <span class="online-status-text">Machine Learning Service</span>
           </mat-chip>
         </mat-chip-list>
+      </mat-nav-list>
+      <mat-nav-list role="listitem">
+        <app-reporting></app-reporting>
       </mat-nav-list>
     </mat-list>
 

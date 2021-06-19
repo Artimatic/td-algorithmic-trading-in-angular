@@ -24,7 +24,17 @@ button.nav-item {
 }
 
 .app-title {
-  color: #0F9117;
-  font-weight: 700;
-  padding: 0 0 0 3px;
+  color: white;
+  font-weight: 800;
+  padding: 0 0 0 35px;
+  font-family: monospace;
+}
+
+.mat-drawer-inner-container {
+  background-color: #2c2c52;
+  color: white;
+}
+
+.online-status-text {
+  font-size: 10px;
 }
