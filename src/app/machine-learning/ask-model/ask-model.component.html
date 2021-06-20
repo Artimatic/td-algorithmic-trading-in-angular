@@ -39,7 +39,8 @@
         <input type="text" pInputText size="50" placeholder="Filter By Algorithm"
           (input)="dt.filterGlobal($event.target.value, 'contains')" style="width:auto">
       </div>
-      <app-default-order-lists class="default-orders-button" [prefillOrderForm]="prefillOrderForm"></app-default-order-lists>
+      <app-default-order-lists class="default-orders-button" [prefillOrderForm]="prefillOrderForm">
+      </app-default-order-lists>
     </ng-template>
     <ng-template pTemplate="header" let-columns>
       <tr>
@@ -53,7 +54,11 @@
       <tr [pSelectableRow]="rowData">
         <td *ngFor="let col of columns" class="table-cell">
           <div *ngIf="col.type==='percent'; else elseBlock" class="data-cell">{{rowData[col.field] | percent}}</div>
-          <div class="data-cell" #elseBlock>{{rowData[col.field]}}</div>
+          <ng-template #elseBlock>
+            <div class="data-cell" #elseBlock>
+              {{rowData[col.field]}}
+            </div>
+          </ng-template>
         </td>
       </tr>
     </ng-template>

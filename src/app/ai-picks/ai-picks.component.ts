@@ -6,6 +6,7 @@ import * as moment from 'moment';
 interface AiPicksPredictionData {
   algorithm: number;
   prediction: number;
+  accuracy: number;
 }
 
 interface AiPicksData {
@@ -46,17 +47,17 @@ export class AiPicksComponent implements OnInit, OnDestroy {
   }
 
   getPredictions(stock, isBuy) {
-    const ThirtyDayPrediction = () => this.activate(stock, 30, 0.01, isBuy, () => {});
-    const FifteenDayPrediction = () => this.activate(stock, 15, 0.01, isBuy, ThirtyDayPrediction);
-    const FiveDayPrediction = () => this.activate(stock, 5, 0.01, isBuy, FifteenDayPrediction);
+    const ThirtyDayPrediction = () => this.activate(stock, 30, 0.01, isBuy, null, () => {});
+    const FifteenDayPrediction = () => this.activate(stock, 15, 0.01, isBuy, null, ThirtyDayPrediction);
+    const FiveDayPrediction = () => this.activate(stock, 5, 0.01, isBuy, null, FifteenDayPrediction);
 
     FiveDayPrediction();
   }
 
-  activate(symbol: string, range, limit, isBuy: boolean, cb: () => void) {
+  activate(symbol: string, range, limit, isBuy: boolean, accuracy: number = null, cb: () => void) {
     this.isLoading = true;
     this.machineLearningService.activateDailyV4(symbol,
-      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      null,
       range,
       limit)
       .subscribe((activation) => {
@@ -65,7 +66,7 @@ export class AiPicksComponent implements OnInit, OnDestroy {
             this.trainAndActivate(symbol, range, limit, isBuy, cb);
           }, 1000);
         } else {
-          const prediction = { algorithm: range, prediction: activation.nextOutput };
+          const prediction = { algorithm: range, prediction: activation.nextOutput, accuracy: accuracy };
           if (isBuy) {
             this.addBuyPick(symbol, prediction);
           } else {
@@ -89,12 +90,12 @@ export class AiPicksComponent implements OnInit, OnDestroy {
       moment().subtract({ day: 1 }).format('YYYY-MM-DD'),
       moment().subtract({ day: 365 }).format('YYYY-MM-DD'),
       0.7,
-      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      null,
       range,
       limit
     )
       .subscribe((data) => {
-        this.activate(symbol, range, limit, isBuy, cb);
+        this.activate(symbol, range, limit, isBuy, data.score, cb);
         this.isLoading = false;
       }, error => {
         console.log('error: ', error);

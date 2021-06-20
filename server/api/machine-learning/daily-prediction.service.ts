@@ -33,7 +33,6 @@ class DailyPredicationService extends PredictionService {
     let indicator = null;
     return TrainingService.buildDailyQuotes(symbol, moment().subtract({ days: 120 }).valueOf(), moment().valueOf())
       .then((quotes) => {
-        console.log('len ; ', quotes.length);
         const subQuotes = quotes.slice(quotes.length - 80, quotes.length);
         price = quotes[quotes.length - 1].close;
         openingPrice = quotes[0].close;
@@ -50,7 +49,6 @@ class DailyPredicationService extends PredictionService {
       })
       .then((signal) => {
         const inputData = this.buildInputSet(openingPrice, signal, featureUse);
-
         return BacktestService.activateCustomModel(symbol, this.getModelName(featureUse), inputData.input, moment().format('YYYY-MM-DD'));
       });
   }

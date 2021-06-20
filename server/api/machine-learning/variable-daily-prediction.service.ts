@@ -22,13 +22,13 @@ class VariableDailyPredicationService extends PredictionService {
   }
 
   getModelName() {
-    return 'daily_' + this.outputRange + '_' + this.outputLimit;
+    return 'dailyt_' + this.outputRange + '_' + this.outputLimit;
   }
 
   buildInputSet(openingPrice, currentSignal, featureUse) {
     console.log('build variable prediction');
     if (!featureUse) {
-      featureUse = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+      featureUse = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
     }
 
     const dataSetObj = {
@@ -56,7 +56,8 @@ class VariableDailyPredicationService extends PredictionService {
       .concat(this.comparePrices(currentSignal.high, close))
       .concat(this.comparePrices(currentSignal.low, close))
       .concat(this.convertRecommendations(currentSignal))
-      .concat([this.convertBBand(currentSignal)])
+      .concat(this.convertRecommendationsForBearish(currentSignal));
+      // .concat([this.convertBBand(currentSignal)])
       // .concat([
       //   _.round(currentSignal.high, 2),
       //   _.round(currentSignal.low, 2),
@@ -65,8 +66,8 @@ class VariableDailyPredicationService extends PredictionService {
       // .concat([_.round(DecisionService.getPercentChange(close, currentSignal.vwma) * 1000, 2)])
       // .concat([_.round(DecisionService.getPercentChange(close, currentSignal.high) * 1000, 2)])
       // .concat([_.round(DecisionService.getPercentChange(close, currentSignal.low) * 1000, 2)])
-      .concat([_.round(currentSignal.mfiLeft, 0)])
-      .concat([_.round(currentSignal.rsi, 0)]);
+      // .concat([_.round(currentSignal.mfiLeft, 0)])
+      // .concat([_.round(currentSignal.rsi, 0)]);
 
     dataSetObj.input = [];
 
@@ -75,6 +76,7 @@ class VariableDailyPredicationService extends PredictionService {
         dataSetObj.input.push(input[idx]);
       }
     });
+
     return dataSetObj;
   }
 

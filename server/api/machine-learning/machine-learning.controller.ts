@@ -78,7 +78,7 @@ class MachineLearningController extends BaseController {
   }
 
   trainDailyV4(request, response) {
-    const features = request.query.features ? request.query.features.split(',') : null;
+    const features = request.query.features && request.query.features !== 'null' ? request.query.features.split(',') : null;
 
     VariableDailyPredicationService.setOutputLimit(Number(request.query.limit));
     VariableDailyPredicationService.setOutputRange(Number(request.query.range));

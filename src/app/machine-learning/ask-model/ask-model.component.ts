@@ -68,8 +68,8 @@ export class AskModelComponent implements OnInit, OnDestroy {
 
     this.models = [
       { name: 'Calibrate daily model', code: 'calibrate_daily' },
-      { name: 'Open Price Up', code: 'open_price_up' },
-      { name: 'Predict Next 30 minutes', code: 'predict_30' },
+      { name: 'Calibrate Open Price Up model', code: 'open_price_up' },
+      { name: 'Calibrate Next 30 minutes model', code: 'predict_30' },
       { name: 'Calibrate intraday model', code: 'calibrate' }
     ];
 
@@ -148,7 +148,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
     console.log('setting: ',  this.form.value.customSettings, settings);
     const symbol = this.form.value.query;
     this.machineLearningService.activateDailyV4(symbol,
-      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      null,
       range,
       limit)
       .pipe(take(1))
@@ -319,7 +319,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
     this.isLoading = true;
 
     const settings = this.form.value.customSettings.split(',');
-    const range = settings[0] || 2;
+    const range = settings[0] || 5;
     const limit = settings[1] || 0.003;
 
     console.log('setting: ',  this.form.value.customSettings, settings);
@@ -329,14 +329,14 @@ export class AskModelComponent implements OnInit, OnDestroy {
       moment().subtract({ day: 1 }).format('YYYY-MM-DD'),
       moment().subtract({ day: 365 }).format('YYYY-MM-DD'),
       0.7,
-      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      null,
       range,
       limit
     )
       .subscribe((data) => {
         console.log('training results: ', data);
         this.machineLearningService.activateDailyV4(symbol,
-          [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+          null,
           range,
           limit)
           .pipe(take(1))

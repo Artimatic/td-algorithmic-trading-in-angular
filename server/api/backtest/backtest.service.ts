@@ -407,23 +407,23 @@ class BacktestService {
             } else if (indicator.recommendation.mfi === DaytradeRecommendation.Bearish) {
               isMfiHighIdx = idx;
             } else if (isMfiHighIdx > -1 && (idx - isMfiHighIdx) < 2 &&
-                indicators[idx - 3].mfiLeft > indicator.mfiLeft &&
-                indicators[idx - 3].high > indicator.high &&
-                indicators[idx - 2].high > indicator.high) {
+              indicators[idx - 3].mfiLeft > indicator.mfiLeft &&
+              indicators[idx - 3].high > indicator.high &&
+              indicators[idx - 2].high > indicator.high) {
               indicator.recommendation.mfiTrade = DaytradeRecommendation.Bearish;
               indicator.recommendation.recommendation = OrderType.Sell;
             }
 
             if (Math.abs(indicators[idx - 8].mfiLeft - indicator.mfiLeft) < 2 &&
-                indicators[idx - 8].high > indicator.high &&
-                indicators[idx - 3].high > indicator.high &&
-                indicators[idx - 2].high > indicator.high
-                ) {
+              indicators[idx - 8].high > indicator.high &&
+              indicators[idx - 3].high > indicator.high &&
+              indicators[idx - 2].high > indicator.high
+            ) {
               indicator.recommendation.mfiDivergence = DaytradeRecommendation.Bullish;
               indicator.recommendation.recommendation = OrderType.Buy;
             } else if (indicators[idx - 5].mfiLeft > indicator.mfiLeft &&
-                indicators[idx - 1].mfiLeft < indicator.mfiLeft &&
-                Math.abs(indicators[idx - 1].mfiLeft - indicator.mfiLeft) > 8) {
+              indicators[idx - 1].mfiLeft < indicator.mfiLeft &&
+              Math.abs(indicators[idx - 1].mfiLeft - indicator.mfiLeft) > 8) {
               indicator.recommendation.mfiDivergence = DaytradeRecommendation.Bearish;
               indicator.recommendation.recommendation = OrderType.Sell;
             }
@@ -1690,6 +1690,29 @@ class BacktestService {
         trainingData,
         trainingSize,
         to: date
+      },
+      json: true
+    };
+
+    return RequestPromise(options)
+      .catch((error) => {
+        console.log('train-custom error: ', error.message);
+      });
+  }
+
+  activateTensorModel(symbol, modelName, trainingData, trainingSize, date) {
+    const URI = `${mlServiceUrl}api/tensor/train-model`;
+
+    const options = {
+      method: 'POST',
+      uri: URI,
+      body: {
+        symbol,
+        modelName,
+        trainingData,
+        trainingSize,
+        to: date,
+        scoreOnly: true
       },
       json: true
     };
