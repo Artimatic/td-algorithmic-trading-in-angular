@@ -64,7 +64,7 @@ export class AiPicksComponent implements OnInit, OnDestroy {
         if (!activation) {
           setTimeout(() => {
             this.trainAndActivate(symbol, range, limit, isBuy, cb);
-          }, 1000);
+          }, 15000);
         } else {
           const prediction = { algorithm: range, prediction: activation.nextOutput, accuracy: accuracy };
           if (isBuy) {
@@ -74,7 +74,7 @@ export class AiPicksComponent implements OnInit, OnDestroy {
           }
           setTimeout(() => {
             cb();
-          }, 1000);
+          }, 20000);
         }
         this.isLoading = false;
       }, error => {
