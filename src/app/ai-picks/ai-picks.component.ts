@@ -26,6 +26,7 @@ export class AiPicksComponent implements OnInit, OnDestroy {
   buysLimit = 3;
   sellsLimit = 3;
   isLoading = false;
+  counter = 0;
 
   constructor(private aiPicksService: AiPicksService,
     private machineLearningService: MachineLearningService
@@ -47,7 +48,7 @@ export class AiPicksComponent implements OnInit, OnDestroy {
   }
 
   getPredictions(stock, isBuy) {
-    const ThirtyDayPrediction = () => this.activate(stock, 30, 0.01, isBuy, null, () => {});
+    const ThirtyDayPrediction = () => this.activate(stock, 30, 0.01, isBuy, null, () => { });
     const FifteenDayPrediction = () => this.activate(stock, 15, 0.01, isBuy, null, ThirtyDayPrediction);
     const FiveDayPrediction = () => this.activate(stock, 5, 0.01, isBuy, null, FifteenDayPrediction);
 
@@ -56,15 +57,21 @@ export class AiPicksComponent implements OnInit, OnDestroy {
 
   activate(symbol: string, range, limit, isBuy: boolean, accuracy: number = null, cb: () => void) {
     this.isLoading = true;
+    this.counter++;
     this.machineLearningService.activateDailyV4(symbol,
       null,
       range,
       limit)
       .subscribe((activation) => {
+        this.counter--;
+        let delay = 0;
+        if (this.counter > 0) {
+          delay = 2000 + 2000 * this.counter;
+        }
         if (!activation) {
           setTimeout(() => {
             this.trainAndActivate(symbol, range, limit, isBuy, cb);
-          }, 1000);
+          }, delay);
         } else {
           const prediction = { algorithm: range, prediction: activation.nextOutput, accuracy: accuracy };
           if (isBuy) {
@@ -74,10 +81,12 @@ export class AiPicksComponent implements OnInit, OnDestroy {
           }
           setTimeout(() => {
             cb();
-          }, 1000);
+          }, delay);
+
         }
         this.isLoading = false;
       }, error => {
+        this.counter--;
         console.log('error: ', error);
         this.isLoading = false;
       });
@@ -85,6 +94,7 @@ export class AiPicksComponent implements OnInit, OnDestroy {
 
   trainAndActivate(symbol, range, limit, isBuy, cb: () => void) {
     this.isLoading = true;
+    this.counter++;
 
     this.machineLearningService.trainPredictDailyV4(symbol,
       moment().subtract({ day: 1 }).format('YYYY-MM-DD'),
@@ -95,9 +105,18 @@ export class AiPicksComponent implements OnInit, OnDestroy {
       limit
     )
       .subscribe((data) => {
-        this.activate(symbol, range, limit, isBuy, data.score, cb);
+        this.counter--;
+        let delay = 0;
+        if (this.counter > 0) {
+          delay = 2000 + 1000 * this.counter;
+        }
+        setTimeout(() => {
+          this.activate(symbol, range, limit, isBuy, data.score, cb);
+        }, delay);
         this.isLoading = false;
       }, error => {
+        this.counter--;
+
         console.log('error: ', error);
         this.isLoading = false;
       });
