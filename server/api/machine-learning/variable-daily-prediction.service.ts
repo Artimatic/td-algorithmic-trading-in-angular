@@ -22,7 +22,7 @@ class VariableDailyPredicationService extends PredictionService {
   }
 
   getModelName() {
-    return 'dailyt_' + this.outputRange + '_' + this.outputLimit;
+    return 'daily_' + this.outputRange + '_' + this.outputLimit;
   }
 
   buildInputSet(openingPrice, currentSignal, featureUse) {

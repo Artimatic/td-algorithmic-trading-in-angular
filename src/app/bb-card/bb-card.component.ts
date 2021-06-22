@@ -37,7 +37,7 @@ import { ClientSmsService } from '@shared/services/client-sms.service';
   templateUrl: './bb-card.component.html',
   styleUrls: ['./bb-card.component.css']
 })
-export class BbCardComponent implements OnInit, OnChanges, OnDestroy  {
+export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   @ViewChild('stepper', { static: false }) stepper;
   @Input() order: SmartOrder;
   @Input() tearDown: boolean;
@@ -217,7 +217,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy  {
             }, error => {
               this.runServerSideBacktest();
             });
-            this.subscriptions.push(postIntradaySub);
+          this.subscriptions.push(postIntradaySub);
         }, error => {
           this.error = `Error getting quotes for ${this.order.holding.symbol}`;
         });
@@ -857,7 +857,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy  {
                             console.log('Current price is too low. Actual: ', price, ' Expected: ', quote);
                           }
                         });
-                        this.subscriptions.push(getPriceSub);
+                      this.subscriptions.push(getPriceSub);
                     }, 120000);
                   }
                 }
@@ -865,7 +865,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy  {
           }, error => {
           });
 
-          this.subscriptions.push(trainingSub);
+        this.subscriptions.push(trainingSub);
       }
     }
   }
@@ -1085,7 +1085,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy  {
 
   ngOnDestroy() {
     this.order = null;
-    this.subscriptions.forEach(sub =>{
+    this.subscriptions.forEach(sub => {
       if (sub) {
         sub.unsubscribe();
       }

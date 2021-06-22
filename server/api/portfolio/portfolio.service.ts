@@ -13,8 +13,6 @@ const robinhoodDevice = {
   deviceToken: configurations.robinhood.deviceId
 };
 
-const globalAccountId = configurations.tdameritrade.accountId;
-
 const apiUrl = 'https://api.robinhood.com/';
 const tdaUrl = 'https://api.tdameritrade.com/v1/';
 
