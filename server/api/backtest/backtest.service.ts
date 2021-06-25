@@ -332,13 +332,13 @@ class BacktestService {
     counter = AlgoService.countRecommendation(macdRecommendation, counter);
     counter = AlgoService.countRecommendation(demark9Recommendation, counter);
 
-    if (counter.bullishCounter > counter.bearishCounter) {
+    if (counter.bullishCounter > counter.bearishCounter && counter.bullishCounter > 2) {
       if (vwmaRecommendation !== DaytradeRecommendation.Bearish) {
         recommendations.recommendation = OrderType.Buy;
       } else {
         recommendations.recommendation = OrderType.None;
       }
-    } else if (counter.bearishCounter > counter.bullishCounter) {
+    } else if (counter.bearishCounter > counter.bullishCounter && counter.bearishCounter > 2) {
       recommendations.recommendation = OrderType.Sell;
     }
 
