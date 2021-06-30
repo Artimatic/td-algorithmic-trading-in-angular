@@ -192,13 +192,15 @@ export class BacktestService {
   }
 
 
-  findIntraday(data: JSON): Observable<any> {
-    const body = JSON.stringify(data);
-
+  findIntraday(symbol: string, to: string = null, from: string = null): Observable<any> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     const options = {
       headers: headers,
-      body: body
+      params: {
+        symbol,
+        to,
+        from
+      }
     };
 
     return this.http.get(`${BASE_URL}api/quote/historical-intraday`, options);

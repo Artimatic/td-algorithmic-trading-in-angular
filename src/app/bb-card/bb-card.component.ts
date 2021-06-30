@@ -317,8 +317,6 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
 
     this.subscriptions.push(getDaytradeBacktestSub);
     this.tiles = this.daytradeService.buildTileList(this.orders);
-
-    this.isBacktest = false;
   }
 
   populateChart(indicators) {

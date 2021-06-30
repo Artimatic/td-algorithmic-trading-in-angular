@@ -48,6 +48,7 @@ export interface Indicators {
   mfiLow?: number;
   high?: number;
   low?: number;
+  mfiTrend?: boolean;
 }
 
 export interface DaytradeAlgos {
@@ -160,22 +161,59 @@ class BacktestService {
     return { perfectSell, perfectBuy };
   }
 
-  getDaytradeIndicators(quotes, period) {
-    let indicators: Indicators = {
-      vwma: null,
-      mfiLeft: null,
-      bband80: null
-    };
+  getDaytradeIndicators(quotes, period): Promise<Indicators> {
     quotes.reals = quotes.close;
     quotes.highs = quotes.high;
     quotes.lows = quotes.low;
     quotes.volumes = quotes.volume;
+    const getIndicatorQuotes = [];
 
-    return this.getIndicators(quotes, period, indicators)
-      .then(results => {
-        indicators = results;
-        return indicators;
+    quotes.forEach(quotes, (value, key) => {
+      const idx = Number(key);
+      if (idx > period) {
+        const q = quotes.slice(idx - period, idx);
+        getIndicatorQuotes.push(this.initStrategy(q));
+      }
+    });
+    return Promise.all(getIndicatorQuotes)
+      .then((indicators: Indicators[]) => {
+        let lastIndicator = {
+          ...indicators[indicators.length - 1],
+          ...this.addOnDaytradeIndicators(indicators)
+        };
+
+        return lastIndicator;
       });
+  }
+
+  addOnDaytradeIndicators(indicators: Indicators[]) {
+    let isMfiLowIdx = -1;
+    let isMfiHighIdx = -1;
+    let indicatorFinal = {
+      mfiTrend: null
+    };
+
+    indicators.forEach((indicator, idx) => {
+      if (idx > 80) {
+        const mfi = AlgoService.checkMfi(indicator.mfiLeft);
+        if (mfi === DaytradeRecommendation.Bullish) {
+          isMfiLowIdx = idx;
+        } else if (mfi === DaytradeRecommendation.Bearish) {
+          isMfiLowIdx = idx;
+        } else if (isMfiLowIdx > -1 && (idx - isMfiLowIdx) < 5) {
+          const recommendation: DaytradeRecommendation = AlgoService.checkMacd(indicator, indicators[idx - 1]);
+          if (recommendation === DaytradeRecommendation.Bullish) {
+            indicatorFinal.mfiTrend = true;
+          }
+        } else if (isMfiHighIdx > -1 && (idx - isMfiHighIdx) < 5) {
+          const recommendation: DaytradeRecommendation = AlgoService.checkMacd(indicator, indicators[idx - 1]);
+          if (recommendation === DaytradeRecommendation.Bearish) {
+            indicatorFinal.mfiTrend = false;
+          }
+        }
+      }
+    });
+    return indicatorFinal;
   }
 
   evaluateStrategyAll(ticker, end, start) {
@@ -332,7 +370,11 @@ class BacktestService {
     counter = AlgoService.countRecommendation(macdRecommendation, counter);
     counter = AlgoService.countRecommendation(demark9Recommendation, counter);
 
-    if (counter.bullishCounter > counter.bearishCounter && counter.bullishCounter > 2) {
+    if (indicator.mfiTrend === true) {
+      recommendations.recommendation = OrderType.Buy;
+    } else if (indicator.mfiTrend === false) {
+      recommendations.recommendation = OrderType.Sell;
+    } else if (counter.bullishCounter > counter.bearishCounter && counter.bullishCounter > 2) {
       if (vwmaRecommendation !== DaytradeRecommendation.Bearish) {
         recommendations.recommendation = OrderType.Buy;
       } else {
@@ -538,7 +580,15 @@ class BacktestService {
             getIndicatorQuotes.push(this.initStrategy(q));
           }
         });
-        return Promise.all(getIndicatorQuotes);
+        return Promise.all(getIndicatorQuotes)
+          .then((indicators: Indicators[]) => {
+            let lastIndicator = {
+              ...indicators[indicators.length - 1],
+              ...this.addOnDaytradeIndicators(indicators)
+            };
+
+            return lastIndicator;
+          });
       });
   }
 
