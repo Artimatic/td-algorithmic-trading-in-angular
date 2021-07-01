@@ -35,7 +35,7 @@ export interface Indicators {
   mfiLeft: number;
   bband80: any[];
   mfiPrevious?: number;
-  macd?: number;
+  macd?: any;
   roc10?: number;
   roc10Previous?: number;
   roc70?: number;
@@ -49,6 +49,7 @@ export interface Indicators {
   high?: number;
   low?: number;
   mfiTrend?: boolean;
+  macdPrevious?: any;
 }
 
 export interface DaytradeAlgos {
@@ -84,7 +85,7 @@ export enum OrderType {
 
 export interface BacktestResults {
   algo: string;
-  recommendation: string;
+  recommendation?: string;
   orderHistory: any[];
   net: number;
   total: number;
@@ -177,43 +178,35 @@ class BacktestService {
     });
     return Promise.all(getIndicatorQuotes)
       .then((indicators: Indicators[]) => {
-        let lastIndicator = {
-          ...indicators[indicators.length - 1],
-          ...this.addOnDaytradeIndicators(indicators)
-        };
-
-        return lastIndicator;
+        indicators = this.addOnDaytradeIndicators(indicators);
+        return indicators[indicators.length - 1];
       });
   }
 
   addOnDaytradeIndicators(indicators: Indicators[]) {
     let isMfiLowIdx = -1;
     let isMfiHighIdx = -1;
-    let indicatorFinal = {
-      mfiTrend: null
-    };
 
-    indicators.forEach((indicator, idx) => {
+    _.forEach(indicators, (indicator, idx) => {
       if (idx > 80) {
         const mfi = AlgoService.checkMfi(indicator.mfiLeft);
+        const macd = AlgoService.checkMacdDaytrade(indicator.macd, indicator.macdPrevious);
         if (mfi === DaytradeRecommendation.Bullish) {
           isMfiLowIdx = idx;
         } else if (mfi === DaytradeRecommendation.Bearish) {
-          isMfiLowIdx = idx;
-        } else if (isMfiLowIdx > -1 && (idx - isMfiLowIdx) < 5) {
-          const recommendation: DaytradeRecommendation = AlgoService.checkMacd(indicator, indicators[idx - 1]);
-          if (recommendation === DaytradeRecommendation.Bullish) {
-            indicatorFinal.mfiTrend = true;
-          }
-        } else if (isMfiHighIdx > -1 && (idx - isMfiHighIdx) < 5) {
-          const recommendation: DaytradeRecommendation = AlgoService.checkMacd(indicator, indicators[idx - 1]);
-          if (recommendation === DaytradeRecommendation.Bearish) {
-            indicatorFinal.mfiTrend = false;
-          }
+          isMfiHighIdx = idx;
+        } else if (isMfiLowIdx > -1 && (idx - isMfiLowIdx) < 5 && macd === DaytradeRecommendation.Bullish) {
+          console.log('found macd mfi bullish', indicator.date);
+
+          indicators[idx].mfiTrend = true;
+        } else if (isMfiHighIdx > -1 && (idx - isMfiHighIdx) < 5 && macd === DaytradeRecommendation.Bearish) {
+          console.log('found macd mfi bearish', indicator.date);
+
+          indicators[idx].mfiTrend = false;
         }
       }
     });
-    return indicatorFinal;
+    return indicators;
   }
 
   evaluateStrategyAll(ticker, end, start) {
@@ -303,15 +296,68 @@ class BacktestService {
       });
   }
 
-  runDaytradeBacktest(symbol, currentDate, startDate, parameters): BacktestResults {
+  runDaytradeBacktest(symbol, currentDate, startDate, parameters) {
     return this.initDaytradeStrategy(symbol, startDate, currentDate, parameters)
       .then(indicators => {
-        const testResults = this.backtestIndicators(this.getDaytradeRecommendation,
+        const testResults = this.backtestDaytradingIndicators(this.getDaytradeRecommendation,
           indicators,
           parameters);
 
         return testResults;
       });
+  }
+
+  backtestDaytradingIndicators(recommendationFn: Function,
+    indicators: Indicators[],
+    parameters: DaytradeParameters): BacktestResults {
+    let orders = {
+      trades: 0,
+      buy: [],
+      history: [],
+      net: 0,
+      total: 0,
+      profitableTrades: 0,
+      returns: 0
+    };
+
+    _.forEach(indicators, (indicator, idx) => {
+      if (indicator.close) {
+        let orderType = OrderType.None;
+        const avgPrice = this.estimateAverageBuyOrderPrice(orders);
+
+        const isAtLimit = this.determineStopProfit(avgPrice, indicator.close,
+          parameters.lossThreshold, parameters.profitThreshold);
+        if (isAtLimit) {
+          orderType = OrderType.Sell;
+          indicator.recommendation = { recommendation: OrderType.Sell };
+        } else {
+          const recommendation: Recommendation = recommendationFn(indicator.close,
+            indicator,
+            idx > 0 ? indicators[idx - 1] : null);
+
+          orderType = recommendation.recommendation;
+          indicator.recommendation = recommendation;
+        }
+        orders = this.calcTrade(orders, indicator, orderType, avgPrice);
+        indicator.action = this.getIndicatorAction(indicator.recommendation.recommendation);
+      }
+    });
+
+    const ordersResults = {
+      algo: '',
+      orderHistory: orders.history,
+      net: orders.net,
+      returns: orders.returns,
+      total: orders.total,
+      invested: orders.total,
+      profitableTrades: orders.profitableTrades,
+      totalTrades: orders.trades
+    };
+
+    return {
+      ...ordersResults,
+      signals: indicators,
+    };
   }
 
   getDaytrade(price: number, paidPrice: number, indicator: Indicators, parameters, response) {
@@ -360,7 +406,7 @@ class BacktestService {
 
     const vwmaRecommendation = AlgoService.checkVwma(price, indicator.vwma);
 
-    const macdRecommendation = AlgoService.checkMacdDaytrade(indicator, indicator.roc10Previous, indicator.roc10);
+    const macdRecommendation = AlgoService.checkMacdDaytrade(indicator.macd, indicator.macdPrevious);
 
     const demark9Recommendation = AlgoService.checkDemark9(indicator.demark9);
 
@@ -421,7 +467,7 @@ class BacktestService {
     let isMfiLowIdx = -1;
     let isMfiHighIdx = -1;
 
-    indicators.forEach((indicator, idx) => {
+    _.forEach(indicators, (indicator, idx) => {
       if (indicator.close) {
         let orderType = OrderType.None;
         const avgPrice = this.estimateAverageBuyOrderPrice(orders);
@@ -563,7 +609,7 @@ class BacktestService {
       });
   }
 
-  initDaytradeStrategy(symbol, startDate, currentDate, parameters) {
+  initDaytradeStrategy(symbol, startDate, currentDate, parameters): Promise<Indicators[]> {
     const minQuotes = parameters.minQuotes;
     const getIndicatorQuotes = [];
 
@@ -582,12 +628,7 @@ class BacktestService {
         });
         return Promise.all(getIndicatorQuotes)
           .then((indicators: Indicators[]) => {
-            let lastIndicator = {
-              ...indicators[indicators.length - 1],
-              ...this.addOnDaytradeIndicators(indicators)
-            };
-
-            return lastIndicator;
+            return this.addOnDaytradeIndicators(indicators);
           });
       });
   }
@@ -1089,6 +1130,10 @@ class BacktestService {
       })
       .then(macd => {
         currentQuote.macd = macd;
+        return this.getMacd(indicators.reals.slice(0, indicators.reals.length - 1), 12, 26, 9);
+      })
+      .then(macdPrevious => {
+        currentQuote.macdPrevious = macdPrevious;
         return this.getRsi(this.getSubArray(indicators.reals, 14), 14);
       })
       .then(rsi => {

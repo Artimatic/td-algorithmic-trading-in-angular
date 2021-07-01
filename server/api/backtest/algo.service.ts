@@ -123,21 +123,17 @@ class AlgoService {
     return DaytradeRecommendation.Neutral;
   }
 
-  checkMacdDaytrade(indicator: Indicators, roc10Previous: number, roc10: number): DaytradeRecommendation {
-    const macd = indicator.macd[2];
+  checkMacdDaytrade(currentMacd: any, previousMacd: any): DaytradeRecommendation {
+    if (previousMacd) {
+      const macd = currentMacd[2];
+      const prevMacd = previousMacd[2];
 
-    if (roc10Previous > 0 && roc10 < 0) {
-      if (macd[macd.length - 1] <= 0) {
+      if (macd[macd.length - 1] > 0 && prevMacd[prevMacd.length - 1] <= 0) {
+        return DaytradeRecommendation.Bullish;
+      } else if (macd[macd.length - 1] <= 0 && prevMacd[prevMacd.length - 1] > 0) {
         return DaytradeRecommendation.Bearish;
       }
     }
-
-    if (roc10Previous < 0 && roc10 > 0) {
-      if (macd[macd.length - 1] > 0) {
-        return DaytradeRecommendation.Bullish;
-      }
-    }
-
     return DaytradeRecommendation.Neutral;
   }
 

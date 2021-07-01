@@ -332,16 +332,13 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
           y: closePrice
         };
 
-        const vwmaDesc = quote.vwma ? quote.vwma.toFixed(2) : '';
-        const roc10 = `roc10:(${quote.roc10Previous})-(${quote.roc10}), `;
-        const roc70 = `roc70:(${quote.roc70Previous})-(${quote.roc70}), `;
-        const mfiDesc = `mfi:${quote.mfiLeft} `;
+        const vwmaDesc = quote.vwma ? `[vwma:${ quote.vwma.toFixed(2)}]` : '';
+        const mfiDesc = `[mfi:${quote.mfiLeft}]`;
 
-        point.description = `${vwmaDesc}${roc10}${roc70}${mfiDesc}`;
+        point.description = `${vwmaDesc}${mfiDesc}`;
 
-        point.description += ` mfi: ${quote.recommendation.mfi}, `;
-        point.description += `roc: ${quote.recommendation.roc}, `;
-        point.description += `bband: ${quote.recommendation.bband}`;
+        point.description += `[macd: ${quote.recommendation.macd}] `;
+        point.description += `[bband: ${quote.recommendation.bband}]`;
 
         if (quote.recommendation.recommendation.toLowerCase() === 'buy') {
           point.marker = {
