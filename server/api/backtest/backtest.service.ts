@@ -169,7 +169,7 @@ class BacktestService {
     quotes.volumes = quotes.volume;
     const getIndicatorQuotes = [];
 
-    quotes.forEach(quotes, (value, key) => {
+    _.forEach(quotes, (value, key) => {
       const idx = Number(key);
       if (idx > period) {
         const q = quotes.slice(idx - period, idx);
@@ -640,7 +640,7 @@ class BacktestService {
     return this.getData(symbol, currentDate, startDate)
       .then(quotes => {
         console.log('Found quotes ', quotes[0].date, ' to ', quotes[quotes.length - 1].date);
-        quotes.forEach((value, key) => {
+        _.forEach(quotes, (value, key) => {
           if (value) {
             const idx = Number(key);
 
