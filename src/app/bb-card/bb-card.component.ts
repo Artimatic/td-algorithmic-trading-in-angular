@@ -85,7 +85,6 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     private reportingService: ReportingService,
     private scoringService: ScoreKeeperService,
     private portfolioService: PortfolioService,
-    private indicatorsService: IndicatorsService,
     public cartService: CartService,
     private globalSettingsService: GlobalSettingsService,
     private tradeService: TradeService,

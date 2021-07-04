@@ -7,7 +7,6 @@ import { Observable, Subject } from 'rxjs';
 import { Injectable } from '@angular/core';
 
 import { environment } from '../../../environments/environment';
-import { Indicators } from '../models/indicators';
 import { AuthenticationService } from './authentication.service';
 
 const BASE_URL = environment.appUrl;
