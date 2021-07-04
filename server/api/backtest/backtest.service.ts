@@ -13,6 +13,7 @@ import * as tulind from 'tulind';
 import * as configurations from '../../config/environment';
 import AlgoService from './algo.service';
 import MfiService from './mfi.service';
+import PortfolioService from '../portfolio/portfolio.service';
 
 const dataServiceUrl = configurations.apps.goliath;
 const mlServiceUrl = configurations.apps.armadillo;
@@ -162,24 +163,24 @@ class BacktestService {
     return { perfectSell, perfectBuy };
   }
 
-  getDaytradeIndicators(quotes, period): Promise<Indicators> {
-    quotes.reals = quotes.close;
-    quotes.highs = quotes.high;
-    quotes.lows = quotes.low;
-    quotes.volumes = quotes.volume;
+  getCurrentDaytradeIndicators(symbol, period): Promise<Indicators> {
     const getIndicatorQuotes = [];
 
-    _.forEach(quotes, (value, key) => {
-      const idx = Number(key);
-      if (idx > period) {
-        const q = quotes.slice(idx - period, idx);
-        getIndicatorQuotes.push(this.initStrategy(q));
-      }
-    });
-    return Promise.all(getIndicatorQuotes)
-      .then((indicators: Indicators[]) => {
-        indicators = this.addOnDaytradeIndicators(indicators);
-        return indicators[indicators.length - 1];
+    return PortfolioService.getIntradayV2(symbol, 1)
+      .then((intradayObj) => {
+        const quotes = intradayObj.candles;
+        _.forEach(quotes, (value, key) => {
+          const idx = Number(key);
+          if (idx > period) {
+            const q = quotes.slice(idx - period, idx);
+            getIndicatorQuotes.push(this.initStrategy(q));
+          }
+        });
+        return Promise.all(getIndicatorQuotes)
+          .then((indicators: Indicators[]) => {
+            indicators = this.addOnDaytradeIndicators(indicators);
+            return indicators[indicators.length - 1];
+          });
       });
   }
 
@@ -196,12 +197,8 @@ class BacktestService {
         } else if (mfi === DaytradeRecommendation.Bearish) {
           isMfiHighIdx = idx;
         } else if (isMfiLowIdx > -1 && (idx - isMfiLowIdx) < 5 && macd === DaytradeRecommendation.Bullish) {
-          console.log('found macd mfi bullish', indicator.date);
-
           indicators[idx].mfiTrend = true;
         } else if (isMfiHighIdx > -1 && (idx - isMfiHighIdx) < 5 && macd === DaytradeRecommendation.Bearish) {
-          console.log('found macd mfi bearish', indicator.date);
-
           indicators[idx].mfiTrend = false;
         }
       }
@@ -360,21 +357,24 @@ class BacktestService {
     };
   }
 
-  getDaytrade(price: number, paidPrice: number, indicator: Indicators, parameters, response) {
-    let recommendation = {
-      recommendation: OrderType.None
-    };
+  getCurrentDaytrade(symbol: string, price: number, paidPrice: number, parameters, response) {
+    return this.getCurrentDaytradeIndicators(symbol, parameters.minQuotes || 80)
+      .then((currentIndicators: Indicators) => {
+        let recommendation = {
+          recommendation: OrderType.None
+        };
 
-    const avgPrice = paidPrice;
+        const avgPrice = paidPrice;
 
-    const isAtLimit = this.determineStopProfit(avgPrice, price,
-      parameters.lossThreshold, parameters.profitThreshold);
-    if (isAtLimit) {
-      recommendation.recommendation = OrderType.Sell;
-    } else {
-      recommendation = this.getDaytradeRecommendation(indicator.close, indicator);
-    }
-    response.status(200).send(recommendation);
+        const isAtLimit = this.determineStopProfit(avgPrice, price,
+          parameters.lossThreshold, parameters.profitThreshold);
+        if (isAtLimit) {
+          recommendation.recommendation = OrderType.Sell;
+        } else {
+          recommendation = this.getDaytradeRecommendation(currentIndicators.close, currentIndicators);
+        }
+        response.status(200).send(recommendation);
+      });
   }
 
   getDaytradeRecommendation(price: number, indicator: Indicators): Recommendation {
@@ -1081,8 +1081,8 @@ class BacktestService {
     return this.getIndicators(indicators, 80, currentQuote);
   }
 
-  getIndicators(indicators, bbandPeriod, quote) {
-    const currentQuote = quote;
+  getIndicators(indicators, bbandPeriod, returnObject) {
+    const currentQuote = returnObject;
     return this.getBBands(indicators.reals, bbandPeriod, 2)
       .then((bband80) => {
         currentQuote.bband80 = bband80;

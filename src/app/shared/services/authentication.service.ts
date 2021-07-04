@@ -8,6 +8,8 @@ import { RedirectLoginDialogComponent } from '../../redirect-login-dialog/redire
 
 export interface TdaAccount {
   accountId: string;
+  consumerKey?: string;
+  refreshKey?: string;
 }
 
 
@@ -21,7 +23,7 @@ export class AuthenticationService {
   constructor(private http: HttpClient, private dialog: MatDialog, public snackBar: MatSnackBar) { }
 
   openLoginDialog(): void {
-    this.dialog.open(RedirectLoginDialogComponent, {width: '650px'});
+    this.dialog.open(RedirectLoginDialogComponent, { width: '650px' });
   }
 
   getToken() {
@@ -94,17 +96,31 @@ export class AuthenticationService {
     });
 
     this.checkCredentials(this.selectedTdaAccount.accountId)
-    .subscribe(() => {
-      this.snackBar.open('Credentials selected.', 'Dismiss', {duration: 2000});
-    }, () => {
-      this.snackBar.open('Current selected account info is missing. Reenter credentials.', 'Dismiss');
-    });
+      .subscribe(() => {
+        this.snackBar.open('Credentials selected.', 'Dismiss', { duration: 2000 });
+      }, () => {
+        if (this.selectedTdaAccount.consumerKey && this.selectedTdaAccount.refreshKey) {
+          this.setTdaAccount(this.selectedTdaAccount.accountId,
+            this.selectedTdaAccount.consumerKey,
+            this.selectedTdaAccount.refreshKey,
+            true).subscribe(() => { }, () => {
+              this.snackBar.open('Current selected account info is missing. Reenter credentials.', 'Dismiss');
+            });
+        } else {
+          this.snackBar.open('Current selected account info is missing. Reenter credentials.', 'Dismiss');
+        }
+      });
   }
 
-  setTdaAccount(accountId, consumerKey, refreshToken): Observable<any> {
+  setTdaAccount(accountId, consumerKey, refreshToken, saveToBrowser: boolean): Observable<any> {
     const account: TdaAccount = {
       accountId
     };
+
+    if (saveToBrowser) {
+      account.consumerKey = consumerKey;
+      account.refreshKey = refreshToken;
+    }
 
     return this.setCredentials(accountId, consumerKey, refreshToken)
       .map(() => {

@@ -225,7 +225,7 @@ class BacktestController extends BaseController {
   }
 
   getDaytradeIndicators(request, response) {
-    BacktestService.getDaytradeIndicators(request.body.quotes, request.body.period)
+    BacktestService.getCurrentDaytradeIndicators(request.body.symbol, request.body.period)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
@@ -246,15 +246,15 @@ class BacktestController extends BaseController {
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
-  getDaytrade(request, response) {
+  getCurrentDaytrade(request, response) {
     if (_.isEmpty(request.body) ||
-      !request.body.indicators ||
-      !request.body.parameters) {
+      !request.body.symbol) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     }
-    BacktestService.getDaytrade(request.body.price,
+    BacktestService.getCurrentDaytrade(
+      request.body.symbol,
+      request.body.price,
       request.body.paidPrice,
-      request.body.indicators,
       request.body.parameters, response);
 
   }

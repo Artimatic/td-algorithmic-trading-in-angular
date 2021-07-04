@@ -31,6 +31,13 @@
       </div>
       <div *ngIf="error" class="alert alert-danger">{{error}}</div>
     </form>
+    <div class="login-input">
+      <mat-checkbox [(ngModel)]="saveCredentials">
+        <div class="checkbox-label">
+          Save full credentials to browser
+        </div>
+      </mat-checkbox>
+    </div>
     <form name="tdaLogin" *ngIf="selectedLogin==='tda'" (ngSubmit)="saveTdaLogin(tdaForm)" [formGroup]="tdaForm">
       <div>
         <mat-form-field class="login-input">
@@ -55,7 +62,7 @@
           <mat-spinner></mat-spinner>
         </div>
         <span *ngIf="!loading">
-          <button mat-raised-button type="submit" [disabled]="!tdaForm.valid" class="save-btn">Save</button>
+          <button mat-raised-button type="submit" [disabled]="!tdaForm.valid" class="save-btn">Send</button>
         </span>
 
         <h3>Available Accounts</h3>

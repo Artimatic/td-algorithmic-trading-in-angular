@@ -27,7 +27,7 @@ router.post('/ma-crossover', BacktestController.getMaCrossOver);
 router.post('/find-resistance', BacktestController.findResistance);
 router.post('/daytrade-indicators', BacktestController.getDaytradeIndicators);
 router.post('/daytrade-backtest', BacktestController.getDaytradeBacktest);
-router.post('/daytrade-recommendation', BacktestController.getDaytrade);
+router.post('/daytrade-recommendation', BacktestController.getCurrentDaytrade);
 router.post('/daytrade-calibrate', BacktestController.calibrateDaytrade);
 router.post('/score-signals', BacktestController.scoreSignals);
 router.post('/pop', BacktestController.getProbabilityOfProfit);

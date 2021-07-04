@@ -354,12 +354,12 @@ export class BacktestService {
     return this.http.post(`${BASE_URL}api/backtest/daytrade-backtest`, data, {});
   }
 
-  getDaytradeRecommendation(price: number, paidPrice: number, indicators: Indicators,
+  getDaytradeRecommendation(symbol: string, price: number, paidPrice: number,
     parameters: DaytradeParameters): Observable<any> {
       const data = {
+        symbol,
         price,
         paidPrice,
-        indicators,
         parameters
       };
     return this.http.post(`${BASE_URL}api/backtest/daytrade-recommendation`, data, {});

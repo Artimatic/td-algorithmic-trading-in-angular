@@ -5,7 +5,6 @@ import BaseController from '../templates/base.controller';
 
 import QuoteService from './quote.service';
 
-
 class QuoteController extends BaseController {
 
   constructor() {

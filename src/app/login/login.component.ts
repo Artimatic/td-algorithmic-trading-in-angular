@@ -21,6 +21,7 @@ export class LoginComponent implements OnInit {
 
   tdaForm: FormGroup;
   selectedItem;
+  saveCredentials = false;
 
   constructor(public dialog: MatDialog,
     public snackBar: MatSnackBar,
@@ -93,7 +94,8 @@ export class LoginComponent implements OnInit {
   saveTdaLogin() {
     this.authenticationService.setTdaAccount(this.tdaForm.value.accountId,
       this.tdaForm.value.consumerKey,
-      this.tdaForm.value.refreshToken)
+      this.tdaForm.value.refreshToken,
+      this.saveCredentials)
       .subscribe(() => {
         this.tdaForm.reset();
         this.snackBar.open('Credentials saved.', 'Dismiss', {duration: 2000});
