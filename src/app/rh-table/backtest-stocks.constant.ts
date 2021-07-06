@@ -37,7 +37,6 @@ export const stockList = [
   'TRQ',
   'AG',
   'MT',
-  'LUN',
   'COPX',
   'API',
   'DKNG',
@@ -466,6 +465,7 @@ export const stockList = [
 ];
 
 export const testList = [
+  'KBH',
   'AAPL',
   'SHOP',
   'TSLA',

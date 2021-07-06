@@ -1,18 +1,8 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MachineLearningService } from '@shared/index';
 import { AiPicksService } from '@shared/services';
+import { AiPicksData, AiPicksPredictionData } from '@shared/services/ai-picks.service';
 import * as moment from 'moment';
-
-interface AiPicksPredictionData {
-  algorithm: number;
-  prediction: number;
-  accuracy: number;
-}
-
-interface AiPicksData {
-  label: string;
-  value: AiPicksPredictionData[];
-}
 
 @Component({
   selector: 'app-ai-picks',
@@ -50,9 +40,8 @@ export class AiPicksComponent implements OnInit, OnDestroy {
   getPredictions(stock, isBuy) {
     const ThirtyDayPrediction = () => this.activate(stock, 30, 0.01, isBuy, null, () => { });
     const FifteenDayPrediction = () => this.activate(stock, 15, 0.01, isBuy, null, ThirtyDayPrediction);
-    const FiveDayPrediction = () => this.activate(stock, 5, 0.01, isBuy, null, FifteenDayPrediction);
 
-    FiveDayPrediction();
+    FifteenDayPrediction();
   }
 
   activate(symbol: string, range, limit, isBuy: boolean, accuracy: number = null, cb: () => void) {
@@ -136,13 +125,16 @@ export class AiPicksComponent implements OnInit, OnDestroy {
   }
 
   addBuyPick(symbol: string, predictionData: AiPicksPredictionData) {
+    const item = this.createListObject(symbol, predictionData);
+
+    this.aiPicksService.mlBuyResults.next(item);
+
     const isBuyPick = (element: AiPicksData) => element.label === symbol;
 
     const index = this.buys.findIndex(isBuyPick);
     if (index >= 0) {
       this.buys[index].value.push(predictionData);
     } else {
-      const item = this.createListObject(symbol, predictionData);
       this.buys.push(item);
     }
   }

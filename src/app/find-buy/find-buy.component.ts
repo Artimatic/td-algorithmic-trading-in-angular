@@ -4,13 +4,15 @@ import * as moment from 'moment';
 import { BacktestResponse } from '../rh-table';
 import Stocks from '../rh-table/backtest-stocks.constant';
 import { Subscription, Subject, Observable } from 'rxjs';
-import { take } from 'rxjs/operators';
+import { take, takeWhile } from 'rxjs/operators';
 import { DailyBacktestService } from '@shared/daily-backtest.service';
 import { PortfolioService } from '@shared/services/portfolio.service';
 import { CartService } from '@shared/services/cart.service';
 import { SmartOrder } from '@shared/models/smart-order';
 import * as _ from 'lodash';
 import { MatSnackBar } from '@angular/material';
+import { AiPicksService } from '@shared/services';
+import { GlobalSettingsService } from '../settings/global-settings.service';
 
 export interface PotentialBuy {
   name: string;
@@ -33,12 +35,16 @@ export class FindBuyComponent implements OnInit, OnDestroy {
   private bufferSubject: Subject<void>;
   public potentialBuys: PotentialBuy[];
   public buyList: PotentialBuy[];
+  loading = false;
+  buyOrdersCount: number;
   prefillOrderForm;
 
   constructor(private backtestService: BacktestService,
     private dailyBacktestService: DailyBacktestService,
     private portfolioService: PortfolioService,
+    private aiPicksService: AiPicksService,
     private cartService: CartService,
+    private globalSettingsService: GlobalSettingsService,
     private snackBar: MatSnackBar) { }
 
   ngOnInit() {
@@ -47,11 +53,16 @@ export class FindBuyComponent implements OnInit, OnDestroy {
     this.callChainSub = new Subscription();
     this.potentialBuys = [];
     this.buyList = [];
+    this.buyOrdersCount = 0;
+    setTimeout(() => {
+      this.autoRun();
+    }, 5000)
   }
 
   getBacktestRequest() {
+    this.loading = true;
     return (param) => {
-      const currentDate = moment().format('YYYY-MM-DD');
+      const currentDate = this.globalSettingsService.getLastTradeDate().format('YYYY-MM-DD');
       const startDate = moment().subtract(365, 'days').format('YYYY-MM-DD');
 
       return this.backtestService.getBacktestEvaluation(param.ticker, startDate, currentDate, 'daily-indicators')
@@ -95,6 +106,7 @@ export class FindBuyComponent implements OnInit, OnDestroy {
                 this.getIndicatorScore(potential.name, testResults.signals);
               }
             }
+            this.loading = false;
           });
     };
   }
@@ -105,6 +117,10 @@ export class FindBuyComponent implements OnInit, OnDestroy {
     }
 
     this.executeBacktests();
+  }
+
+  autoRun() {
+    this.queueBacktests();
   }
 
   findStock() {
@@ -118,8 +134,10 @@ export class FindBuyComponent implements OnInit, OnDestroy {
         .pipe(take(1))
         .subscribe(() => {
           this.backtestBuffer.shift();
-          if (this.buyList.length < 10) {
-            this.triggerNextBacktest();
+          if (this.buyOrdersCount < 1) {
+            setTimeout(() => {
+              this.triggerNextBacktest();
+            }, 1000);
           }
         }, error => {
           console.log(`Error on ${backtest.stock}`, error);
@@ -132,41 +150,66 @@ export class FindBuyComponent implements OnInit, OnDestroy {
   }
 
   getIndicatorScore(stock, signals) {
-    this.dailyBacktestService.getSignalScores(signals).subscribe((score) => {
-      const foundIdx = this.potentialBuys.findIndex((value) => {
-        return value.name === stock;
+    this.dailyBacktestService.getSignalScores(signals)
+      .pipe(take(1))
+      .subscribe((score) => {
+        const foundIdx = this.potentialBuys.findIndex((value) => {
+          return value.name === stock;
+        });
+
+        const potentialBuy = this.potentialBuys[foundIdx];
+        if (potentialBuy.buySignals) {
+          const indicators = potentialBuy.buySignals;
+
+          for (const i in indicators) {
+            if (indicators.hasOwnProperty(i)) {
+              potentialBuy.buyConfidence += score[indicators[i]].bullishMidTermProfitLoss;
+            }
+          }
+
+          if (potentialBuy.buyConfidence > 0.23) {
+            this.buyList.push(potentialBuy);
+
+            this.aiPicksService.tickerBuyRecommendationQueue.next(potentialBuy.name);
+
+            this.aiPicksService.mlBuyResults
+              .pipe(takeWhile(val => {
+                return val.label !== potentialBuy.name
+              }))
+              .subscribe(val => {
+                if (val.label === potentialBuy.name && val.value[0].prediction > 0.5) {
+                  this.portfolioBuy(potentialBuy);
+                }
+              });
+          }
+        }
+
+        if (potentialBuy.sellSignals) {
+          const indicators = potentialBuy.sellSignals;
+
+          for (const i in indicators) {
+            if (indicators.hasOwnProperty(i)) {
+              potentialBuy.sellConfidence += score[indicators[i]].bullishMidTermProfitLoss;
+            }
+          }
+
+          if (potentialBuy.sellConfidence < -0.3) {
+            this.buyList.push(potentialBuy);
+            this.aiPicksService.tickerBuyRecommendationQueue.next(potentialBuy.name);
+
+
+            this.aiPicksService.mlBuyResults
+              .pipe(takeWhile(val => {
+                return val.label !== potentialBuy.name
+              }))
+              .subscribe(val => {
+                if (val.label === potentialBuy.name && val.value[0].prediction > 0.5) {
+                  this.portfolioBuy(potentialBuy);
+                }
+              });
+          }
+        }
       });
-
-      if (this.potentialBuys[foundIdx].buySignals) {
-        const indicators = this.potentialBuys[foundIdx].buySignals;
-
-        for (const i in indicators) {
-          if (indicators.hasOwnProperty(i)) {
-            this.potentialBuys[foundIdx].buyConfidence += score[indicators[i]].bullishMidTermProfitLoss;
-          }
-        }
-
-        if (this.potentialBuys[foundIdx].buyConfidence > 0.25) {
-          this.buyList.push(this.potentialBuys[foundIdx]);
-          this.portfolioBuy(this.potentialBuys[foundIdx]);
-        }
-      }
-
-      if (this.potentialBuys[foundIdx].sellSignals) {
-        const indicators = this.potentialBuys[foundIdx].sellSignals;
-
-        for (const i in indicators) {
-          if (indicators.hasOwnProperty(i)) {
-            this.potentialBuys[foundIdx].sellConfidence += score[indicators[i]].bullishMidTermProfitLoss;
-          }
-        }
-
-        if (this.potentialBuys[foundIdx].sellConfidence < -0.3) {
-          this.buyList.push(this.potentialBuys[foundIdx]);
-          this.portfolioBuy(this.potentialBuys[foundIdx]);
-        }
-      }
-    });
   }
 
   triggerNextBacktest() {
@@ -176,9 +219,10 @@ export class FindBuyComponent implements OnInit, OnDestroy {
   }
 
   portfolioBuy(holding: PotentialBuy) {
+    this.buyOrdersCount++;
     this.portfolioService.getPrice(holding.name).subscribe((price) => {
       this.portfolioService.getTdBalance().subscribe((data) => {
-        const quantity = this.getQuantity(price, 0.1, data.cashAvailableForTrading);
+        const quantity = this.getQuantity(price, 1, data.cashAvailableForTrading);
 
         const order = this.buildOrder(holding.name, quantity, price);
         this.cartService.addToCart(order);
