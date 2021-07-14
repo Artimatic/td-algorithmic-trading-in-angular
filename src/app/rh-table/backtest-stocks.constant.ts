@@ -14,6 +14,8 @@ function createParam(ticker: string): AlgoParam {
 
 export const stockList = [
   'QQQJ',
+  'CLOV',
+  'WISH',
   'ASML',
   'AMRN',
   'EXP',
@@ -43,13 +45,10 @@ export const stockList = [
   'NNDM',
   'AVAV',
   'SPCE',
-  'KMTUY',
-  'EXPC',
   'KTOS',
   'PCAR',
   'ONVO',
   'MTLS',
-  'PSTG',
   'U',
   'REGN',
   'CDNA',
@@ -80,7 +79,6 @@ export const stockList = [
   'TAN',
   'ICLN',
   'PLUG',
-  'NGA',
   'SKLZ',
   'BNGO',
   'AA',
@@ -481,7 +479,7 @@ export const testList = [
 
 const Stocks: AlgoParam[] = [];
 
-for (const s of stockList) {
+for (const s of testList) {
   Stocks.push(createParam(s));
 }
 

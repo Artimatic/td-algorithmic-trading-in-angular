@@ -56,7 +56,7 @@ export class FindBuyComponent implements OnInit, OnDestroy {
     this.buyOrdersCount = 0;
     setTimeout(() => {
       this.autoRun();
-    }, 5000)
+    }, 5000);
   }
 
   getBacktestRequest() {
@@ -174,7 +174,7 @@ export class FindBuyComponent implements OnInit, OnDestroy {
 
             this.aiPicksService.mlBuyResults
               .pipe(takeWhile(val => {
-                return val.label !== potentialBuy.name
+                return val.label !== potentialBuy.name;
               }))
               .subscribe(val => {
                 if (val.label === potentialBuy.name && val.value[0].prediction > 0.5) {
@@ -200,7 +200,7 @@ export class FindBuyComponent implements OnInit, OnDestroy {
 
             this.aiPicksService.mlBuyResults
               .pipe(takeWhile(val => {
-                return val.label !== potentialBuy.name
+                return val.label !== potentialBuy.name;
               }))
               .subscribe(val => {
                 if (val.label === potentialBuy.name && val.value[0].prediction > 0.5) {

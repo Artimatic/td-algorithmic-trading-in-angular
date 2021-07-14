@@ -20,7 +20,6 @@ import {
 } from '../shared';
 import { SmartOrder } from '../shared/models/smart-order';
 import { Subscription } from 'rxjs/Subscription';
-import { IndicatorsService } from '../shared/services/indicators.service';
 import { CartService } from '../shared/services/cart.service';
 import { Indicators } from '../shared/models/indicators';
 import { CardOptions } from '../shared/models/card-options';
