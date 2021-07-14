@@ -21,9 +21,17 @@
         </mat-form-field>
         <p-selectButton [options]="buySellOptions" [formControl]="buySellOption"></p-selectButton>
         <div>
+          <button mat-button (click)="addToList()">Add Stock</button>
           <button mat-button matStepperNext (click)="setDates()">Next</button>
         </div>
       </form>
+      <p-listbox [options]="stockList" [listStyle]="{'max-height':'250px'}">
+        <ng-template let-stock pTemplate="item">
+          <div class="ui-helper-clearfix">
+            <h5>{{stock.label}} <i class="pi pi-times" (click)="removeFromList(stock.label)"></i></h5>
+          </div>
+        </ng-template>
+      </p-listbox>
     </mat-step>
     <mat-step>
       <ng-template matStepLabel>Place Order</ng-template>

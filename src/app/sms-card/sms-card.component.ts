@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 
 import { SelectItem } from 'primeng/components/common/selectitem';
@@ -10,13 +10,15 @@ import { ClientSmsService } from '@shared/services/client-sms.service';
 import { GlobalSettingsService } from '../settings/global-settings.service';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import * as moment from 'moment-timezone';
+import { Subscription } from 'rxjs';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-sms-card',
   templateUrl: './sms-card.component.html',
   styleUrls: ['./sms-card.component.css']
 })
-export class SmsCardComponent implements OnInit {
+export class SmsCardComponent implements OnInit, OnDestroy {
   @ViewChild('stepper', { static: false }) stepper;
 
   alive: boolean;
@@ -29,6 +31,9 @@ export class SmsCardComponent implements OnInit {
   buySellOptions: SelectItem[];
   buySellOption;
 
+  stockList = [];
+  subscriptions: Subscription[] = [];
+
   interval = 60000;
   defaultInterval = 70800;
   tiles;
@@ -40,8 +45,6 @@ export class SmsCardComponent implements OnInit {
 
   constructor(private backtestService: BacktestService,
     private portfolioService: PortfolioService,
-    private daytradeService: DaytradeService,
-    private indicatorsService: IndicatorsService,
     private clientSmsService: ClientSmsService,
     private globalSettingsService: GlobalSettingsService,
     public dialog: MatDialog) { }
@@ -83,65 +86,47 @@ export class SmsCardComponent implements OnInit {
       .takeWhile(() => this.alive)
       .subscribe(async () => {
         this.interval = 900000;
-        if (moment().isAfter(moment(this.startTime)) &&
-          moment().isBefore(moment(this.stopTime))) {
+        if (this.testing.value || (moment().isAfter(moment(this.startTime)) &&
+          moment().isBefore(moment(this.stopTime)))) {
           this.interval = this.defaultInterval;
-          const data = await this.backtestService.getTdIntraday(this.stockFormControl.value)
-            .toPromise()
-            .then((intraday) => {
-              return this.portfolioService.getPrice(this.stockFormControl.value)
-                .toPromise()
-                .then((quote) => {
-                  return this.daytradeService.addQuote(intraday, quote);
-                });
+          this.stockList.forEach((listItem) => {
+            const stockTicker = listItem.label;
+            this.portfolioService.getPrice(stockTicker)
+            .pipe(take(1))
+            .subscribe((lastQuote) => {
+              this.runStrategy(stockTicker, 1 * lastQuote);
             });
-
-          const timestamps = _.get(data, 'chart.result[0].timestamp');
-          const dataLength = timestamps.length;
-          const quotes = _.get(data, 'chart.result[0].indicators.quote[0]');
-
-          if (dataLength > 80) {
-            const lastIndex = dataLength - 1;
-            const firstIndex = dataLength - 80;
-            this.runStrategy(quotes, timestamps, firstIndex, lastIndex);
-          }
+          });
         }
 
-        if (moment().isAfter(moment(this.stopTime)) &&
-          moment().isBefore(moment(this.stopTime).add(2, 'minutes'))) {
+        if (!this.testing.value && (moment().isAfter(moment(this.stopTime)) &&
+          moment().isBefore(moment(this.stopTime).add(2, 'minutes')))) {
           this.stop();
         }
       });
   }
 
-  async runStrategy(quotes, timestamps, firstIdx, lastIdx) {
-    const { firstIndex, lastIndex } = this.daytradeService.findMostCurrentQuoteIndex(quotes.close, firstIdx, lastIdx);
-    const close = quotes.close.slice(firstIndex, lastIndex + 1);
-    const high = quotes.high.slice(firstIndex, lastIndex + 1);
-    const low = quotes.low.slice(firstIndex, lastIndex + 1);
-    const volume = quotes.volume.slice(firstIndex, lastIndex + 1);
-    const indicatorQuotes = { close, high, low, volume };
+  async runStrategy(ticker: string, lastPrice: number) {
+    const getRecommendationSub = this.backtestService.getDaytradeRecommendation(ticker, lastPrice, lastPrice, { minQuotes: 81 }).subscribe(
+      analysis => {
+        this.processAnalysis(ticker, analysis, lastPrice, moment().valueOf());
+        return null;
+      },
+      error => {
+        this.error = 'Issue getting analysis.';
+      }
+    );
 
-    await this.indicatorsService.getIndicators(indicatorQuotes, 80, 2, 14, 70)
-      .then(indicators => {
-        this.backtestService.getDaytradeRecommendation(null, null, indicators, { minQuotes: 81 }).subscribe(
-          analysis => {
-            this.processAnalysis(analysis, quotes.close[lastIndex], timestamps[lastIndex]);
-          },
-          error => {
-            this.error = 'Issue getting analysis.';
-          }
-        );
-      });
+    this.subscriptions.push(getRecommendationSub);
   }
 
-  async processAnalysis(analysis, price, time) {
+  async processAnalysis(ticker: string, analysis, price, time) {
     if (analysis.recommendation.toLowerCase() === 'buy' && (this.buySellOption.value === 'buy_sell' || this.buySellOption.value === 'buy_only')) {
-      this.clientSmsService.sendBuySms(this.stockFormControl.value, this.phoneNumber.value, price, 1).subscribe(() => {
+      this.clientSmsService.sendBuySms(ticker, this.phoneNumber.value, price, 1).subscribe(() => {
         this.messagesSent++;
       });
     } else if (analysis.recommendation.toLowerCase() === 'sell' && (this.buySellOption.value === 'buy_sell' || this.buySellOption.value === 'sell_only')) {
-      this.clientSmsService.sendSellSms(this.stockFormControl.value, this.phoneNumber.value, price, 1).subscribe(() => {
+      this.clientSmsService.sendSellSms(ticker, this.phoneNumber.value, price, 1).subscribe(() => {
         this.messagesSent++;
       });
     }
@@ -192,5 +177,23 @@ export class SmsCardComponent implements OnInit {
   setDates() {
     this.startTime = this.globalSettingsService.startTime;
     this.stopTime = this.globalSettingsService.stopTime;
+  }
+
+  addToList() {
+    const ticker = this.stockFormControl.value.toUpperCase();
+    this.stockList.push({ label: ticker });
+  }
+
+  removeFromList(name) {
+    const idx = this.stockList.findIndex(element => element.label === name);
+    this.stockList.splice(idx, 1);
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(sub => {
+      if (sub) {
+        sub.unsubscribe();
+      }
+    });
   }
 }

@@ -188,7 +188,8 @@ class BacktestService {
   addOnDaytradeIndicators(indicators: Indicators[]) {
     let isMfiLowIdx = -1;
     let isMfiHighIdx = -1;
-
+    let macdBuyIdx = -1;
+    let macdSellIdx = -1;
     _.forEach(indicators, (indicator, idx) => {
       if (idx > 80) {
         const mfi = AlgoService.checkMfi(indicator.mfiLeft);
@@ -197,10 +198,16 @@ class BacktestService {
           isMfiLowIdx = idx;
         } else if (mfi === DaytradeRecommendation.Bearish) {
           isMfiHighIdx = idx;
-        } else if (isMfiLowIdx > -1 && (idx - isMfiLowIdx) < 5 && macd === DaytradeRecommendation.Bullish) {
+        } else if (isMfiLowIdx > -1 && (idx - isMfiLowIdx) < 5 &&
+          (macd === DaytradeRecommendation.Bullish || (idx - macdBuyIdx) < 3)) {
           indicators[idx].mfiTrend = true;
-        } else if (isMfiHighIdx > -1 && (idx - isMfiHighIdx) < 5 && macd === DaytradeRecommendation.Bearish) {
+        } else if (isMfiHighIdx > -1 && (idx - isMfiHighIdx) < 5 &&
+          (macd === DaytradeRecommendation.Bearish || (idx - macdSellIdx) < 3)) {
           indicators[idx].mfiTrend = false;
+        } else if (macd === DaytradeRecommendation.Bullish) {
+          macdBuyIdx = idx;
+        } else if (macd === DaytradeRecommendation.Bearish) {
+          macdSellIdx = idx;
         }
       }
     });
