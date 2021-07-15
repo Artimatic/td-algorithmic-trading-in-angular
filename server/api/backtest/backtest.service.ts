@@ -168,7 +168,6 @@ class BacktestService {
 
     return PortfolioService.getIntradayV2(symbol, 1)
       .then((intradayObj) => {
-        console.log('found quotes: ', intradayObj.candles.length);
         const quotes = intradayObj.candles;
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);
@@ -1169,7 +1168,6 @@ class BacktestService {
       .then((mfiPrevious) => {
         const len = mfiPrevious[0].length - 1;
         currentQuote.mfiPrevious = _.round(mfiPrevious[0][len], 3);
-        console.log('current indicator: ', currentQuote);
         return currentQuote;
       })
       .catch(error => {
