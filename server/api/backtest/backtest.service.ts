@@ -496,13 +496,13 @@ class BacktestService {
             if (indicator.recommendation.mfiLow === DaytradeRecommendation.Bullish ||
               indicator.recommendation.mfi === DaytradeRecommendation.Bullish) {
               isMfiLowIdx = idx;
-            } else if (isMfiLowIdx > -1 && (idx - isMfiLowIdx) < 5 &&
+            } else if (isMfiLowIdx > -1 && (idx - isMfiLowIdx) < 8 &&
               (indicator.recommendation.demark9 === DaytradeRecommendation.Bullish || indicator.recommendation.macd === DaytradeRecommendation.Bullish)) {
               indicator.recommendation.mfiTrade = DaytradeRecommendation.Bullish;
               indicator.recommendation.recommendation = OrderType.Buy;
             } else if (indicator.recommendation.mfi === DaytradeRecommendation.Bearish) {
               isMfiHighIdx = idx;
-            } else if (isMfiHighIdx > -1 && (idx - isMfiHighIdx) < 5 &&
+            } else if (isMfiHighIdx > -1 && (idx - isMfiHighIdx) < 8 &&
               (indicator.recommendation.demark9 === DaytradeRecommendation.Bearish || indicator.recommendation.macd === DaytradeRecommendation.Bearish)) {
               indicator.recommendation.mfiTrade = DaytradeRecommendation.Bearish;
               indicator.recommendation.recommendation = OrderType.Sell;

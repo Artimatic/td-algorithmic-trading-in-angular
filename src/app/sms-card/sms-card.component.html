@@ -22,7 +22,7 @@
         <p-selectButton [options]="buySellOptions" [formControl]="buySellOption"></p-selectButton>
         <div>
           <button mat-button (click)="addToList()">Add Stock</button>
-          <button mat-button matStepperNext (click)="setDates()">Next</button>
+          <button mat-button matStepperNext [disabled]="stockFormControl.hasError('stock') || stockFormControl.hasError('required') || stockList.length === 0" (click)="setDates()">Next</button>
         </div>
       </form>
       <p-listbox [options]="stockList" [listStyle]="{'max-height':'250px'}">

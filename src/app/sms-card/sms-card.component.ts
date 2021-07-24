@@ -21,7 +21,7 @@ import { take } from 'rxjs/operators';
 export class SmsCardComponent implements OnInit, OnDestroy {
   @ViewChild('stepper', { static: false }) stepper;
 
-  alive: boolean;
+  alive: boolean = false;
 
   firstFormGroup: FormGroup;
   stockFormControl: FormControl;
@@ -50,8 +50,6 @@ export class SmsCardComponent implements OnInit, OnDestroy {
     public dialog: MatDialog) { }
 
   ngOnInit() {
-    this.alive = true;
-
     this.buySellOption = new FormControl();
     this.buySellOption.setValue('none');
 
