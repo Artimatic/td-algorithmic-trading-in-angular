@@ -656,7 +656,6 @@ class BacktestService {
                 console.log('Found duplicate ', quotes[idx].date, quotes[idx - 1].date);
                 quotes.splice(idx - 1, 1);
                 const fixedQuotes = quotes.reduce((accumulator, currentValue) => accumulator + ',' + currentValue);
-                console.log('Fixed ', fixedQuotes);
               }
               const q = quotes.slice(idx - minQuotes, idx + 1);
               getIndicatorQuotes.push(this.initStrategy(q));
