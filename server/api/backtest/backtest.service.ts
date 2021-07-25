@@ -655,7 +655,6 @@ class BacktestService {
               if (moment(quotes[idx].date).format('YYYY MM DD') === moment(quotes[idx - 1].date).format('YYYY MM DD')) {
                 console.log('Found duplicate ', quotes[idx].date, quotes[idx - 1].date);
                 quotes.splice(idx - 1, 1);
-                const fixedQuotes = quotes.reduce((accumulator, currentValue) => accumulator + ',' + currentValue);
               }
               const q = quotes.slice(idx - minQuotes, idx + 1);
               getIndicatorQuotes.push(this.initStrategy(q));
