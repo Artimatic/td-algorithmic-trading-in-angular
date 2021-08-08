@@ -68,6 +68,7 @@ export class PortfolioInfoComponent implements OnInit {
   getTechnicalIndicators(stock: string, startDate: string, currentDate: string) {
     return this.backtestService.getBacktestEvaluation(stock, startDate, currentDate, 'daily-indicators')
       .map((indicatorResults: BacktestResponse) => {
+        this.checkForStopLoss();
         this.getIndicatorScore(stock, indicatorResults.signals);
         return indicatorResults.signals[indicatorResults.signals.length - 1];
       });
@@ -162,7 +163,8 @@ export class PortfolioInfoComponent implements OnInit {
 
   checkForStopLoss() {
     this.holdings.forEach(val => {
-      if (_.divide(val.pl, val.netLiq) < -0.07) {
+      const percentLoss = _.divide(val.pl, val.netLiq);
+      if (percentLoss < -0.07) {
         this.portfolioSell(val);
       }
     });
