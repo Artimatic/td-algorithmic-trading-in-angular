@@ -1153,7 +1153,7 @@ class BacktestService {
           indicators.lows,
           indicators.reals,
           indicators.volumes,
-          14);
+          75);
       })
       .then(mfiLow => {
         currentQuote.mfiLow = mfiLow;

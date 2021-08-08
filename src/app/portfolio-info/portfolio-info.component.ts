@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { PortfolioService, BacktestService, PortfolioInfoHolding } from '@shared/services';
+import { PortfolioService, BacktestService, PortfolioInfoHolding, AiPicksService } from '@shared/services';
 import { BacktestResponse } from '../rh-table';
 import { DailyBacktestService } from '@shared/daily-backtest.service';
 import * as moment from 'moment';
@@ -34,7 +34,8 @@ export class PortfolioInfoComponent implements OnInit {
   constructor(private portfolioService: PortfolioService,
     private backtestService: BacktestService,
     private dailyBacktestService: DailyBacktestService,
-    private cartService: CartService) { }
+    private cartService: CartService,
+    private aiPicksService: AiPicksService) { }
 
   ngOnInit() {
     this.init();
@@ -204,6 +205,7 @@ export class PortfolioInfoComponent implements OnInit {
         if (data) {
           data.forEach((holding) => {
             const stock = holding.instrument.symbol;
+            this.runAi(stock);
             let pl;
             if (holding.instrument.assetType.toLowerCase() === 'option') {
               pl = holding.marketValue - (holding.averagePrice * holding.longQuantity) * 100;
@@ -239,6 +241,11 @@ export class PortfolioInfoComponent implements OnInit {
         }
       });
     });
+  }
+
+  runAi(stockName: string) {
+    this.aiPicksService.tickerSellRecommendationQueue.next(stockName);
+    this.aiPicksService.tickerBuyRecommendationQueue.next(stockName);
   }
 
   refresh() {

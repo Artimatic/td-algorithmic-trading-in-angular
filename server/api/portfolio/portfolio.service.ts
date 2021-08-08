@@ -249,8 +249,6 @@ class PortfolioService {
   }
 
   renewTDAuth(accountId) {
-    console.log('renewTDAuth ');
-
     if (accountId === null) {
       for (const id in this.access_token) {
         if (id) {
@@ -289,7 +287,7 @@ class PortfolioService {
 
   getTDIntraday(symbol, accountId) {
     if (!accountId) {
-      accountId = configurations.tdameritrade.accountId;
+      accountId = this.getAccountId();
     }
 
     const query = `${tdaUrl}marketdata/${symbol}/pricehistory`;
@@ -321,8 +319,23 @@ class PortfolioService {
       .then(() => this.getTDIntradayV2(symbol, period, frequencyType, frequency));
   }
 
+  getAccountId() {
+    let accountId = configurations.tdameritrade.accountId;
+    if (accountId) {
+      return accountId;
+    } else {
+      for (const id in this.access_token) {
+        if (id) {
+          accountId = id;
+        }
+      }
+    }
+
+    return accountId;
+  }
+
   getTDIntradayV2(symbol, period, frequencyType, frequency) {
-    const accountId = configurations.tdameritrade.accountId;
+    const accountId = this.getAccountId();
 
     const query = `${tdaUrl}marketdata/${symbol}/pricehistory`;
     const options = {
@@ -353,7 +366,7 @@ class PortfolioService {
   }
 
   getTDIntradayV3(symbol, startDate, endDate) {
-    const accountId = configurations.tdameritrade.accountId;
+    const accountId = this.getAccountId();
 
     const query = `${tdaUrl}marketdata/${symbol}/pricehistory`;
     const options = {
@@ -402,9 +415,10 @@ class PortfolioService {
     const accountIds = Object.getOwnPropertyNames(this.refreshToken);
     if (accountIds.length > 0) {
       accountId = accountIds[0];
-    } else if (configurations.tdameritrade.accountId) {
-      accountId = configurations.tdameritrade.accountId;
     } else {
+      accountId = this.getAccountId();
+    }
+    if (!accountId) {
       console.log('Missing accountId');
     }
     return this.getDailyQuotes(symbol, startDate, endDate, accountId);
@@ -459,7 +473,7 @@ class PortfolioService {
     let key;
     if (!accountId ||
       !this.refreshToken[accountId] || !this.tdaKey[accountId]) {
-      accountId = configurations.tdameritrade.accountId;
+      accountId = this.getAccountId();
       key = configurations.tdameritrade.consumer_key;
       refreshToken = configurations.tdameritrade.refresh_token;
     } else {
@@ -489,7 +503,7 @@ class PortfolioService {
   renewExpiredTDAccessTokenAndGetQuote(symbol, accountId) {
     return this.getTDAccessToken(accountId)
       .then((token) => {
-        return this.getTDMarketData(symbol, accountId || configurations.tdameritrade.accountId)
+        return this.getTDMarketData(symbol, accountId || this.getAccountId())
           .then(this.processTDData);
       });
   }
@@ -671,7 +685,7 @@ class PortfolioService {
 
   getOptionsStraddle(accountId, symbol, strikeCount, optionType = 'S') {
     if (!accountId) {
-      accountId = configurations.tdameritrade.accountId;
+      accountId = this.getAccountId();
     }
 
     return this.renewTDAuth(accountId)

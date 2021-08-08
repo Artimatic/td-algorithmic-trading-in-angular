@@ -26,7 +26,6 @@ class VariableDailyPredicationService extends PredictionService {
   }
 
   buildInputSet(openingPrice, currentSignal, featureUse) {
-    console.log('build variable prediction');
     if (!featureUse) {
       featureUse = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
     }

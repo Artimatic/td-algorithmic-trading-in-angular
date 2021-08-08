@@ -2,6 +2,9 @@
   <div class="p-col">
     <p-card header="Buys Predictions">
       <p-listbox [options]="buys" [listStyle]="{'max-height':'250px'}">
+        <p-header>
+          <img src="../../assets/bull.png" style="display:inline-block;margin:5px 0 0 5px" width="48">
+        </p-header>
         <ng-template let-buy pTemplate="item">
           <div class="ui-helper-clearfix">
             <div class="ui-g">
@@ -21,6 +24,9 @@
   <div class="p-col">
     <p-card header="Sells Predictions">
       <p-listbox [options]="sells" [listStyle]="{'max-height':'250px'}">
+        <p-header>
+          <img src="../../assets/bear.png" style="display:inline-block;margin:5px 0 0 5px" width="48">
+        </p-header>
         <ng-template let-sell pTemplate="item">
           <div class="ui-helper-clearfix">
             <div class="ui-g">
