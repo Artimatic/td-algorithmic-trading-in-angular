@@ -5,7 +5,7 @@
   "main": "server/app.js",
   "scripts": {
     "ng": "ng",
-    "start": "npm run serve",
+    "start": "npm run build && npm run serve",
     "build": "ng build --aot && npm run build-ts && npm run tslint",
     "serve": "node dist/app.js",
     "test-server": "npm run build-ts && node server-tests.js",

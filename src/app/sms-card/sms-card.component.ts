@@ -3,7 +3,7 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 
 import { SelectItem } from 'primeng/components/common/selectitem';
 import * as _ from 'lodash';
-import { BacktestService, IndicatorsService, PortfolioService, DaytradeService } from '@shared/services';
+import { BacktestService, PortfolioService } from '@shared/services';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { MatDialog } from '@angular/material';
 import { ClientSmsService } from '@shared/services/client-sms.service';
@@ -21,7 +21,7 @@ import { take } from 'rxjs/operators';
 export class SmsCardComponent implements OnInit, OnDestroy {
   @ViewChild('stepper', { static: false }) stepper;
 
-  alive: boolean = false;
+  alive = false;
 
   firstFormGroup: FormGroup;
   stockFormControl: FormControl;
