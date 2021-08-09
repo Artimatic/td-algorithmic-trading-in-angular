@@ -9,7 +9,7 @@ class MfiService {
     period: number) {
     let mfiLow = 30;
     if (period > volumes.length) {
-      period = volumes.length -1;
+      period = volumes.length - 1;
     }
     for (let i = 1; i < volumes.length - period; i++) {
       const highSubarray = highs.slice(i - 1, i + period);

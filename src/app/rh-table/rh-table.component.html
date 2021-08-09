@@ -5,15 +5,16 @@
     <div class="ui-g">
       <div class="ui-g-4">
         <div class="table-commands">
-          <button mat-button color="primary" (click)="buy(selectedStock)" [disabled]="!selectedStock">BUY</button>
-          <button mat-button color="warn" (click)="sell(selectedStock)" [disabled]="!selectedStock">SELL</button>
+          <button mat-button color="primary" (click)="buy(selectedStock)" [disabled]="!selectedStock">Buy</button>
+          <button mat-button color="warn" (click)="sell(selectedStock)" [disabled]="!selectedStock">Sell</button>
           <button mat-button (click)="openChartDialog(selectedStock, endDate)" [disabled]="!selectedStock">
+            <mat-icon>assessment</mat-icon>
             Chart
           </button>
           <button mat-button (click)="runAi(selectedStock)" [disabled]="!selectedStock">
-            Run Machine Learning
+            Machine Learning
           </button>
-          <button mat-button color="primary" (click)="runDefaultBacktest()">Run Default
+          <button mat-button color="primary" (click)="runDefaultBacktest()">Default
             Backtest
           </button>
         </div>
