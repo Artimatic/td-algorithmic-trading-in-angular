@@ -81,14 +81,10 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     {
       name: 'Mean Reversion',
       algorithm: [
-        { value: 'v2', viewValue: 'Daily - Bollinger Band' },
-        { value: 'mfi', viewValue: 'Daily - Money Flow Index' },
-        { value: 'v1', viewValue: 'Daily - Moving Average Crossover' },
         { value: 'daily-indicators', viewValue: 'Daily - All Indicators' },
-        { value: 'daily-roc', viewValue: 'Daily - Rate of Change/MFI' },
         { value: 'moving_average_resistance', viewValue: 'Daily - Moving Average Resistance' },
         { value: 'v3', viewValue: 'Intraday - MFI' },
-        { value: 'v4', viewValue: 'Intraday - Bollinger Band' },
+        { value: 'v4', viewValue: 'Intraday - Bollinger Band' }
       ]
     }
   ];
@@ -239,49 +235,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     const algorithm = selectedAlgo ? selectedAlgo : this.selectedAlgo;
 
     switch (algorithm) {
-      case 'v1':
-        algoParams.forEach((param) => {
-          if (!param.start) {
-            param.start = startDate;
-          }
-          if (!param.end) {
-            param.end = currentDate;
-          }
-          this.algo.getInfo(param)
-            .subscribe((stockData: Stock) => {
-              stockData.stock = param.ticker;
-              stockData.recommendation = stockData.trending;
-              stockData.returns = stockData.totalReturns;
-              this.addToList(stockData);
-              this.incrementProgress();
-              this.updateAlgoReport(stockData);
-            }, error => {
-              console.log('error: ', error);
-              this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
-              this.incrementProgress();
-            });
-        });
-        break;
-      case 'v2':
-        const bbCb = (param) => {
-          return this.algo.getInfoV2(param.ticker, currentDate, startDate)
-            .map(
-              result => {
-                if (result) {
-                  result.stock = param.ticker;
-                  this.addToList(result);
-                  this.incrementProgress();
-                  this.updateAlgoReport(result);
-                } else {
-                  this.snackBar.open(`No results for ${param.ticker}`, 'Dismiss');
-                  console.log(`No results for ${param.ticker}`);
-                }
-              });
-        };
-
-        this.iterateAlgoParams(algoParams, bbCb);
-
-        break;
       case 'v3':
         algoParams.forEach((param) => {
           this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, 'intraday').subscribe(
@@ -310,48 +263,15 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
             .subscribe(
               result => {
                 this.algo.postIntraday(result).subscribe(
-                  status => {
-                  }, error => {
+                  () => { }, () => {
                     this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
                     this.incrementProgress();
                   });
-              }, error => {
+              }, () => {
                 this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
                 this.incrementProgress();
               });
         });
-        break;
-      case 'mfi':
-        const mfiCb = (param) => {
-          return this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, 'daily-mfi').map(
-            (testResults: any[]) => {
-              if (testResults.length > 0) {
-                const result = testResults[testResults.length - 1];
-                result.stock = param.ticker;
-                this.addToList(result);
-                this.updateAlgoReport(result);
-              }
-              this.incrementProgress();
-            });
-        };
-        this.iterateAlgoParams(algoParams, mfiCb);
-
-        break;
-      case 'daily-roc':
-        const rocCb = (param) => {
-          return this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, 'daily-roc')
-            .map(
-              (testResults: BacktestResponse) => {
-                if (testResults) {
-                  testResults.stock = param.ticker;
-                  this.addToList(testResults);
-                  this.updateAlgoReport(testResults);
-                }
-                this.incrementProgress();
-              });
-        };
-        this.iterateAlgoParams(algoParams, rocCb);
-
         break;
       case 'daily-indicators':
         const indicatorsCb = (param) => {
@@ -361,7 +281,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
               (testResults: BacktestResponse) => {
                 if (testResults) {
                   const symbol = param.ticker;
-                  this.scoreSignals(param.ticker, testResults.signals);
+                  this.scoreSignals(symbol, testResults.signals);
 
                   testResults.stock = symbol;
                   const indicatorResults: BacktestResponse = testResults;
@@ -572,7 +492,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     this.algoReport.averageReturns = +((this.algoReport.totalReturns / this.totalStocks).toFixed(5));
     this.algoReport.averageTrades = +((this.algoReport.totalTrades / this.totalStocks).toFixed(5));
     this.algoReport.profitableTrades += result.profitableTrades;
-    this.algoReport.successRate =  +((this.algoReport.profitableTrades / this.algoReport.totalTrades).toFixed(5));
+    this.algoReport.successRate = +((this.algoReport.profitableTrades / this.algoReport.totalTrades).toFixed(5));
   }
 
   addBullCount() {
