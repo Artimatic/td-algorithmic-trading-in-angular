@@ -35,19 +35,19 @@ export interface BacktestResponse extends Stock {
   stock: string;
   algo: string;
   totalTrades: number;
-  total: number;
+  total?: number;
   invested: number;
   returns: number;
   lastVolume: number;
   lastPrice: number;
   recommendation: string;
-  buys: number[];
-  orderHistory: any[];
-  startDate: string;
-  endDate: string;
-  signals: any[];
-  upperResistance: number;
-  lowerResistance: number;
+  buys?: number[];
+  orderHistory?: any[];
+  startDate?: string;
+  endDate?: string;
+  signals?: any[];
+  upperResistance?: number;
+  lowerResistance?: number;
 }
 
 @Component({
@@ -310,7 +310,16 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                       result.previousImpliedMovement = this.getPreviousImpliedMove(indicatorResults.signals[indicatorResults.signals.length - 2]);
 
                       const tableObj = {
-                        ...indicatorResults,
+                        recommendation: indicatorResults.recommendation,
+                        stock: indicatorResults.stock,
+                        returns: indicatorResults.returns,
+                        total: indicatorResults.total,
+                        invested: indicatorResults.invested,
+                        profitableTrades: indicatorResults.profitableTrades,
+                        totalTrades: indicatorResults.totalTrades,
+                        lastVolume: indicatorResults.lastVolume || null,
+                        totalReturns:indicatorResults.totalReturns || null,
+                        lastPrice: indicatorResults.lastPrice || null,
                         ...result
                       };
                       this.addToList(tableObj);
