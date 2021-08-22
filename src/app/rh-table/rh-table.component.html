@@ -11,7 +11,7 @@
             <mat-icon>assessment</mat-icon>
             Chart
           </button>
-          <button mat-button (click)="runAi(selectedStock)" [disabled]="!selectedStock">
+          <button mat-button (click)="runAi(selectedStock, true)" [disabled]="!selectedStock">
             Machine Learning
           </button>
           <button mat-button color="primary" (click)="runDefaultBacktest()">Default

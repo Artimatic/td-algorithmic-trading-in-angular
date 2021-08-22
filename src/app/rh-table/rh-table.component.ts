@@ -318,7 +318,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                         profitableTrades: indicatorResults.profitableTrades,
                         totalTrades: indicatorResults.totalTrades,
                         lastVolume: indicatorResults.lastVolume || null,
-                        totalReturns:indicatorResults.totalReturns || null,
+                        totalReturns: indicatorResults.totalReturns || null,
                         lastPrice: indicatorResults.lastPrice || null,
                         ...result
                       };
@@ -712,7 +712,11 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
-  runAi(element: Stock) {
+  runAi(element: Stock, runWithoutChecks = false) {
+    if (runWithoutChecks) {
+      this.aiPicksService.tickerBuyRecommendationQueue.next(element.stock);
+      this.aiPicksService.tickerSellRecommendationQueue.next(element.stock);
+    }
     if (element.sellSignals && element.buySignals) {
       if (element.sellSignals.length > element.buySignals.length) {
         this.aiPicksService.tickerSellRecommendationQueue.next(element.stock);
