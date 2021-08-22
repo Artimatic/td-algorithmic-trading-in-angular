@@ -20,6 +20,6 @@ export class RhInputComponent implements OnInit {
   }
 
   submit() {
-    this.onQuery.emit(this.form.value.toUpperCase());
+    this.onQuery.emit(this.form.value);
   }
 }
