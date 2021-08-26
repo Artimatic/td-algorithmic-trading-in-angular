@@ -759,11 +759,11 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
                 const mlReport = this.reportingService.addAuditLog(this.order.holding.symbol, mlLog);
                 console.log(mlReport);
                 if (machineResult.nextOutput > 0.5) {
-                  this.daytradeBuy(quote, orderQuantity, timestamp, analysis); 
+                  this.daytradeBuy(quote, orderQuantity, timestamp, analysis);
                 }
               });
           }, error => {
-            console.log('daytrade ml error: ', error);+
+            console.log('daytrade ml error: ', error);
             this.daytradeBuy(quote, orderQuantity, timestamp, analysis);
           });
 
@@ -782,7 +782,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
                 price,
                 timestamp,
                 analysis);
-  
+
               this.sendBuy(buyOrder);
             } else {
               console.log('Current price is too low. Actual: ', price, ' Expected: ', quote);
