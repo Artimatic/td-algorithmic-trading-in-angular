@@ -14,6 +14,7 @@ function createParam(ticker: string): AlgoParam {
 
 export const stockList = [
   'QQQJ',
+  'RNG',
   'CLOV',
   'ABNB',
   'WISH',
@@ -190,6 +191,7 @@ export const stockList = [
   'GDXJ',
   'KO',
   'KR',
+  'KRNT',
   'KSU',
   'LEN',
   'LOGM',
@@ -285,7 +287,6 @@ export const stockList = [
   'NRG',
   'EXC',
   'VST',
-  'PNW',
   'DUK',
   'NEE',
   'D',
@@ -357,9 +358,9 @@ export const stockList = [
   'FSLR',
   'AVGO',
   'VXX',
-  'UVXY',
   'TOT',
   'SNAP',
+  'SNOW',
   'KHC',
   'CCEP',
   'ROKU',
@@ -460,6 +461,8 @@ export const stockList = [
   'CL',
   'PRU',
   'SIX',
+  'TDOC',
+  'FATE',
   'AUY'
 ];
 

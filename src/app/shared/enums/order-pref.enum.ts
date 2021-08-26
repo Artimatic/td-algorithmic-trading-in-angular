@@ -6,5 +6,5 @@ export enum OrderPref {
     BuyCloseSellOpen = 'Buy at Close, Sell at Open',
     SellAtOpen = 'Sell positions at Open',
     BuyAt3SellBeforeClose = 'Buy at 3pm, Sell before Close',
-    MlBuySellAtClose = 'Activate ML model to determine Buy/Sell at close'
+    MlBuySellAtClose = 'ML model Buy/Sell at close'
 }

@@ -759,31 +759,37 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
                 const mlReport = this.reportingService.addAuditLog(this.order.holding.symbol, mlLog);
                 console.log(mlReport);
                 if (machineResult.nextOutput > 0.5) {
-                  if (orderQuantity > 0) {
-                    setTimeout(() => {
-                      const getPriceSub = this.portfolioService.getPrice(this.order.holding.symbol)
-                        .subscribe((price) => {
-                          if (price > quote) {
-                            const buyOrder = this.buildBuyOrder(orderQuantity,
-                              price,
-                              timestamp,
-                              analysis);
-
-                            this.sendBuy(buyOrder);
-                          } else {
-                            console.log('Current price is too low. Actual: ', price, ' Expected: ', quote);
-                          }
-                        });
-                      this.subscriptions.push(getPriceSub);
-                    }, 120000);
-                  }
+                  this.daytradeBuy(quote, orderQuantity, timestamp, analysis); 
                 }
               });
           }, error => {
+            console.log('daytrade ml error: ', error);+
+            this.daytradeBuy(quote, orderQuantity, timestamp, analysis);
           });
 
         this.subscriptions.push(trainingSub);
       }
+    }
+  }
+
+  private daytradeBuy(quote: number, orderQuantity: number, timestamp: number, analysis) {
+    if (orderQuantity > 0) {
+      setTimeout(() => {
+        const getPriceSub = this.portfolioService.getPrice(this.order.holding.symbol)
+          .subscribe((price) => {
+            if (price >= quote) {
+              const buyOrder = this.buildBuyOrder(orderQuantity,
+                price,
+                timestamp,
+                analysis);
+  
+              this.sendBuy(buyOrder);
+            } else {
+              console.log('Current price is too low. Actual: ', price, ' Expected: ', quote);
+            }
+          });
+        this.subscriptions.push(getPriceSub);
+      }, 500);
     }
   }
 

@@ -65,7 +65,7 @@ export class GlobalSettingsService {
     if (day === 6) {
       return time.subtract({ day: 1 });
     } else if (day === 0) {
-      return time.subtract({ day: 1 });
+      return time.subtract({ day: 2 });
     }
     return time;
   }
