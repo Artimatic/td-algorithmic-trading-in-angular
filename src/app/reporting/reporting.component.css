@@ -1,3 +1,8 @@
-.reporting-button {
+.reporting-button-container {
   margin-left: 25px;
+}
+
+.reporting-button-container .ui-button {
+  background-color: #35573b;
+  border: 1px solid #35573b;
 }

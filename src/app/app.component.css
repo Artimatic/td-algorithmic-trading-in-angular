@@ -19,3 +19,34 @@ mat-chip {
   min-width: 100px;
   padding: 3px 5px 3px 5px;
 }
+
+.status-on {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #7ab27d;
+}
+
+.status-off {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #941920;
+}
+
+.services-status {
+  display: flex; 
+  flex-direction: row;
+  align-content: flex-start;
+}
+
+.status-indicator {
+  margin-left: 8px;
+  margin-top: 1px;
+}
+
+.service-status-container {
+  width: 150px;
+  margin-left: 17px;
+  margin-top: 10px;
+}

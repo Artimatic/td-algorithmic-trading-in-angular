@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { MatDialog, MatSnackBar } from '@angular/material';
 import { LoginDialogComponent } from '../login-dialog/login-dialog.component';
 import { AuthenticationService } from '../shared';
@@ -11,6 +11,7 @@ import { FormGroup, FormControl, Validators } from '@angular/forms';
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent implements OnInit {
+  @Output() credentialSet: EventEmitter<boolean> = new EventEmitter();
   authenticated = false;
   hide = true;
   model: any = {};
@@ -77,13 +78,12 @@ export class LoginComponent implements OnInit {
     this.loading = true;
     this.authenticationService.login(this.model.username, this.model.password)
       .subscribe(result => {
+        this.loading = false;
         if (result === true) {
-          this.loading = false;
-        } else {
-          this.loading = false;
+          this.credentialSet.emit(true);
         }
       },
-      error => {
+      () => {
         this.snackBar.open('Username or password is incorrect', 'Dismiss', {
           duration: 2000,
         });
@@ -92,12 +92,16 @@ export class LoginComponent implements OnInit {
   }
 
   saveTdaLogin() {
+    this.loading = true;
+
     this.authenticationService.setTdaAccount(this.tdaForm.value.accountId,
       this.tdaForm.value.consumerKey,
       this.tdaForm.value.refreshToken,
       this.saveCredentials)
       .subscribe(() => {
+        this.loading = false;
         this.tdaForm.reset();
+        this.credentialSet.emit(true);
         this.snackBar.open('Credentials saved.', 'Dismiss', {duration: 2000});
       },
       error => {
@@ -108,6 +112,7 @@ export class LoginComponent implements OnInit {
 
   selectAccount(account) {
     this.authenticationService.selectTdaAccount(account.accountId);
+    this.credentialSet.emit(true);
   }
 
   removeAccount(account) {

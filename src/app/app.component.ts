@@ -77,4 +77,8 @@ export class AppComponent implements OnInit, AfterViewInit {
         this.mlStatus = false;
       });
   }
+
+  launchLogin() {
+    this.authenticationService.openLoginDialog();
+  }
 }

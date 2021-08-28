@@ -34,7 +34,7 @@
     <div class="login-input">
       <mat-checkbox [(ngModel)]="saveCredentials">
         <div class="checkbox-label">
-          Save full credentials to browser
+          Save credentials to browser
         </div>
       </mat-checkbox>
     </div>
@@ -61,11 +61,11 @@
         <div *ngIf="loading">
           <mat-spinner></mat-spinner>
         </div>
-        <span *ngIf="!loading">
+        <div *ngIf="!loading" class="login-send-btn">
           <button mat-raised-button type="submit" [disabled]="!tdaForm.valid" class="save-btn">Send</button>
-        </span>
+        </div>
 
-        <h3>Available Accounts</h3>
+        <div class="available-accounts-title">Available Accounts</div>
         <div class="available-accounts">
           <p-listbox [options]="authenticationService.tdaAccounts" [(ngModel)]="selectedItem"
             [ngModelOptions]="{standalone: true}" [listStyle]="{'max-height':'250px'}">

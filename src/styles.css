@@ -26,7 +26,7 @@ button.nav-item {
 .app-title {
   color: white;
   font-weight: 800;
-  padding: 0 0 0 35px;
+  margin: 30px 88px 25px 35px;
   font-family: monospace;
 }
 
@@ -37,4 +37,5 @@ button.nav-item {
 
 .online-status-text {
   font-size: 10px;
+  cursor: pointer;
 }
