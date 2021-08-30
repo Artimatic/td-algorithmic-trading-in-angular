@@ -32,9 +32,11 @@
   </mat-accordion>
   <h1 mat-subheader>Shopping List</h1>
   <app-pokerhand></app-pokerhand>
-  <p-splitButton label="Start Orders" (onClick)="confirmStart()" [model]="multibuttonOptions" icon="pi pi-dollar"
-    styleClass="ui-button-success"></p-splitButton>
-  <app-default-order-lists class="default-orders-button"></app-default-order-lists>
+  <div class="action-buttons">
+    <p-splitButton label="Start Orders" (onClick)="confirmStart()" [model]="multibuttonOptions" icon="pi pi-dollar"
+      styleClass="ui-button-success"></p-splitButton>
+    <app-default-order-lists class="default-orders-button"></app-default-order-lists>
+  </div>
 
   <app-orders-list></app-orders-list>
 
