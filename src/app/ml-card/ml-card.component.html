@@ -13,8 +13,6 @@
     <mat-step [stepControl]="firstFormGroup">
       <form [formGroup]="firstFormGroup">
         <ng-template matStepLabel>Edit Order</ng-template>
-        <mat-chip color="primary" selected>{{ bullishPlay.value }}</mat-chip>
-        <mat-chip color="warn" selected>{{ bearishPlay.value }}</mat-chip>
         <h3>Machine Learning</h3>
         <p>Use RNN model to determine whether go bullish or bearish after hours.</p>
         <h4>Current Brokerage: {{globalSettingsService.brokerage}}</h4>
@@ -50,8 +48,7 @@
             </mat-grid-tile>
             <mat-grid-tile [colspan]="2" [rowspan]="1" [hidden]="bullishPlay.value !== 'CUSTOM'">
               <mat-form-field hintLabel="Symbol">
-                <input matInput type="text" placeholder="Symbol"
-                  formControlName="symbol" required>
+                <input matInput type="text" placeholder="Symbol" formControlName="symbol" required>
               </mat-form-field>
             </mat-grid-tile>
             <mat-grid-tile [colspan]="2" [rowspan]="1">
@@ -67,46 +64,62 @@
               </mat-form-field>
             </mat-grid-tile>
             <mat-grid-tile [colspan]="2" [rowspan]="1">
-              <mat-form-field>
-                <mat-label>Settings</mat-label>
-                <mat-select [formControl]="settings">
-                  <mat-option value="closePositions">Close Positions</mat-option>
-                  <mat-option value="openPositions">Open Positions</mat-option>
-                </mat-select>
-              </mat-form-field>
+              <div class="position-close-setting">
+                <mat-form-field>
+                  <mat-label>Settings</mat-label>
+                  <mat-select [formControl]="settings">
+                    <mat-option value="closePositions">Close Positions</mat-option>
+                    <mat-option value="openPositions">Open Positions</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
             </mat-grid-tile>
             <mat-grid-tile [colspan]="2" [rowspan]="1">
               <mat-form-field>
                 <mat-select placeholder="Multiplier" [formControl]="multiplierPreference" name="multiplier">
                   <mat-option *ngFor="let mulitiplier of multiplierList" [value]="mulitiplier">
-                    {{ mulitiplier }}
+                    {{ mulitiplier }}x
                   </mat-option>
                 </mat-select>
               </mat-form-field>
             </mat-grid-tile>
             <mat-grid-tile [colspan]="2" [rowspan]="2">
-              <mat-slide-toggle [formControl]="testing" (change)="setTest()">
-                Test Mode
-              </mat-slide-toggle>
+              <div class="ml-setting-switch">
+                <mat-slide-toggle [formControl]="testing" (change)="setTest()">
+                  Test Mode
+                </mat-slide-toggle>
+              </div>
+              <div class="ml-setting-switch">
+                <mat-slide-toggle [formControl]="longOnly">
+                  Long only
+                </mat-slide-toggle>
+              </div>
+              <div class="ml-setting-switch">
+                <mat-slide-toggle [formControl]="allIn" [disabled]="globalSettingsService.brokerage==='Robinhood'"
+                  (change)="activateAllIn()">
+                  <a matTooltip="Buy with all available balance">
+                    All In
+                  </a>
+                </mat-slide-toggle>
+              </div>
             </mat-grid-tile>
+
             <mat-grid-tile [colspan]="2" [rowspan]="2">
-              <mat-slide-toggle [formControl]="longOnly">
-                Long only
-              </mat-slide-toggle>
-            </mat-grid-tile>
-            <mat-grid-tile [colspan]="2" [rowspan]="2">
-              <mat-slide-toggle [formControl]="allIn" [disabled]="globalSettingsService.brokerage==='Robinhood'" (change)="activateAllIn()">
-                <a matTooltip="Buy with all available balance">
-                  All In
-                </a>
-              </mat-slide-toggle>
-            </mat-grid-tile>
-            <mat-grid-tile [colspan]="2" [rowspan]="2">
-              <mat-slide-toggle [formControl]="inverse">
-                <a matTooltip="Inverse play">
-                  Inverse
-                </a>
-              </mat-slide-toggle>
+
+              <div class="ml-setting-switch">
+                <mat-slide-toggle [formControl]="inverse">
+                  <a matTooltip="Inverse play">
+                    Inverse
+                  </a>
+                </mat-slide-toggle>
+              </div>
+              <div class="ml-setting-switch">
+                <mat-slide-toggle [formControl]="triggerDaily">
+                  <a matTooltip="Trigger play daily">
+                    Daily
+                  </a>
+                </mat-slide-toggle>
+              </div>
             </mat-grid-tile>
           </mat-grid-list>
         </section>
@@ -131,9 +144,9 @@
         </div>
         <div class="toolbar-content" fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px"
           fxLayoutGap.xs="0">
-          <div fxFlex="5%">
+          <div>
             <mat-card-header>
-              <mat-card-title>RNN Algo</mat-card-title>
+              <div class="ml-title">Machine Learning Decision</div>
             </mat-card-header>
           </div>
         </div>

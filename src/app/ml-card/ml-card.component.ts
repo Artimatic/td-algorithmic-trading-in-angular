@@ -11,6 +11,7 @@ import { MatDialog, MatSnackBar } from '@angular/material';
 import { PortfolioService, DaytradeService, ReportingService, BacktestService } from '../shared';
 import { Holding } from '../shared/models';
 import { GlobalSettingsService, Brokerage } from '../settings/global-settings.service';
+import { take } from 'rxjs/operators';
 
 interface Bet {
   total: number;
@@ -57,6 +58,7 @@ export class MlCardComponent implements OnInit {
   longOnly = new FormControl();
   allIn = new FormControl();
   inverse = new FormControl();
+  triggerDaily = new FormControl();
 
   startTime: moment.Moment;
   stopTime: moment.Moment;
@@ -85,6 +87,7 @@ export class MlCardComponent implements OnInit {
     this.longOnly.setValue(false);
     this.allIn.setValue(false);
     this.inverse.setValue(false);
+    this.triggerDaily.setValue(false);
     this.testing.setValue(false);
 
     this.multiplierList = [
@@ -185,12 +188,20 @@ export class MlCardComponent implements OnInit {
         const momentInst = moment();
         if (momentInst.isAfter(this.startTime) &&
           momentInst.isBefore(this.stopTime) || this.testing.value) {
+          if (this.triggerDaily.value === true) {
+            this.globalSettingsService.tradeDayStart
+              .pipe(take(1))
+              .subscribe(start => {
+                if (start) {
+                  this.goLive();
+                }
+              });
+          }
           this.alive = false;
           this.pendingResults = true;
           this.sendActivation()
             .subscribe((data: any) => {
               console.log('rnn data: ', this.getTradeDay(), data);
-
               if (data) {
                 const bet = this.determineBet(data);
                 this.placeBet(bet);

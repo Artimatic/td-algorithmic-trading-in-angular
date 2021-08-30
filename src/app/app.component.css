@@ -2,6 +2,10 @@
   min-height: 25px;
 }
 
+.nav-item {
+  font-weight: 600;
+}
+
 .toolbar-content {
   width: 100%;
 }

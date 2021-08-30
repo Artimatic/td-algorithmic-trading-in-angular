@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import * as moment from 'moment-timezone';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, Subject, Subscription } from 'rxjs';
+import { TimerObservable } from 'rxjs-compat/observable/TimerObservable';
 
 export enum Brokerage {
   Robinhood = 'Robinhood',
@@ -29,6 +30,11 @@ export class GlobalSettingsService {
   featureList: number[][];
   autostart = false;
 
+  timer: Subscription;
+  timerInterval = 70800;
+  defaultInterval = 70800;
+  tradeDayStart: Subject<boolean> = new Subject();
+
   constructor(private http: HttpClient) { }
 
   async globalModifier() {
@@ -52,16 +58,17 @@ export class GlobalSettingsService {
   }
 
   getTradeDate() {
-    return moment(this.tradeDate);
+    this.tradeDate = this.getNextTradeDate();
+    return this.tradeDate;
   }
 
-  initTradeDate() {
+  initBacktestDate() {
     this.backtestDate = this.getLastTradeDate().format('YYYY-MM-DD');
   }
 
   getLastTradeDate() {
     const day = moment().tz('America/New_York').day();
-    const time = moment().set({hour: 0, minute: 1});
+    const time = moment().set({ hour: 0, minute: 1 });
     if (day === 6) {
       return time.subtract({ day: 1 });
     } else if (day === 0) {
@@ -72,7 +79,7 @@ export class GlobalSettingsService {
 
   getNextTradeDate() {
     const day = moment().tz('America/New_York').day();
-    const time = moment().set({hour: 0, minute: 1});
+    const time = moment().set({ hour: 0, minute: 1 });
     if (day === 6) {
       return time.add({ day: 2 });
     } else if (day === 0) {
@@ -85,7 +92,7 @@ export class GlobalSettingsService {
 
   initGlobalSettings() {
     this.setStartTimes();
-    this.initTradeDate();
+    this.initBacktestDate();
 
     this.maxLoss = 20;
     this.brokerage = Brokerage.Td;
@@ -119,5 +126,27 @@ export class GlobalSettingsService {
     this.featureList.forEach((value) => {
       this.daytradeAlgoSelection.push({ label: value.join(''), value });
     });
+
+    if (this.timer) {
+      this.timer.unsubscribe();
+    }
+
+    this.timer = TimerObservable.create(0, this.timerInterval)
+      .subscribe(() => {
+        if (this.timerInterval !== this.defaultInterval) {
+          this.timerInterval = this.defaultInterval;
+        }
+
+        if (moment().isAfter(moment(this.startTime)) &&
+          moment().isBefore(moment(this.startTime).add(2, 'minutes'))) {
+          this.tradeDayStart.next(true);
+        } else if (moment().isAfter(moment(this.stopTime)) &&
+          moment().isBefore(moment(this.stopTime).add(2, 'minutes'))) {
+          this.setStartTimes();
+          this.tradeDayStart.next(false);
+        } else {
+          this.timerInterval = moment().subtract(5, 'minutes').diff(moment(this.startTime), 'milliseconds');
+        }
+      });
   }
 }

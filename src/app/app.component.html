@@ -5,10 +5,12 @@
         <div class="app-title">Algotrader</div>
       </mat-nav-list>
       <mat-nav-list role="listitem">
-        <button mat-button class="nav-item" (click)="launchLogin()">
-          <mat-icon>account_balance</mat-icon>
-          Account
-        </button>
+        <a matTooltip="Launch login">
+          <button mat-button class="nav-item" (click)="launchLogin()">
+            <mat-icon>account_balance</mat-icon>
+            Account
+          </button>
+        </a>
       </mat-nav-list>
       <mat-nav-list role="listitem">
         <a routerLink="/trade-view" matTooltip="Buy/sell stocks">
@@ -52,7 +54,7 @@
       </mat-nav-list>
       <mat-nav-list class="mat-chip-list-stacked" role="listitem">
         <div class="service-status-container">
-        <h5>Online Status:</h5>
+          <h5>Online Status:</h5>
           <div class="services-status" (click)="checkStatus()" matTooltip="{{dataText}}">
             <div class="online-status-text">Data Service</div>
             <div class="status-indicator">

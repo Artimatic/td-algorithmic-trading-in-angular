@@ -35,9 +35,8 @@
             <mat-option value="SHY">SHY</mat-option>
           </mat-select>
         </mat-form-field>
-        <mat-form-field hintLabel="Quantity" [hidden]="preferences.value === 'Sell positions at Open'">
-          <input matInput type="number" placeholder="Quantity"
-            formControlName="quantity" required>
+        <mat-form-field hintLabel="Quantity" [hidden]="preferences.value === 'Sell positions on the Open'">
+          <input matInput type="number" placeholder="Quantity" formControlName="quantity" required>
         </mat-form-field>
         <mat-form-field>
           <mat-select placeholder="Preferences" [formControl]="preferences" name="preferences">
@@ -46,6 +45,9 @@
             </mat-option>
           </mat-select>
         </mat-form-field>
+        <mat-slide-toggle [formControl]="triggerDaily">
+          Trigger Daily
+        </mat-slide-toggle>
         <div>
           <button mat-button matStepperNext>Next</button>
         </div>
