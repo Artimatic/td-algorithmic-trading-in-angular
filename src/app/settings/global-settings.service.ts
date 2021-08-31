@@ -158,11 +158,9 @@ export class GlobalSettingsService {
           this.timerInterval = this.defaultInterval;
         }
 
-        if (moment().isAfter(moment(this.stopTime).add(5, 'minutes')) &&
-        moment().isBefore(moment(this.stopTime).add(10, 'minutes'))) {
-        // if (moment().isAfter(moment(this.startTime)) &&
-        //   moment().isBefore(moment(this.stopTime)) &&
-        //   this.lastStartDate !== moment().format('YYYY-MM-DD')) {
+        if (moment().isAfter(moment(this.startTime)) &&
+          moment().isBefore(moment(this.stopTime)) &&
+          this.lastStartDate !== moment().format('YYYY-MM-DD')) {
           this.tradeDayStart.next(true);
           this.lastStartDate = moment().format('YYYY-MM-DD');
           console.log('Global start at ', moment().format());
