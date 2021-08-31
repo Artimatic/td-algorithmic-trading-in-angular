@@ -323,7 +323,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
     const limit = settings[1] || 0.003;
 
     console.log('setting: ', this.form.value.customSettings, settings);
-    const symbol = this.form.value.query.toUpperCase();      
+    const symbol = this.form.value.query.toUpperCase();
 
     const endDate = this.endDate ? moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD') : moment().subtract({ day: 1 }).format('YYYY-MM-DD');
     const startDate = moment().subtract({ day: 365 }).format('YYYY-MM-DD');
