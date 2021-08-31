@@ -78,7 +78,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
       { field: 'algorithm', header: 'Algorithm' },
       { field: 'guesses', header: 'Guesses' },
       { field: 'correct', header: 'Correct' },
-      { field: 'score', header: 'Score', type: 'percent'},
+      { field: 'score', header: 'Score', type: 'percent' },
       { field: 'nextOutput', header: 'Next Output' }
     ];
 
@@ -145,7 +145,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
     const settings = this.form.value.customSettings.split(',');
     const range = settings[0] || 2;
     const limit = settings[1] || 0.003;
-    console.log('setting: ',  this.form.value.customSettings, settings);
+    console.log('setting: ', this.form.value.customSettings, settings);
     const symbol = this.form.value.query;
     this.machineLearningService.activateDailyV4(symbol,
       null,
@@ -322,12 +322,15 @@ export class AskModelComponent implements OnInit, OnDestroy {
     const range = settings[0] || 5;
     const limit = settings[1] || 0.003;
 
-    console.log('setting: ',  this.form.value.customSettings, settings);
-    const symbol = this.form.value.query.toUpperCase();
+    console.log('setting: ', this.form.value.customSettings, settings);
+    const symbol = this.form.value.query.toUpperCase();      
+
+    const endDate = this.endDate ? moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD') : moment().subtract({ day: 1 }).format('YYYY-MM-DD');
+    const startDate = moment().subtract({ day: 365 }).format('YYYY-MM-DD');
 
     this.machineLearningService.trainPredictDailyV4(symbol,
-      moment().subtract({ day: 1 }).format('YYYY-MM-DD'),
-      moment().subtract({ day: 365 }).format('YYYY-MM-DD'),
+      endDate,
+      startDate,
       0.7,
       null,
       range,

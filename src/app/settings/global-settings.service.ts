@@ -34,6 +34,7 @@ export class GlobalSettingsService {
   timerInterval = 70800;
   defaultInterval = 70800;
   tradeDayStart: Subject<boolean> = new Subject();
+  lastStartDate = null;
 
   constructor(private http: HttpClient) { }
 
@@ -52,9 +53,23 @@ export class GlobalSettingsService {
   }
 
   setStartTimes() {
-    this.startTime = moment.tz(`${this.getTradeDate().format('YYYY-MM-DD')} 09:50`, 'America/New_York').toDate();
-    this.sellAtCloseTime = moment.tz(`${this.getTradeDate().format('YYYY-MM-DD')} 15:40`, 'America/New_York').toDate();
-    this.stopTime = moment.tz(`${this.getTradeDate().format('YYYY-MM-DD')} 15:50`, 'America/New_York').toDate();
+    let beginTime = '09:50';
+    let endTime = '15:50';
+    let sellTime = '15:40';
+    if (this.startTime) {
+      beginTime = moment.tz(this.startTime.valueOf(), 'America/New_York').format('HH:mm');
+    }
+
+    if (this.stopTime) {
+      endTime = moment.tz(this.stopTime.valueOf(), 'America/New_York').format('HH:mm');
+    }
+
+    if (this.sellAtCloseTime) {
+      sellTime = moment.tz(this.sellAtCloseTime.valueOf(), 'America/New_York').format('HH:mm');
+    }
+    this.startTime = moment.tz(`${this.getTradeDate().format('YYYY-MM-DD')} ${beginTime}`, 'America/New_York').toDate();
+    this.sellAtCloseTime = moment.tz(`${this.getTradeDate().format('YYYY-MM-DD')} ${sellTime}`, 'America/New_York').toDate();
+    this.stopTime = moment.tz(`${this.getTradeDate().format('YYYY-MM-DD')} ${endTime}`, 'America/New_York').toDate();
   }
 
   getTradeDate() {
@@ -88,6 +103,12 @@ export class GlobalSettingsService {
       return time.add({ day: 1 });
     }
     return time;
+  }
+
+  setAutoStart() {
+    this.autostart = !this.autostart;
+    this.setStartTimes();
+    console.log('starttime ', this.startTime, this.stopTime, this.sellAtCloseTime);
   }
 
   initGlobalSettings() {
@@ -137,15 +158,24 @@ export class GlobalSettingsService {
           this.timerInterval = this.defaultInterval;
         }
 
-        if (moment().isAfter(moment(this.startTime)) &&
-          moment().isBefore(moment(this.startTime).add(2, 'minutes'))) {
+        if (moment().isAfter(moment(this.stopTime).add(5, 'minutes')) &&
+        moment().isBefore(moment(this.stopTime).add(10, 'minutes'))) {
+        // if (moment().isAfter(moment(this.startTime)) &&
+        //   moment().isBefore(moment(this.stopTime)) &&
+        //   this.lastStartDate !== moment().format('YYYY-MM-DD')) {
           this.tradeDayStart.next(true);
+          this.lastStartDate = moment().format('YYYY-MM-DD');
+          console.log('Global start at ', moment().format());
         } else if (moment().isAfter(moment(this.stopTime)) &&
           moment().isBefore(moment(this.stopTime).add(2, 'minutes'))) {
           this.setStartTimes();
           this.tradeDayStart.next(false);
+          console.log('Global stop at ', moment().format());
         } else {
           this.timerInterval = moment().subtract(5, 'minutes').diff(moment(this.startTime), 'milliseconds');
+          if (this.timerInterval < 0) {
+            this.timerInterval = this.defaultInterval;
+          }
         }
       });
   }

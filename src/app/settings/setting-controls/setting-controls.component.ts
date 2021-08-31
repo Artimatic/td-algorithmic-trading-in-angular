@@ -27,6 +27,6 @@ export class SettingControlsComponent {
   }
 
   toggleAutostart(): void {
-    this.globalSettingsService.autostart = !this.globalSettingsService.autostart;
+    this.globalSettingsService.setAutoStart();
   }
 }

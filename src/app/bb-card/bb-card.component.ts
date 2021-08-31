@@ -758,7 +758,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
                 const mlLog = `RNN model result: ${machineResult.nextOutput}`;
                 const mlReport = this.reportingService.addAuditLog(this.order.holding.symbol, mlLog);
                 console.log(mlReport);
-                if (machineResult.nextOutput > 0.5) {
+                if (machineResult.nextOutput > 0.4) {
                   this.daytradeBuy(quote, orderQuantity, timestamp, analysis);
                 }
               });
