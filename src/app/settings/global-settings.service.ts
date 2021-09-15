@@ -56,8 +56,15 @@ export class GlobalSettingsService {
     let beginTime = '09:50';
     let endTime = '15:50';
     let sellTime = '15:40';
+    let startDate = null;
     if (this.startTime) {
       beginTime = moment.tz(this.startTime.valueOf(), 'America/New_York').format('HH:mm');
+    }
+
+    if (this.tradeDate) {
+      startDate = moment.tz(this.tradeDate.valueOf(), 'America/New_York');
+    } else {
+      startDate = this.getTradeDate();
     }
 
     if (this.stopTime) {
@@ -67,13 +74,15 @@ export class GlobalSettingsService {
     if (this.sellAtCloseTime) {
       sellTime = moment.tz(this.sellAtCloseTime.valueOf(), 'America/New_York').format('HH:mm');
     }
-    this.startTime = moment.tz(`${this.getTradeDate().format('YYYY-MM-DD')} ${beginTime}`, 'America/New_York').toDate();
-    this.sellAtCloseTime = moment.tz(`${this.getTradeDate().format('YYYY-MM-DD')} ${sellTime}`, 'America/New_York').toDate();
-    this.stopTime = moment.tz(`${this.getTradeDate().format('YYYY-MM-DD')} ${endTime}`, 'America/New_York').toDate();
+    this.startTime = moment.tz(`${startDate.format('YYYY-MM-DD')} ${beginTime}`, 'America/New_York').toDate();
+    this.sellAtCloseTime = moment.tz(`${startDate.format('YYYY-MM-DD')} ${sellTime}`, 'America/New_York').toDate();
+    this.stopTime = moment.tz(`${startDate.format('YYYY-MM-DD')} ${endTime}`, 'America/New_York').toDate();
   }
 
   getTradeDate() {
-    this.tradeDate = this.getNextTradeDate();
+    if (!this.tradeDate || (this.tradeDate && moment().diff(this.tradeDate, 'days') > 0)) {
+      this.tradeDate = this.getNextTradeDate();
+    }
     return this.tradeDate;
   }
 
@@ -99,7 +108,7 @@ export class GlobalSettingsService {
       return time.add({ day: 2 });
     } else if (day === 0) {
       return time.add({ day: 1 });
-    } else if (moment().isAfter(moment.tz('5:00pm', 'h:mma', 'America/New_York'))) {
+    } else if (moment().isAfter(moment.tz('4:00pm', 'h:mma', 'America/New_York'))) {
       return time.add({ day: 1 });
     }
     return time;
@@ -154,6 +163,7 @@ export class GlobalSettingsService {
 
     this.timer = TimerObservable.create(0, this.timerInterval)
       .subscribe(() => {
+        console.log(moment().format());
         if (this.timerInterval !== this.defaultInterval) {
           this.timerInterval = this.defaultInterval;
         }

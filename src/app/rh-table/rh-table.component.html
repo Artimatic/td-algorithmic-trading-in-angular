@@ -65,7 +65,6 @@
         {{col.header}}
         <p-sortIcon [field]="col.field"></p-sortIcon>
       </th>
-      <th>Actions</th>
     </tr>
   </ng-template>
   <ng-template pTemplate="body" let-element let-columns="columns">
@@ -89,11 +88,6 @@
         <span *ngSwitchDefault>
           {{element[col.field]}}
         </span>
-      </td>
-      <td>
-        <button pButton (click)="addOrder(selectedStock)" [disabled]="!selectedStock">
-          Add Order
-        </button>
       </td>
     </tr>
   </ng-template>

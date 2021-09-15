@@ -108,6 +108,7 @@ export class SimpleCardComponent implements OnInit, OnChanges {
   }
 
   goLive() {
+    this.stop();
     this.setup();
     this.alive = true;
     this.sub = TimerObservable.create(0, this.interval)

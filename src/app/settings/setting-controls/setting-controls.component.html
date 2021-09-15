@@ -6,7 +6,7 @@
       </label>
       <span>&nbsp;</span>
       <input type="date" [ngModel]="globalSettingsService.tradeDate | date:'yyyy-MM-dd'"
-        (ngModelChange)="globalSettingsService.tradeDate = $event">
+        (ngModelChange)="setTradeDate($event)">
     </mat-grid-tile>
     <mat-grid-tile>
       <label matTooltip="Orders start time">

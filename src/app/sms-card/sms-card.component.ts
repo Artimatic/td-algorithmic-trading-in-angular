@@ -77,6 +77,7 @@ export class SmsCardComponent implements OnInit, OnDestroy {
   goLive() {
     this.alive = true;
     this.stepper.next();
+    this.setup();
     this.interval = this.defaultInterval;
     this.messagesSent = 0;
 

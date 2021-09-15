@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { GlobalSettingsService, Brokerage } from '../global-settings.service';
+import * as moment from 'moment-timezone';
 
 @Component({
   selector: 'app-setting-controls',
@@ -28,5 +29,10 @@ export class SettingControlsComponent {
 
   toggleAutostart(): void {
     this.globalSettingsService.setAutoStart();
+  }
+
+  setTradeDate(event) {
+    console.log(event);
+    this.globalSettingsService.tradeDate = moment(event);
   }
 }
