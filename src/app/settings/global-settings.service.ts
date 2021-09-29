@@ -103,12 +103,13 @@ export class GlobalSettingsService {
 
   getNextTradeDate() {
     const day = moment().tz('America/New_York').day();
-    const time = moment().set({ hour: 0, minute: 1 });
+    const time = moment().tz('America/New_York').set({ hour: 0, minute: 1 });
+
     if (day === 6) {
       return time.add({ day: 2 });
     } else if (day === 0) {
       return time.add({ day: 1 });
-    } else if (moment().isAfter(moment.tz('4:00pm', 'h:mma', 'America/New_York'))) {
+    } else if (moment().tz('America/New_York').isAfter(moment.tz('04:00pm', 'h:mma', 'America/New_York'))) {
       return time.add({ day: 1 });
     }
     return time;
@@ -163,7 +164,6 @@ export class GlobalSettingsService {
 
     this.timer = TimerObservable.create(0, this.timerInterval)
       .subscribe(() => {
-        console.log(moment().format());
         if (this.timerInterval !== this.defaultInterval) {
           this.timerInterval = this.defaultInterval;
         }
