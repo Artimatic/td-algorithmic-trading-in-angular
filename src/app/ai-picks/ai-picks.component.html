@@ -12,8 +12,11 @@
                 <h5>{{buy.label}} <i class="pi pi-times" (click)="removeFromBuyList(buy.label)"></i></h5>
               </div>
               <div class="ui-g-12" *ngFor="let prediction of buy.value">
-                Day {{prediction.algorithm}}: <span
-                  [ngClass]="{'bullish-title': prediction.prediction >= 0.5}">{{prediction.prediction}}</span>
+                Day {{prediction.algorithm}}:
+                <span [ngClass]="{'bullish-title': prediction.prediction >= 0.5}">
+                  {{prediction.prediction}}
+                </span>
+                <span>(accuracy:{{prediction.accuracy}})</span>
               </div>
             </div>
           </div>
@@ -34,8 +37,11 @@
                 <h5>{{sell.label}} <i class="pi pi-times" (click)="removeFromSellList(sell.label)"></i></h5>
               </div>
               <div class="ui-g-12" *ngFor="let prediction of sell.value">
-                Day {{prediction.algorithm}}: <span
-                  [ngClass]="{'bearish-title': prediction.prediction < 0.5}">{{prediction.prediction}}</span>
+                Day {{prediction.algorithm}}:
+                <span [ngClass]="{'bearish-title': prediction.prediction < 0.5}">
+                  {{prediction.prediction}}
+                </span>
+                <span>(accuracy:{{prediction.accuracy}})</span>
               </div>
             </div>
           </div>

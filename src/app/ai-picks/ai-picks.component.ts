@@ -94,6 +94,7 @@ export class AiPicksComponent implements OnInit, OnDestroy {
       limit
     )
       .subscribe((data) => {
+        console.log('Trained: ', data);
         this.counter--;
         let delay = 0;
         if (this.counter > 0) {
