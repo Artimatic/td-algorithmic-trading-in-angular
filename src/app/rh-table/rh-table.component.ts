@@ -64,6 +64,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   currentList: Stock[] = [];
   algoReport = this.initAlgoReport();
 
+  additionalOptions = false;
   endDate: string;
   progressPct = 0;
   progress = 0;

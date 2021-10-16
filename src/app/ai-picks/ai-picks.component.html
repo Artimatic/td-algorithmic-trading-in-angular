@@ -49,4 +49,32 @@
       </p-listbox>
     </p-card>
   </div>
+  <div class="p-col">
+    <p-card header="Historical Predictions">
+      <p-listbox [options]="history" [listStyle]="{'max-height':'250px'}">
+        <p-header>
+          <input type="text" pInputText [(ngModel)]="historicalStock"/>
+          <input name="endDate" type="date" [ngModel]="endDate" (ngModelChange)="endDate = $event">
+          <button pButton type="button" label="Search" class="ui-button-success"
+            (click)="trainStock()"></button>
+        </p-header>
+        <ng-template let-sell pTemplate="item">
+          <div class="ui-helper-clearfix">
+            <div class="ui-g">
+              <div class="ui-g-12">
+                <h5>{{history.label}} <i class="pi pi-times" (click)="removeFromHistoryList(history.label)"></i></h5>
+              </div>
+              <div class="ui-g-12" *ngFor="let prediction of history.value">
+                Day {{prediction.algorithm}}:
+                <span>
+                  {{prediction.prediction}}
+                </span>
+                <span>(accuracy:{{prediction.accuracy}})</span>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+      </p-listbox>
+    </p-card>
+  </div>
 </div>

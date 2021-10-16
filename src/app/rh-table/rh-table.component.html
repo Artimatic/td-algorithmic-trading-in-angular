@@ -26,11 +26,11 @@
             <input type="text" pInputText size="50" placeholder="Global Filter"
               (input)="dt.filterGlobal($event.target.value, 'contains')" style="width:auto">
           </div>
-          <div class="date-picker">
+          <div class="date-picker" *ngIf="additionalOptions">
             End Date
             <input name="endDate" type="date" [ngModel]="endDate" (ngModelChange)="endDate = $event">
           </div>
-          <mat-form-field>
+          <mat-form-field *ngIf="additionalOptions">
             <mat-select placeholder="Algorithm" [(ngModel)]="selectedAlgo">
               <mat-optgroup *ngFor="let group of algoGroups" [label]="group.name" [disabled]="group.disabled">
                 <mat-option *ngFor="let algo of group.algorithm" [value]="algo.value">
@@ -44,15 +44,19 @@
       <div class="ui-g-4">
         <div class="table-filters">
           <p-multiSelect class="filter" [options]="recommendations" [(ngModel)]="selectedRecommendation"
-            defaultLabel="All Recommendations" (onChange)="filter()" selectedItemsLabel="{0} recommendations selected">
+            defaultLabel="All Recommendations" (onChange)="filter()" selectedItemsLabel="{0} recommendations selected" *ngIf="additionalOptions">
           </p-multiSelect>
           <p-multiSelect class="filter" [options]="cols" [(ngModel)]="selectedColumns" optionLabel="header"
-            selectedItemsLabel="{0} columns selected" [style]="{minWidth: '200px'}" defaultLabel="Choose Columns">
+            selectedItemsLabel="{0} columns selected" [style]="{minWidth: '200px'}" defaultLabel="Choose Columns" *ngIf="additionalOptions">
           </p-multiSelect>
-          <mat-checkbox class="filter" [(ngModel)]="twoOrMoreSignalsOnly" (change)="filter()">
+          <mat-checkbox class="filter" [(ngModel)]="twoOrMoreSignalsOnly" (change)="filter()" *ngIf="additionalOptions">
             Only show if two or more signals
           </mat-checkbox>
           <div class="filter">
+            <div class="more-options-container">
+              <label class="more-options">More options</label>
+              <p-inputSwitch [(ngModel)]="additionalOptions"></p-inputSwitch>
+            </div>
             <app-auto-backtest-switch (switchActivate)="autoActivate()"></app-auto-backtest-switch>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { MachineLearningService } from '@shared/index';
 import { AiPicksService } from '@shared/services';
 import { AiPicksData, AiPicksPredictionData } from '@shared/services/ai-picks.service';
 import * as moment from 'moment';
+import * as _ from 'lodash';
 
 @Component({
   selector: 'app-ai-picks',
@@ -12,11 +13,14 @@ import * as moment from 'moment';
 export class AiPicksComponent implements OnInit, OnDestroy {
   buys: AiPicksData[] = [];
   sells: AiPicksData[] = [];
+  history: AiPicksData[] = [];
 
   buysLimit = 3;
   sellsLimit = 3;
   isLoading = false;
   counter = 0;
+  historicalStock = '';
+  endDate;
 
   constructor(private aiPicksService: AiPicksService,
     private machineLearningService: MachineLearningService
@@ -59,7 +63,7 @@ export class AiPicksComponent implements OnInit, OnDestroy {
         }
         if (!activation) {
           setTimeout(() => {
-            this.trainAndActivate(symbol, range, limit, isBuy, cb);
+            this.trainAndActivate(symbol, range, limit, isBuy, null, cb);
           }, delay);
         } else {
           const prediction = { algorithm: range, prediction: activation.nextOutput, accuracy: accuracy };
@@ -81,13 +85,16 @@ export class AiPicksComponent implements OnInit, OnDestroy {
       });
   }
 
-  trainAndActivate(symbol, range, limit, isBuy, cb: () => void) {
+  trainAndActivate(symbol, range, limit, isBuy, endDate: string = null, cb: () => void = null, activate = true) {
     this.isLoading = true;
     this.counter++;
-
+    if (!endDate) {
+      endDate = moment().format('YYYY-MM-DD');
+    }
+    const startDate = moment(endDate).subtract({ day: 365 }).format('YYYY-MM-DD');
     this.machineLearningService.trainPredictDailyV4(symbol,
-      moment().subtract({ day: 1 }).format('YYYY-MM-DD'),
-      moment().subtract({ day: 365 }).format('YYYY-MM-DD'),
+      endDate,
+      startDate,
       0.7,
       null,
       range,
@@ -100,9 +107,12 @@ export class AiPicksComponent implements OnInit, OnDestroy {
         if (this.counter > 0) {
           delay = 2000 + 1000 * this.counter;
         }
-        setTimeout(() => {
-          this.activate(symbol, range, limit, isBuy, data.score, cb);
-        }, delay);
+        if (activate) {
+          setTimeout(() => {
+            this.activate(symbol, range, limit, isBuy, _.round(data[0].score, 3), cb);
+          }, delay);
+        }
+
         this.isLoading = false;
       }, error => {
         this.counter--;
@@ -143,6 +153,15 @@ export class AiPicksComponent implements OnInit, OnDestroy {
     }
   }
 
+  trainStock() {
+    this.historicalStock = this.historicalStock.toUpperCase();
+    const date = moment(this.endDate).format('YYYY-MM-DD');
+    const ThirtyDayPrediction = () => this.trainAndActivate(this.historicalStock, 30, 0.01, false, date, () => { }, false);
+    const FifteenDayPrediction = () => this.trainAndActivate(this.historicalStock, 15, 0.01, false, date, ThirtyDayPrediction, false);
+
+    FifteenDayPrediction();
+  }
+
   createListObject(symbol: string, predictionData: AiPicksPredictionData): AiPicksData {
     return { label: symbol, value: [predictionData] };
   }
@@ -157,6 +176,10 @@ export class AiPicksComponent implements OnInit, OnDestroy {
     this.sells.splice(idx, 1);
   }
 
+  removeFromHistoryList(name) {
+    const idx = this.history.findIndex(element => element.label === name);
+    this.history.splice(idx, 1);
+  }
 
   ngOnDestroy() {
     this.aiPicksService.tickerBuyRecommendationQueue.unsubscribe();
