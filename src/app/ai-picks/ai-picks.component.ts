@@ -4,7 +4,6 @@ import { AiPicksService } from '@shared/services';
 import { AiPicksData, AiPicksPredictionData } from '@shared/services/ai-picks.service';
 import * as moment from 'moment';
 import * as _ from 'lodash';
-import { Chart } from 'angular-highcharts';
 
 @Component({
   selector: 'app-ai-picks',
@@ -107,7 +106,7 @@ export class AiPicksComponent implements OnInit, OnDestroy {
     )
       .subscribe((data) => {
         console.log('Trained: ', data);
-        const score = _.round(data[0].score, 3)
+        const score = _.round(data[0].score, 3);
         this.counter--;
         let delay = 0;
         if (this.counter > 0) {
@@ -118,10 +117,11 @@ export class AiPicksComponent implements OnInit, OnDestroy {
             this.activate(symbol, range, limit, isBuy, score, cb);
           }, delay);
         } else {
-          const prediction = { stock: symbol, 
-            algorithm: range, 
-            prediction: data[0].nextOutput, 
-            accuracy: score, 
+          const prediction = {
+            stock: symbol,
+            algorithm: range,
+            prediction: data[0].nextOutput,
+            accuracy: score,
             predictionHistory: data[0].predictionHistory
           };
 
