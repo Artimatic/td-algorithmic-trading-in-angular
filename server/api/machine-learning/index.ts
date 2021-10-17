@@ -13,5 +13,6 @@ router.get('/v3/activate', MachineLearningController.activateV3);
 router.get('/v3/activate-daily', MachineLearningController.activateDailyV3);
 router.get('/v4/activate-daily', MachineLearningController.activateDailyV4);
 router.get('/v4/train-daily', MachineLearningController.trainDailyV4);
+router.get('/v4/score-daily', MachineLearningController.scoreDailyV4);
 
 module.exports = router;

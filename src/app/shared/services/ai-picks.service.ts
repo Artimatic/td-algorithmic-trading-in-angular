@@ -5,6 +5,14 @@ export interface AiPicksPredictionData {
   algorithm: number;
   prediction: number;
   accuracy: number;
+  date?: string;
+  stock?: string;
+  predictionHistory?: AiPicksPredictionDate[];
+}
+
+export interface AiPicksPredictionDate {
+  date: string;
+  prediction: number;
 }
 
 export interface AiPicksData {
@@ -20,6 +28,7 @@ export class AiPicksService {
   tickerSellRecommendationQueue: Subject<string> = new Subject();
   mlBuyResults: Subject<AiPicksData> = new Subject();
   mlSellResults: Subject<AiPicksData> = new Subject();
+  predictionData: Subject<AiPicksPredictionData> = new Subject();
 
   clearLists: Subject<boolean> = new Subject();
   private buyList: AiPicksData[] = [];

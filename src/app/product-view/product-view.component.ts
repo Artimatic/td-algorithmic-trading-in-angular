@@ -1,11 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { Chart } from 'angular-highcharts';
-import { Point } from 'highcharts';
 import * as moment from 'moment';
 import { MatSnackBar } from '@angular/material';
 
 import { BacktestService } from '../shared';
 import { ChartParam } from '../shared/services/backtest.service';
+import { AiPicksService } from '@shared/services';
+import { AiPicksPredictionData } from '@shared/services/ai-picks.service';
 
 @Component({
   selector: 'app-product-view',
@@ -20,9 +21,23 @@ export class ProductViewComponent implements OnInit {
 
   constructor(
     public snackBar: MatSnackBar,
-    private algo: BacktestService) { }
+    private algo: BacktestService,
+    private aiPicksService: AiPicksService) { }
 
   ngOnInit() {
+    this.aiPicksService.predictionData.subscribe((predictionData: AiPicksPredictionData) => {
+      const predictions = predictionData.predictionHistory.reduce((previous, current) => {
+        previous[current.date] = current.prediction;
+        return previous;
+      }, {});
+
+      this.loadMLChart({
+        algorithm: 'daily-indicators',
+        symbol: predictionData.stock,
+        date: predictionData.date
+      }, predictions);
+    });
+
     this.algo.currentChart.subscribe((chart: ChartParam) => {
       switch (chart.algorithm) {
         case 'mfi': {
@@ -70,10 +85,6 @@ export class ProductViewComponent implements OnInit {
 
   calculatePercentDifference(v1, v2) {
     return Math.abs(Math.abs(v1 - v2) / ((v1 + v2) / 2));
-  }
-
-  add(y: Point) {
-    this.chart.addPoint(y);
   }
 
   loadBBMfiChart(params: ChartParam) {
@@ -212,6 +223,57 @@ export class ProductViewComponent implements OnInit {
       }
       time.push(day.date);
       const signal = this.buildSignal(action, day.close, day.volume, day.recommendation);
+      seriesData.push(signal);
+
+      this.initChart(symbol, time, seriesData);
+    });
+  }
+
+  loadMLChart(data: ChartParam, predictionData = {}) {
+    const defaultPeriod = 500;
+    data.algorithm = 'daily-indicators';
+    this.resolving = true;
+    const currentDate = moment(data.date).format('YYYY-MM-DD');
+    const pastDate = moment(data.date).subtract(defaultPeriod, 'days').format('YYYY-MM-DD');
+
+    this.algo.getBacktestEvaluation(data.symbol, pastDate, currentDate, data.algorithm)
+      .map(result => {
+        if (result.signals > defaultPeriod) {
+          result.signals = result.signals.slice(result.signals.length - defaultPeriod, result.signals.length);
+        }
+        this.initMlResults(data.symbol, result, result.signals, predictionData);
+      })
+      .subscribe(
+        response => {
+          this.stock = data.symbol;
+          this.resolving = false;
+        },
+        err => {
+          this.resolving = false;
+          this.snackBar.open(`Error: ${err}`, 'Dismiss', {
+            duration: 20000,
+          });
+        }
+      );
+  }
+
+  initMlResults(symbol, result, signals, predictionData = {}) {
+    this.backtestResults = [result];
+    const time = [];
+    const seriesData = [];
+
+    signals.forEach(day => {
+      time.push(day.date);
+      let action;
+      const prediction = predictionData[day.date];
+      if (prediction > 0.5) {
+        action = 'BUY';
+      } else if (prediction <= 0.3) {
+        action = 'SELL';
+      }
+
+      const signal = this.buildSignal(action, day.close, day.volume, day.recommendation);
+
       seriesData.push(signal);
 
       this.initChart(symbol, time, seriesData);

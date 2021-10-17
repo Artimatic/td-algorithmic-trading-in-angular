@@ -70,6 +70,7 @@ export interface Recommendation {
   demark9?: DaytradeRecommendation;
   mfiLow?: DaytradeRecommendation;
   mfiDivergence?: DaytradeRecommendation;
+  overboughtMomentum?: DaytradeRecommendation;
 }
 
 export enum DaytradeRecommendation {
@@ -367,6 +368,7 @@ class BacktestService {
   getCurrentDaytrade(symbol: string, price: number, paidPrice: number, parameters, response) {
     return this.getCurrentDaytradeIndicators(symbol, parameters.minQuotes || 80)
       .then((currentIndicators: Indicators) => {
+
         let recommendation = {
           recommendation: OrderType.None
         };
@@ -378,6 +380,10 @@ class BacktestService {
         if (isAtLimit) {
           recommendation.recommendation = OrderType.Sell;
         } else {
+
+          if (!currentIndicators) {
+            console.log('Missing indicator data: ', currentIndicators);
+          }
           recommendation = this.getDaytradeRecommendation(currentIndicators.close, currentIndicators);
         }
         response.status(200).send(recommendation);

@@ -1,11 +1,15 @@
 import * as moment from 'moment';
 import * as _ from 'lodash';
+import * as RequestPromise from 'request-promise';
 
 import BacktestService from '../backtest/backtest.service';
 import { BacktestResults } from '../backtest/backtest.service';
 import PredictionService from './prediction.service';
-import TrainingService from './training.service';
 
+import TrainingService from './training.service';
+import * as configurations from '../../config/environment';
+
+const mlServiceUrl = configurations.apps.armadillo;
 class VariableDailyPredicationService extends PredictionService {
   modelName = 'model2021-04-01';
 
@@ -56,17 +60,17 @@ class VariableDailyPredicationService extends PredictionService {
       .concat(this.comparePrices(currentSignal.low, close))
       .concat(this.convertRecommendations(currentSignal))
       .concat(this.convertRecommendationsForBearish(currentSignal));
-      // .concat([this.convertBBand(currentSignal)])
-      // .concat([
-      //   _.round(currentSignal.high, 2),
-      //   _.round(currentSignal.low, 2),
-      //   _.round(currentSignal.vwma, 2),
-      // ])
-      // .concat([_.round(DecisionService.getPercentChange(close, currentSignal.vwma) * 1000, 2)])
-      // .concat([_.round(DecisionService.getPercentChange(close, currentSignal.high) * 1000, 2)])
-      // .concat([_.round(DecisionService.getPercentChange(close, currentSignal.low) * 1000, 2)])
-      // .concat([_.round(currentSignal.mfiLeft, 0)])
-      // .concat([_.round(currentSignal.rsi, 0)]);
+    // .concat([this.convertBBand(currentSignal)])
+    // .concat([
+    //   _.round(currentSignal.high, 2),
+    //   _.round(currentSignal.low, 2),
+    //   _.round(currentSignal.vwma, 2),
+    // ])
+    // .concat([_.round(DecisionService.getPercentChange(close, currentSignal.vwma) * 1000, 2)])
+    // .concat([_.round(DecisionService.getPercentChange(close, currentSignal.high) * 1000, 2)])
+    // .concat([_.round(DecisionService.getPercentChange(close, currentSignal.low) * 1000, 2)])
+    // .concat([_.round(currentSignal.mfiLeft, 0)])
+    // .concat([_.round(currentSignal.rsi, 0)]);
 
     dataSetObj.input = [];
 
@@ -112,6 +116,31 @@ class VariableDailyPredicationService extends PredictionService {
         const inputData = this.buildInputSet(openingPrice, signal, featureUse);
         return BacktestService.activateCustomModel(symbol, this.getModelName(), inputData.input, moment().format('YYYY-MM-DD'));
       });
+  }
+
+  scoreV4(symbol, startDate, endDate, featureUse) {
+    const URI = `${mlServiceUrl}api/score-custom`;
+
+    return BacktestService.initDailyStrategy(symbol, moment(endDate).valueOf(), moment(startDate).valueOf(), { minQuotes: 80 })
+      .then((results: BacktestResults) => {
+        const finalDataSet = this.processBacktestResults(results, featureUse);
+        const options = {
+          method: 'POST',
+          uri: URI,
+          body: {
+            symbol,
+            modelName: this.getModelName(),
+            trainingData: finalDataSet
+          },
+          json: true
+        };
+
+        return RequestPromise(options)
+          .catch((error) => {
+            console.log('train-custom error: ', error.message);
+          });
+      });
+
   }
 }
 

@@ -1,4 +1,5 @@
 <app-product-view #product></app-product-view>
+<app-ai-picks></app-ai-picks>
 <p-table #dt [columns]="selectedColumns" [value]="currentList" [paginator]="true" [rows]="10" selectionMode="single"
   [(selection)]="selectedStock" dataKey="stock">
   <ng-template pTemplate="caption">
@@ -115,4 +116,3 @@
     <span class="summary-title">Bullish/Bearish: </span>{{algoReport.bullishBearishRatio}}
   </ng-template>
 </p-table>
-<app-ai-picks></app-ai-picks>

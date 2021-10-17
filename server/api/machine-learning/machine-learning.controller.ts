@@ -89,9 +89,18 @@ class MachineLearningController extends BaseController {
       features)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
-
   }
 
+  scoreDailyV4(request, response) {
+    const features = request.query.features && request.query.features !== 'null' ? request.query.features.split(',') : null;
+
+    VariableDailyPredicationService.scoreV4(request.query.symbol,
+      request.query.startDate,
+      request.query.endDate,
+      features)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
 
   activateDailyV4(request, response) {
     const features = request.query.features ? request.query.features.split(',') : null;

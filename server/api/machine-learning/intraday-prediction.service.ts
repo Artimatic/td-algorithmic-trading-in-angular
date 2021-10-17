@@ -91,6 +91,10 @@ class IntradayPredicationService extends PredictionService {
 
     dataSetObj.input = [];
 
+    if (currentSignal.recommendation.recommendation.toLowerCase() !== 'none') {
+      console.log(currentSignal.recommendation, input);
+    }
+
     featureUse.forEach((value, idx) => {
       if ((value === '1' || value === 1) && input[idx] !== undefined) {
         dataSetObj.input.push(input[idx]);

@@ -86,6 +86,7 @@ export default class PredictionService {
         dataSetObj.input.push(input[idx]);
       }
     });
+
     return dataSetObj;
   }
 

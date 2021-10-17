@@ -27,7 +27,7 @@ class QuoteService {
     return this.getRawData(symbol, interval, range)
       .then((data) => {
         const dataSize = _.get(data, 'chart.result[0].timestamp', []).length;
-        console.log('Found: ', dataSize);
+        console.log('Found quotes: ', dataSize);
         if (dataSize > 1) {
           const quotes = _.get(data, 'chart.result[0].indicators.quote[0]', []);
           const timestamps = _.get(data, 'chart.result[0].timestamp', []);

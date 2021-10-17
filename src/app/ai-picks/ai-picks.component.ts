@@ -4,6 +4,7 @@ import { AiPicksService } from '@shared/services';
 import { AiPicksData, AiPicksPredictionData } from '@shared/services/ai-picks.service';
 import * as moment from 'moment';
 import * as _ from 'lodash';
+import { Chart } from 'angular-highcharts';
 
 @Component({
   selector: 'app-ai-picks',
@@ -21,6 +22,9 @@ export class AiPicksComponent implements OnInit, OnDestroy {
   counter = 0;
   historicalStock = '';
   endDate;
+  showChart = false;
+  chart;
+  currentPrediction = null;
 
   constructor(private aiPicksService: AiPicksService,
     private machineLearningService: MachineLearningService
@@ -92,6 +96,7 @@ export class AiPicksComponent implements OnInit, OnDestroy {
       endDate = moment().format('YYYY-MM-DD');
     }
     const startDate = moment(endDate).subtract({ day: 365 }).format('YYYY-MM-DD');
+    const historicalDate = this.endDate;
     this.machineLearningService.trainPredictDailyV4(symbol,
       endDate,
       startDate,
@@ -102,6 +107,7 @@ export class AiPicksComponent implements OnInit, OnDestroy {
     )
       .subscribe((data) => {
         console.log('Trained: ', data);
+        const score = _.round(data[0].score, 3)
         this.counter--;
         let delay = 0;
         if (this.counter > 0) {
@@ -109,8 +115,17 @@ export class AiPicksComponent implements OnInit, OnDestroy {
         }
         if (activate) {
           setTimeout(() => {
-            this.activate(symbol, range, limit, isBuy, _.round(data[0].score, 3), cb);
+            this.activate(symbol, range, limit, isBuy, score, cb);
           }, delay);
+        } else {
+          const prediction = { stock: symbol, 
+            algorithm: range, 
+            prediction: data[0].nextOutput, 
+            accuracy: score, 
+            predictionHistory: data[0].predictionHistory
+          };
+
+          this.addHistoricalPrediction(symbol, prediction, historicalDate);
         }
 
         this.isLoading = false;
@@ -123,7 +138,7 @@ export class AiPicksComponent implements OnInit, OnDestroy {
   }
 
   addSellPick(symbol: string, predictionData: AiPicksPredictionData) {
-    if (predictionData.prediction < 0.5) {
+    if (predictionData.prediction <= 0.3) {
       const isSellPick = (element: AiPicksData) => element.label === symbol;
 
       const index = this.sells.findIndex(isSellPick);
@@ -153,6 +168,21 @@ export class AiPicksComponent implements OnInit, OnDestroy {
     }
   }
 
+  addHistoricalPrediction(symbol, predictionData: AiPicksPredictionData, date: string) {
+    this.currentPrediction = predictionData;
+    predictionData.date = date;
+    const item = this.createListObject(symbol, predictionData);
+
+    const isPick = (element: AiPicksData) => element.label === symbol;
+
+    const index = this.history.findIndex(isPick);
+    if (index >= 0) {
+      this.history[index].value.push(predictionData);
+    } else {
+      this.history.push(item);
+    }
+  }
+
   trainStock() {
     this.historicalStock = this.historicalStock.toUpperCase();
     const date = moment(this.endDate).format('YYYY-MM-DD');
@@ -179,6 +209,12 @@ export class AiPicksComponent implements OnInit, OnDestroy {
   removeFromHistoryList(name) {
     const idx = this.history.findIndex(element => element.label === name);
     this.history.splice(idx, 1);
+  }
+
+  updateChart() {
+    const predictionHistory = this.currentPrediction;
+
+    this.aiPicksService.predictionData.next(predictionHistory);
   }
 
   ngOnDestroy() {

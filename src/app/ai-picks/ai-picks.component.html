@@ -13,10 +13,10 @@
               </div>
               <div class="ui-g-12" *ngFor="let prediction of buy.value">
                 Day {{prediction.algorithm}}:
-                <span [ngClass]="{'bullish-title': prediction.prediction >= 0.5}">
+                <span [ngClass]="{'bullish-title': prediction.prediction >= 0.75}">
                   {{prediction.prediction}}
                 </span>
-                <span>(accuracy:{{prediction.accuracy}})</span>
+                <span>(accuracy: {{prediction.accuracy}})</span>
               </div>
             </div>
           </div>
@@ -38,10 +38,10 @@
               </div>
               <div class="ui-g-12" *ngFor="let prediction of sell.value">
                 Day {{prediction.algorithm}}:
-                <span [ngClass]="{'bearish-title': prediction.prediction < 0.5}">
+                <span [ngClass]="{'bearish-title': prediction.prediction <= 0.25}">
                   {{prediction.prediction}}
                 </span>
-                <span>(accuracy:{{prediction.accuracy}})</span>
+                <span>(accuracy: {{prediction.accuracy}})</span>
               </div>
             </div>
           </div>
@@ -53,12 +53,15 @@
     <p-card header="Historical Predictions">
       <p-listbox [options]="history" [listStyle]="{'max-height':'250px'}">
         <p-header>
-          <input type="text" pInputText [(ngModel)]="historicalStock"/>
-          <input name="endDate" type="date" [ngModel]="endDate" (ngModelChange)="endDate = $event">
-          <button pButton type="button" label="Search" class="ui-button-success"
-            (click)="trainStock()"></button>
+          <input type="text" pInputText [(ngModel)]="historicalStock" class="ai-picks-input-field ai-picks-button"/>
+          <input name="endDate" type="date" class="ai-picks-input-field ai-picks-button" [ngModel]="endDate" (ngModelChange)="endDate = $event">
+          <button pButton type="button" label="Search" class="ui-button-success ai-picks-button"
+            (click)="trainStock()" *ngIf="!isLoading"></button>
+          <button pButton type="button" label="Update Chart" class="ui-button-info ai-picks-button"
+            (click)="updateChart()" *ngIf="!isLoading"></button>
+          <div *ngIf="isLoading">loading...</div>
         </p-header>
-        <ng-template let-sell pTemplate="item">
+        <ng-template let-history pTemplate="item">
           <div class="ui-helper-clearfix">
             <div class="ui-g">
               <div class="ui-g-12">
@@ -66,10 +69,12 @@
               </div>
               <div class="ui-g-12" *ngFor="let prediction of history.value">
                 Day {{prediction.algorithm}}:
-                <span>
+                <span [ngClass]="{'bearish-title': prediction.prediction < 0.5, 'bullish-title': prediction.prediction >= 0.5}">
                   {{prediction.prediction}}
                 </span>
-                <span>(accuracy:{{prediction.accuracy}})</span>
+                <span>(date: {{prediction.date}})</span>
+                <span>(accuracy: {{prediction.accuracy}})</span>
+
               </div>
             </div>
           </div>
