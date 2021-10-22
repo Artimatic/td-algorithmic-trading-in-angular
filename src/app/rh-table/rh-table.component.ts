@@ -313,7 +313,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
                       result.previousImpliedMovement = this.getPreviousImpliedMove(indicatorResults.signals[indicatorResults.signals.length - 2]);
                       
-                      result.kellyCriterion = (0.7-result.previousImpliedMovement)-((1-(0.7-result.previousImpliedMovement))/1 + result.previousImpliedMovement;
+                      result.kellyCriterion = (0.7-result.previousImpliedMovement)-((1-(0.7-result.previousImpliedMovement))/1 + result.previousImpliedMovement);
                       
                       const tableObj = {
                         recommendation: indicatorResults.recommendation,
