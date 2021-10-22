@@ -27,7 +27,7 @@
             <input type="text" pInputText size="50" placeholder="Global Filter"
               (input)="dt.filterGlobal($event.target.value, 'contains')" style="width:auto">
           </div>
-          <div class="date-picker" *ngIf="additionalOptions">
+          <div class="date-picker">
             End Date
             <input name="endDate" type="date" [ngModel]="endDate" (ngModelChange)="endDate = $event">
           </div>

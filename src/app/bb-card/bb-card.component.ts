@@ -777,7 +777,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
       setTimeout(() => {
         const getPriceSub = this.portfolioService.getPrice(this.order.holding.symbol)
           .subscribe((price) => {
-            if (price >= quote) {
+            if (price >= quote * 0.999) {
               const buyOrder = this.buildBuyOrder(orderQuantity,
                 price,
                 timestamp,
