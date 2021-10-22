@@ -132,6 +132,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       { field: 'lastPrice', header: 'Last Price' },
       { field: 'profitableTrades', header: 'Profitable Trades' },
       { field: 'totalTrades', header: 'Trades' },
+      { field: 'kellyCriterion', header: 'Trade Size' },
 
       { field: 'buySignals', header: 'Buy' },
       { field: 'sellSignals', header: 'Sell' },
@@ -196,6 +197,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       { field: 'previousImpliedMovement', header: 'Previous IM' },
       { field: 'bearishProbability', header: 'Probability of Bear Profit' },
       { field: 'bullishProbability', header: 'Probability of Bull Profit' },
+      { field: 'kellyCriterion', header: 'Trade Size' }
     ];
 
     this.selectedRecommendation = ['strongbuy', 'buy', 'sell', 'strongsell'];
@@ -296,7 +298,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                       const result = {
                         algo: String(indicator),
                         recommendation: 'Neutral',
-                        previousImpliedMovement: null
+                        previousImpliedMovement: null,
+                        kellyCriterion: null
                       };
                       if (lastSignal.recommendation[indicator] === 'Bullish') {
                         result.recommendation = 'Buy';
@@ -309,7 +312,9 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                       }
 
                       result.previousImpliedMovement = this.getPreviousImpliedMove(indicatorResults.signals[indicatorResults.signals.length - 2]);
-
+                      
+                      result.kellyCriterion = (0.7-result.previousImpliedMovement)-((1-(0.7-result.previousImpliedMovement))/1 + result.previousImpliedMovement;
+                      
                       const tableObj = {
                         recommendation: indicatorResults.recommendation,
                         stock: indicatorResults.stock,
