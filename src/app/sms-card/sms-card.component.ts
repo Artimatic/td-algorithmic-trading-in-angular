@@ -174,6 +174,7 @@ export class SmsCardComponent implements OnInit, OnDestroy {
   }
 
   setDates() {
+    this.globalSettingsService.setStartTimes();
     this.startTime = this.globalSettingsService.startTime;
     this.stopTime = this.globalSettingsService.stopTime;
   }

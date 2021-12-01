@@ -311,7 +311,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                         this.addBearCount();
                       }
 
-                      result.previousImpliedMovement = this.getPreviousImpliedMove(indicatorResults.signals[indicatorResults.signals.length - 2]);
+                      result.previousImpliedMovement = this.getPreviousImpliedMove(indicatorResults.signals[indicatorResults.signals.length - 2], indicatorResults.signals[indicatorResults.signals.length - 1]);
 
                       result.kellyCriterion = (0.7 - result.previousImpliedMovement) - ((1 - (0.7 - result.previousImpliedMovement)) / 1 + result.previousImpliedMovement);
 
@@ -369,8 +369,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  private getPreviousImpliedMove(signal) {
-    return signal.impliedMovement;
+  private getPreviousImpliedMove(signal, alternativeSignal) {
+    return signal.impliedMovement ? signal.impliedMovement : alternativeSignal.impliedMovement;
   }
 
   scoreSignals(stock, signals) {
@@ -722,8 +722,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     if (runWithoutChecks) {
       this.aiPicksService.tickerBuyRecommendationQueue.next(element.stock);
       this.aiPicksService.tickerSellRecommendationQueue.next(element.stock);
-    }
-    if (element.sellSignals && element.buySignals) {
+    } else if (element.sellSignals && element.buySignals) {
       if (element.sellSignals.length > element.buySignals.length) {
         this.aiPicksService.tickerSellRecommendationQueue.next(element.stock);
       } else if (element.sellSignals.length < element.buySignals.length) {
