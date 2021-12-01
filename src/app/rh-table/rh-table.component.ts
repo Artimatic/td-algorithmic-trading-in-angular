@@ -311,7 +311,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                         this.addBearCount();
                       }
 
-                      result.previousImpliedMovement = this.getPreviousImpliedMove(indicatorResults.signals[indicatorResults.signals.length - 2], indicatorResults.signals[indicatorResults.signals.length - 1]);
+                      result.previousImpliedMovement = this.getPreviousImpliedMove(indicatorResults.signals[indicatorResults.signals.length - 2],
+                        indicatorResults.signals[indicatorResults.signals.length - 1]);
 
                       result.kellyCriterion = (0.7 - result.previousImpliedMovement) - ((1 - (0.7 - result.previousImpliedMovement)) / 1 + result.previousImpliedMovement);
 
