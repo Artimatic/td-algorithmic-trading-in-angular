@@ -46,4 +46,6 @@ export interface Stock {
   profitableTrades?: number;
   bearishProbability?: number;
   bullishProbability?: number;
+  previousImpliedMovement?: number;
+  kellyCriterion?: number;
 }

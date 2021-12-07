@@ -19,6 +19,7 @@ import { Subscription, Observable, Subject } from 'rxjs';
 import { DailyBacktestService } from '@shared/daily-backtest.service';
 import { take } from 'rxjs/operators';
 import { AiPicksService } from '@shared/services/ai-picks.service';
+import { ReportingService } from '@shared/services/reporting.service';
 
 export interface Algo {
   value: string;
@@ -110,7 +111,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     private globalSettingsService: GlobalSettingsService,
     private optionsDataService: OptionsDataService,
     private dailyBacktestService: DailyBacktestService,
-    private aiPicksService: AiPicksService) { }
+    private aiPicksService: AiPicksService,
+    private reportingService: ReportingService) { }
 
   ngOnInit() {
     this.tickerList = Stocks;
@@ -311,10 +313,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                         this.addBearCount();
                       }
 
-                      result.previousImpliedMovement = this.getPreviousImpliedMove(indicatorResults.signals[indicatorResults.signals.length - 2],
-                        indicatorResults.signals[indicatorResults.signals.length - 1]);
-
-                      result.kellyCriterion = (0.7 - result.previousImpliedMovement) - ((1 - (0.7 - result.previousImpliedMovement)) / 1 + result.previousImpliedMovement);
+                      result.previousImpliedMovement = indicatorResults.signals[indicatorResults.signals.length - 1].impliedMovement;
 
                       const tableObj = {
                         recommendation: indicatorResults.recommendation,
@@ -368,10 +367,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
         this.iterateAlgoParams(algoParams, callback);
         break;
     }
-  }
-
-  private getPreviousImpliedMove(signal, alternativeSignal) {
-    return signal.impliedMovement ? signal.impliedMovement : alternativeSignal.impliedMovement;
   }
 
   scoreSignals(stock, signals) {
@@ -739,6 +734,11 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       .subscribe({
         next: data => {
           foundStock.impliedMovement = data.move;
+
+          const impliedMove = foundStock.impliedMovement;
+          const probabilityOfProfit = foundStock.bullishProbability;
+          foundStock.kellyCriterion = _.round((probabilityOfProfit - impliedMove) - ((1 - (probabilityOfProfit - impliedMove)) / 1 + impliedMove), 2);
+
           this.addToList(foundStock);
         }
       });
@@ -791,6 +791,13 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   autoActivate() {
     this.endDate = moment().format('YYYY-MM-DD');
     this.runDefaultBacktest();
+  }
+
+  exportResults() {
+    this.currentList.forEach(results => {
+      this.reportingService.addBacktestResults(results);
+    });
+    this.reportingService.exportBacktestResults();
   }
 
   ngOnDestroy() {
