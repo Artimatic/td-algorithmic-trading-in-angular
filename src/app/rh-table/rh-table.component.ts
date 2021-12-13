@@ -20,6 +20,8 @@ import { DailyBacktestService } from '@shared/daily-backtest.service';
 import { take } from 'rxjs/operators';
 import { AiPicksService } from '@shared/services/ai-picks.service';
 import { ReportingService } from '@shared/services/reporting.service';
+import { WatchListService } from '../watch-list/watch-list.service';
+import { ClientSmsService } from '@shared/services/client-sms.service';
 
 export interface Algo {
   value: string;
@@ -112,7 +114,9 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     private optionsDataService: OptionsDataService,
     private dailyBacktestService: DailyBacktestService,
     private aiPicksService: AiPicksService,
-    private reportingService: ReportingService) { }
+    private reportingService: ReportingService,
+    private clientSmsService: ClientSmsService,
+    private watchListService: WatchListService) { }
 
   ngOnInit() {
     this.tickerList = Stocks;
@@ -345,6 +349,29 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                     });
 
                   setTimeout(() => {
+                    if (bullishSignals && bearishSignals) {
+                      if (bearishSignals.length > bullishSignals.length) {
+                        const foundInWatchList = this.watchListService.watchList.find(item => {
+                          return item.stock === symbol;
+                        });
+                        if (foundInWatchList) {
+                          this.clientSmsService.sendSellSms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
+                            .pipe(take(1))
+                            .subscribe();
+                        }
+                        this.aiPicksService.tickerSellRecommendationQueue.next(symbol);
+                      } else if (bearishSignals.length < bullishSignals.length) {
+                        const foundInWatchList = this.watchListService.watchList.find(item => {
+                          return item.stock === symbol;
+                        });
+                        if (foundInWatchList) {
+                          this.clientSmsService.sendBuySms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
+                            .pipe(take(1))
+                            .subscribe();
+                        }
+                        this.aiPicksService.tickerBuyRecommendationQueue.next(symbol);
+                      }
+                    }
                     this.getImpliedMovement(testResults);
                   }, 10000);
                 }
@@ -720,8 +747,24 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       this.aiPicksService.tickerSellRecommendationQueue.next(element.stock);
     } else if (element.sellSignals && element.buySignals) {
       if (element.sellSignals.length > element.buySignals.length) {
+        const foundInWatchList = this.watchListService.watchList.find(item => {
+          return item.stock === element.stock;
+        });
+        if (foundInWatchList) {
+          this.clientSmsService.sendSellSms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
+            .pipe(take(1))
+            .subscribe();
+        }
         this.aiPicksService.tickerSellRecommendationQueue.next(element.stock);
       } else if (element.sellSignals.length < element.buySignals.length) {
+        const foundInWatchList = this.watchListService.watchList.find(item => {
+          return item.stock === element.stock;
+        });
+        if (foundInWatchList) {
+          this.clientSmsService.sendBuySms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
+            .pipe(take(1))
+            .subscribe();
+        }
         this.aiPicksService.tickerBuyRecommendationQueue.next(element.stock);
       }
     }

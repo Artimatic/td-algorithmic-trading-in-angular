@@ -459,7 +459,6 @@ export const stockList = [
   'FSLY',
   'LYFT',
   'UBER',
-  'WORK',
   'PINS',
   'KMB',
   'CLX',

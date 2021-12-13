@@ -73,6 +73,7 @@ import { TimepickerModule } from 'ngx-bootstrap/timepicker';
 import { PieAlloctComponent } from './pie-alloct/pie-alloct.component';
 import { AiPicksComponent } from './ai-picks/ai-picks.component';
 import { AutoBacktestSwitchComponent } from './auto-backtest-switch/auto-backtest-switch.component';
+import { WatchListComponent } from './watch-list/watch-list.component';
 
 @NgModule({
   declarations: [
@@ -120,6 +121,7 @@ import { AutoBacktestSwitchComponent } from './auto-backtest-switch/auto-backtes
     PieAlloctComponent,
     AiPicksComponent,
     AutoBacktestSwitchComponent,
+    WatchListComponent,
   ],
   entryComponents: [
     LoginDialogComponent,

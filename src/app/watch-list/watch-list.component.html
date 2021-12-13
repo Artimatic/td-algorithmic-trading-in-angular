@@ -1,0 +1,51 @@
+<p-dialog header="Watch List" [(visible)]="display" [appendTo]="'body'"
+    [contentStyle]="{width:'500px', 'max-height': '600px'}" [draggable]="true" [dismissableMask]="true"
+    [responsive]="true" (onShow)="onShow()" (onHide)="onHide()">
+    <div class="ui-g">
+        <div class="ui-g-6">
+            <p-listbox [options]="defaultList" [(ngModel)]="selectedItem">
+                <ng-template let-contact let-i="index" pTemplate="item">
+                    <div class="ui-helper-clearfix">
+                        <b>{{contact.label}}</b>
+                        {{contact.value.phoneNumber}}
+                    </div>
+                </ng-template>
+                <p-footer>
+                    <p-button icon="pi pi-minus" iconPos="left" class="ui-button-danger" (click)="removeItem()">
+                    </p-button>
+                </p-footer>
+            </p-listbox>
+        </div>
+        <div class="ui-g-6">
+            <div class="card-form">
+                <form [formGroup]="addFormGroup">
+                    <div class="order-form-item">
+                        <input type="text" pInputText placeholder="Phone Number" formControlName="phoneNumber">
+                        <div *ngIf="(!addFormGroup.controls.phoneNumber.pristine || addFormGroup.touched) && addFormGroup.controls.phoneNumber.errors" class="alert-danger">
+                            Valid phone number required.
+                        </div>
+                    </div>
+                    <div class="order-form-item">
+                        <input type="text" pInputText class="uppercase" placeholder="Stock" formControlName="stock"
+                            (keyup.enter)="addItem()">
+                        <div *ngIf="(!addFormGroup.controls.stock.pristine || addFormGroup.touched) && addFormGroup.controls.stock.errors" class="alert-danger">
+                            Valid stock required.
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="action-buttons">
+                <button pButton type="button" label="Remove All" class="ui-button-danger"
+                    (click)="removeAll()"></button>
+                <p-button icon="pi pi-plus" iconPos="left" class="ui-button-success add-button" (click)="addItem()">
+                </p-button>
+            </div>
+        </div>
+
+        <div *ngIf="addFormGroup.errors" class="cross-validation-error-message alert alert-danger">
+            Name cannot match alter ego.
+        </div>
+    </div>
+</p-dialog>
+
+<button type="button" (click)="showDialog()" pButton icon="pi pi-list" label="Watch List"></button>
