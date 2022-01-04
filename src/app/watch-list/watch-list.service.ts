@@ -5,7 +5,7 @@ import { Injectable } from '@angular/core';
 })
 export class WatchListService {
   public watchList = [];
-  constructor() { 
+  constructor() {
     if (sessionStorage.getItem('watchList')) {
       const savedList = JSON.parse(sessionStorage.getItem('watchList'));
       this.watchList = savedList;
@@ -23,7 +23,7 @@ export class WatchListService {
 
   removeWatchItem(stock: string, phoneNumber: string) {
     const index = this.watchList.findIndex(item => {
-      if (item.stock === stock && item.phoneNumber ===  phoneNumber) {
+      if (item.stock === stock && item.phoneNumber === phoneNumber) {
         return true;
       }
       return false;

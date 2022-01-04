@@ -17,7 +17,7 @@ export class WatchListComponent implements OnInit {
   constructor(private _formBuilder: FormBuilder, private watchListService: WatchListService) { }
 
   ngOnInit() {
-   this.defaultList = [];
+    this.defaultList = [];
 
     this.addFormGroup = this._formBuilder.group({
       stock: ['', Validators.required],
@@ -28,7 +28,7 @@ export class WatchListComponent implements OnInit {
   showDialog() {
     this.display = true;
   }
-  
+
   onShow() {
     this.addFormGroup = this._formBuilder.group({
       stock: ['', [Validators.required, Validators.pattern('[A-Za-z]{1,5}')]],
@@ -53,7 +53,7 @@ export class WatchListComponent implements OnInit {
       this.phoneNumber = this.addFormGroup.value.phoneNumber;
       this.watchListService.addWatchItem(this.addFormGroup.value.stock.toUpperCase(), this.addFormGroup.value.phoneNumber);
       this.addFormGroup.value.stock = '';
-      this.addFormGroup.setValue({stock: '', phoneNumber: this.phoneNumber});
+      this.addFormGroup.setValue({ stock: '', phoneNumber: this.phoneNumber });
       this.refreshList();
     }
   }
