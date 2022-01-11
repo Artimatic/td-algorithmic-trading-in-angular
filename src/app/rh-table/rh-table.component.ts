@@ -780,7 +780,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
           const impliedMove = foundStock.impliedMovement;
           const probabilityOfProfit = foundStock.bullishProbability;
-          foundStock.kellyCriterion = _.round((probabilityOfProfit - impliedMove)/(impliedMove) - ((1 - (probabilityOfProfit - impliedMove)) / (impliedMove*2)), 2);
+          foundStock.kellyCriterion = _.round((probabilityOfProfit - impliedMove) / (impliedMove) - ((1 - (probabilityOfProfit - impliedMove)) / (impliedMove * 2)), 2);
 
           this.addToList(foundStock);
         }
