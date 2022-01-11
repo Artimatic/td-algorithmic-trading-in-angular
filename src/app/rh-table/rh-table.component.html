@@ -110,12 +110,22 @@
     Progress: {{progress}}/{{totalStocks}}
     <mat-progress-bar mode="determinate" value="{{progressPct}}"></mat-progress-bar>
     <span class="summary-title">Average Trades: </span>{{algoReport.averageTrades}}
-    <span class="summary-title">Average Returns: </span>{{algoReport.averageReturns}}%
+    <span class="summary-title">Average Returns: </span>{{algoReport.averageReturns.toFixed(1)}}%
     <span class="summary-title">Profitable Trades: </span>{{algoReport.profitableTrades}}
     <span class="summary-title">Total Trades: </span>{{algoReport.totalTrades}}
     <span class="summary-title">Success Rate: </span>{{algoReport.successRate | percent}}
     <span class="summary-title">Bullish Count: </span>{{algoReport.bullishCount}}
     <span class="summary-title">Bearish Count: </span>{{algoReport.bearishCount}}
     <span class="summary-title">Bullish/Bearish: </span>{{algoReport.bullishBearishRatio}}
+    <span class="summary-title">Sentiment: 
+      <span *ngIf="algoReport.bullishCount > algoReport.bearishCount"></span>
+      <span [ngClass]="{'bullish-sentiment': algoReport.bullishCount >= algoReport.bearishCount}">
+        BULLISH
+      </span>
+      <span [ngClass]="{'bearish-sentiment': algoReport.bullishCount < algoReport.bearishCount}">
+        BEARISH
+      </span>
+    </span>
+    
   </ng-template>
 </p-table>

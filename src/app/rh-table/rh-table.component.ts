@@ -547,7 +547,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     const bullishRatio = +((this.algoReport.bullishCount / (this.algoReport.bullishCount + this.algoReport.bearishCount)).toFixed(2)) * 100;
     const bearishRatio = +((this.algoReport.bearishCount / (this.algoReport.bullishCount + this.algoReport.bearishCount)).toFixed(2)) * 100;
 
-    this.algoReport.bullishBearishRatio = `${bullishRatio}/${bearishRatio}`;
+    this.algoReport.bullishBearishRatio = `${bullishRatio.toFixed(0)}/${bearishRatio.toFixed(0)}`;
   }
 
   filter() {
