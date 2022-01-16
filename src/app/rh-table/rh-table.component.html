@@ -43,15 +43,28 @@
               </mat-optgroup>
             </mat-select>
           </mat-form-field>
+          <span class="sentiment-title">
+            Sentiment:
+            <span
+              [ngClass]="{'bullish-sentiment': algoReport.bullishCount > algoReport.bearishCount, 'hide-sentiment': algoReport.bullishCount <= algoReport.bearishCount}">
+              BULLISH
+            </span>
+            <span
+              [ngClass]="{'bearish-sentiment': algoReport.bullishCount < algoReport.bearishCount, 'hide-sentiment': algoReport.bullishCount >= algoReport.bearishCount}">
+              BEARISH
+            </span>
+          </span>
         </div>
       </div>
       <div class="ui-g-4">
         <div class="table-filters">
           <p-multiSelect class="filter" [options]="recommendations" [(ngModel)]="selectedRecommendation"
-            defaultLabel="All Recommendations" (onChange)="filter()" selectedItemsLabel="{0} recommendations selected" *ngIf="additionalOptions">
+            defaultLabel="All Recommendations" (onChange)="filter()" selectedItemsLabel="{0} recommendations selected"
+            *ngIf="additionalOptions">
           </p-multiSelect>
           <p-multiSelect class="filter" [options]="cols" [(ngModel)]="selectedColumns" optionLabel="header"
-            selectedItemsLabel="{0} columns selected" [style]="{minWidth: '200px'}" defaultLabel="Choose Columns" *ngIf="additionalOptions">
+            selectedItemsLabel="{0} columns selected" [style]="{minWidth: '200px'}" defaultLabel="Choose Columns"
+            *ngIf="additionalOptions">
           </p-multiSelect>
           <mat-checkbox class="filter" [(ngModel)]="twoOrMoreSignalsOnly" (change)="filter()" *ngIf="additionalOptions">
             Only show if two or more signals
@@ -117,15 +130,5 @@
     <span class="summary-title">Bullish Count: </span>{{algoReport.bullishCount}}
     <span class="summary-title">Bearish Count: </span>{{algoReport.bearishCount}}
     <span class="summary-title">Bullish/Bearish: </span>{{algoReport.bullishBearishRatio}}
-    <span class="summary-title">Sentiment: 
-      <span *ngIf="algoReport.bullishCount > algoReport.bearishCount"></span>
-      <span [ngClass]="{'bullish-sentiment': algoReport.bullishCount >= algoReport.bearishCount}">
-        BULLISH
-      </span>
-      <span [ngClass]="{'bearish-sentiment': algoReport.bullishCount < algoReport.bearishCount}">
-        BEARISH
-      </span>
-    </span>
-    
   </ng-template>
 </p-table>
