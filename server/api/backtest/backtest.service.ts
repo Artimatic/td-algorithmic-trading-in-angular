@@ -182,6 +182,10 @@ class BacktestService {
             indicators = this.addOnDaytradeIndicators(indicators);
             return indicators[indicators.length - 1];
           });
+      })
+      .catch(err => {
+        console.log('ERROR! getIntradayV2', err);
+        throw err;
       });
   }
 
@@ -387,6 +391,9 @@ class BacktestService {
           recommendation = this.getDaytradeRecommendation(currentIndicators.close, currentIndicators);
         }
         response.status(200).send(recommendation);
+      })
+      .catch((error) => {
+        response.status(500).send({ error });
       });
   }
 
