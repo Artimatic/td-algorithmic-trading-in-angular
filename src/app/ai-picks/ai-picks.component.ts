@@ -138,33 +138,37 @@ export class AiPicksComponent implements OnInit, OnDestroy {
   }
 
   addSellPick(symbol: string, predictionData: AiPicksPredictionData) {
-    if (predictionData.prediction <= 0.3) {
-      const isSellPick = (element: AiPicksData) => element.label === symbol;
+    const isSellPick = (element: AiPicksData) => element.label === symbol;
 
-      const index = this.sells.findIndex(isSellPick);
-      if (index >= 0) {
-        this.sells[index].value.push(predictionData);
-      } else {
-        const sellItem = this.createListObject(symbol, predictionData);
-        this.sells.push(sellItem);
+    const index = this.sells.findIndex(isSellPick);
+
+    if (index >= 0) {
+      if (this.sells[index].value.length > 1) {
+        this.sells[index].value = [];
       }
+      this.sells[index].value.push(predictionData);
+    } else {
+      const sellItem = this.createListObject(symbol, predictionData);
+      this.sells.push(sellItem);
     }
   }
 
   addBuyPick(symbol: string, predictionData: AiPicksPredictionData) {
-    if (predictionData.prediction > 0.5) {
-      const item = this.createListObject(symbol, predictionData);
+    const item = this.createListObject(symbol, predictionData);
 
-      this.aiPicksService.mlBuyResults.next(item);
+    this.aiPicksService.mlBuyResults.next(item);
 
-      const isBuyPick = (element: AiPicksData) => element.label === symbol;
+    const isBuyPick = (element: AiPicksData) => element.label === symbol;
 
-      const index = this.buys.findIndex(isBuyPick);
-      if (index >= 0) {
-        this.buys[index].value.push(predictionData);
-      } else {
-        this.buys.push(item);
+    const index = this.buys.findIndex(isBuyPick);
+
+    if (index >= 0) {
+      if (this.buys[index].value.length > 1) {
+        this.buys[index].value = [];
       }
+      this.buys[index].value.push(predictionData);
+    } else {
+      this.buys.push(item);
     }
   }
 

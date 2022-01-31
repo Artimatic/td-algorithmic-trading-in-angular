@@ -9,7 +9,8 @@
           <div class="ui-helper-clearfix">
             <div class="ui-g">
               <div class="ui-g-12">
-                <h5>{{buy.label}} <i class="pi pi-times" (click)="removeFromBuyList(buy.label)"></i></h5>
+                <h5>{{buy.label}}</h5>
+                <p-button class="ui-button-danger" icon="pi pi-times" iconPos="right" label="Remove" (click)="removeFromBuyList(buy.label)"></p-button>
               </div>
               <div class="ui-g-12" *ngFor="let prediction of buy.value">
                 Day {{prediction.algorithm}}:
@@ -34,7 +35,8 @@
           <div class="ui-helper-clearfix">
             <div class="ui-g">
               <div class="ui-g-12">
-                <h5>{{sell.label}} <i class="pi pi-times" (click)="removeFromSellList(sell.label)"></i></h5>
+                <h5>{{sell.label}}</h5>
+                <p-button class="ui-button-danger" icon="pi pi-times" iconPos="right" label="Remove" (click)="removeFromSellList(sell.label)"></p-button>
               </div>
               <div class="ui-g-12" *ngFor="let prediction of sell.value">
                 Day {{prediction.algorithm}}:
