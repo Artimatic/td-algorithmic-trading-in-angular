@@ -559,7 +559,7 @@ class BacktestService {
     };
   }
 
-  determineStopProfit(paidPrice, currentPrice, lossThreshold, profitThreshold) {
+  determineStopProfit(paidPrice, currentPrice, lossThreshold = 0.05, profitThreshold = 0.05) {
     if (!paidPrice || !currentPrice || !lossThreshold || !profitThreshold) {
       return false;
     }
