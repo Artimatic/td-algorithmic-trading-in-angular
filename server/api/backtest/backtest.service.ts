@@ -377,10 +377,11 @@ class BacktestService {
           recommendation: OrderType.None
         };
 
-        const avgPrice = paidPrice;
-
+        const avgPrice = Number(paidPrice);
+        const lossThreshold = Number(parameters.lossThreshold);
+        const profitThreshold = Number(parameters.profitThreshold);
         const isAtLimit = this.determineStopProfit(avgPrice, price,
-          parameters.lossThreshold, parameters.profitThreshold);
+          lossThreshold, profitThreshold);
         if (isAtLimit) {
           recommendation.recommendation = OrderType.Sell;
         } else {
@@ -559,7 +560,7 @@ class BacktestService {
     };
   }
 
-  determineStopProfit(paidPrice, currentPrice, lossThreshold = 0.05, profitThreshold = 0.05) {
+  determineStopProfit(paidPrice, currentPrice, lossThreshold = null, profitThreshold = null) {
     if (!paidPrice || !currentPrice || !lossThreshold || !profitThreshold) {
       return false;
     }

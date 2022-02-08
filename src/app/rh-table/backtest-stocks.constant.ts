@@ -319,7 +319,6 @@ export const stockList = [
   'JNPR',
   'MCD',
   'SAP',
-  'KEM',
   'CHGG',
   'GLD',
   'MA',
