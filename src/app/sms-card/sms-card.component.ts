@@ -91,10 +91,10 @@ export class SmsCardComponent implements OnInit, OnDestroy {
           this.stockList.forEach((listItem) => {
             const stockTicker = listItem.label;
             this.portfolioService.getPrice(stockTicker)
-            .pipe(take(1))
-            .subscribe((lastQuote) => {
-              this.runStrategy(stockTicker, 1 * lastQuote);
-            });
+              .pipe(take(1))
+              .subscribe((lastQuote) => {
+                this.runStrategy(stockTicker, 1 * lastQuote);
+              });
           });
         }
 
@@ -106,15 +106,16 @@ export class SmsCardComponent implements OnInit, OnDestroy {
   }
 
   async runStrategy(ticker: string, lastPrice: number) {
-    const getRecommendationSub = this.backtestService.getDaytradeRecommendation(ticker, lastPrice, lastPrice, { minQuotes: 81, lossThreshold: 0.03, profitThreshold: 0.05}).subscribe(
-      analysis => {
-        this.processAnalysis(ticker, analysis, lastPrice, moment().valueOf());
-        return null;
-      },
-      error => {
-        this.error = 'Issue getting analysis.';
-      }
-    );
+    const getRecommendationSub = this.backtestService.getDaytradeRecommendation(ticker, lastPrice, lastPrice,
+      { minQuotes: 81 }).subscribe(
+        analysis => {
+          this.processAnalysis(ticker, analysis, lastPrice, moment().valueOf());
+          return null;
+        },
+        error => {
+          this.error = 'Issue getting analysis.';
+        }
+      );
 
     this.subscriptions.push(getRecommendationSub);
   }
