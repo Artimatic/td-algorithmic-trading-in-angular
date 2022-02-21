@@ -567,8 +567,7 @@ class BacktestService {
 
                   mfiDivergenceArr = [];
                 }
-              } 
-              else if (mfiDivergenceArr[0].mfi === DaytradeRecommendation.Bearish) {
+              } else if (mfiDivergenceArr[0].mfi === DaytradeRecommendation.Bearish) {
                 if (mfiDivergenceArr[1].macd === DaytradeRecommendation.Bearish &&
                   mfiDivergenceArr[len - 1].macd === DaytradeRecommendation.Bearish &&
                   mfiDivergenceArr[len - 2].macd === DaytradeRecommendation.Bullish &&
