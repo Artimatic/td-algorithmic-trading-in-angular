@@ -222,6 +222,9 @@ export class ProductViewComponent implements OnInit {
         }
       }
       time.push(day.date);
+      // if (moment(day.date).format('YYYY-MM-DD') === moment('2022-02-11T05:00:00.000+0000').format('YYYY-MM-DD')) {
+      //   console.log(day);
+      // }
       const signal = this.buildSignal(action, day.close, day.volume, day.recommendation);
       seriesData.push(signal);
 

@@ -70,6 +70,7 @@ export interface Recommendation {
   demark9?: DaytradeRecommendation;
   mfiLow?: DaytradeRecommendation;
   mfiDivergence?: DaytradeRecommendation;
+  mfiDivergence2?: DaytradeRecommendation;
   overboughtMomentum?: DaytradeRecommendation;
 }
 
@@ -523,6 +524,29 @@ class BacktestService {
               indicator.recommendation.recommendation = OrderType.Sell;
             }
 
+            // 2020-07-02T05:00:00.000+0000
+            const m = moment(indicator.date);
+            if (indicator.mfiLeft > indicators[idx - 1].mfiLeft &&
+              indicators[idx - 1].mfiLeft > indicators[idx - 2].mfiLeft &&
+              indicators[idx - 2].mfiLeft > indicators[idx - 3].mfiLeft &&
+              indicators[idx - 3].mfiLeft > indicators[idx - 4].mfiLeft &&
+              indicators[idx - 4].mfiLeft > indicators[idx - 5].mfiLeft &&
+              indicator.close < indicators[idx - 5].close &&
+              indicators[idx - 4].close < indicators[idx - 2].close) {
+              indicator.recommendation.mfiDivergence = DaytradeRecommendation.Bearish;
+              indicator.recommendation.recommendation = OrderType.Sell;
+              console.log('bearish: ', m.format());
+            } else if (indicator.mfiLeft < indicators[idx - 1].mfiLeft &&
+              indicators[idx - 1].mfiLeft < indicators[idx - 2].mfiLeft &&
+              indicators[idx - 2].mfiLeft < indicators[idx - 3].mfiLeft &&
+              indicators[idx - 3].mfiLeft < indicators[idx - 4].mfiLeft &&
+              indicators[idx - 4].mfiLeft < indicators[idx - 5].mfiLeft &&
+              indicator.close > indicators[idx - 5].close &&
+              indicators[idx - 4].close > indicators[idx - 2].close) {
+              indicator.recommendation.mfiDivergence = DaytradeRecommendation.Bullish;
+              indicator.recommendation.recommendation = OrderType.Buy;
+              console.log('bullish: ', m.format());
+            }
             if (indicator.recommendation.mfiTrade === DaytradeRecommendation.Bullish) {
               mfiDivergenceArr = [];
               mfiDivergenceArr.push({ mfi: DaytradeRecommendation.Bullish, date: indicator.date, close: indicator.close });
@@ -541,30 +565,19 @@ class BacktestService {
 
             if (mfiDivergenceArr.length > 5) {
               // 2020-07-02T05:00:00.000+0000
-              const m = moment(indicator.date);
-
-              // console.log('indicator: ', indicator);
+              // const m = moment(indicator.date);
 
               const len = mfiDivergenceArr.length;
 
               if (mfiDivergenceArr[0].mfi === DaytradeRecommendation.Bullish) {
-                // if (m.format('MM-YYYY') === '10-2021' || m.format('MM-YYYY') === '09-2021') {
-                //   console.log('mfiDivergenceArr1: ', m.format(), mfiDivergenceArr, 
-                //   mfiDivergenceArr[len - 1].macd === DaytradeRecommendation.Bullish,
-                //   mfiDivergenceArr[1].macd === DaytradeRecommendation.Bullish,
-                //   mfiDivergenceArr[len - 2].macd === DaytradeRecommendation.Bearish,
-                //   mfiDivergenceArr[len - 1].close < mfiDivergenceArr[0].close, mfiDivergenceArr[len - 1].close, mfiDivergenceArr[0].close);
-                // }
                 if (mfiDivergenceArr[1].macd === DaytradeRecommendation.Bullish &&
                   mfiDivergenceArr[len - 1].macd === DaytradeRecommendation.Bullish &&
                   mfiDivergenceArr[len - 2].macd === DaytradeRecommendation.Bearish &&
                   mfiDivergenceArr[len - 3].macd === DaytradeRecommendation.Bullish &&
                   mfiDivergenceArr[len - 4].macd === DaytradeRecommendation.Bearish &&
                   mfiDivergenceArr[len - 1].close < mfiDivergenceArr[0].close) {
-                  indicator.recommendation.mfiDivergence = DaytradeRecommendation.Bullish;
+                  indicator.recommendation.mfiDivergence2 = DaytradeRecommendation.Bullish;
                   indicator.recommendation.recommendation = OrderType.Buy;
-                  console.log('mfiDivergence bullish: ', m.format(), mfiDivergenceArr);
-
                   mfiDivergenceArr = [];
                 }
               } else if (mfiDivergenceArr[0].mfi === DaytradeRecommendation.Bearish) {
@@ -574,10 +587,8 @@ class BacktestService {
                   mfiDivergenceArr[len - 3].macd === DaytradeRecommendation.Bearish &&
                   mfiDivergenceArr[len - 4].macd === DaytradeRecommendation.Bullish &&
                   mfiDivergenceArr[len - 1].close > mfiDivergenceArr[0].close) {
-                  indicator.recommendation.mfiDivergence = DaytradeRecommendation.Bearish;
+                  indicator.recommendation.mfiDivergence2 = DaytradeRecommendation.Bearish;
                   indicator.recommendation.recommendation = OrderType.Sell;
-                  console.log('mfiDivergence bearish: ', m.format(), mfiDivergenceArr);
-
                   mfiDivergenceArr = [];
                 }
               }
@@ -1717,7 +1728,8 @@ class BacktestService {
       mfiTrade: DaytradeRecommendation.Neutral,
       macd: DaytradeRecommendation.Neutral,
       demark9: DaytradeRecommendation.Neutral,
-      mfiDivergence: DaytradeRecommendation.Neutral
+      mfiDivergence: DaytradeRecommendation.Neutral,
+      mfiDivergence2: DaytradeRecommendation.Neutral
     };
 
     const rocCrossoverRecommendation = AlgoService.checkRocCrossover(indicator.roc70Previous, indicator.roc70, indicator.mfiLeft);

@@ -130,11 +130,12 @@ export default class PredictionService {
       input.push(0);
     }
 
-    if (signal.recommendation.roc && signal.recommendation.roc.toLowerCase() === targetRecommendation) {
+    if (signal.recommendation.mfiDivergence2 && signal.recommendation.mfiDivergence2.toLowerCase() === targetRecommendation) {
       input.push(1);
     } else {
       input.push(0);
     }
+
 
     if (signal.recommendation.bband && signal.recommendation.bband.toLowerCase() === targetRecommendation) {
       input.push(1);
