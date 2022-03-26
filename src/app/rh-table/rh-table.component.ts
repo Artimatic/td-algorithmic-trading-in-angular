@@ -778,13 +778,36 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
         next: data => {
           foundStock.impliedMovement = data.move;
 
-          const impliedMove = foundStock.impliedMovement;
-          const probabilityOfProfit = foundStock.bullishProbability;
-          foundStock.kellyCriterion = _.round((probabilityOfProfit - impliedMove) / (impliedMove) - ((1 - (probabilityOfProfit - impliedMove)) / (impliedMove * 2)), 2);
+          // const impliedMove = foundStock.impliedMovement;
+          // const probabilityOfProfit = foundStock.bullishProbability;
+          foundStock.kellyCriterion = 0;
 
           this.addToList(foundStock);
         }
       });
+  }
+
+  getKellyCriterion(stock) {
+    stock.kellyCriterion = this.calculateKellyCriterion(stock.bullishProbability, stock.bearishProbability, null);
+
+    this.addToList(stock);
+  }
+
+  calculateKellyCriterion(bullishProbability, bearishProbability, historicalTotalWinLossRatio) {
+    let winProbability = bullishProbability;
+    let totalWinLossRatio = historicalTotalWinLossRatio;
+    if (!winProbability) {
+      if (bearishProbability) {
+        winProbability = 1 - bearishProbability;
+      }
+    }
+
+    if (!totalWinLossRatio) {
+      totalWinLossRatio = _.round(this.algoReport.profitableTrades / (this.algoReport.totalTrades - this.algoReport.profitableTrades), 2);
+    }
+
+    console.log(winProbability, (1 - winProbability), totalWinLossRatio);
+    return _.round(winProbability - (1 - winProbability) / totalWinLossRatio, 2);
   }
 
   executeBacktests() {
