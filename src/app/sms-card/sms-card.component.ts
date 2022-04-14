@@ -3,7 +3,7 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 
 import { SelectItem } from 'primeng/components/common/selectitem';
 import * as _ from 'lodash';
-import { BacktestService, PortfolioService } from '@shared/services';
+import { BacktestService, PortfolioService, MachineLearningService } from '@shared/services';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { MatDialog } from '@angular/material';
 import { ClientSmsService } from '@shared/services/client-sms.service';
@@ -47,6 +47,7 @@ export class SmsCardComponent implements OnInit, OnDestroy {
     private portfolioService: PortfolioService,
     private clientSmsService: ClientSmsService,
     private globalSettingsService: GlobalSettingsService,
+    private machineLearningService: MachineLearningService,
     public dialog: MatDialog) { }
 
   ngOnInit() {
@@ -121,15 +122,53 @@ export class SmsCardComponent implements OnInit, OnDestroy {
   }
 
   async processAnalysis(ticker: string, analysis, price, time) {
-    if (analysis.recommendation.toLowerCase() === 'buy' && (this.buySellOption.value === 'buy_sell' || this.buySellOption.value === 'buy_only')) {
-      this.clientSmsService.sendBuySms(ticker, this.phoneNumber.value, price, 1).subscribe(() => {
-        this.messagesSent++;
-      });
-    } else if (analysis.recommendation.toLowerCase() === 'sell' && (this.buySellOption.value === 'buy_sell' || this.buySellOption.value === 'sell_only')) {
-      this.clientSmsService.sendSellSms(ticker, this.phoneNumber.value, price, 1).subscribe(() => {
-        this.messagesSent++;
-      });
+    if (this.buySellOption.value === 'buy_sell' || this.buySellOption.value === 'buy_only') {
+      if (analysis.recommendation.toLowerCase() === 'buy') {
+        this.clientSmsService.sendBuySms(ticker, this.phoneNumber.value, price, 1, 'strong buy').subscribe(() => {
+          this.messagesSent++;
+        });
+      } else if (analysis.mfi.toLowerCase() === 'bullish') {
+        this.clientSmsService.sendBuySms(ticker, this.phoneNumber.value, price, 1, 'mfi buy').subscribe(() => {
+          this.messagesSent++;
+        });
+      }
+    } else if (this.buySellOption.value === 'buy_sell' || this.buySellOption.value === 'sell_only') {
+      if (analysis.recommendation.toLowerCase() === 'sell') {
+        this.clientSmsService.sendSellSms(ticker, this.phoneNumber.value, price, 1, 'strong sell').subscribe(() => {
+          this.messagesSent++;
+        });
+      } else if (analysis.mfi.toLowerCase() === 'bearish') {
+        this.clientSmsService.sendSellSms(ticker, this.phoneNumber.value, price, 1, 'mfi sell').subscribe(() => {
+          this.messagesSent++;
+        });
+      }
     }
+
+    const trainingSub = this.machineLearningService
+      .trainPredictNext30(ticker.toUpperCase(),
+        moment().add({ days: 1 }).format('YYYY-MM-DD'),
+        moment().subtract({ days: 10 }).format('YYYY-MM-DD'),
+        1,
+        this.globalSettingsService.daytradeAlgo
+      )
+      .subscribe((data: any[]) => {
+        this.machineLearningService.activate(ticker,
+          this.globalSettingsService.daytradeAlgo)
+          .subscribe((machineResult: { nextOutput: number }) => {
+            const mlLog = `RNN model result: ${machineResult.nextOutput}`;
+            console.log(mlLog);
+            if (machineResult.nextOutput > 0.7) {
+              this.clientSmsService.sendBuySms(ticker, this.phoneNumber.value, price, 1, 'ml buy').subscribe(() => {
+                this.messagesSent++;
+              });
+            }
+          });
+      }, error => {
+        console.log('daytrade ml error: ', error);
+      });
+
+    this.subscriptions.push(trainingSub);
+
     if (this.messagesSent >= this.maxMessages.value) {
       this.stop();
     }

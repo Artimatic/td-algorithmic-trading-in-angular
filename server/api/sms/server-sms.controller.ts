@@ -14,7 +14,7 @@ class ServerSmsController extends BaseController {
 
       response.status(400).send();
     } else {
-      ServerSmsService.sendBuySms(request.body.phone, request.body.stock, request.body.price, request.body.quantity);
+      ServerSmsService.sendBuySms(request.body.phone, request.body.stock, request.body.price, request.body.quantity, request.body.message);
       response.status(200).send({});
     }
   }
@@ -24,7 +24,7 @@ class ServerSmsController extends BaseController {
       _.isNil(request.body.stock)) {
       response.status(400).send();
     } else {
-      ServerSmsService.sendSellSms(request.body.phone, request.body.stock, request.body.price, request.body.quantity);
+      ServerSmsService.sendSellSms(request.body.phone, request.body.stock, request.body.price, request.body.quantity, request.body.message);
       response.status(200).send({});
     }
   }

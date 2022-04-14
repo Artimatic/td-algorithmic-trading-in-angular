@@ -9,3 +9,4 @@ export { AlgoService } from './algo.service';
 export { TradeService } from './trade.service';
 export { CartService } from './cart.service';
 export { AiPicksService } from './ai-picks.service';
+export { MachineLearningService } from './machine-learning/machine-learning.service';
