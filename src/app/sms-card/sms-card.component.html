@@ -75,6 +75,7 @@
         <mat-card-actions>
           <button mat-raised-button color="warn" (click)="resetStepper(stepper)">STOP</button>
           <button mat-button color="warn" (click)="openDialog()">GO LIVE</button>
+          <button mat-button (click)="runTraining()">Train Model</button>
           <mat-slide-toggle [formControl]="testing" (change)="setTest()">
             Test Mode
           </mat-slide-toggle>

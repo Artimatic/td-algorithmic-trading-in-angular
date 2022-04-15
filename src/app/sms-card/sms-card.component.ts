@@ -42,6 +42,8 @@ export class SmsCardComponent implements OnInit, OnDestroy {
   stopTime;
   sub;
   messagesSent = 0;
+  lastSentSms: any = {};
+  lastTrainedTime: any = {};
 
   constructor(private backtestService: BacktestService,
     private portfolioService: PortfolioService,
@@ -81,7 +83,7 @@ export class SmsCardComponent implements OnInit, OnDestroy {
     this.setup();
     this.interval = this.defaultInterval;
     this.messagesSent = 0;
-
+    this.runTraining();
     this.sub = TimerObservable.create(0, this.interval)
       .takeWhile(() => this.alive)
       .subscribe(async () => {
@@ -122,56 +124,71 @@ export class SmsCardComponent implements OnInit, OnDestroy {
   }
 
   async processAnalysis(ticker: string, analysis, price, time) {
-    if (this.buySellOption.value === 'buy_sell' || this.buySellOption.value === 'buy_only') {
-      if (analysis.recommendation.toLowerCase() === 'buy') {
-        this.clientSmsService.sendBuySms(ticker, this.phoneNumber.value, price, 1, 'strong buy').subscribe(() => {
-          this.messagesSent++;
-        });
-      } else if (analysis.mfi.toLowerCase() === 'bullish') {
-        this.clientSmsService.sendBuySms(ticker, this.phoneNumber.value, price, 1, 'mfi buy').subscribe(() => {
-          this.messagesSent++;
-        });
-      }
-    } else if (this.buySellOption.value === 'buy_sell' || this.buySellOption.value === 'sell_only') {
+    if (this.buySellOption.value === 'buy_sell' || this.buySellOption.value === 'sell_only') {
       if (analysis.recommendation.toLowerCase() === 'sell') {
-        this.clientSmsService.sendSellSms(ticker, this.phoneNumber.value, price, 1, 'strong sell').subscribe(() => {
-          this.messagesSent++;
-        });
+        if (!this.lastSentSms[ticker] || moment().isAfter(moment(this.lastSentSms[ticker]).add(5, 'minutes'))) {
+
+          this.lastSentSms[ticker] = moment().valueOf();
+          this.clientSmsService.sendSellSms(ticker, this.phoneNumber.value, price, 1, 'strong sell').subscribe(() => {
+            this.messagesSent++;
+          });
+        }
       } else if (analysis.mfi.toLowerCase() === 'bearish') {
-        this.clientSmsService.sendSellSms(ticker, this.phoneNumber.value, price, 1, 'mfi sell').subscribe(() => {
-          this.messagesSent++;
-        });
+        if (!this.lastSentSms[ticker] || moment().isAfter(moment(this.lastSentSms[ticker]).add(5, 'minutes'))) {
+
+          this.lastSentSms[ticker] = moment().valueOf();
+
+          this.clientSmsService.sendSellSms(ticker, this.phoneNumber.value, price, 1, 'mfi sell').subscribe(() => {
+            this.messagesSent++;
+          });
+        }
       }
     }
 
-    const trainingSub = this.machineLearningService
+    if (this.lastTrainedTime[ticker] && moment().isBefore(moment(this.lastTrainedTime[ticker]).add(2, 'day'))) {
+      this.machineLearningService.activate(ticker,
+        this.globalSettingsService.daytradeAlgo)
+        .pipe(take(1))
+        .subscribe((machineResult: { nextOutput: number }) => {
+          const mlLog = `RNN model result: ${machineResult.nextOutput}`;
+          console.log(mlLog);
+          if (machineResult.nextOutput > 0.7) {
+            this.lastSentSms[ticker] = moment().valueOf();
+
+            this.clientSmsService.sendBuySms(ticker, this.phoneNumber.value, price, 1, 'ml buy').subscribe(() => {
+              this.messagesSent++;
+            });
+          }
+        });
+    } else {
+      this.train(ticker);
+    }
+
+    if (this.messagesSent >= this.maxMessages.value) {
+      this.stop();
+    }
+  }
+
+  train(ticker) {
+    this.machineLearningService
       .trainPredictNext30(ticker.toUpperCase(),
         moment().add({ days: 1 }).format('YYYY-MM-DD'),
         moment().subtract({ days: 10 }).format('YYYY-MM-DD'),
         1,
         this.globalSettingsService.daytradeAlgo
       )
+      .pipe(take(1))
       .subscribe((data: any[]) => {
-        this.machineLearningService.activate(ticker,
-          this.globalSettingsService.daytradeAlgo)
-          .subscribe((machineResult: { nextOutput: number }) => {
-            const mlLog = `RNN model result: ${machineResult.nextOutput}`;
-            console.log(mlLog);
-            if (machineResult.nextOutput > 0.7) {
-              this.clientSmsService.sendBuySms(ticker, this.phoneNumber.value, price, 1, 'ml buy').subscribe(() => {
-                this.messagesSent++;
-              });
-            }
-          });
       }, error => {
         console.log('daytrade ml error: ', error);
       });
+    this.lastTrainedTime[ticker] = moment().valueOf();
+  }
 
-    this.subscriptions.push(trainingSub);
-
-    if (this.messagesSent >= this.maxMessages.value) {
-      this.stop();
-    }
+  runTraining() {
+    this.stockList.forEach((listItem) => {
+      this.train(listItem.label);
+    });
   }
 
   resetStepper(stepper) {
