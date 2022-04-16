@@ -63,4 +63,32 @@
       </tr>
     </ng-template>
   </p-table>
+
+  <button pButton type="button" label="Get Quotes" class="ui-button-success" (click)="getIntradayQuotes()"></button>
+  <button pButton type="button" label="Train" class="ui-button-success" (click)="trainIntradayQuotes()"></button>
+
+  <p-table [columns]="intradayMlCols" [value]="intradayMlResults" [paginator]="true" [rows]="100">
+    <ng-template pTemplate="header" let-columns>
+      <tr>
+        <th *ngFor="let col of columns" [pSortableColumn]="col.field">
+          {{col.header}}
+          <p-sortIcon [field]="col.field"></p-sortIcon>
+        </th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
+      <tr [pSelectableRow]="rowData">
+        <td *ngFor="let col of columns" class="table-cell">
+          <div class="data-cell">
+            {{rowData[col.field]}}
+          </div>
+        </td>
+        <td class="table-cell">
+          <div class="data-cell">
+            <button pButton type="button" label="Activate" *ngIf="rowIndex > 81" class="ui-button-success" (click)="activateIntradayQuotes(rowIndex)"></button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
 </p-card>

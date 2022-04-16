@@ -1,4 +1,5 @@
 import * as _ from 'lodash';
+import * as moment from 'moment';
 
 import BaseController from '../templates/base.controller';
 import TrainingService from './training.service';
@@ -65,6 +66,28 @@ class MachineLearningController extends BaseController {
     const features = request.query.features ? request.query.features.split(',') : null;
 
     IntradayPredicationService.activate(request.query.symbol, features)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+  getQuotes(request, response) {
+    const start = moment(request.query.startDate).valueOf();
+    const end = moment(request.query.endDate).valueOf();
+
+    IntradayPredicationService.getQuotes(request.query.symbol, start, end)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+  getIndicators(request, response) {
+    IntradayPredicationService.getIndicators(request.body.quotes)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+
+  activateModel(request, response) {
+    IntradayPredicationService.activateModel(request.body.symbol, request.body.indicatorData, request.body.featureUse)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }

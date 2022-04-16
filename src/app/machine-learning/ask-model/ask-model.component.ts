@@ -33,7 +33,9 @@ export class AskModelComponent implements OnInit, OnDestroy {
   selectedModel: any;
   models: any[];
   cols: any[];
+  intradayMlCols: any[];
   modelResults: TrainingResults[];
+  intradayMlResults: any[];
   selectedStock;
   prefillOrderForm;
   private callChainSub: Subscription;
@@ -82,7 +84,14 @@ export class AskModelComponent implements OnInit, OnDestroy {
       { field: 'nextOutput', header: 'Next Output' }
     ];
 
+    this.intradayMlCols = [
+      { field: 'date', header: 'Date' },
+      { field: 'close', header: 'Price' },
+      { field: 'nextGuess', header: 'Next Guess' }
+    ];
+
     this.modelResults = [];
+    this.intradayMlResults = [];
     this.isLoading = false;
     this.setStartDate();
     this.selectedModel = this.models[0];
@@ -481,6 +490,53 @@ export class AskModelComponent implements OnInit, OnDestroy {
         const quantity = _.floor(amount / stockPrice);
         this.prefillOrderForm = this.cartService.buildOrder(event.data.symbol, quantity, stockPrice);
       });
+  }
+
+  getIntradayQuotes() {
+    const start = moment(this.startDate).subtract({ days: 1 }).format('YYYY-MM-DD');
+    const end = moment(this.endDate).add({ days: 1 }).format('YYYY-MM-DD');
+    this.machineLearningService.getQuotes(this.form.value.query, start, end)
+      .pipe(take(1))
+      .subscribe(quotes => {
+        console.log('quotes: ', quotes);
+        this.intradayMlResults = quotes;
+      });
+  }
+
+  trainIntradayQuotes() {
+    const start = moment(this.startDate).subtract({ days: 2 }).format('YYYY-MM-DD');
+    const end = moment(this.endDate).add({ days: 1 }).format('YYYY-MM-DD');
+
+    this.machineLearningService
+      .trainPredictNext30(this.form.value.query.toUpperCase(),
+        end,
+        start,
+        1,
+        this.globalSettingsService.daytradeAlgo
+      )
+      .pipe(take(1))
+      .subscribe((data: any[]) => {
+      }, error => {
+        console.log('daytrade ml error: ', error);
+      });
+  }
+
+  activateIntradayQuotes(rowData) {
+    if (rowData > 81) {
+      this.machineLearningService.getIndicators(this.intradayMlResults.slice(rowData - 81, rowData + 1))
+        .pipe(take(1))
+        .subscribe((indicators: any[]) => {
+          console.log('indicators: ', indicators);
+          return this.machineLearningService.activateModel(this.form.value.query, indicators, this.globalSettingsService.daytradeAlgo)
+            .pipe(take(1))
+            .subscribe(modelData => {
+              console.log('activatedata: ', modelData);
+            });
+        }, error => {
+          console.log('daytrade ml error: ', error);
+        });
+    }
+
   }
 
   ngOnDestroy() {

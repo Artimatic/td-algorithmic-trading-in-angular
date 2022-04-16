@@ -57,6 +57,40 @@ export class MachineLearningService {
     return this.http.get(`${BASE_URL}api/machine-learning/v3/activate`, options);
   }
 
+  getQuotes(symbol: string, startDate: string, endDate: string): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const options = {
+      headers: headers,
+      params: {
+        symbol,
+        startDate,
+        endDate
+      }
+    };
+
+    return this.http.get(`${BASE_URL}api/machine-learning/v3/quotes`, options);
+  }
+
+  getIndicators(quotes: any): Observable<any> {
+
+    const data = {
+      quotes
+    };
+
+    return this.http.post(`${BASE_URL}api/machine-learning/v3/indicators`, data, {});
+  }
+
+  activateModel(symbol: string, indicatorData: any, features: number[] = []): Observable<any> {
+
+    const data = {
+      symbol,
+      indicatorData: indicatorData,
+      features: String(features)
+    };
+
+    return this.http.post(`${BASE_URL}api/machine-learning/v3/activate-model`, data, {});
+  }
+
   trainPredictDailyV4(symbol: string,
     endDate: string = null,
     startDate: string = null,
