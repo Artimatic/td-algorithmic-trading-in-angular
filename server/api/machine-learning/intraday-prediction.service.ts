@@ -75,14 +75,42 @@ class IntradayPredicationService extends PredictionService {
   }
 
   activateModel(symbol, indicatorData, featureUse) {
-    console.log('activateModel: ', symbol, indicatorData, featureUse);
-    console.log('activateModel: ', typeof symbol, typeof indicatorData, typeof featureUse);
-
+    console.log(featureUse, typeof featureUse);
+    featureUse = featureUse.split(',');
     const signal = indicatorData;
     const inputData = this.buildInputSet(signal, featureUse);
     const modelName = featureUse ? featureUse.join() : this.modelName;
+    console.log('activateModel: ', symbol, modelName, inputData.input, featureUse);
 
     return BacktestService.activateCustomModel(symbol, modelName, inputData.input, moment().format('YYYY-MM-DD'));
+  }
+
+  processBacktestResults(results: BacktestResults, featureUse): any[] {
+    const signals = results.signals;
+    console.log('Got backtest: ', signals[0].date, signals[signals.length - 1].date);
+
+    const finalDataSet = [];
+    signals.forEach((signal, idx) => {
+      if (this.withinBounds(idx, signals.length)) {
+        finalDataSet.push(this.buildFeatureSet(signals, signal, idx, featureUse));
+      }
+    });
+    console.log('Data set size: ', finalDataSet.length);
+    return finalDataSet;
+  }
+
+  withinBounds(index, totalLength) {
+    return index > this.outputRange && (index + this.outputRange + 1 < totalLength);
+  }
+
+  buildFeatureSet(signals, currentSignal, currentIndex, featureUse) {
+    const futureClose = signals[currentIndex + this.outputRange].close;
+    const closePrice = currentSignal.close;
+
+    const dataSetObj = this.buildInputSet(currentSignal, featureUse);
+
+    dataSetObj.output = [this.getOutput(closePrice, futureClose)];
+    return dataSetObj;
   }
 
   buildInputSet(currentSignal, featureUse) {

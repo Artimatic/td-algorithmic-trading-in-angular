@@ -63,9 +63,10 @@
       </tr>
     </ng-template>
   </p-table>
-
-  <button pButton type="button" label="Get Quotes" class="ui-button-success" (click)="getIntradayQuotes()"></button>
-  <button pButton type="button" label="Train" class="ui-button-success" (click)="trainIntradayQuotes()"></button>
+  
+  <button pButton type="button" label="Train" class="ui-button ui-button-success" (click)="trainIntradayQuotes()"></button>
+  <button pButton type="button" label="Get Quotes" class="ui-button ui-button-success" (click)="getIntradayQuotes()"></button>
+  <button pButton type="button" label="Activate" class="ui-button ui-button-success" (click)="activateAllIntradayQuotes()"></button>
 
   <p-table [columns]="intradayMlCols" [value]="intradayMlResults" [paginator]="true" [rows]="100">
     <ng-template pTemplate="header" let-columns>
@@ -79,13 +80,13 @@
     <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
       <tr [pSelectableRow]="rowData">
         <td *ngFor="let col of columns" class="table-cell">
-          <div class="data-cell">
+          <div class="data-cell" [ngClass]="{'buy-color': rowData[col.field] > 0.7 && rowData[col.field] < 1}">
             {{rowData[col.field]}}
           </div>
         </td>
         <td class="table-cell">
           <div class="data-cell">
-            <button pButton type="button" label="Activate" *ngIf="rowIndex > 81" class="ui-button-success" (click)="activateIntradayQuotes(rowIndex)"></button>
+            <button pButton type="button" label="Activate" *ngIf="rowIndex > 81" class="ui-button-success" (click)="activateIntradayQuotes(rowIndex).subscribe()"></button>
           </div>
         </td>
       </tr>

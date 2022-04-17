@@ -87,7 +87,8 @@ class MachineLearningController extends BaseController {
 
 
   activateModel(request, response) {
-    IntradayPredicationService.activateModel(request.body.symbol, request.body.indicatorData, request.body.featureUse)
+    console.log('activate model controller: ', request.body);
+    IntradayPredicationService.activateModel(request.body.symbol, request.body.indicatorData, request.body.features)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }

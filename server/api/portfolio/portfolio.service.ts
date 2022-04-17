@@ -390,6 +390,12 @@ class PortfolioService {
       .then((data) => {
         const response = this.processTDData(data);
         return QuoteService.convertTdIntradayV2(symbol, response.candles);
+      })
+      .catch(error => {
+        console.log('Error on getTDIntradayV3 request ', error);
+        console.log('getTDIntradayV3 request ', symbol, startDate, endDate);
+
+        return error;
       });
   }
 

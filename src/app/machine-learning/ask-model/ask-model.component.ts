@@ -4,11 +4,11 @@ import { MatSnackBar } from '@angular/material';
 import { FormGroup, FormBuilder } from '@angular/forms';
 import { BacktestService, MachineLearningService, PortfolioService } from '../../shared/index';
 import IntradayStocks from '../../intraday-backtest-view/intraday-backtest-stocks.constant';
-import { Subscription, Subject } from 'rxjs';
+import { Subscription, Subject, of } from 'rxjs';
 import { GlobalSettingsService } from '../../settings/global-settings.service';
 import * as _ from 'lodash';
 import { CartService } from '../../shared/services/cart.service';
-import { take } from 'rxjs/operators';
+import { map, take, tap } from 'rxjs/operators';
 
 export interface TrainingResults {
   symbol?: string;
@@ -41,7 +41,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
   private callChainSub: Subscription;
   private backtestBuffer: { stock: string }[];
   private bufferSubject: Subject<void>;
-  private calibrationBuffer: { stock: string; features: number[]; }[];
+  private calibrationBuffer: { stock: string; features: number[]; idx?: number }[];
   private featureListScoring;
 
   constructor(
@@ -87,7 +87,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
     this.intradayMlCols = [
       { field: 'date', header: 'Date' },
       { field: 'close', header: 'Price' },
-      { field: 'nextGuess', header: 'Next Guess' }
+      { field: 'nextOutput', header: 'Next Guess' }
     ];
 
     this.modelResults = [];
@@ -496,7 +496,14 @@ export class AskModelComponent implements OnInit, OnDestroy {
     const start = moment(this.startDate).subtract({ days: 1 }).format('YYYY-MM-DD');
     const end = moment(this.endDate).add({ days: 1 }).format('YYYY-MM-DD');
     this.machineLearningService.getQuotes(this.form.value.query, start, end)
-      .pipe(take(1))
+      .pipe(
+        take(1),
+        map(quotes => {
+          return quotes.map(quote => {
+            quote.date = moment(quote.date).format('MM-DD hh:mm');
+            return quote;
+          });
+        }))
       .subscribe(quotes => {
         console.log('quotes: ', quotes);
         this.intradayMlResults = quotes;
@@ -504,7 +511,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
   }
 
   trainIntradayQuotes() {
-    const start = moment(this.startDate).subtract({ days: 2 }).format('YYYY-MM-DD');
+    const start = moment(this.endDate).subtract({ days: 3 }).format('YYYY-MM-DD');
     const end = moment(this.endDate).add({ days: 1 }).format('YYYY-MM-DD');
 
     this.machineLearningService
@@ -521,25 +528,52 @@ export class AskModelComponent implements OnInit, OnDestroy {
       });
   }
 
-  activateIntradayQuotes(rowData) {
+  activateIntradayQuotes(rowData, callback = () => { }) {
     if (rowData > 81) {
-      this.machineLearningService.getIndicators(this.intradayMlResults.slice(rowData - 81, rowData + 1))
-        .pipe(take(1))
-        .subscribe((indicators: any[]) => {
-          console.log('indicators: ', indicators);
-          return this.machineLearningService.activateModel(this.form.value.query, indicators, this.globalSettingsService.daytradeAlgo)
-            .pipe(take(1))
-            .subscribe(modelData => {
-              console.log('activatedata: ', modelData);
-            });
-        }, error => {
-          console.log('daytrade ml error: ', error);
-        });
-    }
+      return this.machineLearningService.getIndicators(this.intradayMlResults.slice(rowData - 81, rowData + 1))
+        .pipe(take(1),
+          map((indicators: any[]) => {
+            console.log('indicators: ', indicators);
 
+            return this.machineLearningService.activateModel(this.form.value.query, indicators, this.globalSettingsService.daytradeAlgo)
+              .pipe(take(1))
+              .subscribe(modelData => {
+                this.intradayMlResults[rowData].nextOutput = modelData.nextOutput;
+                callback();
+              });
+          })
+        );
+    }
+    return of({}).pipe(tap(() => { callback(); }));
+  }
+
+  activateAllIntradayQuotes() {
+    this.intradayMlResults.forEach((value, idx) => {
+      this.calibrationBuffer.push({ idx: idx, stock: this.form.value.query, features: this.globalSettingsService.daytradeAlgo });
+    });
+
+    this.bufferSubject
+      .subscribe(() => {
+        const bufferItem = this.calibrationBuffer[0];
+
+        this.callChainSub.add(this.activateIntradayQuotes(bufferItem.idx, () => {
+          this.isLoading = false;
+          this.calibrationBuffer.shift();
+          this.triggerNextCalibration();
+        })
+          .pipe(take(1))
+          .subscribe(() => {
+          }, () => {
+            this.isLoading = false;
+            this.calibrationBuffer.shift();
+            this.triggerNextCalibration();
+          }));
+      });
+    this.triggerNextCalibration();
   }
 
   ngOnDestroy() {
     this.callChainSub.unsubscribe();
+    this.bufferSubject.unsubscribe();
   }
 }

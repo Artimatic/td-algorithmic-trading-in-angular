@@ -40,3 +40,7 @@ button.nav-item {
   font-size: 10px;
   cursor: pointer;
 }
+
+.ui-button {
+  margin: 1em;
+}

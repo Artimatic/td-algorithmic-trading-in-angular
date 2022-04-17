@@ -5,5 +5,10 @@
 }
 
 button {
-  padding-left: 5px;
+  margin: 5px;
+}
+
+.buy-color {
+  color: green;
+  font-weight: bolder;
 }

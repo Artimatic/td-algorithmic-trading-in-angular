@@ -105,7 +105,7 @@ export default class PredictionService {
     if (signal && signal.recommendation) {
       input = this.recommendationToInput(signal, input, targetRecommendation);
     } else {
-      console.log('Missing recommendation: ', signal);
+      console.log('Error converting recommendation. Recommendation missing ', signal);
     }
 
     return input;
