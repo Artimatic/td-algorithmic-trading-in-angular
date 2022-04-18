@@ -75,8 +75,9 @@ class IntradayPredicationService extends PredictionService {
   }
 
   activateModel(symbol, indicatorData, featureUse) {
-    console.log(featureUse, typeof featureUse);
-    featureUse = featureUse.split(',');
+    if (!featureUse) {
+      featureUse = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+    }
     const signal = indicatorData;
     const inputData = this.buildInputSet(signal, featureUse);
     const modelName = featureUse ? featureUse.join() : this.modelName;

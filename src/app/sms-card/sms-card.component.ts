@@ -83,7 +83,6 @@ export class SmsCardComponent implements OnInit, OnDestroy {
     this.setup();
     this.interval = this.defaultInterval;
     this.messagesSent = 0;
-    this.runTraining();
     this.sub = TimerObservable.create(0, this.interval)
       .takeWhile(() => this.alive)
       .subscribe(async () => {
@@ -139,25 +138,6 @@ export class SmsCardComponent implements OnInit, OnDestroy {
           });
         }
       }
-    }
-
-    if (this.lastTrainedTime[ticker] && moment().isBefore(moment(this.lastTrainedTime[ticker]).add(2, 'day'))) {
-      this.machineLearningService.activate(ticker,
-        this.globalSettingsService.daytradeAlgo)
-        .pipe(take(1))
-        .subscribe((machineResult: { nextOutput: number }) => {
-          const mlLog = `RNN model result: ${machineResult.nextOutput}`;
-          console.log(mlLog);
-          if (machineResult.nextOutput > 0.7) {
-            this.lastSentSms[ticker] = moment().valueOf();
-
-            this.clientSmsService.sendBuySms(ticker, this.phoneNumber.value, price, 1, 'ml buy').subscribe(() => {
-              this.messagesSent++;
-            });
-          }
-        });
-    } else {
-      this.train(ticker);
     }
 
     if (this.messagesSent >= this.maxMessages.value) {
