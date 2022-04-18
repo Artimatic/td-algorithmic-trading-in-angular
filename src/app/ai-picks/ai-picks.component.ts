@@ -70,11 +70,14 @@ export class AiPicksComponent implements OnInit, OnDestroy {
           }, delay);
         } else {
           const prediction = { algorithm: range, prediction: activation.nextOutput, accuracy: accuracy };
-          if (isBuy) {
-            this.addBuyPick(symbol, prediction);
-          } else {
-            this.addSellPick(symbol, prediction);
+          if (prediction.prediction > 0.7 || prediction.prediction < 0.3) {
+            if (isBuy) {
+              this.addBuyPick(symbol, prediction);
+            } else {
+              this.addSellPick(symbol, prediction);
+            }
           }
+
           setTimeout(() => {
             cb();
           }, delay);

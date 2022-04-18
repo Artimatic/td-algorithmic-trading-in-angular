@@ -124,21 +124,17 @@ export class SmsCardComponent implements OnInit, OnDestroy {
   }
 
   async processAnalysis(ticker: string, analysis, price, time) {
-    if (this.buySellOption.value === 'buy_sell' || this.buySellOption.value === 'sell_only') {
-      if (analysis.recommendation.toLowerCase() === 'sell') {
+    if (this.buySellOption.value === 'buy_sell' || this.buySellOption.value === 'buy_only') {
+      if (analysis.recommendation.toLowerCase() === 'buy') {
+        this.clientSmsService.sendBuySms(ticker, this.phoneNumber.value, price, 1, 'strong buy').subscribe(() => {
+          this.messagesSent++;
+        });
+      }
+    } else if (this.buySellOption.value === 'buy_sell' || this.buySellOption.value === 'sell_only') {      if (analysis.recommendation.toLowerCase() === 'sell') {
         if (!this.lastSentSms[ticker] || moment().isAfter(moment(this.lastSentSms[ticker]).add(5, 'minutes'))) {
 
           this.lastSentSms[ticker] = moment().valueOf();
           this.clientSmsService.sendSellSms(ticker, this.phoneNumber.value, price, 1, 'strong sell').subscribe(() => {
-            this.messagesSent++;
-          });
-        }
-      } else if (analysis.mfi.toLowerCase() === 'bearish') {
-        if (!this.lastSentSms[ticker] || moment().isAfter(moment(this.lastSentSms[ticker]).add(5, 'minutes'))) {
-
-          this.lastSentSms[ticker] = moment().valueOf();
-
-          this.clientSmsService.sendSellSms(ticker, this.phoneNumber.value, price, 1, 'mfi sell').subscribe(() => {
             this.messagesSent++;
           });
         }
