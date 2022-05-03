@@ -4,6 +4,9 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 import { ChartModule } from 'angular-highcharts';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
+import { InputTextModule } from 'primeng/inputtext';
 
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import 'hammerjs';
@@ -144,6 +147,9 @@ import { WatchListComponent } from './watch-list/watch-list.component';
     MachineLearningModule,
     SharedModule,
     TimepickerModule.forRoot(),
+    ToastModule,
+    InputTextModule,
+
   ],
   providers: [
     BacktestService,
@@ -157,6 +163,7 @@ import { WatchListComponent } from './watch-list/watch-list.component';
     IndicatorsService,
     AlgoService,
     TradeService,
+    MessageService,
   ],
   bootstrap: [AppComponent]
 })
