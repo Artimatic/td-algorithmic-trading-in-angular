@@ -270,6 +270,7 @@ class PortfolioService {
   }
 
   getIntraday(symbol, accountId) {
+    console.log(moment().format(), 'Retrieving intraday quotes ');
     if (!accountId || !this.access_token[accountId]) {
       console.log('missing access token for ', accountId, this.access_token);
       return this.renewTDAuth(accountId)
@@ -400,6 +401,8 @@ class PortfolioService {
   }
 
   getDailyQuotes(symbol, startDate, endDate, accountId) {
+    console.log(moment().format(), 'Retrieving daily quotes ');
+
     if (!this.access_token[accountId]) {
       console.log('missing access token');
 
@@ -408,7 +411,7 @@ class PortfolioService {
     } else {
       return this.getTDDailyQuotes(symbol, startDate, endDate, accountId)
         .catch(error => {
-          console.log('Error retrieving daily quotes ', error.error);
+          console.log(moment().format(), 'Error retrieving daily quotes ', error.error);
 
           return this.renewTDAuth(accountId)
             .then(() => this.getTDDailyQuotes(symbol, startDate, endDate, accountId));
@@ -474,7 +477,7 @@ class PortfolioService {
   }
 
   getTDAccessToken(accountId) {
-    console.log('getting access token');
+    console.log(moment().format(), ' Getting new access token');
     let refreshToken;
     let key;
     if (!accountId ||

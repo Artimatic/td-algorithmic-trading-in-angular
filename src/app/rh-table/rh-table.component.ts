@@ -373,7 +373,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                       }
                     }
                     this.getImpliedMovement(testResults);
-                  }, 10000);
+                  }, this.getBufferTimeout(10000));
                 }
                 this.incrementProgress();
               });
@@ -822,7 +822,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
             this.backtestBuffer.shift();
             setTimeout(() => {
               this.triggerNextBacktest();
-            }, 10000 * this.backtestBuffer.length);
+            }, this.getBufferTimeout(1000));
           }, error => {
             this.snackBar.open(`Error on ${backtest.stock}`, 'Dismiss');
             console.log(`Error on ${backtest.stock}`, error);
@@ -844,6 +844,10 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
   isBlackListed(ticker: string) {
     return this.tickerBlacklist[ticker];
+  }
+
+  getBufferTimeout(constant: number) {
+    return 11000 * this.backtestBuffer.length + constant;
   }
 
   resetTable() {
