@@ -822,7 +822,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
             this.backtestBuffer.shift();
             setTimeout(() => {
               this.triggerNextBacktest();
-            }, 10000);
+            }, 10000 * this.backtestBuffer.length);
           }, error => {
             this.snackBar.open(`Error on ${backtest.stock}`, 'Dismiss');
             console.log(`Error on ${backtest.stock}`, error);

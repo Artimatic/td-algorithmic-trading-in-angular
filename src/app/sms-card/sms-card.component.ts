@@ -12,7 +12,7 @@ import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import * as moment from 'moment-timezone';
 import { Subscription } from 'rxjs';
 import { take } from 'rxjs/operators';
-import {MessageService} from 'primeng/api';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-sms-card',
@@ -95,13 +95,15 @@ export class SmsCardComponent implements OnInit, OnDestroy {
         if (this.testing.value || (moment().isAfter(moment(this.startTime)) &&
           moment().isBefore(moment(this.stopTime)))) {
           this.interval = this.defaultInterval;
-          this.stockList.forEach((listItem) => {
-            const stockTicker = listItem.label;
-            this.portfolioService.getPrice(stockTicker)
-              .pipe(take(1))
-              .subscribe((lastQuote) => {
-                this.runStrategy(stockTicker, 1 * lastQuote);
-              });
+          this.stockList.forEach((listItem, idx) => {
+            setTimeout(() => {
+              const stockTicker = listItem.label;
+              this.portfolioService.getPrice(stockTicker)
+                .pipe(take(1))
+                .subscribe((lastQuote) => {
+                  this.runStrategy(stockTicker, 1 * lastQuote);
+                });
+            }, idx * 1000);
           });
         }
 
@@ -128,7 +130,7 @@ export class SmsCardComponent implements OnInit, OnDestroy {
   }
 
   sendBuy(ticker, message, price) {
-    this.messageService.add({severity:'success', summary: `Buy ${ticker}`, detail: `Time: ${moment().format('hh:mm')} ${message}`});
+    this.messageService.add({ severity: 'success', life: 100000, summary: `Buy ${ticker}`, detail: `Time: ${moment().format('hh:mm')} ${message}` });
     if (!this.toastOnly.value) {
       this.clientSmsService.sendBuySms(ticker, this.phoneNumber.value, price, 1, message).subscribe(() => {
         this.messagesSent++;
@@ -137,7 +139,7 @@ export class SmsCardComponent implements OnInit, OnDestroy {
   }
 
   sendSell(ticker, message, price) {
-    this.messageService.add({severity:'error', summary: `Buy ${ticker}`, detail: `Time: ${moment().format('hh:mm')} ${message}`});
+    this.messageService.add({ severity: 'error', life: 100000, summary: `Buy ${ticker}`, detail: `Time: ${moment().format('hh:mm')} ${message}` });
     if (!this.toastOnly.value) {
       this.clientSmsService.sendSellSms(ticker, this.phoneNumber.value, price, 1, message).subscribe(() => {
         this.messagesSent++;
@@ -252,7 +254,7 @@ export class SmsCardComponent implements OnInit, OnDestroy {
 
     this.startTime = moment.tz(`${moment.tz(this.globalSettingsService.startTime, 'America/New_York').format('YYYY-MM-DD')} ${currentStartTime}`, 'America/New_York').toDate();
     this.stopTime = moment.tz(`${moment.tz(this.globalSettingsService.stopTime, 'America/New_York').format('YYYY-MM-DD')} ${currentStopTime}`, 'America/New_York').toDate();
-    console.log(this.startTime, ' - ',this.stopTime);
+    console.log(this.startTime, ' - ', this.stopTime);
   }
 
   addToList() {

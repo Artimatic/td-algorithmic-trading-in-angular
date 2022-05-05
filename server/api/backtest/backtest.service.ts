@@ -171,9 +171,11 @@ class BacktestService {
     return PortfolioService.getIntradayV2(symbol, 1)
       .then((intradayObj) => {
         const quotes = intradayObj.candles;
+        console.log('daytrade indicator quotes: ', quotes.length);
+
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);
-          if (idx > period) {
+          if (idx > 0) {
             const q = quotes.slice(idx - period, idx);
             getIndicatorQuotes.push(this.initStrategy(q));
           }

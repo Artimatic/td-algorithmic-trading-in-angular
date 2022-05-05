@@ -277,7 +277,7 @@ class PortfolioService {
     } else {
       return this.getTDIntraday(symbol, accountId)
         .catch((error) => {
-          console.log('Error retrieving access token ', error);
+          console.log('Error retrieving intraday data ', error.error);
 
           return this.renewTDAuth(accountId)
             .then(() => this.getTDIntraday(symbol, accountId));
@@ -408,7 +408,7 @@ class PortfolioService {
     } else {
       return this.getTDDailyQuotes(symbol, startDate, endDate, accountId)
         .catch(error => {
-          console.log('Error retrieving access token ', error);
+          console.log('Error retrieving daily quotes ', error.error);
 
           return this.renewTDAuth(accountId)
             .then(() => this.getTDDailyQuotes(symbol, startDate, endDate, accountId));
