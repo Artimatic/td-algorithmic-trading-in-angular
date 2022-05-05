@@ -850,7 +850,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
   getBufferTimeout(constant: number, modifier = 1) {
     const timeout = modifier * (10 * this.backtestBuffer.length) + constant;
-    console.log(this.backtestBuffer.length, constant, timeout / 60000)
+    console.log(this.backtestBuffer.length, constant, timeout / 60000);
     return timeout;
   }
 

@@ -130,20 +130,27 @@ export class SmsCardComponent implements OnInit, OnDestroy {
   }
 
   sendBuy(ticker, message, price) {
-    this.messageService.add({ severity: 'success', life: 100000, summary: `Buy ${ticker}`, detail: `Time: ${moment().format('hh:mm')} ${message}` });
-    if (!this.toastOnly.value) {
-      this.clientSmsService.sendBuySms(ticker, this.phoneNumber.value, price, 1, message).subscribe(() => {
-        this.messagesSent++;
-      });
+    if (!this.lastSentSms[ticker] || moment().isAfter(moment(this.lastSentSms[ticker]).add(10, 'minutes'))) {
+      this.lastSentSms[ticker] = moment().valueOf();
+      this.messageService.add({ severity: 'success', life: 100000, summary: `Buy ${ticker}`, detail: `Time: ${moment().format('hh:mm')} ${message}` });
+      if (!this.toastOnly.value) {
+        this.clientSmsService.sendBuySms(ticker, this.phoneNumber.value, price, 1, message).subscribe(() => {
+          this.messagesSent++;
+        });
+      }
     }
   }
 
   sendSell(ticker, message, price) {
-    this.messageService.add({ severity: 'error', life: 100000, summary: `Buy ${ticker}`, detail: `Time: ${moment().format('hh:mm')} ${message}` });
-    if (!this.toastOnly.value) {
-      this.clientSmsService.sendSellSms(ticker, this.phoneNumber.value, price, 1, message).subscribe(() => {
-        this.messagesSent++;
-      });
+    if (!this.lastSentSms[ticker] || moment().isAfter(moment(this.lastSentSms[ticker]).add(10, 'minutes'))) {
+      this.lastSentSms[ticker] = moment().valueOf();
+
+      this.messageService.add({ severity: 'error', life: 100000, summary: `Buy ${ticker}`, detail: `Time: ${moment().format('hh:mm')} ${message}` });
+      if (!this.toastOnly.value) {
+        this.clientSmsService.sendSellSms(ticker, this.phoneNumber.value, price, 1, message).subscribe(() => {
+          this.messagesSent++;
+        });
+      }
     }
   }
 
@@ -154,10 +161,7 @@ export class SmsCardComponent implements OnInit, OnDestroy {
       }
     } else if (this.buySellOption.value === 'buy_sell' || this.buySellOption.value === 'sell_only') {
       if (analysis.recommendation.toLowerCase() === 'sell') {
-        if (!this.lastSentSms[ticker] || moment().isAfter(moment(this.lastSentSms[ticker]).add(7, 'minutes'))) {
-          this.lastSentSms[ticker] = moment().valueOf();
-          this.sendBuy(ticker, 'sell', price);
-        }
+        this.sendBuy(ticker, 'sell', price);
       }
     }
 
@@ -167,10 +171,9 @@ export class SmsCardComponent implements OnInit, OnDestroy {
       .subscribe((machineResult: { nextOutput: number }) => {
         const mlLog = `${ticker} @ ${moment().format('hh:mm')} RNN model result(${machineResult.nextOutput})`;
         console.log(mlLog);
-        if (machineResult.nextOutput > 0.7 && (!this.lastSentSms[ticker] || moment().isAfter(moment(this.lastSentSms[ticker]).add(7, 'minutes')))) {
+        if (machineResult.nextOutput > 0.7) {
           console.log('Last sms sent: ', this.lastSentSms, moment(this.lastSentSms[ticker]).format());
 
-          this.lastSentSms[ticker] = moment().valueOf();
           this.sendBuy(ticker, 'ml buy', price);
         }
       });
