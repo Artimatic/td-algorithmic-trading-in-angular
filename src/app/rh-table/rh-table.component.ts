@@ -102,7 +102,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   signalScoreTable = [];
 
   private callChainSub: Subscription;
-  private backtestBuffer: { stock: string; sub: Observable<any>; timeout: number; }[];
+  private backtestBuffer: { stock: string; sub: Observable<any>; timeout: number; modifier: number }[];
   private bufferSubject: Subject<void>;
 
   constructor(
@@ -288,6 +288,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
             .pipe(take(1))
             .map(
               (testResults: BacktestResponse) => {
+                console.log('Request finished @ ', moment().format());
                 if (testResults) {
                   const symbol = param.ticker;
                   this.scoreSignals(symbol, testResults.signals);
@@ -373,7 +374,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                       }
                     }
                     this.getImpliedMovement(testResults);
-                  }, this.getBufferTimeout(100000));
+                  }, 1000 * this.backtestBuffer.length);
                 }
                 this.incrementProgress();
               });
@@ -509,7 +510,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       if (this.isBlackListed(algoParams[i].ticker)) {
         this.snackBar.open(`Skipping blacklisted ticker: ${algoParams[i].ticker}`, 'Dismiss');
       } else {
-        this.backtestBuffer.push({ stock: algoParams[i].ticker, sub: callback(algoParams[i]), timeout: 1000 * i });
+        this.backtestBuffer.push({ stock: algoParams[i].ticker, sub: callback(algoParams[i]), timeout: 1000, modifier: i });
       }
     }
     this.executeBacktests();
@@ -819,10 +820,11 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
         this.callChainSub.add(backtest.sub
           .pipe(take(1))
           .subscribe(() => {
+            console.log('next buffer @ ', moment().format());
             this.backtestBuffer.shift();
             setTimeout(() => {
               this.triggerNextBacktest();
-            }, this.getBufferTimeout(backtest.timeout));
+            }, this.getBufferTimeout(backtest.timeout, backtest.modifier));
           }, error => {
             this.snackBar.open(`Error on ${backtest.stock}`, 'Dismiss');
             console.log(`Error on ${backtest.stock}`, error);
@@ -846,8 +848,10 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     return this.tickerBlacklist[ticker];
   }
 
-  getBufferTimeout(constant: number) {
-    return 1000 * this.backtestBuffer.length + constant;
+  getBufferTimeout(constant: number, modifier = 1) {
+    const timeout = modifier * (10 * this.backtestBuffer.length) + constant;
+    console.log(this.backtestBuffer.length, constant, timeout / 60000)
+    return timeout;
   }
 
   resetTable() {
