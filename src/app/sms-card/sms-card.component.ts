@@ -13,6 +13,7 @@ import * as moment from 'moment-timezone';
 import { Subscription } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { MessageService } from 'primeng/api';
+import { SchedulerService } from '@shared/service/scheduler.service';
 
 @Component({
   selector: 'app-sms-card',
@@ -53,6 +54,7 @@ export class SmsCardComponent implements OnInit, OnDestroy {
     private globalSettingsService: GlobalSettingsService,
     private machineLearningService: MachineLearningService,
     private messageService: MessageService,
+    private schedulerService: SchedulerService,
     public dialog: MatDialog) { }
 
   ngOnInit() {
@@ -95,15 +97,16 @@ export class SmsCardComponent implements OnInit, OnDestroy {
         if (this.testing.value || (moment().isAfter(moment(this.startTime)) &&
           moment().isBefore(moment(this.stopTime)))) {
           this.interval = this.defaultInterval;
-          this.stockList.forEach((listItem, idx) => {
-            setTimeout(() => {
+          this.stockList.forEach((listItem) => {
+
+            this.schedulerService.schedule(() => {
               const stockTicker = listItem.label;
               this.portfolioService.getPrice(stockTicker)
                 .pipe(take(1))
                 .subscribe((lastQuote) => {
                   this.runStrategy(stockTicker, 1 * lastQuote);
                 });
-            }, idx * 1000);
+            });
           });
         }
 
@@ -201,7 +204,9 @@ export class SmsCardComponent implements OnInit, OnDestroy {
 
   runTraining() {
     this.stockList.forEach((listItem) => {
-      this.train(listItem.label);
+      this.schedulerService.schedule(() => {
+        this.train(listItem.label);
+      });
     });
   }
 

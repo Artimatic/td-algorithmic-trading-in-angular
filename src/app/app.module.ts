@@ -77,6 +77,7 @@ import { PieAlloctComponent } from './pie-alloct/pie-alloct.component';
 import { AiPicksComponent } from './ai-picks/ai-picks.component';
 import { AutoBacktestSwitchComponent } from './auto-backtest-switch/auto-backtest-switch.component';
 import { WatchListComponent } from './watch-list/watch-list.component';
+import { SchedulerService } from '@shared/service/scheduler.service';
 
 @NgModule({
   declarations: [
@@ -164,6 +165,7 @@ import { WatchListComponent } from './watch-list/watch-list.component';
     AlgoService,
     TradeService,
     MessageService,
+    SchedulerService
   ],
   bootstrap: [AppComponent]
 })

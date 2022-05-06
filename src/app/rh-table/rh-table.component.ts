@@ -22,6 +22,7 @@ import { AiPicksService } from '@shared/services/ai-picks.service';
 import { ReportingService } from '@shared/services/reporting.service';
 import { WatchListService } from '../watch-list/watch-list.service';
 import { ClientSmsService } from '@shared/services/client-sms.service';
+import { SchedulerService } from '@shared/service/scheduler.service';
 
 export interface Algo {
   value: string;
@@ -116,6 +117,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     private aiPicksService: AiPicksService,
     private reportingService: ReportingService,
     private clientSmsService: ClientSmsService,
+    private schedulerService: SchedulerService,
     private watchListService: WatchListService) { }
 
   ngOnInit() {
@@ -348,8 +350,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                         this.runAi({ ...testResults, buySignals: bullishSignals, sellSignals: bearishSignals });
                       }
                     });
-
-                  setTimeout(() => {
+                  this.schedulerService.schedule(() => {
                     if (bullishSignals && bearishSignals) {
                       if (bearishSignals.length > bullishSignals.length) {
                         const foundInWatchList = this.watchListService.watchList.find(item => {
@@ -374,7 +375,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                       }
                     }
                     this.getImpliedMovement(testResults);
-                  }, 1000 * this.backtestBuffer.length);
+                  });
                 }
                 this.incrementProgress();
               });
@@ -822,9 +823,9 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
           .subscribe(() => {
             console.log('next buffer @ ', moment().format());
             this.backtestBuffer.shift();
-            setTimeout(() => {
+            this.schedulerService.schedule(() => {
               this.triggerNextBacktest();
-            }, this.getBufferTimeout(backtest.timeout, backtest.modifier));
+            });
           }, error => {
             this.snackBar.open(`Error on ${backtest.stock}`, 'Dismiss');
             console.log(`Error on ${backtest.stock}`, error);
