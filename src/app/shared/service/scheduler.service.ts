@@ -23,7 +23,7 @@ export class SchedulerService {
       if (task.executionTime > moment().valueOf()) {
         nextExecutionTime = task.executionTime + this.delay;
         nextTimeout = nextExecutionTime - moment().valueOf() + this.delay;
-        scheduledTask = { taskName, taskCb, timeout: nextTimeout, executionTime: nextExecutionTime }
+        scheduledTask = { taskName, taskCb, timeout: nextTimeout, executionTime: nextExecutionTime };
         console.log('scheduled task: ', scheduledTask);
 
         this.scheduledTasks.push(scheduledTask);
