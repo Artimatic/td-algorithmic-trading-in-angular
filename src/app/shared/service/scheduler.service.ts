@@ -5,12 +5,15 @@ import * as moment from 'moment';
   providedIn: 'root'
 })
 export class SchedulerService {
-  scheduledTasks: { taskCb: () => {}; timeout: number; executionTime: number }[] = [];
+  scheduledTasks: { taskName: string; taskCb: () => {}; timeout: number; executionTime: number }[] = [];
   delay = 45000;
 
   constructor() { }
 
-  schedule(taskCb) {
+  schedule(taskCb, taskName) {
+    console.log('Scheduling: ', moment().format(), this.scheduledTasks);
+
+    let scheduledTask;
     if (this.scheduledTasks.length > 0) {
       const task = this.scheduledTasks[this.scheduledTasks.length - 1];
 
@@ -19,21 +22,29 @@ export class SchedulerService {
 
       if (task.executionTime > moment().valueOf()) {
         nextExecutionTime = task.executionTime + this.delay;
-        nextTimeout = nextExecutionTime - moment().valueOf();
-        this.scheduledTasks.push({ taskCb, timeout: nextTimeout, executionTime: nextExecutionTime });
+        nextTimeout = nextExecutionTime - moment().valueOf() + this.delay;
+        scheduledTask = { taskName, taskCb, timeout: nextTimeout, executionTime: nextExecutionTime }
+        console.log('scheduled task: ', scheduledTask);
+
+        this.scheduledTasks.push(scheduledTask);
 
         setTimeout(() => {
+          console.log('Executing scheduled task: ', moment().format());
           taskCb();
         }, nextTimeout);
-        return;
-      } else {
-        this.scheduledTasks = [];
+        return scheduledTask;
       }
     }
-    this.scheduledTasks.push({ taskCb, timeout: this.delay, executionTime: moment().valueOf() });
+    this.scheduledTasks = [];
+    console.log('no conflicting schedule: ', moment().format(), this.scheduledTasks);
+
+    scheduledTask = { taskName, taskCb, timeout: this.delay, executionTime: moment().valueOf() + this.delay + 1000 };
+    this.scheduledTasks.push(scheduledTask);
     setTimeout(() => {
+      console.log('Executing scheduled task: ', moment().format(), scheduledTask);
+
       taskCb();
-    }, this.delay);
-    return;
+    }, scheduledTask.timeout);
+    return scheduledTask;
   }
 }

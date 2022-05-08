@@ -97,16 +97,18 @@ export class SmsCardComponent implements OnInit, OnDestroy {
         if (this.testing.value || (moment().isAfter(moment(this.startTime)) &&
           moment().isBefore(moment(this.stopTime)))) {
           this.interval = this.defaultInterval;
-          this.stockList.forEach((listItem) => {
+          this.stockList.forEach((listItem, idx) => {
+            setTimeout(() => {
+              this.schedulerService.schedule(() => {
+                const stockTicker = listItem.label;
 
-            this.schedulerService.schedule(() => {
-              const stockTicker = listItem.label;
-              this.portfolioService.getPrice(stockTicker)
-                .pipe(take(1))
-                .subscribe((lastQuote) => {
-                  this.runStrategy(stockTicker, 1 * lastQuote);
-                });
-            });
+                this.portfolioService.getPrice(stockTicker)
+                  .pipe(take(1))
+                  .subscribe((lastQuote) => {
+                    this.runStrategy(stockTicker, 1 * lastQuote);
+                  });
+              }, 'smscard');
+            }, 1000 * idx);
           });
         }
 
@@ -160,26 +162,26 @@ export class SmsCardComponent implements OnInit, OnDestroy {
   async processAnalysis(ticker: string, analysis, price, time) {
     if (this.buySellOption.value === 'buy_sell' || this.buySellOption.value === 'buy_only') {
       if (analysis.recommendation.toLowerCase() === 'buy') {
-        this.sendBuy(ticker, 'buy', price);
+        this.machineLearningService.activate(ticker,
+          this.globalSettingsService.daytradeAlgo)
+          .pipe(take(1))
+          .subscribe((machineResult: { nextOutput: number }) => {
+            const mlLog = `${ticker} @ ${moment().format('hh:mm')} RNN model result(${machineResult.nextOutput})`;
+            console.log(mlLog);
+            if (machineResult.nextOutput > 0.7) {
+              console.log('Last sms sent: ', this.lastSentSms, moment(this.lastSentSms[ticker]).format());
+              this.sendBuy(ticker, 'ml buy', price);
+            }
+          });
+        setTimeout(() => {
+          this.sendBuy(ticker, 'buy', price);
+        }, 1000);
       }
     } else if (this.buySellOption.value === 'buy_sell' || this.buySellOption.value === 'sell_only') {
       if (analysis.recommendation.toLowerCase() === 'sell') {
         this.sendBuy(ticker, 'sell', price);
       }
     }
-
-    this.machineLearningService.activate(ticker,
-      this.globalSettingsService.daytradeAlgo)
-      .pipe(take(1))
-      .subscribe((machineResult: { nextOutput: number }) => {
-        const mlLog = `${ticker} @ ${moment().format('hh:mm')} RNN model result(${machineResult.nextOutput})`;
-        console.log(mlLog);
-        if (machineResult.nextOutput > 0.7) {
-          console.log('Last sms sent: ', this.lastSentSms, moment(this.lastSentSms[ticker]).format());
-
-          this.sendBuy(ticker, 'ml buy', price);
-        }
-      });
 
     if (this.messagesSent >= this.maxMessages.value) {
       this.stop();
@@ -206,7 +208,7 @@ export class SmsCardComponent implements OnInit, OnDestroy {
     this.stockList.forEach((listItem) => {
       this.schedulerService.schedule(() => {
         this.train(listItem.label);
-      });
+      }, 'smscard_training');
     });
   }
 

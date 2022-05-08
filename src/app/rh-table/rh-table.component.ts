@@ -375,7 +375,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                       }
                     }
                     this.getImpliedMovement(testResults);
-                  });
+                  }, 'rhtable_process');
                 }
                 this.incrementProgress();
               });
@@ -825,7 +825,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
             this.backtestBuffer.shift();
             this.schedulerService.schedule(() => {
               this.triggerNextBacktest();
-            });
+            }, 'rhtable_backtest');
           }, error => {
             this.snackBar.open(`Error on ${backtest.stock}`, 'Dismiss');
             console.log(`Error on ${backtest.stock}`, error);

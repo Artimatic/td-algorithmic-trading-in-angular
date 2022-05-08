@@ -1155,7 +1155,10 @@ class BacktestService {
   initStrategy(quotes) {
     const currentQuote = quotes[quotes.length - 1];
     const indicators = this.processQuotes(quotes);
-
+    if (!currentQuote) {
+      console.log(currentQuote);
+      console.log(quotes[quotes.length - 2]);
+    }
     return this.getIndicators(indicators, 80, currentQuote);
   }
 
