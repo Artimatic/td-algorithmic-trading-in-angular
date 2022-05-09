@@ -4,6 +4,7 @@ import { AiPicksService } from '@shared/services';
 import { AiPicksData, AiPicksPredictionData } from '@shared/services/ai-picks.service';
 import * as moment from 'moment';
 import * as _ from 'lodash';
+import { SchedulerService } from '@shared/service/scheduler.service';
 
 @Component({
   selector: 'app-ai-picks',
@@ -26,7 +27,8 @@ export class AiPicksComponent implements OnInit, OnDestroy {
   currentPrediction = null;
 
   constructor(private aiPicksService: AiPicksService,
-    private machineLearningService: MachineLearningService
+    private machineLearningService: MachineLearningService,
+    private schedulerService: SchedulerService
   ) { }
 
   ngOnInit() {
@@ -65,9 +67,9 @@ export class AiPicksComponent implements OnInit, OnDestroy {
           delay = 2000 + 2000 * this.counter;
         }
         if (!activation) {
-          setTimeout(() => {
+          this.schedulerService.schedule(() => {
             this.trainAndActivate(symbol, range, limit, isBuy, null, cb);
-          }, delay);
+          }, 'aipicks');
         } else {
           const prediction = { algorithm: range, prediction: activation.nextOutput, accuracy: accuracy };
           if (prediction.prediction > 0.7 || prediction.prediction < 0.3) {
@@ -78,10 +80,9 @@ export class AiPicksComponent implements OnInit, OnDestroy {
             }
           }
 
-          setTimeout(() => {
+          this.schedulerService.schedule(() => {
             cb();
-          }, delay);
-
+          }, 'aipicks');
         }
         this.isLoading = false;
       }, error => {
