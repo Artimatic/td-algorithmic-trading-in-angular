@@ -828,7 +828,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
             }, 'rhtable_backtest');
           }, error => {
             this.snackBar.open(`Error on ${backtest.stock}`, 'Dismiss');
-            console.log(`Error on ${backtest.stock}`, error);
+            console.log(`Error on ${backtest.stock}`, error.error.error, '@', moment().format());
             this.incrementProgress();
             this.backtestBuffer.shift();
             this.triggerNextBacktest();

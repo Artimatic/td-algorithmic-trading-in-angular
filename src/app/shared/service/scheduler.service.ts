@@ -24,21 +24,19 @@ export class SchedulerService {
         nextExecutionTime = task.executionTime + this.delay;
         nextTimeout = nextExecutionTime - moment().valueOf() + this.delay;
         scheduledTask = { taskName, taskCb, timeout: nextTimeout, executionTime: nextExecutionTime };
-        console.log('scheduled task: ', scheduledTask);
 
         this.scheduledTasks.push(scheduledTask);
 
         setTimeout(() => {
-          console.log('Executing scheduled task: ', moment().format());
+          console.log('Executing scheduled task: ', moment().format(), scheduledTask.name);
           taskCb();
         }, nextTimeout);
         return scheduledTask;
       }
     }
     this.scheduledTasks = [];
-    console.log('no conflicting schedule: ', moment().format(), this.scheduledTasks);
 
-    scheduledTask = { taskName, taskCb, timeout: this.delay, executionTime: moment().valueOf() + this.delay + 1000 };
+    scheduledTask = { taskName, taskCb, timeout: 1000, executionTime: moment().valueOf() + 1000 };
     this.scheduledTasks.push(scheduledTask);
     setTimeout(() => {
       console.log('Executing scheduled task: ', moment().format(), scheduledTask);

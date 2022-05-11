@@ -107,7 +107,7 @@ export class SmsCardComponent implements OnInit, OnDestroy {
                   .subscribe((lastQuote) => {
                     this.runStrategy(stockTicker, 1 * lastQuote);
                   });
-              }, 'smscard');
+              }, `${listItem.label}_smscard`);
             }, 1000 * idx);
           });
         }
@@ -208,7 +208,7 @@ export class SmsCardComponent implements OnInit, OnDestroy {
     this.stockList.forEach((listItem) => {
       this.schedulerService.schedule(() => {
         this.train(listItem.label);
-      }, 'smscard_training');
+      }, `smscard_training`);
     });
   }
 

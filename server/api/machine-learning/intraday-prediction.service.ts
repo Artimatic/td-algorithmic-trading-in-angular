@@ -81,8 +81,6 @@ class IntradayPredicationService extends PredictionService {
     const signal = indicatorData;
     const inputData = this.buildInputSet(signal, featureUse);
     const modelName = featureUse ? featureUse.join() : this.modelName;
-    console.log('activateModel: ', symbol, modelName, inputData.input, featureUse);
-
     return BacktestService.activateCustomModel(symbol, modelName, inputData.input, moment().format('YYYY-MM-DD'));
   }
 
@@ -133,10 +131,6 @@ class IntradayPredicationService extends PredictionService {
       .concat(this.convertRecommendations(currentSignal));
 
     dataSetObj.input = [];
-
-    if (currentSignal.recommendation.recommendation.toLowerCase() !== 'none') {
-      console.log(currentSignal.recommendation, input);
-    }
 
     featureUse.forEach((value, idx) => {
       if ((value === '1' || value === 1) && input[idx] !== undefined) {

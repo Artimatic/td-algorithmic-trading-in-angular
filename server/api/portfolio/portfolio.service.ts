@@ -264,9 +264,20 @@ class PortfolioService {
       if (diffMinutes < 30) {
         return Promise.resolve();
       }
+    } else if (!this.access_token[accountId]) {
+      this.access_token[accountId] = {token: '123', timestamp: moment().valueOf()};
     }
-
-    return this.getTDAccessToken(accountId);
+    return this.sendTdPositionRequest(accountId).then(pos => {
+      return Promise.resolve();
+    })
+    .catch(error => {
+      const errorMessage = JSON.parse(error.error).error;
+      console.log('Token error: ', errorMessage);
+      if (errorMessage === 'The access token being passed has expired or is invalid.') {
+        return this.getTDAccessToken(accountId);
+      }
+      return Promise.resolve(errorMessage);
+    });
   }
 
   getIntraday(symbol, accountId) {
@@ -477,7 +488,7 @@ class PortfolioService {
   }
 
   getTDAccessToken(accountId) {
-    console.log(moment().format(), ' Getting new access token');
+    console.log(moment().format(), ' GETTING NEW ACCESS TOKEN');
     let refreshToken;
     let key;
     if (!accountId ||
@@ -510,7 +521,7 @@ class PortfolioService {
   }
 
   renewExpiredTDAccessTokenAndGetQuote(symbol, accountId) {
-    return this.getTDAccessToken(accountId)
+    return this.renewTDAuth(accountId)
       .then((token) => {
         return this.getTDMarketData(symbol, accountId || this.getAccountId())
           .then(this.processTDData);
@@ -633,12 +644,9 @@ class PortfolioService {
   }
 
   getTdPositions(accountId) {
-    return this.renewTDAuth(accountId)
-      .then(() => {
-        return this.sendTdPositionRequest(accountId)
-          .then((pos) => {
-            return pos.securitiesAccount.positions;
-          });
+    return this.sendTdPositionRequest(accountId)
+      .then((pos) => {
+        return pos.securitiesAccount.positions;
       });
   }
 
