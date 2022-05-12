@@ -516,6 +516,8 @@ class PortfolioService {
           timestamp: moment().valueOf()
         };
 
+        console.log(moment().format(), 'Set new access token');
+
         return this.access_token[accountId].token;
       });
   }

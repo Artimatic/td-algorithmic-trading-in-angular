@@ -175,7 +175,7 @@ class BacktestService {
 
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);
-          if (idx > 0) {
+          if (idx > 80) {
             const q = quotes.slice(idx - period, idx);
             getIndicatorQuotes.push(this.initStrategy(q));
           }
@@ -1156,8 +1156,7 @@ class BacktestService {
     const currentQuote = quotes[quotes.length - 1];
     const indicators = this.processQuotes(quotes);
     if (!currentQuote) {
-      console.log(currentQuote);
-      console.log(quotes[quotes.length - 2]);
+      console.log('current quote not found: ', quotes.length, quotes[0]);
     }
     return this.getIndicators(indicators, 80, currentQuote);
   }
@@ -1331,7 +1330,7 @@ class BacktestService {
         return arr;
       })
       .catch((error) => {
-        console.log('Error: ', error);
+        console.log('Error getInfoV2: ', error.error);
       });
   }
 
@@ -1380,7 +1379,7 @@ class BacktestService {
 
     return RequestPromise(options)
       .catch((error) => {
-        console.log('Error: ', error);
+        console.log('Error getHistoricalMatches: ', error.error);
       });
   }
 
@@ -1402,7 +1401,7 @@ class BacktestService {
 
     return RequestPromise(options)
       .catch((error) => {
-        console.log('Error: ', error);
+        console.log('Error checkServiceStatus: ', error.error);
       });
   }
 
@@ -1446,7 +1445,7 @@ class BacktestService {
 
     RequestPromise(options)
       .catch((error) => {
-        console.log('Error: ', error);
+        console.log('Error runRNN: ', error.error);
       });
 
     response.status(200).send();
@@ -1474,7 +1473,7 @@ class BacktestService {
 
         RequestPromise(options)
           .catch((error) => {
-            console.log('Error: ', error);
+            console.log('Error activateRNN: ', error.error);
           });
       });
     response.status(200).send();
@@ -1494,7 +1493,7 @@ class BacktestService {
 
     return RequestPromise(options)
       .catch((error) => {
-        console.log('Error: ', error.message);
+        console.log('Error checkRNNStatus: ', error.message);
       });
   }
 
@@ -1527,7 +1526,7 @@ class BacktestService {
 
     return RequestPromise(options)
       .catch((error) => {
-        console.log('Error: ', error);
+        console.log('Error bbandMfiInfo: ', error);
       });
   }
 
@@ -1560,7 +1559,7 @@ class BacktestService {
 
     return RequestPromise(options)
       .catch((error) => {
-        console.log('Error: ', error);
+        console.log('Error getMovingAverageCrossOverInfo: ', error);
       });
   }
 
@@ -1592,7 +1591,7 @@ class BacktestService {
 
     return RequestPromise(options)
       .catch((error) => {
-        console.log('Error: ', error);
+        console.log('Error findResistance: ', error);
       });
   }
 
@@ -1833,7 +1832,7 @@ class BacktestService {
 
     return RequestPromise(options)
       .catch((error) => {
-        console.log('Error: ', error);
+        console.log('Error trainV2Model: ', error);
       });
   }
 
@@ -1923,7 +1922,7 @@ class BacktestService {
 
     return RequestPromise(options)
       .catch((error) => {
-        console.log('Error: ', error);
+        console.log('Error activateV2Model: ', error);
       });
   }
 
@@ -1945,7 +1944,7 @@ class BacktestService {
 
     return RequestPromise(options)
       .catch((error) => {
-        console.log('Error: ', error);
+        console.log('ErroractivateCustomModel: ', error);
       });
   }
 }
