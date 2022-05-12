@@ -62,10 +62,6 @@ export class AiPicksComponent implements OnInit, OnDestroy {
       limit)
       .subscribe((activation) => {
         this.counter--;
-        let delay = 0;
-        if (this.counter > 0) {
-          delay = 2000 + 2000 * this.counter;
-        }
         if (!activation) {
           this.schedulerService.schedule(() => {
             this.trainAndActivate(symbol, range, limit, isBuy, null, cb);
