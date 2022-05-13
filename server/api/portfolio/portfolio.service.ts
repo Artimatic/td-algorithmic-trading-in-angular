@@ -26,6 +26,7 @@ class PortfolioService {
   access_token: { [key: string]: TokenInfo } = {};
   tdaKey = {};
   refreshToken = {};
+  lastTokenRequest = null;
 
   login(username, password, reply) {
     const options = {
@@ -274,7 +275,11 @@ class PortfolioService {
       const errorMessage = JSON.parse(error.error).error;
       console.log('Token error: ', errorMessage);
       if (errorMessage === 'The access token being passed has expired or is invalid.') {
-        return this.getTDAccessToken(accountId);
+
+        if (this.lastTokenRequest === null || moment().diff(moment(this.lastTokenRequest), 'minutes') > 30){
+          this.lastTokenRequest = moment().valueOf();
+          return this.getTDAccessToken(accountId);
+        }
       }
       return Promise.resolve(errorMessage);
     });
@@ -524,7 +529,7 @@ class PortfolioService {
 
   renewExpiredTDAccessTokenAndGetQuote(symbol, accountId) {
     return this.renewTDAuth(accountId)
-      .then((token) => {
+      .then(() => {
         return this.getTDMarketData(symbol, accountId || this.getAccountId())
           .then(this.processTDData);
       });
