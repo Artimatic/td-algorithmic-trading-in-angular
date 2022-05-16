@@ -13,7 +13,7 @@ import { OrderPref } from '../shared/enums/order-pref.enum';
 import * as _ from 'lodash';
 import { Holding } from '../shared/models';
 import { GlobalSettingsService } from '../settings/global-settings.service';
-import { take } from 'rxjs/operators';
+import { take, takeWhile } from 'rxjs/operators';
 
 interface BuyAt3Algo {
   purchaseSent: boolean;
@@ -112,7 +112,8 @@ export class SimpleCardComponent implements OnInit, OnChanges {
     this.setup();
     this.alive = true;
     this.sub = TimerObservable.create(0, this.interval)
-      .takeWhile(() => this.alive)
+    .pipe(
+      takeWhile(() => this.alive))
       .subscribe(() => {
         this.live = true;
         const momentInst = moment();

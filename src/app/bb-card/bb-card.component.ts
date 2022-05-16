@@ -1,7 +1,7 @@
 import { Component, OnChanges, Input, OnInit, ViewChild, SimpleChanges, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material';
-import 'rxjs/add/operator/takeWhile';
+import { take } from 'rxjs/operators';
 
 import { Chart } from 'angular-highcharts';
 
@@ -30,6 +30,7 @@ import { OrderingService } from '@shared/services/ordering.service';
 import { GlobalTaskQueueService } from '@shared/services/global-task-queue.service';
 import { SelectItem } from 'primeng/components/common/selectitem';
 import { ClientSmsService } from '@shared/services/client-sms.service';
+import { SchedulerService } from '@shared/service/scheduler.service';
 
 @Component({
   selector: 'app-bb-card',
@@ -91,6 +92,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     private orderingService: OrderingService,
     private globalTaskQueueService: GlobalTaskQueueService,
     private clientSmsService: ClientSmsService,
+    private schedulerService: SchedulerService,
     public dialog: MatDialog) { }
 
   ngOnInit() {
@@ -246,51 +248,52 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     const currentDate = this.globalSettingsService.backtestDate;
     const futureDate = moment().add(1, 'days').format('YYYY-MM-DD');
 
-    const getDaytradeBacktestSub = this.backtestService.getDaytradeBacktest(this.order.holding.symbol,
-      futureDate, currentDate,
-      {
-        lossThreshold: this.order.lossThreshold,
-        profitThreshold: this.order.profitTarget,
-        minQuotes: 81
-      }).subscribe(results => {
-        // console.log(results);
-        // _.forEach(results.indicators, indicator => {
-        //   this.indicators = indicator;
-        //   const daytradeType = this.firstFormGroup.value.orderType.toLowerCase();
-        //   const date = moment(indicator.date).unix();
+    this.schedulerService.schedule(() => {
+      this.backtestService.getDaytradeBacktest(this.order.holding.symbol,
+        futureDate, currentDate,
+        {
+          lossThreshold: this.order.lossThreshold,
+          profitThreshold: this.order.profitTarget,
+          minQuotes: 81
+        }).pipe(take(1)).subscribe(results => {
+          // console.log(results);
+          // _.forEach(results.indicators, indicator => {
+          //   this.indicators = indicator;
+          //   const daytradeType = this.firstFormGroup.value.orderType.toLowerCase();
+          //   const date = moment(indicator.date).unix();
 
-        //   if (indicator.recommendation) {
-        //     this.processAnalysis(daytradeType, indicator.recommendation, indicator.close, date);
-        //   } else {
-        //     console.log('missing recommendation: ', indicator);
-        //   }
-        // });
+          //   if (indicator.recommendation) {
+          //     this.processAnalysis(daytradeType, indicator.recommendation, indicator.close, date);
+          //   } else {
+          //     console.log('missing recommendation: ', indicator);
+          //   }
+          // });
 
-        if (results.returns) {
-          this.scoringService.resetProfitLoss(this.order.holding.symbol);
-          this.scoringService.addProfitLoss(this.order.holding.symbol, results.returns * 100);
-        }
+          if (results.returns) {
+            this.scoringService.resetProfitLoss(this.order.holding.symbol);
+            this.scoringService.addProfitLoss(this.order.holding.symbol, results.returns * 100);
+          }
 
-        if (results.profitableTrades && results.totalTrades) {
-          this.scoringService.winlossHash[this.order.holding.symbol] = {
-            wins: results.profitableTrades,
-            losses: null,
-            total: results.totalTrades
-          };
-        }
+          if (results.profitableTrades && results.totalTrades) {
+            this.scoringService.winlossHash[this.order.holding.symbol] = {
+              wins: results.profitableTrades,
+              losses: null,
+              total: results.totalTrades
+            };
+          }
 
-        if (results.signals) {
-          this.populateChart(results.signals);
-        }
-        this.isBacktest = false;
-      },
-        error => {
-          this.error = error._body;
+          if (results.signals) {
+            this.populateChart(results.signals);
+          }
           this.isBacktest = false;
-        }
-      );
+        },
+          error => {
+            this.error = error._body;
+            this.isBacktest = false;
+          }
+        );
+      }, `${this.order.holding.symbol}_bbcard`);
 
-    this.subscriptions.push(getDaytradeBacktestSub);
     this.tiles = this.daytradeService.buildTileList(this.orders);
   }
 

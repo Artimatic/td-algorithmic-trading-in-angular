@@ -12,6 +12,7 @@ import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import { Subscription } from 'rxjs';
 import { Holding } from '../shared/models';
 import { SmartOrder } from '../shared/models/smart-order';
+import { takeWhile } from 'rxjs/operators';
 
 export class MyErrorStateMatcher implements ErrorStateMatcher {
   isErrorState(control: FormControl | null, form: FormGroupDirective | NgForm | null): boolean {
@@ -124,7 +125,8 @@ export class NeuroCardComponent implements OnInit {
       this.setup();
       this.alive = true;
       this.sub = TimerObservable.create(0, this.interval)
-        .takeWhile(() => this.alive)
+      .pipe(
+        takeWhile(() => this.alive))
         .subscribe(() => {
           this.live = true;
           const momentInst = moment();

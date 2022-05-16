@@ -187,7 +187,7 @@ class BacktestService {
           });
       })
       .catch(err => {
-        console.log('ERROR! getIntradayV2', err);
+        console.log('ERROR! getIntradayV2', JSON.parse(err).error);
         throw err;
       });
   }

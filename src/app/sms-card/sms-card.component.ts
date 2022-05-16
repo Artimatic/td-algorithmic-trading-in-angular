@@ -11,7 +11,7 @@ import { GlobalSettingsService } from '../settings/global-settings.service';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import * as moment from 'moment-timezone';
 import { Subscription } from 'rxjs';
-import { take } from 'rxjs/operators';
+import { take, takeWhile } from 'rxjs/operators';
 import { MessageService } from 'primeng/api';
 import { SchedulerService } from '@shared/service/scheduler.service';
 
@@ -91,7 +91,8 @@ export class SmsCardComponent implements OnInit, OnDestroy {
     this.interval = this.defaultInterval;
     this.messagesSent = 0;
     this.sub = TimerObservable.create(0, this.interval)
-      .takeWhile(() => this.alive)
+    .pipe(
+      takeWhile(() => this.alive))
       .subscribe(async () => {
         this.interval = 900000;
         if (this.testing.value || (moment().isAfter(moment(this.startTime)) &&

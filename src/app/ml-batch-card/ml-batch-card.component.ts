@@ -11,6 +11,7 @@ import { MatDialog, MatSnackBar } from '@angular/material';
 import { PortfolioService, DaytradeService, ReportingService, BacktestService } from '../shared';
 import { Holding } from '../shared/models';
 import { GlobalSettingsService, Brokerage } from '../settings/global-settings.service';
+import { takeWhile } from 'rxjs/operators';
 
 export interface StockAllocation {
   stock: string;
@@ -23,7 +24,7 @@ export interface StockAllocation {
   styleUrls: ['./ml-batch-card.component.css']
 })
 export class MlBatchCardComponent implements OnInit, OnDestroy {
-  @ViewChild('stepper', {static: false}) stepper;
+  @ViewChild('stepper', { static: false }) stepper;
 
   sub: Subscription;
 
@@ -149,8 +150,8 @@ export class MlBatchCardComponent implements OnInit, OnDestroy {
   goLive() {
     this.setup();
     this.alive = true;
-    this.sub = TimerObservable.create(0, this.interval)
-      .takeWhile(() => this.alive)
+    this.sub = TimerObservable.create(0, this.interval).pipe(
+      takeWhile(() => this.alive))
       .subscribe(() => {
         this.live = true;
         const momentInst = moment();

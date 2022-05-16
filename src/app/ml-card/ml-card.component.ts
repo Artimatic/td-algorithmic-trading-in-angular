@@ -11,7 +11,7 @@ import { MatDialog, MatSnackBar } from '@angular/material';
 import { PortfolioService, DaytradeService, ReportingService, BacktestService } from '../shared';
 import { Holding } from '../shared/models';
 import { GlobalSettingsService, Brokerage } from '../settings/global-settings.service';
-import { take } from 'rxjs/operators';
+import { take, takeWhile } from 'rxjs/operators';
 
 interface Bet {
   total: number;
@@ -182,7 +182,8 @@ export class MlCardComponent implements OnInit {
     this.trainModel();
     this.alive = true;
     this.sub = TimerObservable.create(0, this.interval)
-      .takeWhile(() => this.alive)
+      .pipe(
+        takeWhile(() => this.alive))
       .subscribe(() => {
         this.live = true;
         const momentInst = moment();
