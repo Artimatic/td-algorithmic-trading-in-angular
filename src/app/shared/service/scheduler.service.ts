@@ -20,7 +20,7 @@ export class SchedulerService {
         const tasksCount = this.scheduledTasks.reduce((previousValue, currentValue) => {
           if (moment(currentValue.executionTime).isAfter(moment())) {
             if (previousValue[currentValue.taskName]) {
-              previousValue[currentValue.taskName]++;;
+              previousValue[currentValue.taskName]++;
             } else {
               previousValue[currentValue.taskName] = 1;
             }
