@@ -350,6 +350,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                         this.runAi({ ...testResults, buySignals: bullishSignals, sellSignals: bearishSignals });
                       }
                     });
+
                   this.schedulerService.schedule(() => {
                     if (bullishSignals && bearishSignals) {
                       if (bearishSignals.length > bullishSignals.length) {
@@ -831,8 +832,10 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
             console.log(`Error on ${backtest.stock}`, error.error.error, '@', moment().format());
             this.incrementProgress();
             this.backtestBuffer.shift();
-            this.triggerNextBacktest();
-            this.addToBlackList(backtest.stock);
+            this.schedulerService.schedule(() => {
+              this.triggerNextBacktest();
+            }, 'rhtable_backtest');
+            // this.addToBlackList(backtest.stock);
           }));
       });
 

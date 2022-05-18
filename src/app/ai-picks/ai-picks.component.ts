@@ -47,8 +47,17 @@ export class AiPicksComponent implements OnInit, OnDestroy {
   }
 
   getPredictions(stock, isBuy) {
-    const ThirtyDayPrediction = () => this.activate(stock, 30, 0.01, isBuy, null, () => { });
-    const FifteenDayPrediction = () => this.activate(stock, 15, 0.01, isBuy, null, ThirtyDayPrediction);
+    const ThirtyDayPrediction = () => {
+      this.schedulerService.schedule(() => {
+        this.activate(stock, 30, 0.01, isBuy, null, () => { });
+      }, 'aipicks');
+    };
+
+    const FifteenDayPrediction = () => {
+      this.schedulerService.schedule(() => {
+        this.activate(stock, 15, 0.01, isBuy, null, ThirtyDayPrediction);
+      }, 'aipicks');
+    };
 
     FifteenDayPrediction();
   }
