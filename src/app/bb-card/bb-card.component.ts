@@ -292,7 +292,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
             this.isBacktest = false;
           }
         );
-      }, `${this.order.holding.symbol}_bbcard`);
+    }, `${this.order.holding.symbol}_bbcard`, this.globalSettingsService.stopTime);
 
     this.tiles = this.daytradeService.buildTileList(this.orders);
   }
@@ -347,11 +347,11 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   async play() {
     this.setLive();
 
-    const dataSub = this.portfolioService.getPrice(this.order.holding.symbol).subscribe((lastQuote) => {
-      this.runStrategy(1 * lastQuote);
-    });
-
-    this.subscriptions.push(dataSub);
+    this.schedulerService.schedule(() => {
+      this.portfolioService.getPrice(this.order.holding.symbol).subscribe((lastQuote) => {
+        this.runStrategy(1 * lastQuote);
+      });
+    }, `${this.order.holding.symbol}_bbcard_getprice`, this.globalSettingsService.stopTime);
 
     // for (let i = 0; i < dataLength; i += 1) {
     //   const closePrice = quotes.close[i];

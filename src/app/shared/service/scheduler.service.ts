@@ -10,7 +10,7 @@ export class SchedulerService {
 
   constructor() { }
 
-  schedule(taskCb, taskName) {
+  schedule(taskCb, taskName, stopTime = null) {
     console.log('Scheduling: ', moment().format(), this.scheduledTasks.length, taskName);
 
     if (this.scheduledTasks.length > 100) {
@@ -45,12 +45,17 @@ export class SchedulerService {
         nextTimeout = nextExecutionTime - moment().valueOf() + this.delay;
         scheduledTask = { taskName, taskCb, timeout: nextTimeout, executionTime: nextExecutionTime };
 
-        this.scheduledTasks.push(scheduledTask);
+        if (stopTime && moment(nextExecutionTime).isAfter(moment(stopTime))) {
+          console.log('Scheduled event is after stop time.', taskName);
+        } else {
+          this.scheduledTasks.push(scheduledTask);
 
-        setTimeout(() => {
-          console.log('Executing scheduled task: ', moment().format(), scheduledTask.name);
-          taskCb();
-        }, nextTimeout);
+          setTimeout(() => {
+            console.log('Executing scheduled task: ', moment().format(), scheduledTask.name);
+            taskCb();
+          }, nextTimeout);
+        }
+
         return scheduledTask;
       }
     }

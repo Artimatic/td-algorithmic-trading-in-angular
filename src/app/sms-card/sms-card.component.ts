@@ -108,7 +108,7 @@ export class SmsCardComponent implements OnInit, OnDestroy {
                   .subscribe((lastQuote) => {
                     this.runStrategy(stockTicker, 1 * lastQuote);
                   });
-              }, `${listItem.label}_smscard`);
+              }, `${listItem.label}_smscard`, this.stopTime);
             }, 1000 * idx);
           });
         }
@@ -178,7 +178,8 @@ export class SmsCardComponent implements OnInit, OnDestroy {
           this.sendBuy(ticker, 'buy', price);
         }, 1000);
       }
-    } else if (this.buySellOption.value === 'buy_sell' || this.buySellOption.value === 'sell_only') {
+    }
+    if (this.buySellOption.value === 'buy_sell' || this.buySellOption.value === 'sell_only') {
       if (analysis.recommendation.toLowerCase() === 'sell') {
         this.sendBuy(ticker, 'sell', price);
       }
