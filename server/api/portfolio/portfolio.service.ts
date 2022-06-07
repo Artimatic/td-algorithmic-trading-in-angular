@@ -252,6 +252,7 @@ class PortfolioService {
   renewTDAuth(accountId) {
     if (accountId === null) {
       for (const id in this.access_token) {
+        console.log('Account ID: ', id);
         if (id) {
           accountId = id;
         }
@@ -264,11 +265,14 @@ class PortfolioService {
 
       if (diffMinutes < 30) {
         return Promise.resolve();
+      } else {
+        console.log('Access token expired.');
       }
     } else if (!this.access_token[accountId]) {
       this.access_token[accountId] = {token: '123', timestamp: moment().valueOf()};
     }
     return this.sendTdPositionRequest(accountId).then(pos => {
+      console.log('Added new token');
       return Promise.resolve();
     })
     .catch(error => {

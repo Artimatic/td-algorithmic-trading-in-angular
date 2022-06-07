@@ -101,13 +101,15 @@ export class SmsCardComponent implements OnInit, OnDestroy {
           this.stockList.forEach((listItem, idx) => {
             setTimeout(() => {
               this.schedulerService.schedule(() => {
-                const stockTicker = listItem.label;
+                if (this.alive) {
+                  const stockTicker = listItem.label;
 
-                this.portfolioService.getPrice(stockTicker)
-                  .pipe(take(1))
-                  .subscribe((lastQuote) => {
-                    this.runStrategy(stockTicker, 1 * lastQuote);
-                  });
+                  this.portfolioService.getPrice(stockTicker)
+                    .pipe(take(1))
+                    .subscribe((lastQuote) => {
+                      this.runStrategy(stockTicker, 1 * lastQuote);
+                    });
+                }
               }, `${listItem.label}_smscard`, this.stopTime);
             }, 1000 * idx);
           });
@@ -181,7 +183,7 @@ export class SmsCardComponent implements OnInit, OnDestroy {
     }
     if (this.buySellOption.value === 'buy_sell' || this.buySellOption.value === 'sell_only') {
       if (analysis.recommendation.toLowerCase() === 'sell') {
-        this.sendBuy(ticker, 'sell', price);
+        this.sendSell(ticker, 'sell', price);
       }
     }
 
