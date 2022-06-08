@@ -1427,7 +1427,7 @@ class BacktestService {
     return RequestPromise(options)
       .then(data => JSON.parse(data))
       .catch(error => {
-        console.log('Error getTrainingData', error);
+        console.log('Error getTrainingData', error.statusCode);
       });
   }
 

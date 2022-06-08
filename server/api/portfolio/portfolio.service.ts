@@ -252,8 +252,8 @@ class PortfolioService {
   renewTDAuth(accountId) {
     if (accountId === null) {
       for (const id in this.access_token) {
-        console.log('Account ID: ', id);
         if (id) {
+          console.log('Account ID: ', id);
           accountId = id;
         }
       }
@@ -269,24 +269,24 @@ class PortfolioService {
         console.log('Access token expired.');
       }
     } else if (!this.access_token[accountId]) {
-      this.access_token[accountId] = {token: '123', timestamp: moment().valueOf()};
+      this.access_token[accountId] = { token: '123', timestamp: moment().valueOf() };
     }
     return this.sendTdPositionRequest(accountId).then(pos => {
       console.log('Added new token');
       return Promise.resolve();
     })
-    .catch(error => {
-      const errorMessage = JSON.parse(error.error).error;
-      console.log('Token error: ', errorMessage);
-      if (errorMessage === 'The access token being passed has expired or is invalid.') {
+      .catch(error => {
+        const errorMessage = JSON.parse(error.error).error;
+        console.log('Token error: ', errorMessage);
+        if (errorMessage === 'The access token being passed has expired or is invalid.') {
 
-        if (this.lastTokenRequest === null || moment().diff(moment(this.lastTokenRequest), 'minutes') > 30){
-          this.lastTokenRequest = moment().valueOf();
-          return this.getTDAccessToken(accountId);
+          if (this.lastTokenRequest === null || moment().diff(moment(this.lastTokenRequest), 'minutes') > 30) {
+            this.lastTokenRequest = moment().valueOf();
+            return this.getTDAccessToken(accountId);
+          }
         }
-      }
-      return Promise.resolve(errorMessage);
-    });
+        return Promise.resolve(errorMessage);
+      });
   }
 
   getIntraday(symbol, accountId) {
@@ -351,7 +351,7 @@ class PortfolioService {
         }
       }
     }
-
+    console.log('Using account id ', accountId);
     return accountId;
   }
 

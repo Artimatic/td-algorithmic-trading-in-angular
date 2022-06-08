@@ -65,6 +65,7 @@ export class IntradayBacktestViewComponent implements OnInit {
   }
 
   async import(file, trigger = false) {
+    let counter = 0;
     for (const row of file) {
       setTimeout(() => {
         const newHolding: Holding = {
@@ -98,7 +99,7 @@ export class IntradayBacktestViewComponent implements OnInit {
               .subscribe((quote) => {
                 this.addResult(order.holding.symbol, quote);
               });
-          }, 500);
+          }, 10000 * counter++);
         }
 
         this.progress++;
@@ -143,7 +144,7 @@ export class IntradayBacktestViewComponent implements OnInit {
     const uniqueCheck = {};
     for (let i = 0; i < 25; i++) {
       let rand;
-      do  {
+      do {
         rand = Math.floor(Math.random() * IntradayStocks.length);
       } while (uniqueCheck[rand]);
       stockList.push(IntradayStocks[rand]);
@@ -158,24 +159,28 @@ export class IntradayBacktestViewComponent implements OnInit {
     const futureDate = moment().add(1, 'days').format('YYYY-MM-DD');
     const quotesPromises = [];
 
+    let counter = 0;
+
     for (const symbol of stocks) {
       quotesPromises.push(this.backtestService.getYahooIntraday(symbol).toPromise()
-      .then(quotes => {
-        return this.backtestService.postIntraday(quotes).subscribe();
-      }));
+        .then(quotes => {
+          setTimeout(() => {
+            this.backtestService.postIntraday(quotes).subscribe();
+          }, 10000 * counter++);
+        }));
     }
 
     Promise.all(quotesPromises).then(() => {
       this.backtestService.calibrateDaytrade(stocks, futureDate, startDate)
-      .subscribe(result => {
-        console.log('results: ', result);
-      });
+        .subscribe(result => {
+          console.log('results: ', result);
+        });
     })
-    .catch(() => {
-      this.backtestService.calibrateDaytrade(stocks, futureDate, startDate)
-      .subscribe(result => {
-        console.log('results: ', result);
+      .catch(() => {
+        this.backtestService.calibrateDaytrade(stocks, futureDate, startDate)
+          .subscribe(result => {
+            console.log('results: ', result);
+          });
       });
-    });
   }
 }
