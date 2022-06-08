@@ -747,30 +747,30 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
         const modifier = await this.globalSettingsService.globalModifier();
         orderQuantity = _.round(_.multiply(modifier, orderQuantity), 0);
 
-        const trainingSub = this.machineLearningService
-          .trainPredictNext30(this.order.holding.symbol.toUpperCase(),
-            moment().add({ days: 1 }).format('YYYY-MM-DD'),
-            moment().subtract({ days: 1 }).format('YYYY-MM-DD'),
-            0.9,
-            this.globalSettingsService.daytradeAlgo
-          )
-          .subscribe((data: any[]) => {
-            this.machineLearningService.activate(this.order.holding.symbol,
-              this.globalSettingsService.daytradeAlgo)
-              .subscribe((machineResult: { nextOutput: number }) => {
-                const mlLog = `RNN model result: ${machineResult.nextOutput}`;
-                const mlReport = this.reportingService.addAuditLog(this.order.holding.symbol, mlLog);
-                console.log(mlReport);
-                if (machineResult.nextOutput > 0.4) {
-                  this.daytradeBuy(quote, orderQuantity, timestamp, analysis);
-                }
-              });
-          }, error => {
-            console.log('daytrade ml error: ', error);
-            this.daytradeBuy(quote, orderQuantity, timestamp, analysis);
-          });
-
-        this.subscriptions.push(trainingSub);
+        this.schedulerService.schedule(() => {
+          this.machineLearningService
+            .trainPredictNext30(this.order.holding.symbol.toUpperCase(),
+              moment().add({ days: 1 }).format('YYYY-MM-DD'),
+              moment().subtract({ days: 1 }).format('YYYY-MM-DD'),
+              0.9,
+              this.globalSettingsService.daytradeAlgo
+            )
+            .subscribe((data: any[]) => {
+              this.machineLearningService.activate(this.order.holding.symbol,
+                this.globalSettingsService.daytradeAlgo)
+                .subscribe((machineResult: { nextOutput: number }) => {
+                  const mlLog = `RNN model result: ${machineResult.nextOutput}`;
+                  const mlReport = this.reportingService.addAuditLog(this.order.holding.symbol, mlLog);
+                  console.log(mlReport);
+                  if (machineResult.nextOutput > 0.4) {
+                    this.daytradeBuy(quote, orderQuantity, timestamp, analysis);
+                  }
+                });
+            }, error => {
+              console.log('daytrade ml error: ', error);
+              this.daytradeBuy(quote, orderQuantity, timestamp, analysis);
+            });
+        }, `${this.order.holding.symbol}_bbcard_ml`, this.globalSettingsService.stopTime);
       }
     }
   }
