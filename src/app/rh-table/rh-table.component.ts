@@ -375,7 +375,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                         this.aiPicksService.tickerBuyRecommendationQueue.next(symbol);
                       }
                     }
-                    this.getImpliedMovement(testResults);
+                    // this.getImpliedMovement(testResults);
                   }, 'rhtable_process');
                 }
                 this.incrementProgress();
@@ -824,17 +824,23 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
           .subscribe(() => {
             console.log('next buffer @ ', moment().format());
             this.backtestBuffer.shift();
-            this.schedulerService.schedule(() => {
-              this.triggerNextBacktest();
-            }, 'rhtable_backtest');
+            setTimeout(() => {
+              this.schedulerService.schedule(() => {
+                this.triggerNextBacktest();
+              }, 'rhtable_backtest');
+            }, 10 * (1000 - this.backtestBuffer.length));
+
           }, error => {
             this.snackBar.open(`Error on ${backtest.stock}`, 'Dismiss');
             console.log(`Error on ${backtest.stock}`, error.error.error, '@', moment().format());
             this.incrementProgress();
             this.backtestBuffer.shift();
-            this.schedulerService.schedule(() => {
-              this.triggerNextBacktest();
-            }, 'rhtable_backtest');
+            setTimeout(() => {
+              this.schedulerService.schedule(() => {
+                this.triggerNextBacktest();
+              }, 'rhtable_backtest');
+            }, 100 * (1000 - this.backtestBuffer.length));
+
             // this.addToBlackList(backtest.stock);
           }));
       });

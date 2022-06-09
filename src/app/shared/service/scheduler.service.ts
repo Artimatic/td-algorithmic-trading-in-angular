@@ -64,7 +64,7 @@ export class SchedulerService {
     scheduledTask = { taskName, taskCb, timeout: 1000, executionTime: moment().valueOf() + 1000 };
     this.scheduledTasks.push(scheduledTask);
     setTimeout(() => {
-      console.log('Executing scheduled task: ', moment().format(), scheduledTask);
+      console.log('Executing scheduled task: ', moment().format(), scheduledTask.taskName);
 
       taskCb();
     }, scheduledTask.timeout);
