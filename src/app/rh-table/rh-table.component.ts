@@ -351,32 +351,34 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                       }
                     });
 
-                  this.schedulerService.schedule(() => {
-                    if (bullishSignals && bearishSignals) {
-                      if (bearishSignals.length > bullishSignals.length) {
-                        const foundInWatchList = this.watchListService.watchList.find(item => {
-                          return item.stock === symbol;
-                        });
-                        if (foundInWatchList) {
-                          this.clientSmsService.sendSellSms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
-                            .pipe(take(1))
-                            .subscribe();
+                  setTimeout(() => {
+                    this.schedulerService.schedule(() => {
+                      if (bullishSignals && bearishSignals) {
+                        if (bearishSignals.length > bullishSignals.length) {
+                          const foundInWatchList = this.watchListService.watchList.find(item => {
+                            return item.stock === symbol;
+                          });
+                          if (foundInWatchList) {
+                            this.clientSmsService.sendSellSms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
+                              .pipe(take(1))
+                              .subscribe();
+                          }
+                          this.aiPicksService.tickerSellRecommendationQueue.next(symbol);
+                        } else if (bearishSignals.length < bullishSignals.length) {
+                          const foundInWatchList = this.watchListService.watchList.find(item => {
+                            return item.stock === symbol;
+                          });
+                          if (foundInWatchList) {
+                            this.clientSmsService.sendBuySms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
+                              .pipe(take(1))
+                              .subscribe();
+                          }
+                          this.aiPicksService.tickerBuyRecommendationQueue.next(symbol);
                         }
-                        this.aiPicksService.tickerSellRecommendationQueue.next(symbol);
-                      } else if (bearishSignals.length < bullishSignals.length) {
-                        const foundInWatchList = this.watchListService.watchList.find(item => {
-                          return item.stock === symbol;
-                        });
-                        if (foundInWatchList) {
-                          this.clientSmsService.sendBuySms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
-                            .pipe(take(1))
-                            .subscribe();
-                        }
-                        this.aiPicksService.tickerBuyRecommendationQueue.next(symbol);
                       }
-                    }
-                    // this.getImpliedMovement(testResults);
-                  }, 'rhtable_process');
+                      // this.getImpliedMovement(testResults);
+                    }, 'rhtable_process' + symbol);
+                  }, 1000 - this.backtestBuffer.length * 10000);
                 }
                 this.incrementProgress();
               });
@@ -827,7 +829,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
             setTimeout(() => {
               this.schedulerService.schedule(() => {
                 this.triggerNextBacktest();
-              }, 'rhtable_backtest');
+              }, 'rhtable_backtest' + backtest.stock);
             }, 10 * (1000 - this.backtestBuffer.length));
 
           }, error => {
@@ -838,7 +840,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
             setTimeout(() => {
               this.schedulerService.schedule(() => {
                 this.triggerNextBacktest();
-              }, 'rhtable_backtest');
+              }, 'rhtable_backtest' + backtest.stock);
             }, 100 * (1000 - this.backtestBuffer.length));
 
             // this.addToBlackList(backtest.stock);
