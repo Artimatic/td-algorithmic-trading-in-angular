@@ -457,7 +457,7 @@ class BacktestService {
       } else {
         recommendations.recommendation = OrderType.None;
       }
-    } else if (counter.bearishCounter > 2 && counter.bullishCounter === 0) {
+    } else if (counter.bearishCounter > 1 && counter.bullishCounter === 0) {
       recommendations.recommendation = OrderType.Sell;
     }
 
