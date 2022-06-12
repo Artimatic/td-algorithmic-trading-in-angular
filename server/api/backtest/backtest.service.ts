@@ -216,6 +216,15 @@ class BacktestService {
         } else if (macd === DaytradeRecommendation.Bearish) {
           macdSellIdx = idx;
         }
+
+        const bbandRecommendation = AlgoService.checkBBand(indicator.close,
+          AlgoService.getLowerBBand(indicator.bband80), AlgoService.getUpperBBand(indicator.bband80),
+          indicator.mfiLeft);
+    
+        if (isMfiLowIdx > -1 && (idx - isMfiLowIdx) < 33 && (idx - isMfiLowIdx) > 5 &&
+          (bbandRecommendation === DaytradeRecommendation.Bullish || (idx - macdBuyIdx) < 3)) {
+          indicators[idx].mfiTrend = true;
+        }
       }
     });
     return indicators;
@@ -433,24 +442,22 @@ class BacktestService {
     const macdRecommendation = AlgoService.checkMacdDaytrade(indicator.macd, indicator.macdPrevious);
 
     const demark9Recommendation = AlgoService.checkDemark9(indicator.demark9);
+    const mfiTradeRec = indicator.mfiTrend ? DaytradeRecommendation.Bullish : DaytradeRecommendation.Bearish;
 
     counter = AlgoService.countRecommendation(mfiRecommendation, counter);
     counter = AlgoService.countRecommendation(rocMomentumRecommendation, counter);
     counter = AlgoService.countRecommendation(bbandRecommendation, counter);
     counter = AlgoService.countRecommendation(macdRecommendation, counter);
     counter = AlgoService.countRecommendation(demark9Recommendation, counter);
+    counter = AlgoService.countRecommendation(mfiTradeRec, counter);
 
-    if (indicator.mfiTrend === true) {
-      recommendations.recommendation = OrderType.Buy;
-    } else if (indicator.mfiTrend === false) {
-      recommendations.recommendation = OrderType.Sell;
-    } else if (counter.bullishCounter > counter.bearishCounter && counter.bullishCounter > 0) {
+    if (counter.bullishCounter > 1 && counter.bearishCounter === 0) {
       if (vwmaRecommendation !== DaytradeRecommendation.Bearish) {
         recommendations.recommendation = OrderType.Buy;
       } else {
         recommendations.recommendation = OrderType.None;
       }
-    } else if (counter.bearishCounter > counter.bullishCounter && counter.bearishCounter > 0) {
+    } else if (counter.bearishCounter > 2 && counter.bullishCounter === 0) {
       recommendations.recommendation = OrderType.Sell;
     }
 
@@ -459,6 +466,7 @@ class BacktestService {
     recommendations.bband = bbandRecommendation;
     recommendations.demark9 = demark9Recommendation;
     recommendations.macd = macdRecommendation;
+    recommendations.mfiTrade = mfiTradeRec;
 
     return recommendations;
   }
