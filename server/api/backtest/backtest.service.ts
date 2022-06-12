@@ -220,7 +220,7 @@ class BacktestService {
         const bbandRecommendation = AlgoService.checkBBand(indicator.close,
           AlgoService.getLowerBBand(indicator.bband80), AlgoService.getUpperBBand(indicator.bband80),
           indicator.mfiLeft);
-    
+
         if (isMfiLowIdx > -1 && (idx - isMfiLowIdx) < 33 && (idx - isMfiLowIdx) > 5 &&
           (bbandRecommendation === DaytradeRecommendation.Bullish || (idx - macdBuyIdx) < 3)) {
           indicators[idx].mfiTrend = true;
