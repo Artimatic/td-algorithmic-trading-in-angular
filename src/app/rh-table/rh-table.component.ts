@@ -843,7 +843,16 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
               }, 'rhtable_backtest' + backtest.stock);
             }, 100 * (1000 - this.backtestBuffer.length));
 
-            // this.addToBlackList(backtest.stock);
+            setTimeout(() => {
+              this.schedulerService.schedule(() => {
+                backtest.sub
+                  .pipe(take(1))
+                  .subscribe(() => {}, () => {
+                    this.snackBar.open(`Error on ${backtest.stock}`, 'Dismiss');
+                    this.addToBlackList(backtest.stock);
+                  });
+              }, 'rhtable_backtest' + backtest.stock);
+            }, 10000 * (1000 - this.backtestBuffer.length));
           }));
       });
 
