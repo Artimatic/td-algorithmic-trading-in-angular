@@ -279,7 +279,7 @@ class PortfolioService {
         const errorMessage = JSON.parse(error.error).error;
         console.log('Token error: ', errorMessage);
         if (errorMessage === 'The access token being passed has expired or is invalid.') {
-
+          console.log('Last token request: ', moment(this.lastTokenRequest).format());
           if (this.lastTokenRequest === null || moment().diff(moment(this.lastTokenRequest), 'minutes') > 30) {
             this.lastTokenRequest = moment().valueOf();
             return this.getTDAccessToken(accountId);

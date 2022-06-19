@@ -433,7 +433,6 @@ export const stockList = [
   'CNC',
   'TRMB',
   'DXC',
-  'XLNX',
   'ECL',
   'CPB',
   'TRIP',
