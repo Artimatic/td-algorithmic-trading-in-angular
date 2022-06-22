@@ -125,7 +125,7 @@ export class GlobalSettingsService {
     this.setStartTimes();
     this.initBacktestDate();
 
-    this.maxLoss = 20;
+    this.maxLoss = 500;
     this.brokerage = Brokerage.Td;
 
     this.daytradeAlgo = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
