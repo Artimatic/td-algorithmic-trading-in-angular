@@ -99,31 +99,31 @@ export class ScoreKeeperService {
   }
 
   determineLossTallyModifier(stock: string) {
-    if (this.lossTally[stock]) {
-      switch (this.lossTally[stock]) {
-        case 1:
-          return 0.5;
-        case 2:
-          return 0.75;
-        case 3:
-          return 1;
-        default:
-          if (this.lossTally[stock] > 3) {
-            return 0.25;
-          }
-      }
-    }
+    // if (this.lossTally[stock]) {
+    //   switch (this.lossTally[stock]) {
+    //     case 1:
+    //       return 0.5;
+    //     case 2:
+    //       return 0.75;
+    //     case 3:
+    //       return 1;
+    //     default:
+    //       if (this.lossTally[stock] > 3) {
+    //         return 0.25;
+    //       }
+    //   }
+    // }
 
-    if (this.winlossHash[stock]) {
-      const difference = this.winlossHash[stock].wins - this.winlossHash[stock].losses;
-      if (difference > 3) {
-        return 1;
-      } else if (difference > 2) {
-        return 0.8;
-      } else if (difference > 1) {
-        return 0.6;
-      }
-    }
+    // if (this.winlossHash[stock]) {
+    //   const difference = this.winlossHash[stock].wins - this.winlossHash[stock].losses;
+    //   if (difference > 3) {
+    //     return 1;
+    //   } else if (difference > 2) {
+    //     return 0.8;
+    //   } else if (difference > 1) {
+    //     return 0.6;
+    //   }
+    // }
     return 1;
   }
 
