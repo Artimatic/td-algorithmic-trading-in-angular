@@ -773,7 +773,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
               console.log('daytrade ml error: ', error);
               this.daytradeBuy(quote, orderQuantity, timestamp, analysis);
             });
-        }, `${this.order.holding.symbol}_bbcard_ml`, this.globalSettingsService.stopTime);
+        }, `${this.order.holding.symbol}_bbcard_ml`, this.globalSettingsService.stopTime, true);
       }
     }
   }

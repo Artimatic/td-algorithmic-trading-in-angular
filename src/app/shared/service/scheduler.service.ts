@@ -5,13 +5,31 @@ import * as moment from 'moment';
   providedIn: 'root'
 })
 export class SchedulerService {
-  scheduledTasks: { taskName: string; taskCb: () => {}; timeout: number; executionTime: number }[] = [];
+  scheduledTasks: { taskName: string; taskCb: () => {}; timeout: number; executionTime: number, timeoutId?: number }[] = [];
   delay = 45000;
+  priorityEndtime;
+  lastExecutionTime;
+  priorityExecutionHoldTime;
 
   constructor() { }
 
-  schedule(taskCb, taskName, stopTime = null) {
+  schedule(taskCb, taskName, stopTime = null, isPriority = false) {
     console.log('Scheduling: ', moment().format(), this.scheduledTasks.length, taskName);
+
+    if (isPriority) {
+      this.priorityExecutionHoldTime = moment().add({ milliseconds: this.delay + 300 });
+
+      if (moment().isAfter(moment(this.lastExecutionTime).add({ milliseconds: this.delay }))) {
+        taskCb();
+        this.lastExecutionTime = moment().format();
+      } else {
+        setTimeout(() => {
+          console.log('Executing priority task: ', moment().format(), taskName);
+          taskCb();
+          this.lastExecutionTime = moment().format();
+        }, this.delay + 100);
+      }
+    }
 
     if (this.scheduledTasks.length > 100) {
       if (moment(this.scheduledTasks[this.scheduledTasks.length - 1].executionTime).isBefore(moment())) {
@@ -28,7 +46,10 @@ export class SchedulerService {
           return previousValue;
         }, {});
         if (tasksCount[taskName] > 20) {
-          console.log('Too many tasks scheduled. Dropping ', taskName);
+          console.log('Too many tasks scheduled. Trying again later ', taskName);
+          setTimeout(() => {
+            this.schedule(taskCb, taskName, stopTime, isPriority);
+          }, 900000);
         }
       }
     }
@@ -48,12 +69,10 @@ export class SchedulerService {
         if (stopTime && moment(nextExecutionTime).isAfter(moment(stopTime))) {
           console.log('Scheduled event is after stop time.', taskName);
         } else {
-          this.scheduledTasks.push(scheduledTask);
+          const id = this.createTimeout(taskCb, scheduledTask.name, nextTimeout);
 
-          setTimeout(() => {
-            console.log('Executing scheduled task: ', moment().format(), scheduledTask.name);
-            taskCb();
-          }, nextTimeout);
+          scheduledTask.timeoutId = id;
+          this.scheduledTasks.push(scheduledTask);
         }
 
         return scheduledTask;
@@ -62,12 +81,26 @@ export class SchedulerService {
     this.scheduledTasks = [];
 
     scheduledTask = { taskName, taskCb, timeout: 1000, executionTime: moment().valueOf() + 1000 };
-    this.scheduledTasks.push(scheduledTask);
-    setTimeout(() => {
-      console.log('Executing scheduled task: ', moment().format(), scheduledTask.taskName);
 
-      taskCb();
-    }, scheduledTask.timeout);
+    const timeoutId = this.createTimeout(taskCb, scheduledTask.name, scheduledTask.timeout);
+
+    scheduledTask.timeoutId = timeoutId;
+    this.scheduledTasks.push(scheduledTask);
+
     return scheduledTask;
+  }
+
+  createTimeout(taskCb, name, timeout) {
+    return setTimeout(() => {
+      this.priorityExecutionHoldTime = moment().add({ milliseconds: this.delay + 100 });
+
+      if (moment().isAfter(this.priorityExecutionHoldTime)) {
+        console.log('Executing scheduled task: ', moment().format(), name);
+        taskCb();
+        this.lastExecutionTime = moment().format();
+      } else {
+        console.log('Dropping task for priority task');
+      }
+    }, timeout);
   }
 }

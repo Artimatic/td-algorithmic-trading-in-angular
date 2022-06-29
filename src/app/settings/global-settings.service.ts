@@ -42,7 +42,7 @@ export class GlobalSettingsService {
     const spreadData = await this.get10y2ySpread().toPromise();
     const changePercent = Number(spreadData.QuickQuoteResult.QuickQuote.change_pct);
     if (changePercent < 0) {
-      return 0.1;
+      return 0.5;
     } else {
       return 1;
     }
