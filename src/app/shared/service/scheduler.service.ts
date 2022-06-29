@@ -92,14 +92,12 @@ export class SchedulerService {
 
   createTimeout(taskCb, name, timeout) {
     return setTimeout(() => {
-      this.priorityExecutionHoldTime = moment().add({ milliseconds: this.delay + 100 });
-
-      if (moment().isAfter(this.priorityExecutionHoldTime)) {
+      if (!this.priorityExecutionHoldTime || moment().isAfter(this.priorityExecutionHoldTime)) {
         console.log('Executing scheduled task: ', moment().format(), name);
         taskCb();
         this.lastExecutionTime = moment().format();
       } else {
-        console.log('Dropping task for priority task');
+        console.log('Dropping task for priority task', name, this.priorityExecutionHoldTime);
       }
     }, timeout);
   }
