@@ -201,6 +201,10 @@ class BacktestService {
       if (idx > 80) {
         const mfi = AlgoService.checkMfi(indicator.mfiLeft);
         const macd = AlgoService.checkMacdDaytrade(indicator.macd, indicator.macdPrevious);
+        if ((idx - isMfiHighIdx) > 5 || (idx - isMfiLowIdx) > 5) {
+          indicators[idx].mfiTrend = null;
+        }
+
         if (mfi === DaytradeRecommendation.Bullish) {
           isMfiLowIdx = idx;
         } else if (mfi === DaytradeRecommendation.Bearish) {
@@ -215,7 +219,7 @@ class BacktestService {
           macdBuyIdx = idx;
         } else if (macd === DaytradeRecommendation.Bearish) {
           macdSellIdx = idx;
-        }
+        } 
 
         const bbandRecommendation = AlgoService.checkBBand(indicator.close,
           AlgoService.getLowerBBand(indicator.bband80), AlgoService.getUpperBBand(indicator.bband80),
@@ -442,7 +446,12 @@ class BacktestService {
     const macdRecommendation = AlgoService.checkMacdDaytrade(indicator.macd, indicator.macdPrevious);
 
     const demark9Recommendation = AlgoService.checkDemark9(indicator.demark9);
-    const mfiTradeRec = indicator.mfiTrend ? DaytradeRecommendation.Bullish : DaytradeRecommendation.Bearish;
+    let mfiTradeRec = DaytradeRecommendation.Neutral;
+    if (indicator.mfiTrend === true) {
+      mfiTradeRec =  DaytradeRecommendation.Bullish;
+    } else {
+      mfiTradeRec = DaytradeRecommendation.Bearish;
+    }
 
     counter = AlgoService.countRecommendation(mfiRecommendation, counter);
     counter = AlgoService.countRecommendation(rocMomentumRecommendation, counter);
