@@ -14,8 +14,6 @@ export class SchedulerService {
   constructor() { }
 
   schedule(taskCb, taskName, stopTime = null, isPriority = false) {
-    console.log('Scheduling: ', moment().format(), this.scheduledTasks.length, taskName);
-
     if (isPriority) {
       this.priorityExecutionHoldTime = moment().add({ milliseconds: this.delay + 300 });
 
@@ -93,7 +91,6 @@ export class SchedulerService {
   createTimeout(taskCb, name, timeout) {
     return setTimeout(() => {
       if (!this.priorityExecutionHoldTime || moment().isAfter(this.priorityExecutionHoldTime)) {
-        console.log('Executing scheduled task: ', moment().format(), name);
         taskCb();
         this.lastExecutionTime = moment().format();
       } else {

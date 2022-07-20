@@ -719,7 +719,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
       if (this.hasReachedDayTradeOrderLimit()) {
         this.stop();
       } else if (analysis.recommendation.toLowerCase() === 'sell') {
-        console.log('Received sell recommendation: ', analysis);
+        console.log('Received sell recommendation: ', analysis, this.order.holding.symbol);
         if (this.buyCount >= this.sellCount) {
           const orderQuantity = this.positionCount;
           if (orderQuantity > 0) {
@@ -737,7 +737,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
         this.scoringService.total < this.globalSettingsService.maxLoss * -1) {
         this.warning = 'Global stop loss exceeded. Buying paused.';
       } else if (analysis.recommendation.toLowerCase() === 'buy') {
-        console.log('Received Buy recommendation: ', analysis);
+        console.log('Received Buy recommendation: ', analysis, this.order.holding.symbol);
 
         const log = `Received buy recommendation`;
         const report = this.reportingService.addAuditLog(this.order.holding.symbol, log);

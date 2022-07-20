@@ -476,6 +476,7 @@ class BacktestService {
     recommendations.demark9 = demark9Recommendation;
     recommendations.macd = macdRecommendation;
     recommendations.mfiTrade = mfiTradeRec;
+    recommendations.vwma = vwmaRecommendation;
 
     return recommendations;
   }
