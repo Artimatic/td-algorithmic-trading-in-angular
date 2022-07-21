@@ -171,14 +171,12 @@ class BacktestService {
     return PortfolioService.getIntradayV2(symbol, 1)
       .then((intradayObj) => {
         const quotes = intradayObj.candles;
-        console.log('daytrade indicator quotes: ', quotes.length);
+        console.log('daytrade indicator quotes: ', quotes.length, moment().format('hh:mm'));
 
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);
-          if (idx > 80) {
-            const q = quotes.slice(idx - period, idx);
-            getIndicatorQuotes.push(this.initStrategy(q));
-          }
+          const q = quotes.slice(idx - period, idx);
+          getIndicatorQuotes.push(this.initStrategy(q));
         });
         return Promise.all(getIndicatorQuotes)
           .then((indicators: Indicators[]) => {
