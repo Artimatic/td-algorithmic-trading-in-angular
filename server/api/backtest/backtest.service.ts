@@ -221,7 +221,7 @@ class BacktestService {
           macdBuyIdx = idx;
         } else if (macd === DaytradeRecommendation.Bearish) {
           macdSellIdx = idx;
-        } 
+        }
 
         const bbandRecommendation = AlgoService.checkBBand(indicator.close,
           AlgoService.getLowerBBand(indicator.bband80), AlgoService.getUpperBBand(indicator.bband80),
@@ -431,7 +431,7 @@ class BacktestService {
       vwma: DaytradeRecommendation.Neutral,
       macd: DaytradeRecommendation.Neutral,
       demark9: DaytradeRecommendation.Neutral,
-      data: {price, indicator}
+      data: { price, indicator }
     };
 
     const mfiRecommendation = AlgoService.checkMfi(indicator.mfiLeft);
@@ -451,7 +451,7 @@ class BacktestService {
     const demark9Recommendation = AlgoService.checkDemark9(indicator.demark9);
     let mfiTradeRec = DaytradeRecommendation.Neutral;
     if (indicator.mfiTrend === true) {
-      mfiTradeRec =  DaytradeRecommendation.Bullish;
+      mfiTradeRec = DaytradeRecommendation.Bullish;
     } else if (indicator.mfiTrend === false) {
       mfiTradeRec = DaytradeRecommendation.Bearish;
     }
