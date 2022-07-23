@@ -72,6 +72,7 @@ export interface Recommendation {
   mfiDivergence?: DaytradeRecommendation;
   mfiDivergence2?: DaytradeRecommendation;
   overboughtMomentum?: DaytradeRecommendation;
+  data?: any;
 }
 
 export enum DaytradeRecommendation {
@@ -175,8 +176,11 @@ class BacktestService {
 
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);
-          const q = quotes.slice(idx - period, idx);
-          getIndicatorQuotes.push(this.initStrategy(q));
+          const minLength = idx - period > 0 ? idx - period : idx - 14;
+          const q = quotes.slice(minLength, idx);
+          if (q.length > 0) {
+            getIndicatorQuotes.push(this.initStrategy(q));
+          }
         });
         return Promise.all(getIndicatorQuotes)
           .then((indicators: Indicators[]) => {
@@ -426,7 +430,8 @@ class BacktestService {
       bband: DaytradeRecommendation.Neutral,
       vwma: DaytradeRecommendation.Neutral,
       macd: DaytradeRecommendation.Neutral,
-      demark9: DaytradeRecommendation.Neutral
+      demark9: DaytradeRecommendation.Neutral,
+      data: {price, indicator}
     };
 
     const mfiRecommendation = AlgoService.checkMfi(indicator.mfiLeft);
@@ -447,7 +452,7 @@ class BacktestService {
     let mfiTradeRec = DaytradeRecommendation.Neutral;
     if (indicator.mfiTrend === true) {
       mfiTradeRec =  DaytradeRecommendation.Bullish;
-    } else {
+    } else if (indicator.mfiTrend === false) {
       mfiTradeRec = DaytradeRecommendation.Bearish;
     }
 
@@ -458,13 +463,14 @@ class BacktestService {
     counter = AlgoService.countRecommendation(demark9Recommendation, counter);
     counter = AlgoService.countRecommendation(mfiTradeRec, counter);
 
-    if (counter.bullishCounter > 1 && counter.bearishCounter === 0) {
-      if (vwmaRecommendation !== DaytradeRecommendation.Bearish) {
-        recommendations.recommendation = OrderType.Buy;
-      } else {
-        recommendations.recommendation = OrderType.None;
-      }
-    } else if (counter.bearishCounter > 1 && counter.bullishCounter === 0) {
+    if (counter.bullishCounter > 2 && counter.bullishCounter > counter.bearishCounter) {
+      // if (vwmaRecommendation !== DaytradeRecommendation.Bearish) {
+      //   recommendations.recommendation = OrderType.Buy;
+      // } else {
+      //   recommendations.recommendation = OrderType.None;
+      // }
+      recommendations.recommendation = OrderType.Buy;
+    } else if (counter.bearishCounter > 1 && counter.bullishCounter > counter.bullishCounter) {
       recommendations.recommendation = OrderType.Sell;
     }
 

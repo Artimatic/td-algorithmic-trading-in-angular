@@ -12,11 +12,14 @@ class AlgoService {
   }
 
   checkVwma(lastClose: number, vwma: number): DaytradeRecommendation {
-    if (lastClose > vwma) {
-      return DaytradeRecommendation.Bullish;
-    } else {
-      return DaytradeRecommendation.Bearish;
+    if (_.isNumber(lastClose) && _.isNumber(vwma)) {
+      if (lastClose < vwma) {
+        return DaytradeRecommendation.Bullish;
+      } if (lastClose > vwma) {
+        return DaytradeRecommendation.Bearish;
+      }
     }
+    return DaytradeRecommendation.Neutral;
   }
 
   checkMfi(mfi: number): DaytradeRecommendation {

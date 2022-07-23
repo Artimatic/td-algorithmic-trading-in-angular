@@ -64,9 +64,7 @@ export class SchedulerService {
         nextTimeout = nextExecutionTime - moment().valueOf() + this.delay;
         scheduledTask = { taskName, taskCb, timeout: nextTimeout, executionTime: nextExecutionTime };
 
-        if (stopTime && moment(nextExecutionTime).isAfter(moment(stopTime))) {
-          console.log('Scheduled event is after stop time.', taskName);
-        } else {
+        if(!stopTime || moment(nextExecutionTime).isBefore(moment(stopTime))) {
           const id = this.createTimeout(taskCb, scheduledTask.name, nextTimeout);
 
           scheduledTask.timeoutId = id;
