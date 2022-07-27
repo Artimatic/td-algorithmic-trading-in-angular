@@ -13,9 +13,9 @@ class AlgoService {
 
   checkVwma(lastClose: number, vwma: number): DaytradeRecommendation {
     if (_.isNumber(lastClose) && _.isNumber(vwma)) {
-      if (lastClose < vwma) {
+      if (lastClose >= vwma) {
         return DaytradeRecommendation.Bullish;
-      } if (lastClose > vwma) {
+      } if (lastClose < vwma) {
         return DaytradeRecommendation.Bearish;
       }
     }
