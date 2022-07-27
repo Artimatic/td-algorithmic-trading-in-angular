@@ -31,6 +31,7 @@ import { GlobalTaskQueueService } from '@shared/services/global-task-queue.servi
 import { SelectItem } from 'primeng/components/common/selectitem';
 import { ClientSmsService } from '@shared/services/client-sms.service';
 import { SchedulerService } from '@shared/service/scheduler.service';
+import { MachineDaytradingService } from '../machine-daytrading/machine-daytrading.service';
 
 @Component({
   selector: 'app-bb-card',
@@ -72,6 +73,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   subscriptions: Subscription[];
 
   multiplierPreference: FormControl;
+  machineControlled: FormControl;
   multiplierList: number[];
 
   lastTriggeredTime: string;
@@ -93,6 +95,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     private globalTaskQueueService: GlobalTaskQueueService,
     private clientSmsService: ClientSmsService,
     private schedulerService: SchedulerService,
+    private machineDaytradingService: MachineDaytradingService,
     public dialog: MatDialog) { }
 
   ngOnInit() {
@@ -171,7 +174,9 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     this.preferences.setValue(this.initPreferences());
 
     this.multiplierPreference = new FormControl();
+    this.machineControlled = new FormControl();
     this.multiplierPreference.setValue(1);
+    this.machineControlled.setValue(false);
 
     this.smsOption = new FormControl();
     this.smsOption.setValue('none');
@@ -347,11 +352,20 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   async play() {
     this.setLive();
 
-    this.schedulerService.schedule(() => {
-      this.portfolioService.getPrice(this.order.holding.symbol).subscribe((lastQuote) => {
-        this.runStrategy(1 * lastQuote);
-      });
-    }, `${this.order.holding.symbol}_bbcard_getprice`, this.globalSettingsService.stopTime);
+    if (this.machineControlled.value) {
+      this.order.holding.symbol = this.machineDaytradingService.selectedStock;
+      this.firstFormGroup.value.quantity = this.machineDaytradingService.quantity;
+      this.firstFormGroup.value.orderSize = this.machineDaytradingService.orderSize;
+      if (!this.order.holding.symbol) {
+        this.machineDaytradingService.findTrade();
+      }
+    } else {
+      this.schedulerService.schedule(() => {
+        this.portfolioService.getPrice(this.order.holding.symbol).subscribe((lastQuote) => {
+          this.runStrategy(1 * lastQuote);
+        });
+      }, `${this.order.holding.symbol}_bbcard_getprice`, this.globalSettingsService.stopTime);
+    }
 
     // for (let i = 0; i < dataLength; i += 1) {
     //   const closePrice = quotes.close[i];

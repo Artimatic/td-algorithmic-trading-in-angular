@@ -10,6 +10,7 @@ import { Subject } from 'rxjs';
 import {
   debounceTime, distinctUntilChanged
 } from 'rxjs/operators';
+import { MachineDaytradingService } from '../machine-daytrading/machine-daytrading.service';
 
 @Component({
   selector: 'app-default-order-lists',
@@ -32,7 +33,8 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges {
 
   constructor(private _formBuilder: FormBuilder,
     private portfolioService: PortfolioService,
-    private cartService: CartService) { }
+    private cartService: CartService,
+    private machineDaytradingService: MachineDaytradingService) { }
 
   ngOnInit() {
     this.display = false;
@@ -168,6 +170,12 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges {
         this.templateOrders.push(this.cartService.buildOrder(stock, quantity, price, this.addOrderFormGroup.value.side));
       });
     }
+
+    const cb = (quantity, price) => {
+      this.templateOrders.push(this.cartService.buildOrder(stock, quantity, price, this.addOrderFormGroup.value.side));
+    };
+
+    this.machineDaytradingService.addOrder(this.addOrderFormGroup.value.side, stock, allocationPct, total, cb);
   }
 
   getQuantity(stockPrice: number, allocationPct: number, total: number) {
@@ -241,7 +249,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges {
 
   getPortfolioTotal() {
     this.isLoading = true;
-    this.portfolioService.getTdBalance().subscribe((data) => {
+    this.machineDaytradingService.getPortfolioBalance().subscribe((data) => {
       this.updatedAmount(data.liquidationValue);
       this.isLoading = false;
     });
@@ -249,7 +257,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges {
 
   getCashBalance() {
     this.isLoading = true;
-    this.portfolioService.getTdBalance().subscribe((data) => {
+    this.machineDaytradingService.getPortfolioBalance().subscribe((data) => {
       this.updatedAmount(data.cashBalance || data.cashAvailableForTrading);
       this.isLoading = false;
     });

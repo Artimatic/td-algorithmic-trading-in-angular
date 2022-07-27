@@ -256,7 +256,6 @@ class BacktestController extends BaseController {
       request.body.price,
       request.body.paidPrice,
       request.body.parameters, response);
-
   }
 
   calibrateDaytrade(request, response) {

@@ -283,6 +283,8 @@ class PortfolioService {
           if (this.lastTokenRequest === null || moment().diff(moment(this.lastTokenRequest), 'minutes') > 30) {
             this.lastTokenRequest = moment().valueOf();
             return this.getTDAccessToken(accountId);
+          } else {
+            return Promise.resolve(this.access_token[accountId].token);
           }
         }
         return Promise.resolve(errorMessage);

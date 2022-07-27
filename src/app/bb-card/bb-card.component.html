@@ -62,7 +62,13 @@
           <input matInput type="string" placeholder="Phone" formControlName="phoneNumber" required>
         </mat-form-field>
         <p-selectButton [options]="smsOptions" [formControl]="smsOption"></p-selectButton>
-
+        <div class="machine-switch">
+          <mat-slide-toggle [formControl]="machineControlled">
+            <a matTooltip="Machine picks the stock">
+              Machine Controlled
+            </a>
+          </mat-slide-toggle>
+        </div>
         <div>
           <button mat-button matStepperNext>Next</button>
         </div>
@@ -129,4 +135,3 @@
     </mat-step>
   </mat-horizontal-stepper>
 </p-card>
-

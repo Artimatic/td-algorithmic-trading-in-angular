@@ -43,3 +43,7 @@
     height: auto;
     width: auto;
 }
+
+.machine-switch {
+    padding: 3px 0 5px 3px;
+}
