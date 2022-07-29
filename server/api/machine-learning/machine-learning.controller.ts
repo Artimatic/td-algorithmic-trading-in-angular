@@ -28,8 +28,26 @@ class MachineLearningController extends BaseController {
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
+  getDailyActivationData(request, response) {
+    TrainingService.getDailyActivationData(request.query.symbol)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+  getCurrentIntradayActivationData(request, response) {
+    TrainingService.getCurrentIntradayActivationData(request.query.symbol)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
   testV2Model(request, response) {
     TrainingService.testModel(request.query.symbol, request.query.startDate, request.query.endDate, request.query.trainingSize)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+  activateBuyAtCloseModel(request, response) {
+    TrainingService.activateBuyAtCloseModel(request.body.symbol, request.body.startDate, request.body.inputData)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
@@ -131,6 +149,12 @@ class MachineLearningController extends BaseController {
     VariableDailyPredicationService.setOutputLimit(request.query.limit);
     VariableDailyPredicationService.setOutputRange(request.query.range);
     VariableDailyPredicationService.activate(request.query.symbol, features)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+  getTrainingData(request, response) {
+    TrainingService.getTrainingData(request.query.symbol, request.query.startData, request.query.endData)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }

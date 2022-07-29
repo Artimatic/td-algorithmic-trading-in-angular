@@ -305,6 +305,20 @@ export class BacktestService {
     return this.http.get(`${BASE_URL}api/machine-learning/v3/train-daily`, options);
   }
 
+  getTrainingData(symbol: string, startDate, endDate): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const options = {
+      headers: headers,
+      params: {
+        symbol, 
+        startDate,
+        endDate
+      }
+    };
+
+    return this.http.get(`${BASE_URL}api/machine-learning/get-training-data`, options);
+  }
+
   activateLstmV2(symbol: string): Observable<any> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     const options = {
@@ -328,6 +342,30 @@ export class BacktestService {
     };
 
     return this.http.get(`${BASE_URL}api/machine-learning/v3/activate-daily`, options);
+  }
+
+  getDailyActivationData(symbol: string): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const options = {
+      headers: headers,
+      params: {
+        symbol
+      }
+    };
+
+    return this.http.get(`${BASE_URL}api/machine-learning/activation-data`, options);
+  }
+
+  getCurrentIntradayActivationData(symbol: string): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const options = {
+      headers: headers,
+      params: {
+        symbol
+      }
+    };
+
+    return this.http.get(`${BASE_URL}api/machine-learning/current-activation-data`, options);
   }
 
   getDaytradeIndicators(quotes: any, period: number, stddev: number, mfiPeriod: number,

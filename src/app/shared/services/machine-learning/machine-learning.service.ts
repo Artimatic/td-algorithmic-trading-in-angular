@@ -57,6 +57,16 @@ export class MachineLearningService {
     return this.http.get(`${BASE_URL}api/machine-learning/v3/activate`, options);
   }
 
+  activateBuyAtCloseModel(symbol, startDate, inputData): Observable<any> {
+    const data = {
+      symbol,
+      startDate,
+      inputData
+    };
+
+    return this.http.post(`${BASE_URL}api/machine-learning/activate-at-close-model`, data, {});
+  }
+
   getQuotes(symbol: string, startDate: string, endDate: string): Observable<any> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     const options = {

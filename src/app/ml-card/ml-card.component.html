@@ -151,9 +151,10 @@
           </div>
         </div>
         <mat-card-actions>
-          <button mat-raised-button color="warn" (click)="resetStepper(stepper)">STOP</button>
-          <button mat-button color="warn" (click)="goLiveClick()">GO LIVE</button>
-          <button mat-button color="primary" (click)="trainModel()">Train Model</button>
+          <button mat-raised-button color="warn" (click)="resetStepper(stepper)">Stop</button>
+          <button mat-button color="warn" (click)="goLiveClick()">Go live</button>
+          <button mat-button color="warn" (click)="executeNow()">Execute now</button>
+          <button mat-button color="primary" (click)="trainModel()">Train model</button>
         </mat-card-actions>
       </mat-card>
     </mat-step>

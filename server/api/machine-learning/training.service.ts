@@ -11,6 +11,11 @@ export interface TrainingData {
 }
 
 class TrainingService {
+
+  getTrainingData(symbol, endDate, startDate) {
+    return BacktestService.getTrainingData(symbol, endDate, startDate, false);
+  }
+
   train(symbol, startDate, endDate) {
     const finalDataSet: TrainingData[] = [];
     let spyDataSet: TrainingData[];
@@ -24,13 +29,20 @@ class TrainingService {
     console.log('Getting SPY');
     let counter = 1;
 
-    return BacktestService.getTrainingData('SPY', endDate, startDate, false)
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({});
+      }, 46000 * counter++);
+    })
+      .then(() => {
+        return BacktestService.getTrainingData('SPY', endDate, startDate, false)
+      })
       .then(spyData => {
         spyDataSet = spyData;
         return new Promise((resolve) => {
           setTimeout(() => {
             resolve({});
-          }, 45000 * counter++);
+          }, 46000 * counter++);
         });
       })
       .then(() => {
@@ -43,7 +55,7 @@ class TrainingService {
         return new Promise((resolve) => {
           setTimeout(() => {
             resolve({});
-          }, 45000 * counter++);
+          }, 46000 * counter++);
         });
       })
       .then(() => {
@@ -56,7 +68,7 @@ class TrainingService {
         return new Promise((resolve) => {
           setTimeout(() => {
             resolve({});
-          }, 45000 * counter++);
+          }, 46000 * counter++);
         });
 
       })
@@ -70,7 +82,7 @@ class TrainingService {
         return new Promise((resolve) => {
           setTimeout(() => {
             resolve({});
-          }, 45000 * counter++);
+          }, 46000 * counter++);
         });
 
       })
@@ -84,7 +96,7 @@ class TrainingService {
         return new Promise((resolve) => {
           setTimeout(() => {
             resolve({});
-          }, 45000 * counter++);
+          }, 46000 * counter++);
         });
       })
       .then(() => {
@@ -97,7 +109,7 @@ class TrainingService {
         return new Promise((resolve) => {
           setTimeout(() => {
             resolve({});
-          }, 45000 * counter++);
+          }, 46000 * counter++);
         });
       })
       .then(() => {
@@ -110,7 +122,7 @@ class TrainingService {
         return new Promise((resolve) => {
           setTimeout(() => {
             resolve({});
-          }, 45000 * counter++);
+          }, 46000 * counter++);
         });
       })
       .then(() => {
@@ -172,6 +184,16 @@ class TrainingService {
       });
   }
 
+  getDailyActivationData(symbol) {
+    const endDate = moment();
+    const startDate = moment().subtract({ day: 1 });
+    return QuoteService.getDailyQuotes(symbol, endDate, startDate);
+  }
+  
+  getCurrentIntradayActivationData(symbol) {
+    return PortfolioService.getIntradayV2(symbol);
+  }
+
   trainWithIntraday(symbol) {
     const stocks = ['SPY', 'QQQ', 'TLT', 'GLD', 'VXX', 'IWM', 'HYG', symbol];
     const intradayQuotesPromises = [];
@@ -209,6 +231,10 @@ class TrainingService {
             return BacktestService.activateV2Model(symbol, startDate, trainingData);
           });
       });
+  }
+
+  activateBuyAtCloseModel(symbol, startDate, trainingData) {
+    return BacktestService.activateV2Model(symbol, startDate, trainingData);
   }
 
   buildDailyQuotes(symbol, startDate, endDate) {
