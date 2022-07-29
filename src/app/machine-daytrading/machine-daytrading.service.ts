@@ -42,22 +42,21 @@ export class MachineDaytradingService {
                       this.selectedStock = stock;
                       this.quantity = quantity;
                       this.orderSize = _.floor(quantity / 3) || 1;
+                      console.log('Set trade: ', stock);
                     };
 
                     console.log('Found a trade: ', stock);
                     this.schedulerService.schedule(() => {
                       this.getPortfolioBalance().subscribe((total) => {
+                        console.log('Adding trade: ', stock);
+
                         this.addOrder('daytrade', stock, 1, total, cb);
                       });
                     }, 'MachineDaytradingService_add_order', this.globalSettingsService.stopTime, false);
 
-                  } else {
-                    this.resetStock();
                   }
                 });
             }, 'MachineDaytradingService_ml', this.globalSettingsService.stopTime, false);
-          } else {
-            this.resetStock();
           }
         }
       );

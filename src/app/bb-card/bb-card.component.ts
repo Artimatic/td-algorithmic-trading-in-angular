@@ -358,6 +358,12 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
       this.firstFormGroup.value.orderSize = this.machineDaytradingService.orderSize;
       if (!this.order.holding.symbol) {
         this.machineDaytradingService.findTrade();
+      } else {
+        this.schedulerService.schedule(() => {
+          this.portfolioService.getPrice(this.order.holding.symbol).subscribe((lastQuote) => {
+            this.runStrategy(1 * lastQuote);
+          });
+        }, `${this.order.holding.symbol}_bbcard_getprice`, this.globalSettingsService.stopTime);
       }
     } else {
       this.schedulerService.schedule(() => {
