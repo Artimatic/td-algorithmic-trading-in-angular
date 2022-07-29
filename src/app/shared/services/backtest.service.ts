@@ -111,7 +111,7 @@ export class BacktestService {
   }
 
   getMaCrossOverBacktestChart(symbol: string, to: string, from: string,
-                              shortTerm: number, longTerm: number): Observable<any> {
+    shortTerm: number, longTerm: number): Observable<any> {
     const data = {
       symbol,
       to,
@@ -310,7 +310,7 @@ export class BacktestService {
     const options = {
       headers: headers,
       params: {
-        symbol, 
+        symbol,
         startDate,
         endDate
       }
@@ -370,44 +370,44 @@ export class BacktestService {
 
   getDaytradeIndicators(quotes: any, period: number, stddev: number, mfiPeriod: number,
     vwmaPeriod: number): Observable<any> {
-      const data = {
-        quotes,
-        period,
-        stddev,
-        mfiPeriod,
-        vwmaPeriod
-      };
+    const data = {
+      quotes,
+      period,
+      stddev,
+      mfiPeriod,
+      vwmaPeriod
+    };
     return this.http.post(`${BASE_URL}api/backtest/daytrade-indicators`, data, {});
   }
 
   getDaytradeBacktest(symbol: any, currentDate: string, startDate: string,
     parameters: DaytradeParameters): Observable<any> {
-      const data = {
-        symbol,
-        currentDate,
-        startDate,
-        parameters
-      };
+    const data = {
+      symbol,
+      currentDate,
+      startDate,
+      parameters
+    };
     return this.http.post(`${BASE_URL}api/backtest/daytrade-backtest`, data, {});
   }
 
   getDaytradeRecommendation(symbol: string, price: number, paidPrice: number,
     parameters: DaytradeParameters): Observable<any> {
-      const data = {
-        symbol,
-        price,
-        paidPrice,
-        parameters
-      };
+    const data = {
+      symbol,
+      price,
+      paidPrice,
+      parameters
+    };
     return this.http.post(`${BASE_URL}api/backtest/daytrade-recommendation`, data, {});
   }
 
   calibrateDaytrade(symbols: string[], currentDate: string, startDate: string): Observable<any> {
-      const data = {
-        symbols,
-        currentDate,
-        startDate
-      };
+    const data = {
+      symbols,
+      currentDate,
+      startDate
+    };
     return this.http.post(`${BASE_URL}api/backtest/daytrade-calibrate`, data, {});
   }
 }

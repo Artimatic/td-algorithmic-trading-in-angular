@@ -35,7 +35,7 @@ class TrainingService {
       }, 46000 * counter++);
     })
       .then(() => {
-        return BacktestService.getTrainingData('SPY', endDate, startDate, false)
+        return BacktestService.getTrainingData('SPY', endDate, startDate, false);
       })
       .then(spyData => {
         spyDataSet = spyData;
@@ -189,7 +189,7 @@ class TrainingService {
     const startDate = moment().subtract({ day: 1 });
     return QuoteService.getDailyQuotes(symbol, endDate, startDate);
   }
-  
+
   getCurrentIntradayActivationData(symbol) {
     return PortfolioService.getIntradayV2(symbol);
   }
