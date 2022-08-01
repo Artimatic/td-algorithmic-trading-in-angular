@@ -44,7 +44,6 @@ export class SchedulerService {
           return previousValue;
         }, {});
         if (tasksCount[taskName] > 20) {
-          console.log('Too many tasks scheduled. Trying again later ', taskName);
           setTimeout(() => {
             this.schedule(taskCb, taskName, stopTime, isPriority);
           }, 900000);

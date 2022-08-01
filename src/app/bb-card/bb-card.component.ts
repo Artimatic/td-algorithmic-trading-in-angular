@@ -779,7 +779,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
               this.globalSettingsService.daytradeAlgo
             )
             .subscribe((data: any[]) => {
-              console.log(`${this.order.holding.symbol} ml result: `, data);
+              console.log(`${this.order.holding.symbol} ml result: `, data[0]);
               if (data[0].nextOutput > 0.5) {
                 this.daytradeBuy(quote, orderQuantity, timestamp, analysis);
               }
@@ -804,7 +804,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
 
   private daytradeBuy(quote: number, orderQuantity: number, timestamp: number, analysis) {
     if (orderQuantity > 0) {
-      setTimeout(() => {
+      this.schedulerService.schedule(() => {
         const getPriceSub = this.portfolioService.getPrice(this.order.holding.symbol)
           .subscribe((price) => {
             if (price >= quote * 0.999) {
@@ -817,9 +817,16 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
             } else {
               console.log('Current price is too low. Actual: ', price, ' Expected: ', quote);
             }
+          }, () => {
+            const buyOrder = this.buildBuyOrder(orderQuantity,
+              quote,
+              timestamp,
+              analysis);
+
+            this.sendBuy(buyOrder);
           });
         this.subscriptions.push(getPriceSub);
-      }, 500);
+      }, `${this.order.holding.symbol}_bbcard_buy`, this.globalSettingsService.stopTime, true);
     }
   }
 

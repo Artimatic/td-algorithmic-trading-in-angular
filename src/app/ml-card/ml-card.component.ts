@@ -47,6 +47,7 @@ export class MlCardComponent implements OnInit {
   selectedModel: FormControl;
   settings: FormControl;
 
+  responseCounter = 0;
   error: string;
   warning: string;
 
@@ -181,31 +182,33 @@ export class MlCardComponent implements OnInit {
   }
 
   goLive() {
-    this.setup();
-    this.trainModel();
-    this.alive = true;
-    this.sub = TimerObservable.create(0, this.interval)
-      .pipe(
-        takeWhile(() => this.alive))
-      .subscribe(() => {
-        this.live = true;
-        const momentInst = moment();
-        if (momentInst.isAfter(this.startTime) &&
-          momentInst.isBefore(this.stopTime) || this.testing.value) {
-          if (this.triggerDaily.value === true) {
-            this.globalSettingsService.tradeDayStart
-              .pipe(take(1))
-              .subscribe(start => {
-                if (start) {
-                  this.goLive();
-                }
-              });
+    this.schedulerService.schedule(() => {
+      this.setup();
+      this.trainModel();
+      this.alive = true;
+      this.sub = TimerObservable.create(0, this.interval)
+        .pipe(
+          takeWhile(() => this.alive))
+        .subscribe(() => {
+          this.live = true;
+          const momentInst = moment();
+          if (momentInst.isAfter(this.startTime) &&
+            momentInst.isBefore(this.stopTime) || this.testing.value) {
+            if (this.triggerDaily.value === true) {
+              this.globalSettingsService.tradeDayStart
+                .pipe(take(1))
+                .subscribe(start => {
+                  if (start) {
+                    this.goLive();
+                  }
+                });
+            }
+            this.alive = false;
+            this.pendingResults = true;
+            this.executeNow();
           }
-          this.alive = false;
-          this.pendingResults = true;
-          this.executeNow();
-        }
-      });
+        });
+    }, 'ml_card_start');
   }
 
   determineBet(prediction) {
@@ -428,15 +431,15 @@ export class MlCardComponent implements OnInit {
   }
 
   sendActivation() {
+    this.responseCounter = 0;
     const activationHash = {};
     const activationIntradayash = {};
-    let responseCount = 0;
 
     this.schedulerService.schedule(() => {
       this.backtestService.getDailyActivationData('SPY').subscribe(activationData => {
         activationHash['SPY'] = activationData;
-        responseCount++;
-        this.handleResponse(responseCount, activationHash, activationIntradayash);
+        this.responseCounter++;
+        this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
       });
     }, 'ml_card_activation', this.stopTime);
 
@@ -444,16 +447,16 @@ export class MlCardComponent implements OnInit {
       this.backtestService.getCurrentIntradayActivationData('SPY')
         .subscribe(intradayQuotes => {
           activationIntradayash['SPY'] = intradayQuotes;
-          responseCount++;
-          this.handleResponse(responseCount, activationHash, activationIntradayash);
+          this.responseCounter++;
+          this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
         });
     }, 'ml_card_activation', this.stopTime);
 
     this.schedulerService.schedule(() => {
       this.backtestService.getDailyActivationData('QQQ').subscribe(activationData => {
         activationHash['QQQ'] = activationData;
-        responseCount++;
-        this.handleResponse(responseCount, activationHash, activationIntradayash);
+        this.responseCounter++;
+        this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
       });
     }, 'ml_card_activation', this.stopTime);
 
@@ -461,16 +464,16 @@ export class MlCardComponent implements OnInit {
       this.backtestService.getCurrentIntradayActivationData('QQQ')
         .subscribe(intradayQuotes => {
           activationIntradayash['SPY'] = intradayQuotes;
-          responseCount++;
-          this.handleResponse(responseCount, activationHash, activationIntradayash);
+          this.responseCounter++;
+          this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
         });
     }, 'ml_card_activation', this.stopTime);
 
     this.schedulerService.schedule(() => {
       this.backtestService.getDailyActivationData('TLT').subscribe(activationData => {
         activationHash['TLT'] = activationData;
-        responseCount++;
-        this.handleResponse(responseCount, activationHash, activationIntradayash);
+        this.responseCounter++;
+        this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
       });
     }, 'ml_card_activation', this.stopTime);
 
@@ -478,16 +481,16 @@ export class MlCardComponent implements OnInit {
       this.backtestService.getCurrentIntradayActivationData('TLT')
         .subscribe(intradayQuotes => {
           activationIntradayash['TLT'] = intradayQuotes;
-          responseCount++;
-          this.handleResponse(responseCount, activationHash, activationIntradayash);
+          this.responseCounter++;
+          this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
         });
     }, 'ml_card_activation', this.stopTime);
 
     this.schedulerService.schedule(() => {
       this.backtestService.getDailyActivationData('GLD').subscribe(activationData => {
         activationHash['GLD'] = activationData;
-        responseCount++;
-        this.handleResponse(responseCount, activationHash, activationIntradayash);
+        this.responseCounter++;
+        this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
       });
     }, 'ml_card_activation', this.stopTime);
 
@@ -495,16 +498,16 @@ export class MlCardComponent implements OnInit {
       this.backtestService.getCurrentIntradayActivationData('GLD')
         .subscribe(intradayQuotes => {
           activationIntradayash['GLD'] = intradayQuotes;
-          responseCount++;
-          this.handleResponse(responseCount, activationHash, activationIntradayash);
+          this.responseCounter++;
+          this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
         });
     }, 'ml_card_activation', this.stopTime);
 
     this.schedulerService.schedule(() => {
       this.backtestService.getDailyActivationData('VXX').subscribe(activationData => {
         activationHash['VXX'] = activationData;
-        responseCount++;
-        this.handleResponse(responseCount, activationHash, activationIntradayash);
+        this.responseCounter++;
+        this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
       });
     }, 'ml_card_activation', this.stopTime);
 
@@ -512,8 +515,8 @@ export class MlCardComponent implements OnInit {
       this.backtestService.getCurrentIntradayActivationData('VXX')
         .subscribe(intradayQuotes => {
           activationIntradayash['VXX'] = intradayQuotes;
-          responseCount++;
-          this.handleResponse(responseCount, activationHash, activationIntradayash);
+          this.responseCounter++;
+          this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
         });
     }, 'ml_card_activation', this.stopTime);
 
@@ -521,8 +524,8 @@ export class MlCardComponent implements OnInit {
     this.schedulerService.schedule(() => {
       this.backtestService.getDailyActivationData('HYG').subscribe(activationData => {
         activationHash['HYG'] = activationData;
-        responseCount++;
-        this.handleResponse(responseCount, activationHash, activationIntradayash);
+        this.responseCounter++;
+        this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
       });
     }, 'ml_card_activation', this.stopTime);
 
@@ -530,16 +533,16 @@ export class MlCardComponent implements OnInit {
       this.backtestService.getCurrentIntradayActivationData('HYG')
         .subscribe(intradayQuotes => {
           activationIntradayash['HYG'] = intradayQuotes;
-          responseCount++;
-          this.handleResponse(responseCount, activationHash, activationIntradayash);
+          this.responseCounter++;
+          this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
         });
     }, 'ml_card_activation', this.stopTime);
 
     this.schedulerService.schedule(() => {
       this.backtestService.getDailyActivationData(this.getTrainingStock()).subscribe(activationData => {
         activationHash[this.getTrainingStock()] = activationData;
-        responseCount++;
-        this.handleResponse(responseCount, activationHash, activationIntradayash);
+        this.responseCounter++;
+        this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
       });
     }, 'ml_card_activation', this.stopTime);
 
@@ -547,14 +550,14 @@ export class MlCardComponent implements OnInit {
       this.backtestService.getCurrentIntradayActivationData(this.getTrainingStock())
         .subscribe(intradayQuotes => {
           activationIntradayash[this.getTrainingStock()] = intradayQuotes;
-          responseCount++;
-          this.handleResponse(responseCount, activationHash, activationIntradayash);
+          this.responseCounter++;
+          this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
         });
     }, 'ml_card_activation', this.stopTime);
   }
 
   handleResponse(responseCount, activationHash, activationIntradayash) {
-    if (responseCount > 16) {
+    if (responseCount === 14) {
       const quotes = [
         activationHash['SPY'],
         activationHash['QQQ'],

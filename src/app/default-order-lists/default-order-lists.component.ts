@@ -11,6 +11,7 @@ import {
   debounceTime, distinctUntilChanged
 } from 'rxjs/operators';
 import { MachineDaytradingService } from '../machine-daytrading/machine-daytrading.service';
+import { SchedulerService } from '@shared/service/scheduler.service';
 
 @Component({
   selector: 'app-default-order-lists',
@@ -34,6 +35,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges {
   constructor(private _formBuilder: FormBuilder,
     private portfolioService: PortfolioService,
     private cartService: CartService,
+    private schedulerService: SchedulerService,
     private machineDaytradingService: MachineDaytradingService) { }
 
   ngOnInit() {
@@ -153,29 +155,32 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges {
   }
 
   addOrder(stock: string, allocationPct: number, total: number) {
-    if (this.addOrderFormGroup.value.side.toLowerCase() === 'sell') {
-      this.portfolioService.getTdPortfolio().subscribe((data) => {
-        data.forEach((holding) => {
-          if (holding.instrument.symbol === stock) {
-            const sellQuantity = holding.longQuantity;
-            this.portfolioService.getPrice(stock).subscribe((price) => {
-              this.templateOrders.push(this.cartService.buildOrder(stock, sellQuantity, price, this.addOrderFormGroup.value.side));
-            });
-          }
+    stock = stock.toUpperCase();
+    this.schedulerService.schedule(() => {
+      if (this.addOrderFormGroup.value.side.toLowerCase() === 'sell') {
+        this.portfolioService.getTdPortfolio().subscribe((data) => {
+          data.forEach((holding) => {
+            if (holding.instrument.symbol === stock) {
+              const sellQuantity = holding.longQuantity;
+              this.portfolioService.getPrice(stock).subscribe((price) => {
+                this.templateOrders.push(this.cartService.buildOrder(stock, sellQuantity, price, this.addOrderFormGroup.value.side));
+              });
+            }
+          });
         });
-      });
-    } else {
-      this.portfolioService.getPrice(stock).subscribe((price) => {
-        const quantity = this.getQuantity(price, allocationPct, total);
+      } else {
+        this.portfolioService.getPrice(stock).subscribe((price) => {
+          const quantity = this.getQuantity(price, allocationPct, total);
+          this.templateOrders.push(this.cartService.buildOrder(stock, quantity, price, this.addOrderFormGroup.value.side));
+        });
+      }
+
+      const cb = (quantity, price) => {
         this.templateOrders.push(this.cartService.buildOrder(stock, quantity, price, this.addOrderFormGroup.value.side));
-      });
-    }
+      };
 
-    const cb = (quantity, price) => {
-      this.templateOrders.push(this.cartService.buildOrder(stock, quantity, price, this.addOrderFormGroup.value.side));
-    };
-
-    this.machineDaytradingService.addOrder(this.addOrderFormGroup.value.side, stock, allocationPct, total, cb);
+      this.machineDaytradingService.addOrder(this.addOrderFormGroup.value.side, stock, allocationPct, total, cb);
+    }, 'adding_order');
   }
 
   getQuantity(stockPrice: number, allocationPct: number, total: number) {
