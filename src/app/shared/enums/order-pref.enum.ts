@@ -1,10 +1,10 @@
 export enum OrderPref {
     TakeProfit = 'Take Profit',
     StopLoss = 'Stop Loss',
-    SellAtClose = 'Sell positions at close',
+    SellAtClose = 'Sell positions on the close',
     TrailingStopLoss = 'Trailing Stop Loss',
-    BuyCloseSellOpen = 'Buy at Close, Sell at Open',
-    SellAtOpen = 'Sell positions at Open',
-    BuyAt3SellBeforeClose = 'Buy at 3pm, Sell before Close',
-    MlBuySellAtClose = 'Activate ML model to determine Buy/Sell at close'
+    BuyCloseSellOpen = 'Buy on the Close, Sell on the Open',
+    SellAtOpen = 'Sell positions on the Open',
+    BuyAt3SellBeforeClose = 'Buy at 3pm, Sell before the Close',
+    MlBuySellAtClose = 'ML model Buy/Sell on the close'
 }

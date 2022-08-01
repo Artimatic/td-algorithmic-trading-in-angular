@@ -1,3 +1,2 @@
 echo on
- npm i
- npm start
+ npm i && npm build && npm run start

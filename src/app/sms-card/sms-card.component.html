@@ -3,16 +3,7 @@
     <mat-step>
       <form>
         <ng-template matStepLabel>Edit Order</ng-template>
-        <mat-form-field>
-          <mat-label>Stock</mat-label>
-          <input matInput [formControl]="stockFormControl" placeholder="Ex. MSFT">
-          <mat-error *ngIf="stockFormControl.hasError('stock') && !stockFormControl.hasError('required')">
-            Please enter a valid symbol
-          </mat-error>
-          <mat-error *ngIf="stockFormControl.hasError('required')">
-            Stock is <strong>required</strong>
-          </mat-error>
-        </mat-form-field>
+        <input type="text" style="margin-right: 1em;" pInputText [formControl]="stockFormControl" placeholder="Ex. FB, AAPL, MSFT"/>
         <mat-form-field hintLabel="Max number of text messages">
           <input matInput type="number" placeholder="SMS Messages" [formControl]="maxMessages" required>
         </mat-form-field>
@@ -20,10 +11,23 @@
           <input matInput type="string" placeholder="Phone" [formControl]="phoneNumber" required>
         </mat-form-field>
         <p-selectButton [options]="buySellOptions" [formControl]="buySellOption"></p-selectButton>
+        <div style="padding: 1em;">
+          <mat-slide-toggle [formControl]="toastOnly">
+            Toast Message Only
+          </mat-slide-toggle>
+        </div>
         <div>
-          <button mat-button matStepperNext (click)="setDates()">Next</button>
+          <button mat-button (click)="addToList()">Add Stock</button>
+          <button mat-button matStepperNext [disabled]="stockFormControl.hasError('stock') || stockFormControl.hasError('required') || stockList.length === 0" (click)="setDates()">Next</button>
         </div>
       </form>
+      <p-listbox [options]="stockList" [listStyle]="{'max-height':'250px'}">
+        <ng-template let-stock pTemplate="item">
+          <div class="ui-helper-clearfix">
+            <h5>{{stock.label}} <i class="pi pi-times" (click)="removeFromList(stock.label)"></i></h5>
+          </div>
+        </ng-template>
+      </p-listbox>
     </mat-step>
     <mat-step>
       <ng-template matStepLabel>Place Order</ng-template>
@@ -67,6 +71,7 @@
         <mat-card-actions>
           <button mat-raised-button color="warn" (click)="resetStepper(stepper)">STOP</button>
           <button mat-button color="warn" (click)="openDialog()">GO LIVE</button>
+          <button mat-button (click)="runTraining()">Train Model</button>
           <mat-slide-toggle [formControl]="testing" (change)="setTest()">
             Test Mode
           </mat-slide-toggle>

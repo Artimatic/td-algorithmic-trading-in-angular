@@ -3,25 +3,26 @@ import * as twilio from 'twilio';
 
 const authToken = configurations.twilio.key;
 const accountSid = configurations.twilio.id;
+const twilioNumber = configurations.twilio.num;
 
 class ServerSmsService {
 
-  sendSms(phoneNumber: string, buy: boolean, stock: string, price: number, quantity: number) {
+  sendSms(phoneNumber: string, buy: boolean, stock: string, price: number, quantity: number, message: string = '') {
     const client = twilio(accountSid, authToken);
     client.messages.create({
-      body: (buy ? 'Buy ' : 'Sell ') + `${quantity} of ${stock} @ ${price}`,
+      body: (buy ? 'Buy ' : 'Sell ') + `${quantity} of ${stock} @ ${price}, ${message}`,
       to: '' + phoneNumber,  // Text this number
-      from: '+17479004684' // From a valid Twilio number
-    }).then((message) => console.log('sent sms: ', message))
+      from: twilioNumber // From a valid Twilio number
+    }).then((msg) => console.log('sent sms: ', msg.body))
     .catch((error) => console.log('error sending sms: ', error));
   }
 
-  sendBuySms(phoneNumber: string, stock: string, price: number, quantity: number) {
-    this.sendSms(phoneNumber, true, stock, price, quantity);
+  sendBuySms(phoneNumber: string, stock: string, price: number, quantity: number, message: string = '') {
+    this.sendSms(phoneNumber, true, stock, price, quantity, message);
   }
 
-  sendSellSms(phoneNumber: string, stock: string, price: number, quantity: number) {
-    this.sendSms(phoneNumber, false, stock, price, quantity);
+  sendSellSms(phoneNumber: string, stock: string, price: number, quantity: number, message: string = '') {
+    this.sendSms(phoneNumber, false, stock, price, quantity, message);
   }
 }
 

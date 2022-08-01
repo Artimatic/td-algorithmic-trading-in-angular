@@ -1,0 +1,21 @@
+.uppercase {
+    text-transform: uppercase;
+}
+
+.order-form-item {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.action-buttons {
+    padding-top: 3px;
+
+}
+
+.add-button {
+    float: right;
+}
+
+.remove-button {
+    float: left;
+}

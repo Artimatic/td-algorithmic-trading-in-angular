@@ -16,11 +16,17 @@ const robinhoodDevice = {
 const apiUrl = 'https://api.robinhood.com/';
 const tdaUrl = 'https://api.tdameritrade.com/v1/';
 
+interface TokenInfo {
+  timestamp: number;
+  token: string;
+}
+
 class PortfolioService {
 
-  access_token = {};
+  access_token: { [key: string]: TokenInfo } = {};
   tdaKey = {};
   refreshToken = {};
+  lastTokenRequest = null;
 
   login(username, password, reply) {
     const options = {
@@ -244,16 +250,58 @@ class PortfolioService {
   }
 
   renewTDAuth(accountId) {
-    return this.getTDAccessToken(accountId);
+    if (accountId === null) {
+      for (const id in this.access_token) {
+        if (id) {
+          console.log('Account ID: ', id);
+          accountId = id;
+        }
+      }
+    }
+
+    if (this.access_token[accountId]) {
+      const diffMinutes = moment().diff(moment(this.access_token[accountId].timestamp), 'minutes');
+      console.log('Found access token ', diffMinutes);
+
+      if (diffMinutes < 30) {
+        return Promise.resolve();
+      } else {
+        console.log('Access token expired.');
+      }
+    } else if (!this.access_token[accountId]) {
+      this.access_token[accountId] = { token: '123', timestamp: moment().valueOf() };
+    }
+    return this.sendTdPositionRequest(accountId).then(pos => {
+      console.log('Added new token');
+      return Promise.resolve();
+    })
+      .catch(error => {
+        const errorMessage = JSON.parse(error.error).error;
+        console.log('Token error: ', errorMessage);
+        if (errorMessage === 'The access token being passed has expired or is invalid.') {
+          console.log('Last token request: ', moment(this.lastTokenRequest).format());
+          if (this.lastTokenRequest === null || moment().diff(moment(this.lastTokenRequest), 'minutes') > 30) {
+            this.lastTokenRequest = moment().valueOf();
+            return this.getTDAccessToken(accountId);
+          } else {
+            return Promise.resolve(this.access_token[accountId].token);
+          }
+        }
+        return Promise.resolve(errorMessage);
+      });
   }
 
   getIntraday(symbol, accountId) {
+    console.log(moment().format(), 'Retrieving intraday quotes ');
     if (!accountId || !this.access_token[accountId]) {
+      console.log('missing access token for ', accountId, this.access_token);
       return this.renewTDAuth(accountId)
         .then(() => this.getTDIntraday(symbol, accountId));
     } else {
       return this.getTDIntraday(symbol, accountId)
-        .catch(() => {
+        .catch((error) => {
+          console.log('Error retrieving intraday data ', error.error);
+
           return this.renewTDAuth(accountId)
             .then(() => this.getTDIntraday(symbol, accountId));
         });
@@ -262,7 +310,7 @@ class PortfolioService {
 
   getTDIntraday(symbol, accountId) {
     if (!accountId) {
-      accountId = configurations.tdameritrade.accountId;
+      accountId = this.getAccountId();
     }
 
     const query = `${tdaUrl}marketdata/${symbol}/pricehistory`;
@@ -278,7 +326,7 @@ class PortfolioService {
         needExtendedHoursData: false
       },
       headers: {
-        Authorization: `Bearer ${this.access_token[accountId]}`
+        Authorization: `Bearer ${this.access_token[accountId].token}`
       }
     };
 
@@ -294,8 +342,23 @@ class PortfolioService {
       .then(() => this.getTDIntradayV2(symbol, period, frequencyType, frequency));
   }
 
+  getAccountId() {
+    let accountId = configurations.tdameritrade.accountId;
+    if (accountId) {
+      return accountId;
+    } else {
+      for (const id in this.access_token) {
+        if (id) {
+          accountId = id;
+        }
+      }
+    }
+    console.log('Using account id ', accountId);
+    return accountId;
+  }
+
   getTDIntradayV2(symbol, period, frequencyType, frequency) {
-    const accountId = configurations.tdameritrade.accountId;
+    const accountId = this.getAccountId();
 
     const query = `${tdaUrl}marketdata/${symbol}/pricehistory`;
     const options = {
@@ -310,7 +373,7 @@ class PortfolioService {
         needExtendedHoursData: false
       },
       headers: {
-        Authorization: `Bearer ${this.access_token[accountId]}`
+        Authorization: `Bearer ${this.access_token[accountId].token}`
       }
     };
 
@@ -326,7 +389,7 @@ class PortfolioService {
   }
 
   getTDIntradayV3(symbol, startDate, endDate) {
-    const accountId = configurations.tdameritrade.accountId;
+    const accountId = this.getAccountId();
 
     const query = `${tdaUrl}marketdata/${symbol}/pricehistory`;
     const options = {
@@ -342,7 +405,7 @@ class PortfolioService {
         needExtendedHoursData: false
       },
       headers: {
-        Authorization: `Bearer ${this.access_token[accountId]}`
+        Authorization: `Bearer ${this.access_token[accountId].token}`
       }
     };
 
@@ -350,16 +413,28 @@ class PortfolioService {
       .then((data) => {
         const response = this.processTDData(data);
         return QuoteService.convertTdIntradayV2(symbol, response.candles);
+      })
+      .catch(error => {
+        console.log('Error on getTDIntradayV3 request ', error);
+        console.log('getTDIntradayV3 request ', symbol, startDate, endDate);
+
+        return error;
       });
   }
 
   getDailyQuotes(symbol, startDate, endDate, accountId) {
+    console.log(moment().format(), 'Retrieving daily quotes ');
+
     if (!this.access_token[accountId]) {
+      console.log('missing access token');
+
       return this.renewTDAuth(accountId)
         .then(() => this.getTDDailyQuotes(symbol, startDate, endDate, accountId));
     } else {
       return this.getTDDailyQuotes(symbol, startDate, endDate, accountId)
-        .catch(() => {
+        .catch(error => {
+          console.log(moment().format(), 'Error retrieving daily quotes ', error.error);
+
           return this.renewTDAuth(accountId)
             .then(() => this.getTDDailyQuotes(symbol, startDate, endDate, accountId));
         });
@@ -371,9 +446,10 @@ class PortfolioService {
     const accountIds = Object.getOwnPropertyNames(this.refreshToken);
     if (accountIds.length > 0) {
       accountId = accountIds[0];
-    } else if (configurations.tdameritrade.accountId) {
-      accountId = configurations.tdameritrade.accountId;
     } else {
+      accountId = this.getAccountId();
+    }
+    if (!accountId) {
       console.log('Missing accountId');
     }
     return this.getDailyQuotes(symbol, startDate, endDate, accountId);
@@ -393,7 +469,7 @@ class PortfolioService {
         needExtendedHoursData: false
       },
       headers: {
-        Authorization: `Bearer ${this.access_token[accountId]}`
+        Authorization: `Bearer ${this.access_token[accountId].token}`
       }
     };
 
@@ -412,7 +488,7 @@ class PortfolioService {
         apikey: this.tdaKey[accountId]
       },
       headers: {
-        Authorization: `Bearer ${this.access_token[accountId]}`
+        Authorization: `Bearer ${this.access_token[accountId].token}`
       }
     };
     return request.get(options);
@@ -423,11 +499,12 @@ class PortfolioService {
   }
 
   getTDAccessToken(accountId) {
+    console.log(moment().format(), ' GETTING NEW ACCESS TOKEN');
     let refreshToken;
     let key;
     if (!accountId ||
       !this.refreshToken[accountId] || !this.tdaKey[accountId]) {
-      accountId = configurations.tdameritrade.accountId;
+      accountId = this.getAccountId();
       key = configurations.tdameritrade.consumer_key;
       refreshToken = configurations.tdameritrade.refresh_token;
     } else {
@@ -445,15 +522,21 @@ class PortfolioService {
     })
       .then(this.processTDData)
       .then(EASObject => {
-        this.access_token[accountId] = EASObject.access_token;
-        return this.access_token[accountId];
+        this.access_token[accountId] = {
+          token: EASObject.access_token,
+          timestamp: moment().valueOf()
+        };
+
+        console.log(moment().format(), 'Set new access token');
+
+        return this.access_token[accountId].token;
       });
   }
 
   renewExpiredTDAccessTokenAndGetQuote(symbol, accountId) {
-    return this.getTDAccessToken(accountId)
-      .then((token) => {
-        return this.getTDMarketData(symbol, accountId || configurations.tdameritrade.accountId)
+    return this.renewTDAuth(accountId)
+      .then(() => {
+        return this.getTDMarketData(symbol, accountId || this.getAccountId())
           .then(this.processTDData);
       });
   }
@@ -482,7 +565,7 @@ class PortfolioService {
       'Accept': '*/*',
       'Accept-Encoding': 'gzip',
       'Accept-Language': 'en-US',
-      'Authorization': `Bearer ${this.access_token[accountId]}`,
+      'Authorization': `Bearer ${this.access_token[accountId].token}`,
       'Content-Type': 'application/json',
     };
 
@@ -538,7 +621,7 @@ class PortfolioService {
       'Accept': '*/*',
       'Accept-Encoding': 'gzip',
       'Accept-Language': 'en-US',
-      'Authorization': `Bearer ${this.access_token[accountId]}`,
+      'Authorization': `Bearer ${this.access_token[accountId].token}`,
       'Content-Type': 'application/json',
     };
 
@@ -574,12 +657,9 @@ class PortfolioService {
   }
 
   getTdPositions(accountId) {
-    return this.renewTDAuth(accountId)
-      .then(() => {
-        return this.sendTdPositionRequest(accountId)
-          .then((pos) => {
-            return pos.securitiesAccount.positions;
-          });
+    return this.sendTdPositionRequest(accountId)
+      .then((pos) => {
+        return pos.securitiesAccount.positions;
       });
   }
 
@@ -601,7 +681,7 @@ class PortfolioService {
         fields: 'positions'
       },
       headers: {
-        Authorization: `Bearer ${this.access_token[accountId]}`
+        Authorization: `Bearer ${this.access_token[accountId].token}`
       }
     };
 
@@ -635,28 +715,27 @@ class PortfolioService {
 
   getOptionsStraddle(accountId, symbol, strikeCount, optionType = 'S') {
     if (!accountId) {
-      accountId = configurations.tdameritrade.accountId;
+      accountId = this.getAccountId();
     }
-
-    const query = `${tdaUrl}marketdata/chains`;
-    const options = {
-      uri: query,
-      qs: {
-        symbol,
-        strikeCount,
-        includeQuotes: true,
-        strategy: 'STRADDLE',
-        interval: 0,
-        range: 'SNK',
-        optionType
-      },
-      headers: {
-        Authorization: `Bearer ${this.access_token[accountId]}`
-      }
-    };
 
     return this.renewTDAuth(accountId)
       .then(() => {
+        const query = `${tdaUrl}marketdata/chains`;
+        const options = {
+          uri: query,
+          qs: {
+            symbol,
+            strikeCount,
+            includeQuotes: true,
+            strategy: 'STRADDLE',
+            interval: 0,
+            range: 'SNK',
+            optionType
+          },
+          headers: {
+            Authorization: `Bearer ${this.access_token[accountId].token}`
+          }
+        };
         return request.get(options)
           .then((data) => {
             return this.processTDData(data);

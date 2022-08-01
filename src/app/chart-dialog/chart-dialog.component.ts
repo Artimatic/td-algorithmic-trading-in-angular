@@ -36,12 +36,12 @@ export class ChartDialogComponent implements OnInit {
     { value: 'findresistance', viewValue: 'Moving Average Resistance' }
   ];
 
-  selectedAlgo = 'bollingerbandmfi';
+  selectedAlgo = 'all';
 
   constructor(@Inject(MAT_DIALOG_DATA) public data: { chartData: any }, private _formBuilder: FormBuilder) { }
 
   ngOnInit() {
-    this.selectedAlgo = this.data.chartData.algorithm;
+    this.selectedAlgo = 'all';
     this.smaForm = this._formBuilder.group({
       deviation: new FormControl(this.data.chartData.params.deviation, Validators.required),
       fastAvg: new FormControl(this.data.chartData.params.fastAvg, Validators.required),

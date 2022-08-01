@@ -1,8 +1,8 @@
-<p-table [value]="potentialBuys" [paginator]="true" [rows]="20" dataKey="name" selectionMode="single"
+<p-table [value]="potentialBuys" [paginator]="true" [rows]="10" dataKey="name" selectionMode="single"
   (onRowSelect)="onRowSelect($event)">
   <ng-template pTemplate="caption">
     <div class="find-recommendation-btn">
-      <button pButton type="button" label="Recommend a Stock" class="ui-button-success" (click)="findStock()">
+      <button pButton type="button" label="Recommend a Stock" class="ui-button-success" (click)="findStock()" *ngIf="!loading">
       </button>
     </div>
     <app-default-order-lists class="default-orders-button" [prefillOrderForm]="prefillOrderForm">
@@ -27,5 +27,7 @@
     </tr>
   </ng-template>
 </p-table>
+
+<app-ai-picks></app-ai-picks>
 
 <app-pokerhand></app-pokerhand>

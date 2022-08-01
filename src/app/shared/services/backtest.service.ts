@@ -7,7 +7,6 @@ import { Observable, Subject } from 'rxjs';
 import { Injectable } from '@angular/core';
 
 import { environment } from '../../../environments/environment';
-import { Indicators } from '../models/indicators';
 import { AuthenticationService } from './authentication.service';
 
 const BASE_URL = environment.appUrl;
@@ -112,7 +111,7 @@ export class BacktestService {
   }
 
   getMaCrossOverBacktestChart(symbol: string, to: string, from: string,
-                              shortTerm: number, longTerm: number): Observable<any> {
+    shortTerm: number, longTerm: number): Observable<any> {
     const data = {
       symbol,
       to,
@@ -192,13 +191,15 @@ export class BacktestService {
   }
 
 
-  findIntraday(data: JSON): Observable<any> {
-    const body = JSON.stringify(data);
-
+  findIntraday(symbol: string, to: string = null, from: string = null): Observable<any> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     const options = {
       headers: headers,
-      body: body
+      params: {
+        symbol,
+        to,
+        from
+      }
     };
 
     return this.http.get(`${BASE_URL}api/quote/historical-intraday`, options);
@@ -304,6 +305,20 @@ export class BacktestService {
     return this.http.get(`${BASE_URL}api/machine-learning/v3/train-daily`, options);
   }
 
+  getTrainingData(symbol: string, startDate, endDate): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const options = {
+      headers: headers,
+      params: {
+        symbol,
+        startDate,
+        endDate
+      }
+    };
+
+    return this.http.get(`${BASE_URL}api/machine-learning/get-training-data`, options);
+  }
+
   activateLstmV2(symbol: string): Observable<any> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     const options = {
@@ -329,46 +344,70 @@ export class BacktestService {
     return this.http.get(`${BASE_URL}api/machine-learning/v3/activate-daily`, options);
   }
 
+  getDailyActivationData(symbol: string): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const options = {
+      headers: headers,
+      params: {
+        symbol
+      }
+    };
+
+    return this.http.get(`${BASE_URL}api/machine-learning/activation-data`, options);
+  }
+
+  getCurrentIntradayActivationData(symbol: string): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const options = {
+      headers: headers,
+      params: {
+        symbol
+      }
+    };
+
+    return this.http.get(`${BASE_URL}api/machine-learning/current-activation-data`, options);
+  }
+
   getDaytradeIndicators(quotes: any, period: number, stddev: number, mfiPeriod: number,
     vwmaPeriod: number): Observable<any> {
-      const data = {
-        quotes,
-        period,
-        stddev,
-        mfiPeriod,
-        vwmaPeriod
-      };
+    const data = {
+      quotes,
+      period,
+      stddev,
+      mfiPeriod,
+      vwmaPeriod
+    };
     return this.http.post(`${BASE_URL}api/backtest/daytrade-indicators`, data, {});
   }
 
   getDaytradeBacktest(symbol: any, currentDate: string, startDate: string,
     parameters: DaytradeParameters): Observable<any> {
-      const data = {
-        symbol,
-        currentDate,
-        startDate,
-        parameters
-      };
+    const data = {
+      symbol,
+      currentDate,
+      startDate,
+      parameters
+    };
     return this.http.post(`${BASE_URL}api/backtest/daytrade-backtest`, data, {});
   }
 
-  getDaytradeRecommendation(price: number, paidPrice: number, indicators: Indicators,
+  getDaytradeRecommendation(symbol: string, price: number, paidPrice: number,
     parameters: DaytradeParameters): Observable<any> {
-      const data = {
-        price,
-        paidPrice,
-        indicators,
-        parameters
-      };
+    const data = {
+      symbol,
+      price,
+      paidPrice,
+      parameters
+    };
     return this.http.post(`${BASE_URL}api/backtest/daytrade-recommendation`, data, {});
   }
 
   calibrateDaytrade(symbols: string[], currentDate: string, startDate: string): Observable<any> {
-      const data = {
-        symbols,
-        currentDate,
-        startDate
-      };
+    const data = {
+      symbols,
+      currentDate,
+      startDate
+    };
     return this.http.post(`${BASE_URL}api/backtest/daytrade-calibrate`, data, {});
   }
 }

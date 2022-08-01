@@ -1,4 +1,5 @@
 import * as moment from 'moment';
+
 import BacktestService from '../backtest/backtest.service';
 import PortfolioService from '../portfolio/portfolio.service';
 import QuoteService from '../quote/quote.service';
@@ -10,6 +11,11 @@ export interface TrainingData {
 }
 
 class TrainingService {
+
+  getTrainingData(symbol, endDate, startDate) {
+    return BacktestService.getTrainingData(symbol, endDate, startDate, false);
+  }
+
   train(symbol, startDate, endDate) {
     const finalDataSet: TrainingData[] = [];
     let spyDataSet: TrainingData[];
@@ -21,46 +27,106 @@ class TrainingService {
     let hygDataSet: TrainingData[];
 
     console.log('Getting SPY');
-    return BacktestService.getTrainingData('SPY', endDate, startDate, false)
+    let counter = 1;
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({});
+      }, 46000 * counter++);
+    })
+      .then(() => {
+        return BacktestService.getTrainingData('SPY', endDate, startDate, false);
+      })
       .then(spyData => {
         spyDataSet = spyData;
-        console.log('Getting QQQ');
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            resolve({});
+          }, 46000 * counter++);
+        });
+      })
+      .then(() => {
+        console.log('Getting QQQ @ ', moment().format('hh:mm'));
 
         return BacktestService.getTrainingData('QQQ', endDate, startDate, false);
       })
       .then(qqqData => {
         qqqDataSet = qqqData;
-        console.log('Getting TLT');
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            resolve({});
+          }, 46000 * counter++);
+        });
+      })
+      .then(() => {
+        console.log('Getting TLT', moment().format('hh:mm'));
 
         return BacktestService.getTrainingData('TLT', endDate, startDate, false);
       })
       .then(tltData => {
         tltDataSet = tltData;
-        console.log('Getting GLD');
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            resolve({});
+          }, 46000 * counter++);
+        });
+
+      })
+      .then(() => {
+        console.log('Getting GLD', moment().format('hh:mm'));
 
         return BacktestService.getTrainingData('GLD', endDate, startDate, false);
       })
       .then(gldData => {
         gldDataSet = gldData;
-        console.log('Getting VXX');
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            resolve({});
+          }, 46000 * counter++);
+        });
+
+      })
+      .then(() => {
+        console.log('Getting VXX', moment().format('hh:mm'));
 
         return BacktestService.getTrainingData('VXX', endDate, startDate, false);
       })
       .then(vxxData => {
         vxxDataSet = vxxData;
-        console.log('Getting IWM');
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            resolve({});
+          }, 46000 * counter++);
+        });
+      })
+      .then(() => {
+        console.log('Getting IWM', moment().format('hh:mm'));
 
         return BacktestService.getTrainingData('IWM', endDate, startDate, false);
       })
       .then(iwmData => {
         iwmDataSet = iwmData;
-        console.log('Getting HYG');
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            resolve({});
+          }, 46000 * counter++);
+        });
+      })
+      .then(() => {
+        console.log('Getting HYG', moment().format('hh:mm'));
 
         return BacktestService.getTrainingData('HYG', endDate, startDate, false);
       })
       .then(hygData => {
         hygDataSet = hygData;
-        console.log('Getting', symbol);
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            resolve({});
+          }, 46000 * counter++);
+        });
+      })
+      .then(() => {
+        console.log('Getting', symbol, moment().format('hh:mm'));
 
         return BacktestService.getTrainingData(symbol, endDate, startDate, false);
       })
@@ -118,6 +184,16 @@ class TrainingService {
       });
   }
 
+  getDailyActivationData(symbol) {
+    const endDate = moment();
+    const startDate = moment().subtract({ day: 1 });
+    return QuoteService.getDailyQuotes(symbol, endDate, startDate);
+  }
+
+  getCurrentIntradayActivationData(symbol) {
+    return PortfolioService.getIntradayV2(symbol);
+  }
+
   trainWithIntraday(symbol) {
     const stocks = ['SPY', 'QQQ', 'TLT', 'GLD', 'VXX', 'IWM', 'HYG', symbol];
     const intradayQuotesPromises = [];
@@ -141,7 +217,7 @@ class TrainingService {
             quotes.forEach((val, idx) => {
               const quote = val[val.length - 2]; // TODO CHANGE TO -1
               const intraday = intradayQuotes[idx].candles;
-              const datetime =  intraday[intraday.length - 2].datetime;
+              const datetime = intraday[intraday.length - 2].datetime;
               if (moment(datetime).diff(moment(quote.date), 'days') > 1) {
                 console.log(moment(quote.date).diff(moment(datetime), 'days'), quote.date, moment(datetime).format());
                 console.log(`The dates ${moment(quote.date).format()} ${moment(datetime).format()} are incorrect`);
@@ -149,7 +225,7 @@ class TrainingService {
               input = input.concat(this.buildTrainingData(quote, intraday));
             });
 
-            return [{input}];
+            return [{ input }];
           })
           .then(trainingData => {
             return BacktestService.activateV2Model(symbol, startDate, trainingData);
@@ -157,41 +233,54 @@ class TrainingService {
       });
   }
 
+  activateBuyAtCloseModel(symbol, startDate, trainingData) {
+    return BacktestService.activateV2Model(symbol, startDate, trainingData);
+  }
+
   buildDailyQuotes(symbol, startDate, endDate) {
     return QuoteService.getDailyQuotes(symbol, endDate, startDate)
       .then(quotes => {
         return PortfolioService.getIntradayV2(symbol, 1, 'minute', 1)
           .then(intradayQuotes => {
-              const quote = quotes[quotes.length - 1];
-              const intradayCandles = intradayQuotes.candles;
-              const datetime =  intradayCandles[intradayCandles.length - 2].datetime;
+            const quote = quotes[quotes.length - 1];
+            const intradayCandles = intradayQuotes.candles;
+            const secondToLastIntradayCandle = intradayCandles[intradayCandles.length - 2];
+            const datetime = secondToLastIntradayCandle.datetime;
 
-              if (moment(datetime).diff(moment(quote.date), 'days') > 1) {
-                console.log(moment(quote.date).diff(moment(datetime), 'days'), quote.date, moment(datetime).format());
-                console.log(`The dates ${moment(quote.date).format()} ${moment(datetime).format()} are incorrect`);
-              } else if (moment(datetime).diff(moment(quote.date), 'days') < 1) {
+            if (moment(datetime).diff(moment(quote.date), 'days') > 1) {
+              console.log(moment(quote.date).diff(moment(datetime), 'days'), quote.date, moment(datetime).format());
+              console.log(`The dates ${moment(quote.date).format()} ${moment(datetime).format()} are incorrect`);
+            } else if (moment(datetime).diff(moment(quote.date), 'days') < 1) {
 
-                const currentQuote = this.processIntraday(intradayCandles);
-                const currentVolume = this.getVolume(intradayCandles);
+              const currentQuote = this.processIntraday(intradayCandles);
+              const currentVolume = this.getVolume(intradayCandles);
 
-                currentQuote.date = moment(intradayCandles[intradayCandles.length - 2].datetime).toISOString();
-                currentQuote.volume = currentVolume;
-                currentQuote.symbol = symbol;
-                quotes[quotes.length - 1] = currentQuote;
-              } else {
-                const currentQuote = this.processIntraday(intradayCandles);
-                const currentVolume = this.getVolume(intradayCandles);
+              currentQuote.date = moment(secondToLastIntradayCandle.datetime).toISOString();
+              currentQuote.volume = currentVolume;
+              currentQuote.symbol = symbol;
+              quotes[quotes.length - 1] = currentQuote;
+            } else {
+              const currentQuote = this.processIntraday(intradayCandles);
+              const currentVolume = this.getVolume(intradayCandles);
 
-                currentQuote.date = moment(intradayCandles[intradayCandles.length - 2].datetime).toISOString();
-                currentQuote.volume = currentVolume;
-                currentQuote.symbol = symbol;
-                quotes = quotes.concat(currentQuote);
-              }
+              currentQuote.date = moment(secondToLastIntradayCandle.datetime).toISOString();
+              currentQuote.volume = currentVolume;
+              currentQuote.symbol = symbol;
+              quotes = quotes.concat(currentQuote);
+            }
 
-              console.log('Yesterday: ', moment(quotes[quotes.length - 2].date).format(), 'Today: ', moment(quotes[quotes.length - 1].date).format());
+            console.log('Yesterday: ', moment(quotes[quotes.length - 2].date).format(), 'Today: ', moment(quotes[quotes.length - 1].date).format());
 
             return quotes;
+          })
+          .catch(err => {
+            console.log('Error on PortfolioService.getIntradayV2: ', err);
+            return err;
           });
+      })
+      .catch(err => {
+        console.log('Error on QuoteService.getDailyQuotes: ', err);
+        return err;
       });
   }
 

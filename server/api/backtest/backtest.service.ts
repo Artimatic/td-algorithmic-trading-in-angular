@@ -13,6 +13,7 @@ import * as tulind from 'tulind';
 import * as configurations from '../../config/environment';
 import AlgoService from './algo.service';
 import MfiService from './mfi.service';
+import PortfolioService from '../portfolio/portfolio.service';
 
 const dataServiceUrl = configurations.apps.goliath;
 const mlServiceUrl = configurations.apps.armadillo;
@@ -35,7 +36,7 @@ export interface Indicators {
   mfiLeft: number;
   bband80: any[];
   mfiPrevious?: number;
-  macd?: number;
+  macd?: any;
   roc10?: number;
   roc10Previous?: number;
   roc70?: number;
@@ -46,6 +47,10 @@ export interface Indicators {
   date?: string;
   demark9?: any;
   mfiLow?: number;
+  high?: number;
+  low?: number;
+  mfiTrend?: boolean;
+  macdPrevious?: any;
 }
 
 export interface DaytradeAlgos {
@@ -65,6 +70,9 @@ export interface Recommendation {
   demark9?: DaytradeRecommendation;
   mfiLow?: DaytradeRecommendation;
   mfiDivergence?: DaytradeRecommendation;
+  mfiDivergence2?: DaytradeRecommendation;
+  overboughtMomentum?: DaytradeRecommendation;
+  data?: any;
 }
 
 export enum DaytradeRecommendation {
@@ -81,7 +89,7 @@ export enum OrderType {
 
 export interface BacktestResults {
   algo: string;
-  recommendation: string;
+  recommendation?: string;
   orderHistory: any[];
   net: number;
   total: number;
@@ -158,22 +166,74 @@ class BacktestService {
     return { perfectSell, perfectBuy };
   }
 
-  getDaytradeIndicators(quotes, period) {
-    let indicators: Indicators = {
-      vwma: null,
-      mfiLeft: null,
-      bband80: null
-    };
-    quotes.reals = quotes.close;
-    quotes.highs = quotes.high;
-    quotes.lows = quotes.low;
-    quotes.volumes = quotes.volume;
+  getCurrentDaytradeIndicators(symbol, period): Promise<Indicators> {
+    const getIndicatorQuotes = [];
 
-    return this.getIndicators(quotes, period, indicators)
-      .then(results => {
-        indicators = results;
-        return indicators;
+    return PortfolioService.getIntradayV2(symbol, 1)
+      .then((intradayObj) => {
+        const quotes = intradayObj.candles;
+        console.log('daytrade indicator quotes: ', quotes.length, moment().format('hh:mm'));
+
+        _.forEach(quotes, (value, key) => {
+          const idx = Number(key);
+          const minLength = idx - period > 0 ? idx - period : idx - 14;
+          const q = quotes.slice(minLength, idx);
+          if (q.length > 0) {
+            getIndicatorQuotes.push(this.initStrategy(q));
+          }
+        });
+        return Promise.all(getIndicatorQuotes)
+          .then((indicators: Indicators[]) => {
+            indicators = this.addOnDaytradeIndicators(indicators);
+            return indicators[indicators.length - 1];
+          });
+      })
+      .catch(err => {
+        console.log('ERROR! getIntradayV2', JSON.parse(err).error);
+        throw err;
       });
+  }
+
+  addOnDaytradeIndicators(indicators: Indicators[]) {
+    let isMfiLowIdx = -1;
+    let isMfiHighIdx = -1;
+    let macdBuyIdx = -1;
+    let macdSellIdx = -1;
+    _.forEach(indicators, (indicator, idx) => {
+      if (idx > 80) {
+        const mfi = AlgoService.checkMfi(indicator.mfiLeft);
+        const macd = AlgoService.checkMacdDaytrade(indicator.macd, indicator.macdPrevious);
+        if ((idx - isMfiHighIdx) > 5 || (idx - isMfiLowIdx) > 5) {
+          indicators[idx].mfiTrend = null;
+        }
+
+        if (mfi === DaytradeRecommendation.Bullish) {
+          isMfiLowIdx = idx;
+        } else if (mfi === DaytradeRecommendation.Bearish) {
+          isMfiHighIdx = idx;
+        } else if (isMfiLowIdx > -1 && (idx - isMfiLowIdx) < 5 &&
+          (macd === DaytradeRecommendation.Bullish || (idx - macdBuyIdx) < 3)) {
+          indicators[idx].mfiTrend = true;
+        } else if (isMfiHighIdx > -1 && (idx - isMfiHighIdx) < 5 &&
+          (macd === DaytradeRecommendation.Bearish || (idx - macdSellIdx) < 3)) {
+          indicators[idx].mfiTrend = false;
+        } else if (macd === DaytradeRecommendation.Bullish) {
+          macdBuyIdx = idx;
+        } else if (macd === DaytradeRecommendation.Bearish) {
+          macdSellIdx = idx;
+        }
+
+        const bbandRecommendation = AlgoService.checkBBand(indicator.close,
+          AlgoService.getLowerBBand(indicator.bband80), AlgoService.getUpperBBand(indicator.bband80),
+          indicator.mfiLeft);
+
+        if (isMfiLowIdx > -1 && (idx - isMfiLowIdx) < 33 && (idx - isMfiLowIdx) > 5 &&
+          (bbandRecommendation === DaytradeRecommendation.Bullish || (idx - macdBuyIdx) < 3)) {
+          indicators[idx].mfiTrend = true;
+        }
+      }
+    });
+    return indicators;
   }
 
   evaluateStrategyAll(ticker, end, start) {
@@ -263,10 +323,10 @@ class BacktestService {
       });
   }
 
-  runDaytradeBacktest(symbol, currentDate, startDate, parameters): BacktestResults {
+  runDaytradeBacktest(symbol, currentDate, startDate, parameters) {
     return this.initDaytradeStrategy(symbol, startDate, currentDate, parameters)
       .then(indicators => {
-        const testResults = this.backtestIndicators(this.getDaytradeRecommendation,
+        const testResults = this.backtestDaytradingIndicators(this.getDaytradeRecommendation,
           indicators,
           parameters);
 
@@ -274,21 +334,86 @@ class BacktestService {
       });
   }
 
-  getDaytrade(price: number, paidPrice: number, indicator: Indicators, parameters, response) {
-    let recommendation = {
-      recommendation: OrderType.None
+  backtestDaytradingIndicators(recommendationFn: Function,
+    indicators: Indicators[],
+    parameters: DaytradeParameters): BacktestResults {
+    let orders = {
+      trades: 0,
+      buy: [],
+      history: [],
+      net: 0,
+      total: 0,
+      profitableTrades: 0,
+      returns: 0
     };
 
-    const avgPrice = paidPrice;
+    _.forEach(indicators, (indicator, idx) => {
+      if (indicator.close) {
+        let orderType = OrderType.None;
+        const avgPrice = this.estimateAverageBuyOrderPrice(orders);
 
-    const isAtLimit = this.determineStopProfit(avgPrice, price,
-      parameters.lossThreshold, parameters.profitThreshold);
-    if (isAtLimit) {
-      recommendation.recommendation = OrderType.Sell;
-    } else {
-      recommendation = this.getDaytradeRecommendation(indicator.close, indicator);
-    }
-    response.status(200).send(recommendation);
+        const isAtLimit = this.determineStopProfit(avgPrice, indicator.close,
+          parameters.lossThreshold, parameters.profitThreshold);
+        if (isAtLimit) {
+          orderType = OrderType.Sell;
+          indicator.recommendation = { recommendation: OrderType.Sell };
+        } else {
+          const recommendation: Recommendation = recommendationFn(indicator.close,
+            indicator,
+            idx > 0 ? indicators[idx - 1] : null);
+
+          orderType = recommendation.recommendation;
+          indicator.recommendation = recommendation;
+        }
+        orders = this.calcTrade(orders, indicator, orderType, avgPrice);
+        indicator.action = this.getIndicatorAction(indicator.recommendation.recommendation);
+      }
+    });
+
+    const ordersResults = {
+      algo: '',
+      orderHistory: orders.history,
+      net: orders.net,
+      returns: orders.returns,
+      total: orders.total,
+      invested: orders.total,
+      profitableTrades: orders.profitableTrades,
+      totalTrades: orders.trades
+    };
+
+    return {
+      ...ordersResults,
+      signals: indicators,
+    };
+  }
+
+  getCurrentDaytrade(symbol: string, price: number, paidPrice: number, parameters, response) {
+    return this.getCurrentDaytradeIndicators(symbol, parameters.minQuotes || 80)
+      .then((currentIndicators: Indicators) => {
+
+        let recommendation = {
+          recommendation: OrderType.None
+        };
+
+        const avgPrice = Number(paidPrice);
+        const lossThreshold = Number(parameters.lossThreshold);
+        const profitThreshold = Number(parameters.profitThreshold);
+        const isAtLimit = this.determineStopProfit(avgPrice, price,
+          lossThreshold, profitThreshold);
+        if (isAtLimit) {
+          recommendation.recommendation = OrderType.Sell;
+        } else {
+
+          if (!currentIndicators) {
+            console.log('Missing indicator data: ', currentIndicators);
+          }
+          recommendation = this.getDaytradeRecommendation(currentIndicators.close, currentIndicators);
+        }
+        response.status(200).send(recommendation);
+      })
+      .catch((error) => {
+        response.status(500).send({ error });
+      });
   }
 
   getDaytradeRecommendation(price: number, indicator: Indicators): Recommendation {
@@ -305,7 +430,8 @@ class BacktestService {
       bband: DaytradeRecommendation.Neutral,
       vwma: DaytradeRecommendation.Neutral,
       macd: DaytradeRecommendation.Neutral,
-      demark9: DaytradeRecommendation.Neutral
+      demark9: DaytradeRecommendation.Neutral,
+      data: { price, indicator }
     };
 
     const mfiRecommendation = AlgoService.checkMfi(indicator.mfiLeft);
@@ -320,23 +446,31 @@ class BacktestService {
 
     const vwmaRecommendation = AlgoService.checkVwma(price, indicator.vwma);
 
-    const macdRecommendation = AlgoService.checkMacdDaytrade(indicator, indicator.roc10Previous, indicator.roc10);
+    const macdRecommendation = AlgoService.checkMacdDaytrade(indicator.macd, indicator.macdPrevious);
 
     const demark9Recommendation = AlgoService.checkDemark9(indicator.demark9);
+    let mfiTradeRec = DaytradeRecommendation.Neutral;
+    if (indicator.mfiTrend === true) {
+      mfiTradeRec = DaytradeRecommendation.Bullish;
+    } else if (indicator.mfiTrend === false) {
+      mfiTradeRec = DaytradeRecommendation.Bearish;
+    }
 
     counter = AlgoService.countRecommendation(mfiRecommendation, counter);
     counter = AlgoService.countRecommendation(rocMomentumRecommendation, counter);
     counter = AlgoService.countRecommendation(bbandRecommendation, counter);
     counter = AlgoService.countRecommendation(macdRecommendation, counter);
     counter = AlgoService.countRecommendation(demark9Recommendation, counter);
+    counter = AlgoService.countRecommendation(mfiTradeRec, counter);
 
-    if (counter.bullishCounter > counter.bearishCounter) {
-      if (vwmaRecommendation !== DaytradeRecommendation.Bearish) {
-        recommendations.recommendation = OrderType.Buy;
-      } else {
-        recommendations.recommendation = OrderType.None;
-      }
-    } else if (counter.bearishCounter > counter.bullishCounter) {
+    if (counter.bullishCounter > 2 && counter.bullishCounter > counter.bearishCounter) {
+      // if (vwmaRecommendation !== DaytradeRecommendation.Bearish) {
+      //   recommendations.recommendation = OrderType.Buy;
+      // } else {
+      //   recommendations.recommendation = OrderType.None;
+      // }
+      recommendations.recommendation = OrderType.Buy;
+    } else if (counter.bearishCounter > 1 && counter.bullishCounter > counter.bullishCounter) {
       recommendations.recommendation = OrderType.Sell;
     }
 
@@ -345,6 +479,8 @@ class BacktestService {
     recommendations.bband = bbandRecommendation;
     recommendations.demark9 = demark9Recommendation;
     recommendations.macd = macdRecommendation;
+    recommendations.mfiTrade = mfiTradeRec;
+    recommendations.vwma = vwmaRecommendation;
 
     return recommendations;
   }
@@ -374,7 +510,11 @@ class BacktestService {
       returns: 0
     };
 
-    indicators.forEach((indicator, idx) => {
+    let isMfiLowIdx = -1;
+    let isMfiHighIdx = -1;
+    let mfiDivergenceArr = [];
+
+    _.forEach(indicators, (indicator, idx) => {
       if (indicator.close) {
         let orderType = OrderType.None;
         const avgPrice = this.estimateAverageBuyOrderPrice(orders);
@@ -391,6 +531,93 @@ class BacktestService {
 
           orderType = recommendation.recommendation;
           indicator.recommendation = recommendation;
+
+          if (idx > 80) {
+            if (indicator.recommendation.mfiLow === DaytradeRecommendation.Bullish ||
+              indicator.recommendation.mfi === DaytradeRecommendation.Bullish) {
+              isMfiLowIdx = idx;
+            } else if (isMfiLowIdx > -1 && (idx - isMfiLowIdx) < 8 &&
+              (indicator.recommendation.demark9 === DaytradeRecommendation.Bullish || indicator.recommendation.macd === DaytradeRecommendation.Bullish)) {
+              indicator.recommendation.mfiTrade = DaytradeRecommendation.Bullish;
+              indicator.recommendation.recommendation = OrderType.Buy;
+            } else if (indicator.recommendation.mfi === DaytradeRecommendation.Bearish) {
+              isMfiHighIdx = idx;
+            } else if (isMfiHighIdx > -1 && (idx - isMfiHighIdx) < 8 &&
+              (indicator.recommendation.demark9 === DaytradeRecommendation.Bearish || indicator.recommendation.macd === DaytradeRecommendation.Bearish)) {
+              indicator.recommendation.mfiTrade = DaytradeRecommendation.Bearish;
+              indicator.recommendation.recommendation = OrderType.Sell;
+            }
+
+            // 2020-07-02T05:00:00.000+0000
+            const m = moment(indicator.date);
+            if (indicator.mfiLeft > indicators[idx - 1].mfiLeft &&
+              indicators[idx - 1].mfiLeft > indicators[idx - 2].mfiLeft &&
+              indicators[idx - 2].mfiLeft > indicators[idx - 3].mfiLeft &&
+              indicators[idx - 3].mfiLeft > indicators[idx - 4].mfiLeft &&
+              indicators[idx - 4].mfiLeft > indicators[idx - 5].mfiLeft &&
+              indicator.close < indicators[idx - 5].close &&
+              indicators[idx - 4].close < indicators[idx - 2].close) {
+              indicator.recommendation.mfiDivergence = DaytradeRecommendation.Bearish;
+              indicator.recommendation.recommendation = OrderType.Sell;
+              console.log('bearish: ', m.format());
+            } else if (indicator.mfiLeft < indicators[idx - 1].mfiLeft &&
+              indicators[idx - 1].mfiLeft < indicators[idx - 2].mfiLeft &&
+              indicators[idx - 2].mfiLeft < indicators[idx - 3].mfiLeft &&
+              indicators[idx - 3].mfiLeft < indicators[idx - 4].mfiLeft &&
+              indicators[idx - 4].mfiLeft < indicators[idx - 5].mfiLeft &&
+              indicator.close > indicators[idx - 5].close &&
+              indicators[idx - 4].close > indicators[idx - 2].close) {
+              indicator.recommendation.mfiDivergence = DaytradeRecommendation.Bullish;
+              indicator.recommendation.recommendation = OrderType.Buy;
+              console.log('bullish: ', m.format());
+            }
+            if (indicator.recommendation.mfiTrade === DaytradeRecommendation.Bullish) {
+              mfiDivergenceArr = [];
+              mfiDivergenceArr.push({ mfi: DaytradeRecommendation.Bullish, date: indicator.date, close: indicator.close });
+            } else if (indicator.recommendation.mfiTrade === DaytradeRecommendation.Bearish) {
+              mfiDivergenceArr = [];
+              mfiDivergenceArr.push({ mfi: DaytradeRecommendation.Bearish, date: indicator.date, close: indicator.close });
+            }
+
+            if (mfiDivergenceArr.length > 0) {
+              if (indicator.recommendation.macd === DaytradeRecommendation.Bullish) {
+                mfiDivergenceArr.push({ macd: DaytradeRecommendation.Bullish, date: indicator.date, close: indicator.close });
+              } else if (indicator.recommendation.macd === DaytradeRecommendation.Bearish) {
+                mfiDivergenceArr.push({ macd: DaytradeRecommendation.Bearish, date: indicator.date, close: indicator.close });
+              }
+            }
+
+            if (mfiDivergenceArr.length > 5) {
+              // 2020-07-02T05:00:00.000+0000
+              // const m = moment(indicator.date);
+
+              const len = mfiDivergenceArr.length;
+
+              if (mfiDivergenceArr[0].mfi === DaytradeRecommendation.Bullish) {
+                if (mfiDivergenceArr[1].macd === DaytradeRecommendation.Bullish &&
+                  mfiDivergenceArr[len - 1].macd === DaytradeRecommendation.Bullish &&
+                  mfiDivergenceArr[len - 2].macd === DaytradeRecommendation.Bearish &&
+                  mfiDivergenceArr[len - 3].macd === DaytradeRecommendation.Bullish &&
+                  mfiDivergenceArr[len - 4].macd === DaytradeRecommendation.Bearish &&
+                  mfiDivergenceArr[len - 1].close < mfiDivergenceArr[0].close) {
+                  indicator.recommendation.mfiDivergence2 = DaytradeRecommendation.Bullish;
+                  indicator.recommendation.recommendation = OrderType.Buy;
+                  mfiDivergenceArr = [];
+                }
+              } else if (mfiDivergenceArr[0].mfi === DaytradeRecommendation.Bearish) {
+                if (mfiDivergenceArr[1].macd === DaytradeRecommendation.Bearish &&
+                  mfiDivergenceArr[len - 1].macd === DaytradeRecommendation.Bearish &&
+                  mfiDivergenceArr[len - 2].macd === DaytradeRecommendation.Bullish &&
+                  mfiDivergenceArr[len - 3].macd === DaytradeRecommendation.Bearish &&
+                  mfiDivergenceArr[len - 4].macd === DaytradeRecommendation.Bullish &&
+                  mfiDivergenceArr[len - 1].close > mfiDivergenceArr[0].close) {
+                  indicator.recommendation.mfiDivergence2 = DaytradeRecommendation.Bearish;
+                  indicator.recommendation.recommendation = OrderType.Sell;
+                  mfiDivergenceArr = [];
+                }
+              }
+            }
+          }
         }
 
         orders = this.calcTrade(orders, indicator, orderType, avgPrice);
@@ -418,7 +645,7 @@ class BacktestService {
     };
   }
 
-  determineStopProfit(paidPrice, currentPrice, lossThreshold, profitThreshold) {
+  determineStopProfit(paidPrice, currentPrice, lossThreshold = null, profitThreshold = null) {
     if (!paidPrice || !currentPrice || !lossThreshold || !profitThreshold) {
       return false;
     }
@@ -484,7 +711,7 @@ class BacktestService {
       });
   }
 
-  initDaytradeStrategy(symbol, startDate, currentDate, parameters) {
+  initDaytradeStrategy(symbol, startDate, currentDate, parameters): Promise<Indicators[]> {
     const minQuotes = parameters.minQuotes;
     const getIndicatorQuotes = [];
 
@@ -501,7 +728,10 @@ class BacktestService {
             getIndicatorQuotes.push(this.initStrategy(q));
           }
         });
-        return Promise.all(getIndicatorQuotes);
+        return Promise.all(getIndicatorQuotes)
+          .then((indicators: Indicators[]) => {
+            return this.addOnDaytradeIndicators(indicators);
+          });
       });
   }
 
@@ -511,12 +741,19 @@ class BacktestService {
 
     return this.getData(symbol, currentDate, startDate)
       .then(quotes => {
+        console.log('Found quotes ', quotes[0].date, ' to ', quotes[quotes.length - 1].date);
         _.forEach(quotes, (value, key) => {
-          const idx = Number(key);
+          if (value) {
+            const idx = Number(key);
 
-          if (idx > minQuotes) {
-            const q = quotes.slice(idx - minQuotes, idx + 1);
-            getIndicatorQuotes.push(this.initStrategy(q));
+            if (idx > minQuotes) {
+              if (moment(quotes[idx].date).format('YYYY MM DD') === moment(quotes[idx - 1].date).format('YYYY MM DD')) {
+                console.log('Found duplicate ', quotes[idx].date, quotes[idx - 1].date);
+                quotes.splice(idx - 1, 1);
+              }
+              const q = quotes.slice(idx - minQuotes, idx + 1);
+              getIndicatorQuotes.push(this.initStrategy(q));
+            }
           }
         });
 
@@ -940,12 +1177,14 @@ class BacktestService {
   initStrategy(quotes) {
     const currentQuote = quotes[quotes.length - 1];
     const indicators = this.processQuotes(quotes);
-
+    if (!currentQuote) {
+      console.log('current quote not found: ', quotes.length, quotes[0]);
+    }
     return this.getIndicators(indicators, 80, currentQuote);
   }
 
-  getIndicators(indicators, bbandPeriod, quote) {
-    const currentQuote = quote;
+  getIndicators(indicators, bbandPeriod, returnObject) {
+    const currentQuote = returnObject;
     return this.getBBands(indicators.reals, bbandPeriod, 2)
       .then((bband80) => {
         currentQuote.bband80 = bband80;
@@ -993,6 +1232,10 @@ class BacktestService {
       })
       .then(macd => {
         currentQuote.macd = macd;
+        return this.getMacd(indicators.reals.slice(0, indicators.reals.length - 1), 12, 26, 9);
+      })
+      .then(macdPrevious => {
+        currentQuote.macdPrevious = macdPrevious;
         return this.getRsi(this.getSubArray(indicators.reals, 14), 14);
       })
       .then(rsi => {
@@ -1007,7 +1250,7 @@ class BacktestService {
           indicators.lows,
           indicators.reals,
           indicators.volumes,
-          14);
+          75);
       })
       .then(mfiLow => {
         currentQuote.mfiLow = mfiLow;
@@ -1021,6 +1264,10 @@ class BacktestService {
         const len = mfiPrevious[0].length - 1;
         currentQuote.mfiPrevious = _.round(mfiPrevious[0][len], 3);
         return currentQuote;
+      })
+      .catch(error => {
+        console.log('Error creating indicators: ', error);
+        return error;
       });
   }
 
@@ -1105,7 +1352,7 @@ class BacktestService {
         return arr;
       })
       .catch((error) => {
-        console.log('Error: ', error);
+        console.log('Error getInfoV2: ', error.error);
       });
   }
 
@@ -1154,7 +1401,7 @@ class BacktestService {
 
     return RequestPromise(options)
       .catch((error) => {
-        console.log('Error: ', error);
+        console.log('Error getHistoricalMatches: ', error.error);
       });
   }
 
@@ -1176,7 +1423,7 @@ class BacktestService {
 
     return RequestPromise(options)
       .catch((error) => {
-        console.log('Error: ', error);
+        console.log('Error checkServiceStatus: ', error.error);
       });
   }
 
@@ -1202,7 +1449,7 @@ class BacktestService {
     return RequestPromise(options)
       .then(data => JSON.parse(data))
       .catch(error => {
-        console.log('Error getTrainingData', error);
+        console.log('Error getTrainingData', error.statusCode);
       });
   }
 
@@ -1220,7 +1467,7 @@ class BacktestService {
 
     RequestPromise(options)
       .catch((error) => {
-        console.log('Error: ', error);
+        console.log('Error runRNN: ', error.error);
       });
 
     response.status(200).send();
@@ -1248,7 +1495,7 @@ class BacktestService {
 
         RequestPromise(options)
           .catch((error) => {
-            console.log('Error: ', error);
+            console.log('Error activateRNN: ', error.error);
           });
       });
     response.status(200).send();
@@ -1268,7 +1515,7 @@ class BacktestService {
 
     return RequestPromise(options)
       .catch((error) => {
-        console.log('Error: ', error.message);
+        console.log('Error checkRNNStatus: ', error.message);
       });
   }
 
@@ -1301,7 +1548,7 @@ class BacktestService {
 
     return RequestPromise(options)
       .catch((error) => {
-        console.log('Error: ', error);
+        console.log('Error bbandMfiInfo: ', error);
       });
   }
 
@@ -1334,7 +1581,7 @@ class BacktestService {
 
     return RequestPromise(options)
       .catch((error) => {
-        console.log('Error: ', error);
+        console.log('Error getMovingAverageCrossOverInfo: ', error);
       });
   }
 
@@ -1366,7 +1613,7 @@ class BacktestService {
 
     return RequestPromise(options)
       .catch((error) => {
-        console.log('Error: ', error);
+        console.log('Error findResistance: ', error);
       });
   }
 
@@ -1480,9 +1727,9 @@ class BacktestService {
       mfiTrade: DaytradeRecommendation.Neutral
     };
 
-    const rocCrossoverRecommendation = AlgoService.checkRocCrossover(indicator.roc70Previous, indicator.roc70);
+    const rocCrossoverRecommendation = AlgoService.checkRocCrossover(indicator.roc70Previous, indicator.roc70, indicator.mfiLeft);
 
-    const mfiTrendRecommendation = AlgoService.checkMfiTrend(indicator.mfiPrevious, indicator.mfiLeft);
+    const mfiTrendRecommendation = AlgoService.checkMfiTrend(indicator.mfiPrevious, indicator.mfiLeft, null, null);
 
     recommendations.roc = rocCrossoverRecommendation;
     recommendations.mfiTrade = mfiTrendRecommendation;
@@ -1507,12 +1754,11 @@ class BacktestService {
       mfiTrade: DaytradeRecommendation.Neutral,
       macd: DaytradeRecommendation.Neutral,
       demark9: DaytradeRecommendation.Neutral,
-      mfiDivergence: DaytradeRecommendation.Neutral
+      mfiDivergence: DaytradeRecommendation.Neutral,
+      mfiDivergence2: DaytradeRecommendation.Neutral
     };
 
-    const rocCrossoverRecommendation = AlgoService.checkRocCrossover(indicator.roc70Previous, indicator.roc70);
-
-    const mfiTrendRecommendation = AlgoService.checkMfiTrend(indicator.mfiPrevious, indicator.mfiLeft);
+    const rocCrossoverRecommendation = AlgoService.checkRocCrossover(indicator.roc70Previous, indicator.roc70, indicator.mfiLeft);
 
     const mfiRecommendation = AlgoService.checkMfi(indicator.mfiLeft);
 
@@ -1522,15 +1768,12 @@ class BacktestService {
 
     const mfiLowRecommendation = AlgoService.checkMfiLow(indicator.mfiLow, indicator.mfiLeft);
 
-    const mfiDivergenceRecommendation = AlgoService.checkMfiDivergence(indicator.mfiPrevious, indicator.mfiLeft, indicator.roc10Previous, indicator.roc10);
 
     recommendations.roc = rocCrossoverRecommendation;
-    recommendations.mfiTrade = mfiTrendRecommendation;
     recommendations.macd = macdRecommendation;
     recommendations.mfi = mfiRecommendation;
     recommendations.demark9 = demark9Recommendation;
     recommendations.mfiLow = mfiLowRecommendation;
-    recommendations.mfiDivergence = mfiDivergenceRecommendation;
 
     if (recommendations.demark9 === DaytradeRecommendation.Bullish ||
       recommendations.mfiTrade === DaytradeRecommendation.Bullish ||
@@ -1611,12 +1854,34 @@ class BacktestService {
 
     return RequestPromise(options)
       .catch((error) => {
-        console.log('Error: ', error);
+        console.log('Error trainV2Model: ', error);
       });
   }
 
   trainCustomModel(symbol, modelName, trainingData, trainingSize, date) {
     const URI = `${mlServiceUrl}api/train-custom`;
+
+    const options = {
+      method: 'POST',
+      uri: URI,
+      body: {
+        symbol,
+        modelName,
+        trainingData,
+        trainingSize,
+        to: date
+      },
+      json: true
+    };
+    console.log('model name: ', modelName);
+    return RequestPromise(options)
+      .catch((error) => {
+        console.log('train-custom error: ', error.message);
+      });
+  }
+
+  trainTensorModel(symbol, modelName, trainingData, trainingSize, date) {
+    const URI = `${mlServiceUrl}api/tensor/train-model`;
 
     const options = {
       method: 'POST',
@@ -1637,7 +1902,7 @@ class BacktestService {
       });
   }
 
-  trainTensorModel(symbol, modelName, trainingData, trainingSize, date) {
+  activateTensorModel(symbol, modelName, trainingData, trainingSize, date) {
     const URI = `${mlServiceUrl}api/tensor/train-model`;
 
     const options = {
@@ -1648,7 +1913,8 @@ class BacktestService {
         modelName,
         trainingData,
         trainingSize,
-        to: date
+        to: date,
+        scoreOnly: true
       },
       json: true
     };
@@ -1678,7 +1944,7 @@ class BacktestService {
 
     return RequestPromise(options)
       .catch((error) => {
-        console.log('Error: ', error);
+        console.log('Error activateV2Model: ', error);
       });
   }
 
@@ -1700,7 +1966,7 @@ class BacktestService {
 
     return RequestPromise(options)
       .catch((error) => {
-        console.log('Error: ', error);
+        console.log('ErroractivateCustomModel: ', error);
       });
   }
 }

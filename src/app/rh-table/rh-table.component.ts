@@ -18,6 +18,11 @@ import { OptionsDataService } from '../shared/options-data.service';
 import { Subscription, Observable, Subject } from 'rxjs';
 import { DailyBacktestService } from '@shared/daily-backtest.service';
 import { take } from 'rxjs/operators';
+import { AiPicksService } from '@shared/services/ai-picks.service';
+import { ReportingService } from '@shared/services/reporting.service';
+import { WatchListService } from '../watch-list/watch-list.service';
+import { ClientSmsService } from '@shared/services/client-sms.service';
+import { SchedulerService } from '@shared/service/scheduler.service';
 
 export interface Algo {
   value: string;
@@ -34,19 +39,19 @@ export interface BacktestResponse extends Stock {
   stock: string;
   algo: string;
   totalTrades: number;
-  total: number;
+  total?: number;
   invested: number;
   returns: number;
   lastVolume: number;
   lastPrice: number;
   recommendation: string;
-  buys: number[];
-  orderHistory: any[];
-  startDate: string;
-  endDate: string;
-  signals: any[];
-  upperResistance: number;
-  lowerResistance: number;
+  buys?: number[];
+  orderHistory?: any[];
+  startDate?: string;
+  endDate?: string;
+  signals?: any[];
+  upperResistance?: number;
+  lowerResistance?: number;
 }
 
 @Component({
@@ -61,13 +66,9 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   selectedRecommendation: string[];
   stockList: Stock[] = [];
   currentList: Stock[] = [];
-  algoReport = {
-    totalReturns: 0,
-    totalTrades: 0,
-    averageReturns: 0,
-    averageTrades: 0
-  };
+  algoReport = this.initAlgoReport();
 
+  additionalOptions = false;
   endDate: string;
   progressPct = 0;
   progress = 0;
@@ -85,14 +86,10 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     {
       name: 'Mean Reversion',
       algorithm: [
-        { value: 'v2', viewValue: 'Daily - Bollinger Band' },
-        { value: 'mfi', viewValue: 'Daily - Money Flow Index' },
-        { value: 'v1', viewValue: 'Daily - Moving Average Crossover' },
         { value: 'daily-indicators', viewValue: 'Daily - All Indicators' },
-        { value: 'daily-roc', viewValue: 'Daily - Rate of Change/MFI' },
         { value: 'moving_average_resistance', viewValue: 'Daily - Moving Average Resistance' },
         { value: 'v3', viewValue: 'Intraday - MFI' },
-        { value: 'v4', viewValue: 'Intraday - Bollinger Band' },
+        { value: 'v4', viewValue: 'Intraday - Bollinger Band' }
       ]
     }
   ];
@@ -101,11 +98,12 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   selectedColumns: any[];
   selectedStock: any;
   twoOrMoreSignalsOnly: boolean;
-
+  tickerList = [];
+  tickerBlacklist = {};
   signalScoreTable = [];
 
   private callChainSub: Subscription;
-  private backtestBuffer: { stock: string; sub: Observable<any>; }[];
+  private backtestBuffer: { stock: string; sub: Observable<any>; timeout: number; modifier: number }[];
   private bufferSubject: Subject<void>;
 
   constructor(
@@ -115,9 +113,15 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     private portfolioService: PortfolioService,
     private globalSettingsService: GlobalSettingsService,
     private optionsDataService: OptionsDataService,
-    private dailyBacktestService: DailyBacktestService) { }
+    private dailyBacktestService: DailyBacktestService,
+    private aiPicksService: AiPicksService,
+    private reportingService: ReportingService,
+    private clientSmsService: ClientSmsService,
+    private schedulerService: SchedulerService,
+    private watchListService: WatchListService) { }
 
   ngOnInit() {
+    this.tickerList = Stocks;
     this.bufferSubject = new Subject();
     this.backtestBuffer = [];
     this.callChainSub = new Subscription();
@@ -127,13 +131,17 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       { value: 'sell', label: 'Sell' },
       { value: 'strongsell', label: 'Strong Sell' }
     ];
-    this.endDate = moment(this.endDate).format('YYYY-MM-DD');
+    this.endDate = moment(this.globalSettingsService.backtestDate).format('YYYY-MM-DD');
+
     this.cols = [
       { field: 'stock', header: 'Stock' },
       { field: 'returns', header: 'Returns' },
       { field: 'lastVolume', header: 'Last Volume' },
       { field: 'lastPrice', header: 'Last Price' },
+      { field: 'profitableTrades', header: 'Profitable Trades' },
       { field: 'totalTrades', header: 'Trades' },
+      { field: 'kellyCriterion', header: 'Trade Size' },
+
       { field: 'buySignals', header: 'Buy' },
       { field: 'sellSignals', header: 'Sell' },
       { field: 'upperResistance', header: 'Upper Resistance' },
@@ -188,14 +196,16 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
     this.selectedColumns = [
       { field: 'stock', header: 'Stock' },
-      { field: 'strongbuySignals', header: 'Strong Buy' },
       { field: 'buySignals', header: 'Buy' },
       { field: 'sellSignals', header: 'Sell' },
-      { field: 'strongsellSignals', header: 'Strong Sell' },
+      { field: 'profitableTrades', header: 'Profitable Trades' },
+      { field: 'totalTrades', header: 'Trades' },
+      { field: 'returns', header: 'Returns' },
       { field: 'impliedMovement', header: 'Implied Movement' },
       { field: 'previousImpliedMovement', header: 'Previous IM' },
       { field: 'bearishProbability', header: 'Probability of Bear Profit' },
-      { field: 'bullishProbability', header: 'Probability of Bull Profit' }
+      { field: 'bullishProbability', header: 'Probability of Bull Profit' },
+      { field: 'kellyCriterion', header: 'Trade Size' }
     ];
 
     this.selectedRecommendation = ['strongbuy', 'buy', 'sell', 'strongsell'];
@@ -210,65 +220,32 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
+  initAlgoReport() {
+    return {
+      totalReturns: 0,
+      totalTrades: 0,
+      averageReturns: 0,
+      averageTrades: 0,
+      profitableTrades: 0,
+      successRate: 0,
+      bullishCount: 0,
+      bearishCount: 0,
+      bullishBearishRatio: ''
+    };
+  }
+
   async getData(algoParams, selectedAlgo = null) {
+
     const currentDate = moment(this.endDate).format('YYYY-MM-DD');
     const startDate = moment(this.endDate).subtract(1000, 'days').format('YYYY-MM-DD');
 
     this.progress = 0;
     this.totalStocks += algoParams.length;
-    this.algoReport = {
-      totalReturns: 0,
-      totalTrades: 0,
-      averageReturns: 0,
-      averageTrades: 0
-    };
+    this.algoReport = this.initAlgoReport();
 
     const algorithm = selectedAlgo ? selectedAlgo : this.selectedAlgo;
 
     switch (algorithm) {
-      case 'v1':
-        algoParams.forEach((param) => {
-          if (!param.start) {
-            param.start = startDate;
-          }
-          if (!param.end) {
-            param.end = currentDate;
-          }
-          this.algo.getInfo(param)
-            .subscribe((stockData: Stock) => {
-              stockData.stock = param.ticker;
-              stockData.recommendation = stockData.trending;
-              stockData.returns = stockData.totalReturns;
-              this.addToList(stockData);
-              this.incrementProgress();
-              this.updateAlgoReport(stockData);
-            }, error => {
-              console.log('error: ', error);
-              this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
-              this.incrementProgress();
-            });
-        });
-        break;
-      case 'v2':
-        const bbCb = (param) => {
-          return this.algo.getInfoV2(param.ticker, currentDate, startDate)
-            .map(
-              result => {
-                if (result) {
-                  result.stock = param.ticker;
-                  this.addToList(result);
-                  this.incrementProgress();
-                  this.updateAlgoReport(result);
-                } else {
-                  this.snackBar.open(`No results for ${param.ticker}`, 'Dismiss');
-                  console.log(`No results for ${param.ticker}`);
-                }
-              });
-        };
-
-        this.iterateAlgoParams(algoParams, bbCb);
-
-        break;
       case 'v3':
         algoParams.forEach((param) => {
           this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, 'intraday').subscribe(
@@ -297,48 +274,15 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
             .subscribe(
               result => {
                 this.algo.postIntraday(result).subscribe(
-                  status => {
-                  }, error => {
+                  () => { }, () => {
                     this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
                     this.incrementProgress();
                   });
-              }, error => {
+              }, () => {
                 this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
                 this.incrementProgress();
               });
         });
-        break;
-      case 'mfi':
-        const mfiCb = (param) => {
-          return this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, 'daily-mfi').map(
-            (testResults: any[]) => {
-              if (testResults.length > 0) {
-                const result = testResults[testResults.length - 1];
-                result.stock = param.ticker;
-                this.addToList(result);
-                this.updateAlgoReport(result);
-              }
-              this.incrementProgress();
-            });
-        };
-        this.iterateAlgoParams(algoParams, mfiCb);
-
-        break;
-      case 'daily-roc':
-        const rocCb = (param) => {
-          return this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, 'daily-roc')
-            .map(
-              (testResults: BacktestResponse) => {
-                if (testResults) {
-                  testResults.stock = param.ticker;
-                  this.addToList(testResults);
-                  this.updateAlgoReport(testResults);
-                }
-                this.incrementProgress();
-              });
-        };
-        this.iterateAlgoParams(algoParams, rocCb);
-
         break;
       case 'daily-indicators':
         const indicatorsCb = (param) => {
@@ -346,12 +290,14 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
             .pipe(take(1))
             .map(
               (testResults: BacktestResponse) => {
+                console.log('Request finished @ ', moment().format());
                 if (testResults) {
                   const symbol = param.ticker;
-                  this.scoreSignals(param.ticker, testResults.signals);
+                  this.scoreSignals(symbol, testResults.signals);
 
                   testResults.stock = symbol;
                   const indicatorResults: BacktestResponse = testResults;
+                  this.updateAlgoReport(indicatorResults);
 
                   const lastSignal = indicatorResults.signals[indicatorResults.signals.length - 1];
                   const bullishSignals = [];
@@ -361,24 +307,35 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                       const result = {
                         algo: String(indicator),
                         recommendation: 'Neutral',
-                        previousImpliedMovement: null
+                        previousImpliedMovement: null,
+                        kellyCriterion: null
                       };
                       if (lastSignal.recommendation[indicator] === 'Bullish') {
                         result.recommendation = 'Buy';
                         bullishSignals.push(indicator);
+                        this.addBullCount();
                       } else if (lastSignal.recommendation[indicator] === 'Bearish') {
                         result.recommendation = 'Sell';
                         bearishSignals.push(indicator);
+                        this.addBearCount();
                       }
 
-                      result.previousImpliedMovement = this.getPreviousImpliedMove(indicatorResults.signals[indicatorResults.signals.length - 2]);
+                      result.previousImpliedMovement = indicatorResults.signals[indicatorResults.signals.length - 1].impliedMovement;
 
                       const tableObj = {
-                        ...indicatorResults,
+                        recommendation: indicatorResults.recommendation,
+                        stock: indicatorResults.stock,
+                        returns: indicatorResults.returns,
+                        total: indicatorResults.total,
+                        invested: indicatorResults.invested,
+                        profitableTrades: indicatorResults.profitableTrades,
+                        totalTrades: indicatorResults.totalTrades,
+                        lastVolume: indicatorResults.lastVolume || null,
+                        totalReturns: indicatorResults.totalReturns || null,
+                        lastPrice: indicatorResults.lastPrice || null,
                         ...result
                       };
                       this.addToList(tableObj);
-                      this.updateAlgoReport(tableObj);
                     }
                   }
 
@@ -388,11 +345,40 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                         bullishProbability: data.bullishProbability,
                         bearishProbability: data.bearishProbability
                       }, this.stockList);
+
+                      if (data.bullishProbability > 0.4 || data.bearishProbability > 0.4) {
+                        this.runAi({ ...testResults, buySignals: bullishSignals, sellSignals: bearishSignals });
+                      }
                     });
 
                   setTimeout(() => {
-                    this.getImpliedMovement(testResults);
-                  }, 10000);
+                    this.schedulerService.schedule(() => {
+                      if (bullishSignals && bearishSignals) {
+                        if (bearishSignals.length > bullishSignals.length) {
+                          const foundInWatchList = this.watchListService.watchList.find(item => {
+                            return item.stock === symbol;
+                          });
+                          if (foundInWatchList) {
+                            this.clientSmsService.sendSellSms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
+                              .pipe(take(1))
+                              .subscribe();
+                          }
+                          this.aiPicksService.tickerSellRecommendationQueue.next(symbol);
+                        } else if (bearishSignals.length < bullishSignals.length) {
+                          const foundInWatchList = this.watchListService.watchList.find(item => {
+                            return item.stock === symbol;
+                          });
+                          if (foundInWatchList) {
+                            this.clientSmsService.sendBuySms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
+                              .pipe(take(1))
+                              .subscribe();
+                          }
+                          this.aiPicksService.tickerBuyRecommendationQueue.next(symbol);
+                        }
+                      }
+                      // this.getImpliedMovement(testResults);
+                    }, 'rhtable_process' + symbol);
+                  }, 1000 - this.backtestBuffer.length * 10000);
                 }
                 this.incrementProgress();
               });
@@ -413,10 +399,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
         this.iterateAlgoParams(algoParams, callback);
         break;
     }
-  }
-
-  private getPreviousImpliedMove(signal) {
-    return signal.impliedMovement;
   }
 
   scoreSignals(stock, signals) {
@@ -529,7 +511,11 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
   async iterateAlgoParams(algoParams: any[], callback: Function) {
     for (let i = 0; i < algoParams.length; i++) {
-      this.backtestBuffer.push({ stock: algoParams[i].ticker, sub: callback(algoParams[i]) });
+      if (this.isBlackListed(algoParams[i].ticker)) {
+        this.snackBar.open(`Skipping blacklisted ticker: ${algoParams[i].ticker}`, 'Dismiss');
+      } else {
+        this.backtestBuffer.push({ stock: algoParams[i].ticker, sub: callback(algoParams[i]), timeout: 1000, modifier: i });
+      }
     }
     this.executeBacktests();
   }
@@ -544,10 +530,29 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   updateAlgoReport(result: Stock) {
-    this.algoReport.totalReturns += result.returns;
+    this.algoReport.totalReturns += (result.returns * 100);
     this.algoReport.totalTrades += result.totalTrades;
     this.algoReport.averageReturns = +((this.algoReport.totalReturns / this.totalStocks).toFixed(5));
     this.algoReport.averageTrades = +((this.algoReport.totalTrades / this.totalStocks).toFixed(5));
+    this.algoReport.profitableTrades += result.profitableTrades;
+    this.algoReport.successRate = +((this.algoReport.profitableTrades / this.algoReport.totalTrades).toFixed(5));
+  }
+
+  addBullCount() {
+    this.algoReport.bullishCount++;
+    this.getBullishBearishRatio();
+  }
+
+  addBearCount() {
+    this.algoReport.bearishCount++;
+    this.getBullishBearishRatio();
+  }
+
+  getBullishBearishRatio() {
+    const bullishRatio = +((this.algoReport.bullishCount / (this.algoReport.bullishCount + this.algoReport.bearishCount)).toFixed(2)) * 100;
+    const bearishRatio = +((this.algoReport.bearishCount / (this.algoReport.bullishCount + this.algoReport.bearishCount)).toFixed(2)) * 100;
+
+    this.algoReport.bullishBearishRatio = `${bullishRatio.toFixed(0)}/${bearishRatio.toFixed(0)}`;
   }
 
   filter() {
@@ -700,9 +705,10 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   runDefaultBacktest() {
-    this.interval = 0;
+    this.resetTable();
 
-    this.getData(Stocks, 'daily-indicators');
+    this.interval = 0;
+    this.getData(this.tickerList, 'daily-indicators');
 
     this.progress = 0;
   }
@@ -740,6 +746,35 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
+  runAi(element: Stock, runWithoutChecks = false) {
+    if (runWithoutChecks) {
+      this.aiPicksService.tickerBuyRecommendationQueue.next(element.stock);
+      this.aiPicksService.tickerSellRecommendationQueue.next(element.stock);
+    } else if (element.sellSignals && element.buySignals) {
+      if (element.sellSignals.length > element.buySignals.length) {
+        const foundInWatchList = this.watchListService.watchList.find(item => {
+          return item.stock === element.stock;
+        });
+        if (foundInWatchList) {
+          this.clientSmsService.sendSellSms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
+            .pipe(take(1))
+            .subscribe();
+        }
+        this.aiPicksService.tickerSellRecommendationQueue.next(element.stock);
+      } else if (element.sellSignals.length < element.buySignals.length) {
+        const foundInWatchList = this.watchListService.watchList.find(item => {
+          return item.stock === element.stock;
+        });
+        if (foundInWatchList) {
+          this.clientSmsService.sendBuySms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
+            .pipe(take(1))
+            .subscribe();
+        }
+        this.aiPicksService.tickerBuyRecommendationQueue.next(element.stock);
+      }
+    }
+  }
+
   getImpliedMovement(stock: Stock) {
     const symbol = stock.stock;
     const foundStock = this.findStock(symbol, this.stockList);
@@ -747,9 +782,37 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       .subscribe({
         next: data => {
           foundStock.impliedMovement = data.move;
+
+          // const impliedMove = foundStock.impliedMovement;
+          // const probabilityOfProfit = foundStock.bullishProbability;
+          foundStock.kellyCriterion = 0;
+
           this.addToList(foundStock);
         }
       });
+  }
+
+  getKellyCriterion(stock) {
+    stock.kellyCriterion = this.calculateKellyCriterion(stock.bullishProbability, stock.bearishProbability, null);
+
+    this.addToList(stock);
+  }
+
+  calculateKellyCriterion(bullishProbability, bearishProbability, historicalTotalWinLossRatio) {
+    let winProbability = bullishProbability;
+    let totalWinLossRatio = historicalTotalWinLossRatio;
+    if (!winProbability) {
+      if (bearishProbability) {
+        winProbability = 1 - bearishProbability;
+      }
+    }
+
+    if (!totalWinLossRatio) {
+      totalWinLossRatio = _.round(this.algoReport.profitableTrades / (this.algoReport.totalTrades - this.algoReport.profitableTrades), 2);
+    }
+
+    console.log(winProbability, (1 - winProbability), totalWinLossRatio);
+    return _.round(winProbability - (1 - winProbability) / totalWinLossRatio, 2);
   }
 
   executeBacktests() {
@@ -761,14 +824,35 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
         this.callChainSub.add(backtest.sub
           .pipe(take(1))
           .subscribe(() => {
+            console.log('next buffer @ ', moment().format());
             this.backtestBuffer.shift();
-            this.triggerNextBacktest();
+            setTimeout(() => {
+              this.schedulerService.schedule(() => {
+                this.triggerNextBacktest();
+              }, 'rhtable_backtest' + backtest.stock);
+            }, 10 * (1000 - this.backtestBuffer.length));
+
           }, error => {
             this.snackBar.open(`Error on ${backtest.stock}`, 'Dismiss');
-            console.log(`Error on ${backtest.stock}`, error);
+            console.log(`Error on ${backtest.stock}`, error.error.error, '@', moment().format());
             this.incrementProgress();
             this.backtestBuffer.shift();
-            this.triggerNextBacktest();
+            setTimeout(() => {
+              this.schedulerService.schedule(() => {
+                this.triggerNextBacktest();
+              }, 'rhtable_backtest' + backtest.stock);
+            }, 100 * (1000 - this.backtestBuffer.length));
+
+            setTimeout(() => {
+              this.schedulerService.schedule(() => {
+                backtest.sub
+                  .pipe(take(1))
+                  .subscribe(() => {}, () => {
+                    this.snackBar.open(`Error on ${backtest.stock}`, 'Dismiss');
+                    this.addToBlackList(backtest.stock);
+                  });
+              }, 'rhtable_backtest' + backtest.stock);
+            }, 10000 * (1000 - this.backtestBuffer.length));
           }));
       });
 
@@ -781,7 +865,38 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
+  isBlackListed(ticker: string) {
+    return this.tickerBlacklist[ticker];
+  }
+
+  getBufferTimeout(constant: number, modifier = 1) {
+    const timeout = modifier * (10 * this.backtestBuffer.length) + constant;
+    console.log(this.backtestBuffer.length, constant, timeout / 60000);
+    return timeout;
+  }
+
+  resetTable() {
+    this.currentList = [];
+  }
+
+  addToBlackList(ticker: string) {
+    this.tickerBlacklist[ticker] = true;
+  }
+
+  autoActivate() {
+    this.endDate = moment().format('YYYY-MM-DD');
+    this.runDefaultBacktest();
+  }
+
+  exportResults() {
+    this.currentList.forEach(results => {
+      this.reportingService.addBacktestResults(results);
+    });
+    this.reportingService.exportBacktestResults();
+  }
+
   ngOnDestroy() {
     this.callChainSub.unsubscribe();
+    this.resetTable();
   }
 }

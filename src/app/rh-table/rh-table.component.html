@@ -1,20 +1,26 @@
 <app-product-view #product></app-product-view>
-
-<h3 class="table-title">Stocks</h3>
+<app-ai-picks></app-ai-picks>
 <p-table #dt [columns]="selectedColumns" [value]="currentList" [paginator]="true" [rows]="10" selectionMode="single"
   [(selection)]="selectedStock" dataKey="stock">
   <ng-template pTemplate="caption">
     <div class="ui-g">
       <div class="ui-g-4">
         <div class="table-commands">
-          <button mat-button color="primary" (click)="buy(selectedStock)" [disabled]="!selectedStock">BUY</button>
-          <button mat-button color="warn" (click)="sell(selectedStock)" [disabled]="!selectedStock">SELL</button>
+          <button mat-button color="primary" (click)="buy(selectedStock)" [disabled]="!selectedStock">Buy</button>
+          <button mat-button color="warn" (click)="sell(selectedStock)" [disabled]="!selectedStock">Sell</button>
           <button mat-button (click)="openChartDialog(selectedStock, endDate)" [disabled]="!selectedStock">
+            <mat-icon>assessment</mat-icon>
             Chart
           </button>
-          <button mat-button color="primary" (click)=runDefaultBacktest() *ngIf="progress>=totalStocks">Run Default
+          <button mat-button (click)="runAi(selectedStock, true)" [disabled]="!selectedStock">
+            Machine Learning
+          </button>
+          <button mat-button color="primary" (click)="runDefaultBacktest()">Default
             Backtest
           </button>
+          <button mat-button color="primary" (click)="exportResults()">Export Results</button>
+          <app-watch-list>
+          </app-watch-list>
         </div>
       </div>
       <div class="ui-g-4">
@@ -28,7 +34,7 @@
             End Date
             <input name="endDate" type="date" [ngModel]="endDate" (ngModelChange)="endDate = $event">
           </div>
-          <mat-form-field>
+          <mat-form-field *ngIf="additionalOptions">
             <mat-select placeholder="Algorithm" [(ngModel)]="selectedAlgo">
               <mat-optgroup *ngFor="let group of algoGroups" [label]="group.name" [disabled]="group.disabled">
                 <mat-option *ngFor="let algo of group.algorithm" [value]="algo.value">
@@ -37,19 +43,39 @@
               </mat-optgroup>
             </mat-select>
           </mat-form-field>
+          <span class="sentiment-title">
+            Sentiment:
+            <span
+              [ngClass]="{'bullish-sentiment': algoReport.bullishCount > algoReport.bearishCount, 'hide-sentiment': algoReport.bullishCount <= algoReport.bearishCount}">
+              BULLISH
+            </span>
+            <span
+              [ngClass]="{'bearish-sentiment': algoReport.bullishCount < algoReport.bearishCount, 'hide-sentiment': algoReport.bullishCount >= algoReport.bearishCount}">
+              BEARISH
+            </span>
+          </span>
         </div>
       </div>
       <div class="ui-g-4">
         <div class="table-filters">
           <p-multiSelect class="filter" [options]="recommendations" [(ngModel)]="selectedRecommendation"
-            defaultLabel="All Recommendations" (onChange)="filter()" selectedItemsLabel="{0} recommendations selected">
+            defaultLabel="All Recommendations" (onChange)="filter()" selectedItemsLabel="{0} recommendations selected"
+            *ngIf="additionalOptions">
           </p-multiSelect>
           <p-multiSelect class="filter" [options]="cols" [(ngModel)]="selectedColumns" optionLabel="header"
-            selectedItemsLabel="{0} columns selected" [style]="{minWidth: '200px'}" defaultLabel="Choose Columns">
+            selectedItemsLabel="{0} columns selected" [style]="{minWidth: '200px'}" defaultLabel="Choose Columns"
+            *ngIf="additionalOptions">
           </p-multiSelect>
-          <mat-checkbox class="filter" [(ngModel)]="twoOrMoreSignalsOnly" (change)="filter()">
+          <mat-checkbox class="filter" [(ngModel)]="twoOrMoreSignalsOnly" (change)="filter()" *ngIf="additionalOptions">
             Only show if two or more signals
           </mat-checkbox>
+          <div class="filter">
+            <div class="more-options-container">
+              <label class="more-options">More options</label>
+              <p-inputSwitch [(ngModel)]="additionalOptions"></p-inputSwitch>
+            </div>
+            <app-auto-backtest-switch (switchActivate)="autoActivate()"></app-auto-backtest-switch>
+          </div>
         </div>
       </div>
     </div>
@@ -60,7 +86,6 @@
         {{col.header}}
         <p-sortIcon [field]="col.field"></p-sortIcon>
       </th>
-      <th>Actions</th>
     </tr>
   </ng-template>
   <ng-template pTemplate="body" let-element let-columns="columns">
@@ -81,14 +106,14 @@
         <span *ngSwitchCase="'previousImpliedMovement'">
           {{element?.previousImpliedMovement | percent}}
         </span>
+        <span *ngSwitchCase="'kellyCriterion'">
+          <button mat-button color="primary" *ngIf=!element.kellyCriterion
+            (click)="getKellyCriterion(element)">Get Allocation</button>
+          <span *ngIf=element.kellyCriterion>{{element.kellyCriterion}}</span>
+        </span>
         <span *ngSwitchDefault>
           {{element[col.field]}}
         </span>
-      </td>
-      <td>
-        <button pButton (click)="addOrder(selectedStock)" [disabled]="!selectedStock">
-          Add Order
-        </button>
       </td>
     </tr>
   </ng-template>
@@ -102,7 +127,13 @@
   <ng-template pTemplate="summary">
     Progress: {{progress}}/{{totalStocks}}
     <mat-progress-bar mode="determinate" value="{{progressPct}}"></mat-progress-bar>
-    Average Trades: {{algoReport.averageTrades}}
-    Average Returns: {{algoReport.averageReturns}}%
+    <span class="summary-title">Average Trades: </span>{{algoReport.averageTrades}}
+    <span class="summary-title">Average Returns: </span>{{algoReport.averageReturns.toFixed(1)}}%
+    <span class="summary-title">Profitable Trades: </span>{{algoReport.profitableTrades}}
+    <span class="summary-title">Total Trades: </span>{{algoReport.totalTrades}}
+    <span class="summary-title">Success Rate: </span>{{algoReport.successRate | percent}}
+    <span class="summary-title">Bullish Count: </span>{{algoReport.bullishCount}}
+    <span class="summary-title">Bearish Count: </span>{{algoReport.bearishCount}}
+    <span class="summary-title">Bullish/Bearish: </span>{{algoReport.bullishBearishRatio}}
   </ng-template>
 </p-table>

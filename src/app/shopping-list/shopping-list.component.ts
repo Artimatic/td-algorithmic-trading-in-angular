@@ -15,6 +15,7 @@ import { TradeService, AlgoQueueItem } from '../shared/services/trade.service';
 import { OrderRow } from '../shared/models/order-row';
 import { FormControl, Validators } from '@angular/forms';
 import { MenuItem } from 'primeng/components/common/menuitem';
+import { take, takeWhile } from 'rxjs/operators';
 
 @Component({
   selector: 'app-shopping-list',
@@ -56,8 +57,6 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
     private tradeService: TradeService) { }
 
   ngOnInit() {
-    this.globalSettingsService.initGlobalSettings();
-
     this.mlCards = [];
     this.interval = this.defaultInterval;
 
@@ -230,7 +229,8 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
     });
 
     this.sub = TimerObservable.create(0, this.interval)
-      .takeWhile(() => this.alive)
+      .pipe(
+        takeWhile(() => this.alive))
       .subscribe(() => {
         this.lastCheckedTime = moment().format('hh:mm');
         if (this.interval !== this.defaultInterval) {
@@ -246,7 +246,9 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
               reset: false
             };
 
-            this.tradeService.algoQueue.next(queueItem);
+            setTimeout(() => {
+              this.tradeService.algoQueue.next(queueItem);
+            }, 500 * lastIndex);
             lastIndex++;
             executed++;
           }
@@ -279,13 +281,14 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
           });
           mlStopTime = mlStartTime;
 
-          setTimeout(() => {
-            this.globalSettingsService.initGlobalSettings();
-          }, 888000);
           if (this.globalSettingsService.autostart) {
-            setTimeout(() => {
-              this.triggerStart();
-            }, 8880000);
+            this.globalSettingsService.tradeDayStart
+              .pipe(take(1))
+              .subscribe(start => {
+                if (start) {
+                  this.triggerStart();
+                }
+              });
           }
         }
       });

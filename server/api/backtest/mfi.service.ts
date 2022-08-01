@@ -7,7 +7,10 @@ class MfiService {
     reals: number[],
     volumes: number[],
     period: number) {
-    let mfiLow = 80;
+    let mfiLow = 30;
+    if (period > volumes.length) {
+      period = volumes.length - 1;
+    }
     for (let i = 1; i < volumes.length - period; i++) {
       const highSubarray = highs.slice(i - 1, i + period);
       const lowSubarray = lows.slice(i - 1, i + period);

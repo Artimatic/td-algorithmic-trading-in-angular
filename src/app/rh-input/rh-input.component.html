@@ -1,6 +1,6 @@
 <form [formGroup]="form" novalidate>
   <mat-form-field>
-    <input matInput formControlName="query" placeholder="Enter ticker symbol" />
+    <input matInput formControlName="query" class="uppercase" placeholder="Enter ticker symbol" />
   </mat-form-field>
   <button mat-button (click)="submit()">Submit</button>
 </form>

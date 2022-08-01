@@ -37,3 +37,33 @@
       top: 100px;
   }
 }
+
+.summary-title {
+  font-weight: 500;
+}
+
+.more-options {
+  padding-right: 10px;
+}
+
+.more-options-container {
+  width: 11rem;
+}
+
+.bullish-sentiment {
+  color: #0F9117;
+  font-weight: 700;
+}
+
+.bearish-sentiment {
+  color: #ff0000;
+  font-weight: 700;
+}
+
+.hide-sentiment { 
+  display: none;
+}
+
+.sentiment-title {
+  font-weight: 500;
+}

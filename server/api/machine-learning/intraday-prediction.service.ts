@@ -16,7 +16,7 @@ class IntradayPredicationService extends PredictionService {
   }
 
   train(symbol, startDate, endDate, trainingSize, featureUse) {
-    return PortfolioService.getIntradayV3(symbol, moment(startDate).valueOf(), moment(endDate).valueOf())
+    return this.getQuotes(symbol, moment(startDate).valueOf(), moment(endDate).valueOf())
       .then((data) => {
         console.log('Got quotes ', data[0].date, data[data.length - 1].date);
         return QuoteService.postIntradayData(data);
@@ -44,34 +44,75 @@ class IntradayPredicationService extends PredictionService {
   }
 
   activate(symbol, featureUse) {
-    let price = null;
-    let openingPrice = null;
-    let indicator = null;
-    return PortfolioService.getIntradayV3(symbol, moment().subtract({ days: 1 }).valueOf(), moment().valueOf())
+    return this.getQuotes(symbol, moment().subtract({ days: 1 }).valueOf(), moment().valueOf())
       .then((quotes) => {
-        const subQuotes = quotes.slice(quotes.length - 80, quotes.length);
-        price = quotes[quotes.length - 1].close;
-        openingPrice = quotes[0].close;
-        return BacktestService.initStrategy(subQuotes);
+        return this.getIndicators(quotes);
       })
+      .then((signalData) => {
+        return this.activateModel(symbol, signalData, featureUse);
+      });
+  }
+
+
+  getQuotes(symbol, start, end) {
+    return PortfolioService.getIntradayV3(symbol, start, end);
+  }
+
+  getIndicators(quotes) {
+    let price = null;
+    let indicator = null;
+    const subQuotes = quotes.slice(quotes.length - 80, quotes.length);
+    price = quotes[quotes.length - 1].close;
+    return BacktestService.initStrategy(subQuotes)
       .then((indicators) => {
         indicator = indicators;
-
         return BacktestService.getDaytradeRecommendation(price, indicator);
       })
       .then((recommendation) => {
         indicator.recommendation = recommendation;
         return indicator;
-      })
-      .then((signal) => {
-        const inputData = this.buildInputSet(openingPrice, signal, featureUse);
-        const modelName = featureUse ? featureUse.join() : this.modelName;
-
-        return BacktestService.activateCustomModel(symbol, modelName, inputData.input, moment().format('YYYY-MM-DD'));
       });
   }
 
-  buildInputSet(openingPrice, currentSignal, featureUse) {
+  activateModel(symbol, indicatorData, featureUse) {
+    if (!featureUse) {
+      featureUse = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+    }
+    const signal = indicatorData;
+    const inputData = this.buildInputSet(signal, featureUse);
+    const modelName = featureUse ? featureUse.join() : this.modelName;
+    return BacktestService.activateCustomModel(symbol, modelName, inputData.input, moment().format('YYYY-MM-DD'));
+  }
+
+  processBacktestResults(results: BacktestResults, featureUse): any[] {
+    const signals = results.signals;
+    console.log('Got backtest: ', signals[0].date, signals[signals.length - 1].date);
+
+    const finalDataSet = [];
+    signals.forEach((signal, idx) => {
+      if (this.withinBounds(idx, signals.length)) {
+        finalDataSet.push(this.buildFeatureSet(signals, signal, idx, featureUse));
+      }
+    });
+    console.log('Data set size: ', finalDataSet.length);
+    return finalDataSet;
+  }
+
+  withinBounds(index, totalLength) {
+    return index > this.outputRange && (index + this.outputRange + 1 < totalLength);
+  }
+
+  buildFeatureSet(signals, currentSignal, currentIndex, featureUse) {
+    const futureClose = signals[currentIndex + this.outputRange].close;
+    const closePrice = currentSignal.close;
+
+    const dataSetObj = this.buildInputSet(currentSignal, featureUse);
+
+    dataSetObj.output = [this.getOutput(closePrice, futureClose)];
+    return dataSetObj;
+  }
+
+  buildInputSet(currentSignal, featureUse) {
     if (!featureUse) {
       featureUse = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
     }

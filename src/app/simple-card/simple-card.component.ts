@@ -13,6 +13,7 @@ import { OrderPref } from '../shared/enums/order-pref.enum';
 import * as _ from 'lodash';
 import { Holding } from '../shared/models';
 import { GlobalSettingsService } from '../settings/global-settings.service';
+import { take, takeWhile } from 'rxjs/operators';
 
 interface BuyAt3Algo {
   purchaseSent: boolean;
@@ -24,7 +25,7 @@ interface BuyAt3Algo {
   styleUrls: ['./simple-card.component.css']
 })
 export class SimpleCardComponent implements OnInit, OnChanges {
-  @ViewChild('stepper', {static: false}) stepper;
+  @ViewChild('stepper', { static: false }) stepper;
   @Input() order: SmartOrder;
 
   selectedOrder: FormControl;
@@ -54,6 +55,7 @@ export class SimpleCardComponent implements OnInit, OnChanges {
 
   preferences: FormControl;
 
+  triggerDaily: FormControl;
   buyAt3Algo: BuyAt3Algo;
 
   tiles;
@@ -92,6 +94,8 @@ export class SimpleCardComponent implements OnInit, OnChanges {
     this.preferences = new FormControl();
     this.preferences.setValue(OrderPref.SellAtOpen);
 
+    this.triggerDaily = new FormControl();
+    this.triggerDaily.setValue(false);
     this.setup();
   }
 
@@ -104,10 +108,12 @@ export class SimpleCardComponent implements OnInit, OnChanges {
   }
 
   goLive() {
+    this.stop();
     this.setup();
     this.alive = true;
     this.sub = TimerObservable.create(0, this.interval)
-      .takeWhile(() => this.alive)
+    .pipe(
+      takeWhile(() => this.alive))
       .subscribe(() => {
         this.live = true;
         const momentInst = moment();
@@ -166,9 +172,17 @@ export class SimpleCardComponent implements OnInit, OnChanges {
                       }
                     });
                 });
+
+              if (this.triggerDaily.value === true) {
+                this.globalSettingsService.tradeDayStart
+                  .pipe(take(1))
+                  .subscribe(start => {
+                    if (start) {
+                      this.goLive();
+                    }
+                  });
+              }
             }
-
-
           }
         }
       });

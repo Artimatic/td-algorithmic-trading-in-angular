@@ -31,13 +31,27 @@
     </mat-expansion-panel>
   </mat-accordion>
   <h1 mat-subheader>Shopping List</h1>
-  <p>Import and execute your trading algorithms</p>
   <app-pokerhand></app-pokerhand>
-  <p-splitButton label="Start Orders" (onClick)="confirmStart()" [model]="multibuttonOptions" icon="pi pi-dollar"
-    styleClass="ui-button-success"></p-splitButton>
-  <app-default-order-lists class="default-orders-button"></app-default-order-lists>
+  <div class="action-buttons">
+    <p-splitButton label="Start Orders" (onClick)="confirmStart()" [model]="multibuttonOptions" icon="pi pi-dollar"
+      styleClass="ui-button-success"></p-splitButton>
+    <app-default-order-lists class="default-orders-button"></app-default-order-lists>
+  </div>
 
   <app-orders-list></app-orders-list>
+
+  <mat-accordion>
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <h2>SMS</h2>
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <div class="order-card">
+        <app-sms-card></app-sms-card>
+      </div>
+    </mat-expansion-panel>
+  </mat-accordion>
 
   <mat-accordion>
     <mat-expansion-panel>

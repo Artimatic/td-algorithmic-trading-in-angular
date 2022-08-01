@@ -1,0 +1,21 @@
+.bullish-title {
+  color: #0F9117;
+  font-weight: 700;
+}
+
+.bearish-title {
+  color: #ff0000;
+  font-weight: 700;
+}
+
+.ai-picks {
+  margin: 10px
+}
+
+.ai-picks-button {
+  margin: 3px 0 3px 0;
+}
+
+.ai-picks-input-field {
+  width: 8em;
+}

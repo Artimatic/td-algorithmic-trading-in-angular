@@ -8,6 +8,9 @@
         <mat-form-field>
           <input matInput formControlName="query" placeholder="Enter ticker symbol" (keyup.enter)="train()" />
         </mat-form-field>
+        <mat-form-field>
+          <input matInput formControlName="customSettings" placeholder="Settings" (keyup.enter)="train()" />
+        </mat-form-field>
       </form>
     </div>
     <div class="p-col">
@@ -23,6 +26,9 @@
       <button pButton type="button" label="Activate" class="ui-button-warn" (click)="activate()"></button>
       <button pButton type="button" label="Random" (click)="random()"></button>
     </div>
+    <div *ngIf="isLoading">
+      Loading...
+    </div>
   </div>
 
   <p-table #dt [columns]="cols" [value]="modelResults" [paginator]="true" [rows]="100" dataKey="symbol"
@@ -33,7 +39,8 @@
         <input type="text" pInputText size="50" placeholder="Filter By Algorithm"
           (input)="dt.filterGlobal($event.target.value, 'contains')" style="width:auto">
       </div>
-      <app-default-order-lists class="default-orders-button" [prefillOrderForm]="prefillOrderForm"></app-default-order-lists>
+      <app-default-order-lists class="default-orders-button" [prefillOrderForm]="prefillOrderForm">
+      </app-default-order-lists>
     </ng-template>
     <ng-template pTemplate="header" let-columns>
       <tr>
@@ -46,7 +53,41 @@
     <ng-template pTemplate="body" let-rowData let-columns="columns">
       <tr [pSelectableRow]="rowData">
         <td *ngFor="let col of columns" class="table-cell">
-          <div class="data-cell">{{rowData[col.field]}}</div>
+          <div *ngIf="col.type==='percent'; else elseBlock" class="data-cell">{{rowData[col.field] | percent}}</div>
+          <ng-template #elseBlock>
+            <div class="data-cell" #elseBlock>
+              {{rowData[col.field]}}
+            </div>
+          </ng-template>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+  
+  <button pButton type="button" label="Train" class="ui-button ui-button-success" (click)="trainIntradayQuotes()"></button>
+  <button pButton type="button" label="Get Quotes" class="ui-button ui-button-success" (click)="getIntradayQuotes()"></button>
+  <button pButton type="button" label="Activate" class="ui-button ui-button-success" (click)="activateAllIntradayQuotes()"></button>
+
+  <p-table [columns]="intradayMlCols" [value]="intradayMlResults" [paginator]="true" [rows]="100">
+    <ng-template pTemplate="header" let-columns>
+      <tr>
+        <th *ngFor="let col of columns" [pSortableColumn]="col.field">
+          {{col.header}}
+          <p-sortIcon [field]="col.field"></p-sortIcon>
+        </th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
+      <tr [pSelectableRow]="rowData">
+        <td *ngFor="let col of columns" class="table-cell">
+          <div class="data-cell" [ngClass]="{'buy-color': rowData[col.field] > 0.7 && rowData[col.field] < 1}">
+            {{rowData[col.field]}}
+          </div>
+        </td>
+        <td class="table-cell">
+          <div class="data-cell">
+            <button pButton type="button" label="Activate" *ngIf="rowIndex > 81" class="ui-button-success" (click)="activateIntradayQuotes(rowIndex).subscribe()"></button>
+          </div>
         </td>
       </tr>
     </ng-template>

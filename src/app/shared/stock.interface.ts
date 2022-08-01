@@ -43,4 +43,9 @@ export interface Stock {
   bbandBullishShortTerm?: number;
   bbandBullishMidTerm?: number;
   bbandBullish?: number;
+  profitableTrades?: number;
+  bearishProbability?: number;
+  bullishProbability?: number;
+  previousImpliedMovement?: number;
+  kellyCriterion?: number;
 }

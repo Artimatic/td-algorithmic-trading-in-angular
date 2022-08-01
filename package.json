@@ -5,7 +5,7 @@
   "main": "server/app.js",
   "scripts": {
     "ng": "ng",
-    "start": "npm run serve",
+    "start": "npm run build && npm run serve",
     "build": "ng build --aot && npm run build-ts && npm run tslint",
     "serve": "node dist/app.js",
     "test-server": "npm run build-ts && node server-tests.js",
@@ -44,6 +44,7 @@
     "cookie-parser": "^1.4.3",
     "core-js": "^2.6.1",
     "d3fc-financial-feed": "^3.0.0",
+    "elliptic": "^6.5.4",
     "errorhandler": "^1.5.0",
     "errors": "^0.3.0",
     "eslint": "^6.8.0",
@@ -76,7 +77,10 @@
     "tslib": "^1.10.0",
     "tulind": "^0.8.15",
     "twilio": "^3.50.0",
+    "typescript": "3.5.3",
+    "websocket-extensions": "^0.1.4",
     "xlsx": "^0.14.2",
+    "y18n": "^4.0.1",
     "yahoo-finance-data": "^3.2.0",
     "zone.js": "^0.9.1"
   },
@@ -107,11 +111,10 @@
     "nodemon": "^1.14.1",
     "protractor": "^5.4.2",
     "ts-node": "^3.3.0",
-    "tslint": "^5.15.0",
-    "typescript": "^3.5.3"
+    "tslint": "^5.15.0"
   },
   "engines": {
-    "node": ">=12.18.3"
+    "node": "12.18.3"
   },
   "babel": {
     "presets": [

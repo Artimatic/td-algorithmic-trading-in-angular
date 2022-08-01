@@ -24,3 +24,11 @@
 .save-btn {
   margin-left: 0px;
 }
+
+.login-send-btn {
+  margin-left: 80px;
+}
+
+.available-accounts-title {
+  font-weight: 700;
+}

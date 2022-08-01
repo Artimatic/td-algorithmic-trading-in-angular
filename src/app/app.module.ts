@@ -4,6 +4,9 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 import { ChartModule } from 'angular-highcharts';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
+import { InputTextModule } from 'primeng/inputtext';
 
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import 'hammerjs';
@@ -71,6 +74,10 @@ import { DetermineHedgeComponent } from './determine-hedge/determine-hedge.compo
 import { SmsCardComponent } from './sms-card/sms-card.component';
 import { TimepickerModule } from 'ngx-bootstrap/timepicker';
 import { PieAlloctComponent } from './pie-alloct/pie-alloct.component';
+import { AiPicksComponent } from './ai-picks/ai-picks.component';
+import { AutoBacktestSwitchComponent } from './auto-backtest-switch/auto-backtest-switch.component';
+import { WatchListComponent } from './watch-list/watch-list.component';
+import { SchedulerService } from '@shared/service/scheduler.service';
 
 @NgModule({
   declarations: [
@@ -116,6 +123,9 @@ import { PieAlloctComponent } from './pie-alloct/pie-alloct.component';
     DetermineHedgeComponent,
     SmsCardComponent,
     PieAlloctComponent,
+    AiPicksComponent,
+    AutoBacktestSwitchComponent,
+    WatchListComponent,
   ],
   entryComponents: [
     LoginDialogComponent,
@@ -138,6 +148,9 @@ import { PieAlloctComponent } from './pie-alloct/pie-alloct.component';
     MachineLearningModule,
     SharedModule,
     TimepickerModule.forRoot(),
+    ToastModule,
+    InputTextModule,
+
   ],
   providers: [
     BacktestService,
@@ -151,6 +164,8 @@ import { PieAlloctComponent } from './pie-alloct/pie-alloct.component';
     IndicatorsService,
     AlgoService,
     TradeService,
+    MessageService,
+    SchedulerService
   ],
   bootstrap: [AppComponent]
 })

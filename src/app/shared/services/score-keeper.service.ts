@@ -94,55 +94,37 @@ export class ScoreKeeperService {
 
   determineBetSize(stock: string, requestedQuantity: number, existingPositionSize: number,
     sizeLimit: number) {
-    const modifier = _.add(this.determineLossTallyModifier(stock),
-      this.determineExistingPositionModifier(existingPositionSize, sizeLimit));
+    const modifier = this.determineLossTallyModifier(stock);
     return _.round(_.multiply(modifier, requestedQuantity), 0);
   }
 
   determineLossTallyModifier(stock: string) {
-    if (this.lossTally[stock]) {
-      switch (this.lossTally[stock]) {
-        case 1:
-          return 0.5;
-        case 2:
-          return 0.75;
-        case 3:
-          return 0.95;
-        default:
-          if (this.lossTally[stock] > 3) {
-            return 0.25;
-          }
-      }
-    }
+    // if (this.lossTally[stock]) {
+    //   switch (this.lossTally[stock]) {
+    //     case 1:
+    //       return 0.5;
+    //     case 2:
+    //       return 0.75;
+    //     case 3:
+    //       return 1;
+    //     default:
+    //       if (this.lossTally[stock] > 3) {
+    //         return 0.25;
+    //       }
+    //   }
+    // }
 
-    if (this.winlossHash[stock]) {
-      const difference = this.winlossHash[stock].wins - this.winlossHash[stock].losses;
-      if (difference > 3) {
-        return 1;
-      } else if (difference > 2) {
-        return 0.8;
-      } else if (difference > 1) {
-        return 0.6;
-      }
-    }
-    return 0.5;
-  }
-
-  determineExistingPositionModifier(existingPositionSize: number, sizeLimit: number): number {
-    const ratio = _.divide(existingPositionSize, sizeLimit);
-    if (ratio === 0) {
-      return 0.1;
-    } else if (ratio > 0 && ratio < 0.1) {
-      return -0.1;
-    } else if (ratio >= 0.1 && ratio < 0.4) {
-      return -0.25;
-    } else if (ratio >= 0.4 && ratio < 0.6) {
-      return -0.5;
-    } else if (ratio >= 0.6 && ratio < 0.8) {
-      return -0.8;
-    } else if (ratio >= 0.8) {
-      return -0.9;
-    }
+    // if (this.winlossHash[stock]) {
+    //   const difference = this.winlossHash[stock].wins - this.winlossHash[stock].losses;
+    //   if (difference > 3) {
+    //     return 1;
+    //   } else if (difference > 2) {
+    //     return 0.8;
+    //   } else if (difference > 1) {
+    //     return 0.6;
+    //   }
+    // }
+    return 1;
   }
 
   resetProfitLoss(stock: string) {

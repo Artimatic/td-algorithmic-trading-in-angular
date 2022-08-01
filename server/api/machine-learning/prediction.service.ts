@@ -3,9 +3,8 @@ import DecisionService from '../mean-reversion/reversion-decision.service';
 import * as _ from 'lodash';
 
 export default class PredictionService {
-
-  outputRange;
-  outputLimit;
+  outputRange: number;
+  outputLimit: number;
 
   constructor(range, limit) {
     this.outputRange = range;
@@ -87,6 +86,7 @@ export default class PredictionService {
         dataSetObj.input.push(input[idx]);
       }
     });
+
     return dataSetObj;
   }
 
@@ -100,49 +100,22 @@ export default class PredictionService {
   }
 
   convertRecommendations(signal: Indicators) {
-    const input = [];
+    let input = [];
+    const targetRecommendation = 'bullish';
     if (signal && signal.recommendation) {
-      if (signal.recommendation.recommendation && signal.recommendation.recommendation.toLowerCase() === 'buy') {
-        input.push(1);
-      } else {
-        input.push(0);
-      }
+      input = this.recommendationToInput(signal, input, targetRecommendation);
+    } else {
+      console.log('Error converting recommendation. Recommendation missing ', signal);
+    }
 
-      if (signal.recommendation.mfi && signal.recommendation.mfi.toLowerCase() === 'bullish') {
-        input.push(1);
-      } else {
-        input.push(0);
-      }
+    return input;
+  }
 
-      if (signal.recommendation.roc && signal.recommendation.roc.toLowerCase() === 'bullish') {
-        input.push(1);
-      } else {
-        input.push(0);
-      }
-
-      if (signal.recommendation.bband && signal.recommendation.bband.toLowerCase() === 'bullish') {
-        input.push(1);
-      } else {
-        input.push(0);
-      }
-
-      if (signal.recommendation.macd && signal.recommendation.macd.toLowerCase() === 'bullish') {
-        input.push(1);
-      } else {
-        input.push(0);
-      }
-
-      if (signal.recommendation.demark9 && signal.recommendation.demark9.toLowerCase() === 'bullish') {
-        input.push(1);
-      } else {
-        input.push(0);
-      }
-
-      if (signal.recommendation.vwma && signal.recommendation.vwma.toLowerCase() === 'bullish') {
-        input.push(1);
-      } else {
-        input.push(0);
-      }
+  convertRecommendationsForBearish(signal: Indicators) {
+    let input = [];
+    const targetRecommendation = 'bearish';
+    if (signal && signal.recommendation) {
+      input = this.recommendationToInput(signal, input, targetRecommendation);
     } else {
       console.log('Missing recommendation: ', signal);
     }
@@ -150,6 +123,58 @@ export default class PredictionService {
     return input;
   }
 
+  recommendationToInput(signal: Indicators, input, targetRecommendation) {
+    if (signal.recommendation.mfi && signal.recommendation.mfi.toLowerCase() === targetRecommendation) {
+      input.push(1);
+    } else {
+      input.push(0);
+    }
+
+    if (signal.recommendation.mfiDivergence2 && signal.recommendation.mfiDivergence2.toLowerCase() === targetRecommendation) {
+      input.push(1);
+    } else {
+      input.push(0);
+    }
+
+
+    if (signal.recommendation.bband && signal.recommendation.bband.toLowerCase() === targetRecommendation) {
+      input.push(1);
+    } else {
+      input.push(0);
+    }
+
+    if (signal.recommendation.macd && signal.recommendation.macd.toLowerCase() === targetRecommendation) {
+      input.push(1);
+    } else {
+      input.push(0);
+    }
+
+    if (signal.recommendation.demark9 && signal.recommendation.demark9.toLowerCase() === targetRecommendation) {
+      input.push(1);
+    } else {
+      input.push(0);
+    }
+
+    if (signal.recommendation.vwma && signal.recommendation.vwma.toLowerCase() === targetRecommendation) {
+      input.push(1);
+    } else {
+      input.push(0);
+    }
+
+    if (signal.recommendation.mfiTrade && signal.recommendation.mfiTrade.toLowerCase() === targetRecommendation) {
+      input.push(1);
+    } else {
+      input.push(0);
+    }
+
+    if (signal.recommendation.mfiDivergence && signal.recommendation.mfiDivergence.toLowerCase() === targetRecommendation) {
+      input.push(1);
+    } else {
+      input.push(0);
+    }
+
+    return input;
+  }
   comparePrices(price, close) {
     if (close < price) {
       return 1;

@@ -6,7 +6,7 @@
       </label>
       <span>&nbsp;</span>
       <input type="date" [ngModel]="globalSettingsService.tradeDate | date:'yyyy-MM-dd'"
-        (ngModelChange)="globalSettingsService.tradeDate = $event">
+        (ngModelChange)="setTradeDate($event)">
     </mat-grid-tile>
     <mat-grid-tile>
       <label matTooltip="Orders start time">
@@ -16,7 +16,7 @@
       <timepicker [(ngModel)]="globalSettingsService.startTime" [showMeridian]="ismeridian"></timepicker>
     </mat-grid-tile>
     <mat-grid-tile>
-      <label matTooltip="When to close order if 'sell at close' is set. Must be before stop time">
+      <label matTooltip="When to close order if 'sell on the close' is set. Must be before stop time">
         Sell to Close
       </label>
       <span>&nbsp;</span>
@@ -59,8 +59,8 @@
       </mat-slide-toggle>
     </mat-grid-tile>
     <mat-grid-tile>
-      <label matTooltip="Autostart on/off">
-        Auto Start Trading:
+      <label matTooltip="Restart cards for next day when trading is finished">
+        Auto start:
       </label>
       <mat-slide-toggle (change)="toggleAutostart()">
       </mat-slide-toggle>

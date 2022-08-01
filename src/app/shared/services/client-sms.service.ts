@@ -12,23 +12,25 @@ export class ClientSmsService {
 
   constructor(private http: HttpClient) { }
 
-  sendBuySms(symbol: string, phoneNumber: string, price: number, quantity: number): Observable<any> {
+  sendBuySms(symbol: string, phoneNumber: string, price: number, quantity: number, message: string = ''): Observable<any> {
     const data = {
       phone: phoneNumber,
       stock: symbol,
       price,
-      quantity
+      quantity,
+      message
     };
 
     return this.http.post(`${BASE_URL}api/sms/buy`, data, {});
   }
 
-  sendSellSms(symbol: string, phoneNumber: string, price: number, quantity: number): Observable<any> {
+  sendSellSms(symbol: string, phoneNumber: string, price: number, quantity: number, message: string = ''): Observable<any> {
     const data = {
       phone: phoneNumber,
       stock: symbol,
       price,
-      quantity
+      quantity,
+      message
     };
 
     return this.http.post(`${BASE_URL}api/sms/sell`, data, {});
