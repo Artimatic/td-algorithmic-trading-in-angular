@@ -44,3 +44,7 @@ button.nav-item {
 .ui-button {
   margin: 1em;
 }
+
+.uppercase {
+  text-transform: uppercase;
+}

@@ -157,24 +157,6 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges {
   addOrder(stock: string, allocationPct: number, total: number) {
     stock = stock.toUpperCase();
     this.schedulerService.schedule(() => {
-      if (this.addOrderFormGroup.value.side.toLowerCase() === 'sell') {
-        this.portfolioService.getTdPortfolio().subscribe((data) => {
-          data.forEach((holding) => {
-            if (holding.instrument.symbol === stock) {
-              const sellQuantity = holding.longQuantity;
-              this.portfolioService.getPrice(stock).subscribe((price) => {
-                this.templateOrders.push(this.cartService.buildOrder(stock, sellQuantity, price, this.addOrderFormGroup.value.side));
-              });
-            }
-          });
-        });
-      } else {
-        this.portfolioService.getPrice(stock).subscribe((price) => {
-          const quantity = this.getQuantity(price, allocationPct, total);
-          this.templateOrders.push(this.cartService.buildOrder(stock, quantity, price, this.addOrderFormGroup.value.side));
-        });
-      }
-
       const cb = (quantity, price) => {
         this.templateOrders.push(this.cartService.buildOrder(stock, quantity, price, this.addOrderFormGroup.value.side));
       };

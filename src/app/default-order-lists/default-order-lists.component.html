@@ -34,7 +34,7 @@
           <p-card [style]="{height: '130px'}">
             <form [formGroup]="addOrderFormGroup">
               <div class="order-form-item">
-                <input type="text" pInputText placeholder="Stock" formControlName="symbol">
+                <input type="text" pInputText placeholder="Stock" class="uppercase" formControlName="symbol">
                 <p-dropdown [options]="sides" formControlName="side"
                   [style]="{'minWidth':'50px', 'width':'93px', 'margin-left':'5px'}"></p-dropdown>
               </div>
