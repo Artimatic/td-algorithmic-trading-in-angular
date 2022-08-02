@@ -1,7 +1,6 @@
 import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { SelectItem } from 'primeng/components/common/selectitem';
 import { SmartOrder } from '../shared/models/smart-order';
-import { PortfolioService } from '../shared';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import * as _ from 'lodash';
 import { CartService } from '../shared/services/cart.service';
