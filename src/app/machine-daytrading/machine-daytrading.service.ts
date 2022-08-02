@@ -27,7 +27,7 @@ export class MachineDaytradingService {
       const stock = this.getRandomStock();
       this.backtestService.getDaytradeRecommendation(stock, 0, 0, { minQuotes: 81 }).subscribe(
         analysis => {
-          if (analysis.recommendation.toLowerCase() === 'buy') {
+          if (analysis.vwma.toLowerCase() === 'bullish') {
             this.schedulerService.schedule(() => {
               this.machineLearningService
                 .trainPredictNext30(stock,
