@@ -33,7 +33,6 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges {
   errorMsg: string;
 
   constructor(private _formBuilder: FormBuilder,
-    private portfolioService: PortfolioService,
     private cartService: CartService,
     private schedulerService: SchedulerService,
     private machineDaytradingService: MachineDaytradingService) { }
