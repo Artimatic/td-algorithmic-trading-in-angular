@@ -324,24 +324,29 @@ export class MlCardComponent implements OnInit {
   }
 
   buy(order: SmartOrder, modifier: number) {
-    return this.getQuote(order.holding.symbol)
-      .subscribe((bid) => {
-        if (this.globalSettingsService.brokerage === Brokerage.Td) {
-          this.portfolioService.getTdBalance()
-            .subscribe(balance => {
-              const totalBalance = _.add(balance.cashBalance, balance.moneyMarketFund);
-              let totalBuyAmount = this.firstFormGroup.value.amount;
+    this.schedulerService.schedule(() => {
+      this.getQuote(order.holding.symbol)
+        .subscribe((bid) => {
+          if (this.globalSettingsService.brokerage === Brokerage.Td) {
+            this.schedulerService.schedule(() => {
+              this.portfolioService.getTdBalance()
+                .subscribe(balance => {
+                  const totalBalance = _.add(balance.cashBalance, balance.moneyMarketFund);
+                  let totalBuyAmount = this.firstFormGroup.value.amount;
 
-              if (this.allIn.value === true || totalBuyAmount > totalBalance) {
-                totalBuyAmount = totalBalance;
-              }
+                  if (this.allIn.value === true || totalBuyAmount > totalBalance) {
+                    totalBuyAmount = totalBalance;
+                  }
 
-              this.initiateBuy(modifier, totalBuyAmount, bid, order);
-            });
-        } else if (this.globalSettingsService.brokerage === Brokerage.Robinhood) {
-          this.initiateBuy(modifier, this.firstFormGroup.value.amount, bid, order);
-        }
-      });
+                  this.initiateBuy(modifier, totalBuyAmount, bid, order);
+                });
+            }, 'ml_card_getbalance');
+
+          } else if (this.globalSettingsService.brokerage === Brokerage.Robinhood) {
+            this.initiateBuy(modifier, this.firstFormGroup.value.amount, bid, order);
+          }
+        });
+    }, 'ml_card_quote');
   }
 
   initiateBuy(modifier: number, totalBuyAmount: number, bid: number, order: SmartOrder) {
@@ -404,7 +409,7 @@ export class MlCardComponent implements OnInit {
   }
 
   setup() {
-    this.startTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 15:30`, 'America/New_York');
+    this.startTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 15:20`, 'America/New_York');
     this.stopTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 16:00`, 'America/New_York');
 
     this.holdingCount = 0;
@@ -441,7 +446,7 @@ export class MlCardComponent implements OnInit {
         this.responseCounter++;
         this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
       });
-    }, 'ml_card_activation', this.stopTime);
+    }, 'ml_card_activation');
 
     this.schedulerService.schedule(() => {
       this.backtestService.getCurrentIntradayActivationData('SPY')
@@ -450,7 +455,7 @@ export class MlCardComponent implements OnInit {
           this.responseCounter++;
           this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
         });
-    }, 'ml_card_activation', this.stopTime);
+    }, 'ml_card_activation');
 
     this.schedulerService.schedule(() => {
       this.backtestService.getDailyActivationData('QQQ').subscribe(activationData => {
@@ -458,7 +463,7 @@ export class MlCardComponent implements OnInit {
         this.responseCounter++;
         this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
       });
-    }, 'ml_card_activation', this.stopTime);
+    }, 'ml_card_activation');
 
     this.schedulerService.schedule(() => {
       this.backtestService.getCurrentIntradayActivationData('QQQ')
@@ -467,7 +472,7 @@ export class MlCardComponent implements OnInit {
           this.responseCounter++;
           this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
         });
-    }, 'ml_card_activation', this.stopTime);
+    }, 'ml_card_activation');
 
     this.schedulerService.schedule(() => {
       this.backtestService.getDailyActivationData('TLT').subscribe(activationData => {
@@ -475,7 +480,7 @@ export class MlCardComponent implements OnInit {
         this.responseCounter++;
         this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
       });
-    }, 'ml_card_activation', this.stopTime);
+    }, 'ml_card_activation');
 
     this.schedulerService.schedule(() => {
       this.backtestService.getCurrentIntradayActivationData('TLT')
@@ -484,7 +489,7 @@ export class MlCardComponent implements OnInit {
           this.responseCounter++;
           this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
         });
-    }, 'ml_card_activation', this.stopTime);
+    }, 'ml_card_activation');
 
     this.schedulerService.schedule(() => {
       this.backtestService.getDailyActivationData('GLD').subscribe(activationData => {
@@ -492,7 +497,7 @@ export class MlCardComponent implements OnInit {
         this.responseCounter++;
         this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
       });
-    }, 'ml_card_activation', this.stopTime);
+    }, 'ml_card_activation');
 
     this.schedulerService.schedule(() => {
       this.backtestService.getCurrentIntradayActivationData('GLD')
@@ -501,7 +506,7 @@ export class MlCardComponent implements OnInit {
           this.responseCounter++;
           this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
         });
-    }, 'ml_card_activation', this.stopTime);
+    }, 'ml_card_activation');
 
     this.schedulerService.schedule(() => {
       this.backtestService.getDailyActivationData('VXX').subscribe(activationData => {
@@ -509,7 +514,7 @@ export class MlCardComponent implements OnInit {
         this.responseCounter++;
         this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
       });
-    }, 'ml_card_activation', this.stopTime);
+    }, 'ml_card_activation');
 
     this.schedulerService.schedule(() => {
       this.backtestService.getCurrentIntradayActivationData('VXX')
@@ -518,7 +523,7 @@ export class MlCardComponent implements OnInit {
           this.responseCounter++;
           this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
         });
-    }, 'ml_card_activation', this.stopTime);
+    }, 'ml_card_activation');
 
 
     this.schedulerService.schedule(() => {
@@ -527,7 +532,7 @@ export class MlCardComponent implements OnInit {
         this.responseCounter++;
         this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
       });
-    }, 'ml_card_activation', this.stopTime);
+    }, 'ml_card_activation');
 
     this.schedulerService.schedule(() => {
       this.backtestService.getCurrentIntradayActivationData('HYG')
@@ -536,7 +541,7 @@ export class MlCardComponent implements OnInit {
           this.responseCounter++;
           this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
         });
-    }, 'ml_card_activation', this.stopTime);
+    }, 'ml_card_activation');
 
     this.schedulerService.schedule(() => {
       this.backtestService.getDailyActivationData(this.getTrainingStock()).subscribe(activationData => {
@@ -544,7 +549,7 @@ export class MlCardComponent implements OnInit {
         this.responseCounter++;
         this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
       });
-    }, 'ml_card_activation', this.stopTime);
+    }, 'ml_card_activation');
 
     this.schedulerService.schedule(() => {
       this.backtestService.getCurrentIntradayActivationData(this.getTrainingStock())
@@ -553,11 +558,11 @@ export class MlCardComponent implements OnInit {
           this.responseCounter++;
           this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
         });
-    }, 'ml_card_activation', this.stopTime);
+    }, 'ml_card_activation');
   }
 
   handleResponse(responseCount, activationHash, activationIntradayash) {
-    if (responseCount === 14) {
+    if (responseCount === 13) {
       const quotes = [
         activationHash['SPY'],
         activationHash['QQQ'],
@@ -593,7 +598,7 @@ export class MlCardComponent implements OnInit {
       });
 
       const activationInput = [{ input }];
-      return this.machineLearningService.activateBuyAtCloseModel(this.getTrainingStock(), moment().subtract({ day: 1 }), activationInput)
+      this.machineLearningService.activateBuyAtCloseModel(this.getTrainingStock(), moment().subtract({ day: 1 }), activationInput)
         .subscribe(mlResult => {
           console.log('ml data: ', this.getTradeDay(), mlResult);
           if (mlResult) {

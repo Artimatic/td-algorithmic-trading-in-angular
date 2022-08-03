@@ -352,11 +352,11 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   async play() {
     this.setLive();
 
-    if (this.machineControlled.value) {
+    if (this.machineControlled.value || !this.order.holding.symbol) {
       this.order.holding.symbol = this.machineDaytradingService.selectedStock;
       this.firstFormGroup.value.quantity = this.machineDaytradingService.quantity;
       this.firstFormGroup.value.orderSize = this.machineDaytradingService.orderSize;
-      if (!this.order.holding.symbol) {
+      if (!this.order.holding.symbol || !this.machineDaytradingService.selectedStock) {
         this.machineDaytradingService.findTrade();
       } else {
         this.schedulerService.schedule(() => {
