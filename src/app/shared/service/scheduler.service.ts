@@ -6,7 +6,7 @@ import * as moment from 'moment';
 })
 export class SchedulerService {
   scheduledTasks: { taskName: string; taskCb: () => {}; timeout: number; executionTime: number, timeoutId?: number }[] = [];
-  delay = 45000;
+  delay = 45100;
   priorityEndtime;
   lastExecutionTime;
   priorityExecutionHoldTime;
@@ -29,7 +29,8 @@ export class SchedulerService {
       }
     }
 
-    if (this.scheduledTasks.length > 100) {
+    if (this.scheduledTasks.length > 90) {
+      console.log('Too many tasks. Cleaning up. ', this.scheduledTasks);
       if (moment(this.scheduledTasks[this.scheduledTasks.length - 1].executionTime).isBefore(moment())) {
         this.scheduledTasks = [];
       } else {
@@ -43,10 +44,10 @@ export class SchedulerService {
           }
           return previousValue;
         }, {});
-        if (tasksCount[taskName] > 20) {
+        if (tasksCount[taskName] > 10) {
           setTimeout(() => {
             this.schedule(taskCb, taskName, stopTime, isPriority);
-          }, 900000);
+          }, 300000);
         }
       }
     }

@@ -208,7 +208,7 @@ export class MlCardComponent implements OnInit {
             this.executeNow();
           }
         });
-    }, 'ml_card_start');
+    }, 'ml_card_start', null, true);
   }
 
   determineBet(prediction) {
@@ -409,8 +409,8 @@ export class MlCardComponent implements OnInit {
   }
 
   setup() {
-    this.startTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 15:20`, 'America/New_York');
-    this.stopTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 16:00`, 'America/New_York');
+    this.startTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 15:40`, 'America/New_York');
+    this.stopTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 17:00`, 'America/New_York');
 
     this.holdingCount = 0;
     this.warning = '';
@@ -562,7 +562,7 @@ export class MlCardComponent implements OnInit {
   }
 
   handleResponse(responseCount, activationHash, activationIntradayash) {
-    if (responseCount === 13) {
+    if (responseCount > 13) {
       const quotes = [
         activationHash['SPY'],
         activationHash['QQQ'],
@@ -598,15 +598,18 @@ export class MlCardComponent implements OnInit {
       });
 
       const activationInput = [{ input }];
-      this.machineLearningService.activateBuyAtCloseModel(this.getTrainingStock(), moment().subtract({ day: 1 }), activationInput)
-        .subscribe(mlResult => {
-          console.log('ml data: ', this.getTradeDay(), mlResult);
-          if (mlResult) {
-            const bet = this.determineBet(mlResult);
-            this.placeBet(bet);
-            this.pendingResults = false;
-          }
-        });
+      this.schedulerService.schedule(() => {
+
+        this.machineLearningService.activateBuyAtCloseModel(this.getTrainingStock(), moment().subtract({ day: 1 }), activationInput)
+          .subscribe(mlResult => {
+            console.log('ml data: ', this.getTradeDay(), mlResult);
+            if (mlResult) {
+              const bet = this.determineBet(mlResult);
+              this.placeBet(bet);
+              this.pendingResults = false;
+            }
+          });
+      }, 'ml_card_final_activation');
     }
   }
 
