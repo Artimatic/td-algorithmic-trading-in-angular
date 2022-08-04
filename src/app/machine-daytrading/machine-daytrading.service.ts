@@ -79,13 +79,25 @@ export class MachineDaytradingService {
         data.forEach((holding) => {
           if (holding.instrument.symbol === stock) {
             const sellQuantity = holding.longQuantity;
-            cb(sellQuantity, lastPrice);
+            if (!lastPrice) {
+              this.portfolioService.getPrice(stock).subscribe((price) => {
+                cb(sellQuantity, price);
+              });
+            } else {
+              cb(sellQuantity, lastPrice);
+            }
           }
         });
       });
     } else {
       const quantity = this.getQuantity(lastPrice, allocationPct, total);
-      cb(quantity, lastPrice);
+      if (!lastPrice) {
+        this.portfolioService.getPrice(stock).subscribe((price) => {
+          cb(quantity, price);
+        });
+      } else {
+        cb(quantity, lastPrice);
+      }
     }
   }
 

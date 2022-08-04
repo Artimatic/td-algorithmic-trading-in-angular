@@ -159,7 +159,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges {
         this.templateOrders.push(this.cartService.buildOrder(stock, quantity, price, this.addOrderFormGroup.value.side));
       };
 
-      this.machineDaytradingService.addOrder(this.addOrderFormGroup.value.side, stock, allocationPct, total, cb);
+      this.machineDaytradingService.addOrder(this.addOrderFormGroup.value.side, stock, allocationPct, total, cb, null);
     }, 'adding_order');
   }
 
