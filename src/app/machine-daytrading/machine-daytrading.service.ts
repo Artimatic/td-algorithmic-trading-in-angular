@@ -90,12 +90,13 @@ export class MachineDaytradingService {
         });
       });
     } else {
-      const quantity = this.getQuantity(lastPrice, allocationPct, total);
       if (!lastPrice) {
         this.portfolioService.getPrice(stock).subscribe((price) => {
+          const quantity = this.getQuantity(price, allocationPct, total);
           cb(quantity, price);
         });
       } else {
+        const quantity = this.getQuantity(lastPrice, allocationPct, total);
         cb(quantity, lastPrice);
       }
     }
