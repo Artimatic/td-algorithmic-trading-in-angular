@@ -30,7 +30,6 @@ export class SchedulerService {
     }
 
     if (this.scheduledTasks.length > 90) {
-      console.log('Too many tasks. Cleaning up. ', this.scheduledTasks);
       if (moment(this.scheduledTasks[this.scheduledTasks.length - 1].executionTime).isBefore(moment())) {
         this.scheduledTasks = [];
       } else {

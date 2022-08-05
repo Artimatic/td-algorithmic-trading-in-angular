@@ -25,46 +25,48 @@ export class MachineDaytradingService {
 
   findTrade() {
     this.schedulerService.schedule(() => {
-      const stock = this.getRandomStock();
-      this.backtestService.getDaytradeRecommendation(stock, 0, 0, { minQuotes: 81 }).subscribe(
-        analysis => {
-          if (analysis.vwma.toLowerCase() === 'bullish') {
-            this.schedulerService.schedule(() => {
-              this.machineLearningService
-                .trainPredictNext30(stock,
-                  moment().add({ days: 1 }).format('YYYY-MM-DD'),
-                  moment().subtract({ days: 1 }).format('YYYY-MM-DD'),
-                  1,
-                  this.globalSettingsService.daytradeAlgo
-                )
-                .subscribe((data: any[]) => {
-                  if (data[0].nextOutput > 0.5 && data[0].correct / data[0].guesses > 0.5) {
-                    const cb = (quantity) => {
-                      this.selectedStock = stock;
-                      this.quantity = quantity;
-                      this.orderSize = _.floor(quantity / 3) || 1;
-                      console.log('Set trade: ', stock);
-                    };
+      if (!this.selectedStock) {
+        const stock = this.getRandomStock();
+        this.backtestService.getDaytradeRecommendation(stock, 0, 0, { minQuotes: 81 }).subscribe(
+          analysis => {
+            if (analysis.vwma.toLowerCase() === 'bullish') {
+              this.schedulerService.schedule(() => {
+                this.machineLearningService
+                  .trainPredictNext30(stock,
+                    moment().add({ days: 1 }).format('YYYY-MM-DD'),
+                    moment().subtract({ days: 1 }).format('YYYY-MM-DD'),
+                    1,
+                    this.globalSettingsService.daytradeAlgo
+                  )
+                  .subscribe((data: any[]) => {
+                    if (data[0].nextOutput > 0.5 && data[0].correct / data[0].guesses > 0.5) {
+                      const cb = (quantity) => {
+                        this.selectedStock = stock;
+                        this.quantity = quantity;
+                        this.orderSize = _.floor(quantity / 3) || 1;
+                        console.log('Set trade: ', stock);
+                      };
 
-                    console.log('Found a trade: ', stock);
+                      console.log('Found a trade: ', stock);
 
-                    if (this.lastBalance) {
-                      console.log('Adding trade: ', stock);
-                      this.addOrder('daytrade', stock, 1, this.lastBalance, cb, analysis.data.price);
-                    } else {
-                      this.schedulerService.schedule(() => {
-                        this.getPortfolioBalance().subscribe(total => {
-                          console.log('Adding trade: ', stock);
-                          this.addOrder('daytrade', stock, 1, total, cb, analysis.data.price);
-                        });
-                      }, 'MachineDaytradingService_add_order', this.globalSettingsService.stopTime, true);
+                      if (this.lastBalance) {
+                        console.log('Adding trade: ', stock);
+                        this.addOrder('daytrade', stock, 1, this.lastBalance, cb, analysis.data.price);
+                      } else {
+                        this.schedulerService.schedule(() => {
+                          this.getPortfolioBalance().subscribe(total => {
+                            console.log('Adding trade: ', stock);
+                            this.addOrder('daytrade', stock, 1, total, cb, analysis.data.price);
+                          });
+                        }, 'MachineDaytradingService_add_order', this.globalSettingsService.stopTime, true);
+                      }
                     }
-                  }
-                });
-            }, 'MachineDaytradingService_ml', this.globalSettingsService.stopTime, true);
+                  });
+              }, 'MachineDaytradingService_ml', this.globalSettingsService.stopTime, true);
+            }
           }
-        }
-      );
+        );
+      }
     }, 'MachineDaytradingService_get_recommendation', this.globalSettingsService.stopTime);
   }
 
