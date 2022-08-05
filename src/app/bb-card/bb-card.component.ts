@@ -352,7 +352,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   async play() {
     this.setLive();
 
-    if (this.machineControlled.value && !this.order.holding.symbol) {
+    if (this.machineControlled.value) {
       this.order = {
         holding: {
           symbol: this.machineDaytradingService.selectedStock,
@@ -365,10 +365,14 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
         side: 'DayTrade'
       };
 
+      this.order.holding.symbol = this.machineDaytradingService.selectedStock;
       this.firstFormGroup.value.quantity = this.machineDaytradingService.quantity;
       this.firstFormGroup.value.orderSize = this.machineDaytradingService.orderSize;
 
+
       if (!this.order.holding.symbol) {
+        console.log('machine controlled ', this.order.holding.symbol);
+
         this.machineDaytradingService.findTrade();
       } else {
         this.schedulerService.schedule(() => {
