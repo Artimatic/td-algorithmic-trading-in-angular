@@ -163,6 +163,15 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges {
     }, 'adding_order');
   }
 
+  addMachineTrade() {
+    const stock = 'MACHINE';
+    this.machineDaytradingService.allocationPct = this.addOrderFormGroup.value.allocation;
+    this.machineDaytradingService.allocationTotal = this.firstFormGroup.value.amount;
+    this.templateOrders.push(this.cartService.buildOrder(stock, 1, 1, this.addOrderFormGroup.value.side, 'MACHINE'));
+
+    this.errorMsg = '';
+  }
+
   getQuantity(stockPrice: number, allocationPct: number, total: number) {
     const totalCost = _.round(total * allocationPct, 2);
     return _.floor(totalCost / stockPrice);

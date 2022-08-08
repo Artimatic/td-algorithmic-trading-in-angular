@@ -188,7 +188,7 @@ export class CartService {
     });
   }
 
-  buildOrder(symbol: string, quantity = 0, price = 0, side = 'DayTrade'): SmartOrder {
+  buildOrder(symbol: string, quantity = 0, price = 0, side = 'DayTrade', id = null): SmartOrder {
     return {
       holding: {
         instrument: null,
@@ -206,7 +206,8 @@ export class CartService {
       useStopLoss: false,
       useTrailingStopLoss: false,
       useTakeProfit: false,
-      sellAtClose: false
+      sellAtClose: false,
+      id
     };
   }
 }

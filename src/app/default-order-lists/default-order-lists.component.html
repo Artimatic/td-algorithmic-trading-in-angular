@@ -49,6 +49,9 @@
             <div class="order-form-item">
               <button pButton type="button" icon="pi pi-plus-circle" (click)="addCustomList()"
                 class="ui-button-success"></button>
+              &nbsp;
+              <button pButton type="button" icon="pi pi-ticket" (click)="addMachineTrade()"
+                class="ui-button-info"></button>
               <div *ngIf="errorMsg" class="error-message">{{errorMsg}}</div>
             </div>
           </p-card>

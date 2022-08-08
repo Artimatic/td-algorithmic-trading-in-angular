@@ -243,7 +243,7 @@ export class DaytradeService {
       }
       const orderRow = {
         timeSubmitted: moment.unix(orders[i].timeSubmitted).format('hh:mma'),
-        signalTime: moment.unix(orders[i].signalTime).format('hh:mma'),
+        signalTime: moment(orders[i].signalTime).format('hh:mma'),
         quantity: orders[i].quantity,
         price: orders[i].price,
         action

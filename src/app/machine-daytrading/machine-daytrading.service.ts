@@ -15,6 +15,8 @@ export class MachineDaytradingService {
   public selectedStock = null;
   public quantity = 0;
   public orderSize = 0;
+  public allocationPct = null;
+  public allocationTotal = null;
   public lastBalance = null;
 
   constructor(private schedulerService: SchedulerService,
@@ -49,13 +51,13 @@ export class MachineDaytradingService {
 
                       console.log('Found a trade: ', stock);
 
-                      if (this.lastBalance) {
-                        console.log('Adding trade: ', stock);
-                        this.addOrder('daytrade', stock, 1, this.lastBalance, cb, analysis.data.price);
+                      if (this.allocationTotal === null && this.allocationPct === null) {
+                        console.log('Adding trade 1: ', stock);
+                        this.addOrder('daytrade', stock, this.allocationPct, this.allocationTotal, cb, analysis.data.price);
                       } else {
                         this.schedulerService.schedule(() => {
                           this.getPortfolioBalance().subscribe(total => {
-                            console.log('Adding trade: ', stock);
+                            console.log('Adding trade 2: ', stock);
                             this.addOrder('daytrade', stock, 1, total, cb, analysis.data.price);
                           });
                         }, 'MachineDaytradingService_add_order', this.globalSettingsService.stopTime, true);

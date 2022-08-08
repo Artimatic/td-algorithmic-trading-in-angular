@@ -101,7 +101,8 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   ngOnInit() {
     this.subscriptions = [];
     const algoQueueSub = this.tradeService.algoQueue.subscribe((item: AlgoQueueItem) => {
-      if (this.order.holding.symbol === item.symbol) {
+      if (this.order.holding.symbol === item.symbol || this.order.id === item.id ||
+        (this.machineControlled.value && this.order.id === 'MACHINE')) {
         if (item.reset) {
           this.setup();
           this.alive = true;
@@ -261,19 +262,6 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
           profitThreshold: this.order.profitTarget,
           minQuotes: 81
         }).pipe(take(1)).subscribe(results => {
-          // console.log(results);
-          // _.forEach(results.indicators, indicator => {
-          //   this.indicators = indicator;
-          //   const daytradeType = this.firstFormGroup.value.orderType.toLowerCase();
-          //   const date = moment(indicator.date).unix();
-
-          //   if (indicator.recommendation) {
-          //     this.processAnalysis(daytradeType, indicator.recommendation, indicator.close, date);
-          //   } else {
-          //     console.log('missing recommendation: ', indicator);
-          //   }
-          // });
-
           if (results.returns) {
             this.scoringService.resetProfitLoss(this.order.holding.symbol);
             this.scoringService.addProfitLoss(this.order.holding.symbol, results.returns * 100);
@@ -352,29 +340,26 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   async play() {
     this.setLive();
 
-    if (this.machineControlled.value) {
-      this.order = {
-        holding: {
-          symbol: this.machineDaytradingService.selectedStock,
-          instrument: ''
-        },
-        quantity: this.machineDaytradingService.quantity,
-        price: null,
-        submitted: false,
-        pending: false,
-        side: 'DayTrade'
-      };
-
-      this.order.holding.symbol = this.machineDaytradingService.selectedStock;
-      this.firstFormGroup.value.quantity = this.machineDaytradingService.quantity;
-      this.firstFormGroup.value.orderSize = this.machineDaytradingService.orderSize;
-
-
-      if (!this.order.holding.symbol) {
+    if (this.machineControlled.value || this.order.id === 'MACHINE') {
+      if (!this.machineDaytradingService.selectedStock) {
         console.log('machine controlled ', this.order.holding.symbol);
-
         this.machineDaytradingService.findTrade();
       } else {
+        this.order = {
+          holding: {
+            symbol: this.machineDaytradingService.selectedStock,
+            instrument: ''
+          },
+          quantity: this.machineDaytradingService.quantity,
+          price: null,
+          submitted: false,
+          pending: false,
+          side: 'DayTrade'
+        };
+        this.firstFormGroup.value.quantity = this.machineDaytradingService.quantity || 1;
+        this.firstFormGroup.value.orderSize = this.machineDaytradingService.orderSize || 1;
+
+        console.log('Scheduling machine order ', this.firstFormGroup.value);
         this.schedulerService.schedule(() => {
           this.portfolioService.getPrice(this.order.holding.symbol).subscribe((lastQuote) => {
             this.runStrategy(1 * lastQuote);

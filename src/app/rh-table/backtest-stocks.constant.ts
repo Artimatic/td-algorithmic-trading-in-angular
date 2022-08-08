@@ -176,7 +176,7 @@ export const stockList = [
   'EFV',
   'ETFC',
   'FAST',
-  'FB',
+  'META',
   'FDX',
   'FEYE',
   'IQ',
