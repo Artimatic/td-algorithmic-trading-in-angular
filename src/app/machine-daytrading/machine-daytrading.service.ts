@@ -28,8 +28,7 @@ export class MachineDaytradingService {
   findTrade() {
     this.schedulerService.schedule(() => {
       if (!this.selectedStock) {
-        // const stock = this.getRandomStock();
-        const stock = 'FSLY';
+        const stock = this.getRandomStock();
         this.backtestService.getDaytradeRecommendation(stock, 0, 0, { minQuotes: 81 }).subscribe(
           analysis => {
             if (analysis.vwma.toLowerCase() === 'bullish') {
