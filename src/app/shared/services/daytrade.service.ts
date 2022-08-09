@@ -257,8 +257,6 @@ export class DaytradeService {
     }
 
     tiles.push({ orders: currentList, cols: 1, rows: 1 });
-
-    console.log('build tiles: ', tiles);
     return tiles;
   }
 

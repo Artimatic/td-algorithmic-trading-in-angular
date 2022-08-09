@@ -28,7 +28,8 @@ export class MachineDaytradingService {
   findTrade() {
     this.schedulerService.schedule(() => {
       if (!this.selectedStock) {
-        const stock = this.getRandomStock();
+        // const stock = this.getRandomStock();
+        const stock = 'FSLY';
         this.backtestService.getDaytradeRecommendation(stock, 0, 0, { minQuotes: 81 }).subscribe(
           analysis => {
             if (analysis.vwma.toLowerCase() === 'bullish') {
@@ -41,24 +42,25 @@ export class MachineDaytradingService {
                     this.globalSettingsService.daytradeAlgo
                   )
                   .subscribe((data: any[]) => {
-                    if (data[0].nextOutput > 0.5 && data[0].correct / data[0].guesses > 0.5) {
+                    // if (data[0].nextOutput > 0.5 && data[0].correct / data[0].guesses > 0.5) {
+                    if (data[0].correct / data[0].guesses > 0.5) {
                       const cb = (quantity) => {
                         this.selectedStock = stock;
                         this.quantity = quantity;
                         this.orderSize = _.floor(quantity / 3) || 1;
-                        console.log('Set trade: ', stock);
+                        console.log('Set trade: ', stock, this.quantity, this.orderSize);
                       };
 
                       console.log('Found a trade: ', stock);
 
-                      if (this.allocationTotal === null && this.allocationPct === null) {
+                      if (this.allocationTotal !== null && this.allocationPct !== null) {
                         console.log('Adding trade 1: ', stock);
                         this.addOrder('daytrade', stock, this.allocationPct, this.allocationTotal, cb, analysis.data.price);
                       } else {
                         this.schedulerService.schedule(() => {
-                          this.getPortfolioBalance().subscribe(total => {
+                          this.getPortfolioBalance().subscribe(balance => {
                             console.log('Adding trade 2: ', stock);
-                            this.addOrder('daytrade', stock, 1, total, cb, analysis.data.price);
+                            this.addOrder('daytrade', stock, 1, balance.availableFunds, cb, analysis.data.price);
                           });
                         }, 'MachineDaytradingService_add_order', this.globalSettingsService.stopTime, true);
                       }

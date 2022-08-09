@@ -545,7 +545,9 @@ export class MlCardComponent implements OnInit {
 
     this.schedulerService.schedule(() => {
       this.backtestService.getDailyActivationData(this.getTrainingStock()).subscribe(activationData => {
-        activationHash[this.getTrainingStock()] = activationData;
+        if (!activationHash[this.getTrainingStock()]) {
+          activationHash[this.getTrainingStock()] = activationData;
+        }
         this.responseCounter++;
         this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
       });
@@ -554,7 +556,9 @@ export class MlCardComponent implements OnInit {
     this.schedulerService.schedule(() => {
       this.backtestService.getCurrentIntradayActivationData(this.getTrainingStock())
         .subscribe(intradayQuotes => {
-          activationIntradayash[this.getTrainingStock()] = intradayQuotes;
+          if (!activationIntradayash[this.getTrainingStock()]) {
+            activationIntradayash[this.getTrainingStock()] = intradayQuotes;
+          }
           this.responseCounter++;
           this.handleResponse(this.responseCounter, activationHash, activationIntradayash);
         });
@@ -589,11 +593,7 @@ export class MlCardComponent implements OnInit {
       quotes.forEach((val, idx) => {
         const quote = val[val.length - 2]; // TODO CHANGE TO -1
         const intraday = intradayQuotes[idx].candles;
-        const datetime = intraday[intraday.length - 2].datetime;
-        if (moment(datetime).diff(moment(quote.date), 'days') > 1) {
-          console.log(moment(quote.date).diff(moment(datetime), 'days'), quote.date, moment(datetime).format());
-          console.log(`The dates ${moment(quote.date).format()} ${moment(datetime).format()} are incorrect`);
-        }
+        console.log('intradayQuotes', intradayQuotes, idx, intradayQuotes[idx]);
         input = input.concat(this.buildTrainingData(quote, intraday));
       });
 
