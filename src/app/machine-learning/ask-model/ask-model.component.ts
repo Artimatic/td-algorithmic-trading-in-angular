@@ -9,6 +9,7 @@ import { GlobalSettingsService } from '../../settings/global-settings.service';
 import * as _ from 'lodash';
 import { CartService } from '../../shared/services/cart.service';
 import { map, take, tap } from 'rxjs/operators';
+import { SchedulerService } from '@shared/service/scheduler.service';
 
 export interface TrainingResults {
   symbol?: string;
@@ -51,6 +52,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
     private globalSettingsService: GlobalSettingsService,
     private portfolioService: PortfolioService,
     private cartService: CartService,
+    private schedulerService: SchedulerService,
     public snackBar: MatSnackBar) { }
 
   ngOnInit() {
@@ -69,10 +71,10 @@ export class AskModelComponent implements OnInit, OnDestroy {
     });
 
     this.models = [
+      { name: 'Calibrate intraday model', code: 'calibrate' },
       { name: 'Calibrate daily model', code: 'calibrate_daily' },
       { name: 'Calibrate Open Price Up model', code: 'open_price_up' },
-      { name: 'Calibrate Next 30 minutes model', code: 'predict_30' },
-      { name: 'Calibrate intraday model', code: 'calibrate' }
+      { name: 'Calibrate Next 30 minutes model', code: 'predict_30' }
     ];
 
     this.cols = [
@@ -114,24 +116,27 @@ export class AskModelComponent implements OnInit, OnDestroy {
 
   train() {
     this.setStartDate();
-    switch (this.selectedModel.code) {
-      case 'open_price_up': {
-        this.trainOpenUp();
-        break;
+
+    this.schedulerService.schedule(() => {
+      switch (this.selectedModel.code) {
+        case 'open_price_up': {
+          this.trainOpenUp();
+          break;
+        }
+        case 'predict_30': {
+          this.trainPredict30();
+          break;
+        }
+        case 'calibrate': {
+          this.calibrateOne();
+          break;
+        }
+        case 'calibrate_daily': {
+          this.calibrateDaily();
+          break;
+        }
       }
-      case 'predict_30': {
-        this.trainPredict30();
-        break;
-      }
-      case 'calibrate': {
-        this.calibrateOne();
-        break;
-      }
-      case 'calibrate_daily': {
-        this.calibrateDaily();
-        break;
-      }
-    }
+    }, `ask_model_training`);
   }
 
   activate() {

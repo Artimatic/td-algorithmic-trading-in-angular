@@ -705,8 +705,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   runDefaultBacktest() {
-    this.resetTable();
-
     this.interval = 0;
     this.getData(this.tickerList, 'daily-indicators');
 
