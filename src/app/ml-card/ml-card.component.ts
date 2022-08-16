@@ -653,7 +653,6 @@ export class MlCardComponent implements OnInit {
 
       const activationInput = [{ input }];
       this.schedulerService.schedule(() => {
-
         this.machineLearningService.activateBuyAtCloseModel(this.getTrainingStock(), moment().subtract({ day: 1 }), activationInput)
           .subscribe(mlResult => {
             console.log('ml data: ', this.getTradeDay(), mlResult);
