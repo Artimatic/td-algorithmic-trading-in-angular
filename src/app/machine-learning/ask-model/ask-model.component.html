@@ -5,12 +5,8 @@
   <div class="p-grid p-align-center">
     <div class="p-col">
       <form [formGroup]="form" novalidate>
-        <mat-form-field>
-          <input matInput formControlName="query" placeholder="Enter ticker symbol" (keyup.enter)="train()" />
-        </mat-form-field>
-        <mat-form-field>
-          <input matInput formControlName="customSettings" placeholder="Settings" (keyup.enter)="train()" />
-        </mat-form-field>
+        <input type="text" style="margin-bottom: 1em;" pInputText formControlName="query" placeholder="Ex. FB, AAPL, MSFT" (keyup.enter)="train()" />
+        <input type="text" style="margin-bottom: 1em;" pInputText formControlName="customSettings" placeholder="Settings" (keyup.enter)="train()" />
       </form>
     </div>
     <div class="p-col">

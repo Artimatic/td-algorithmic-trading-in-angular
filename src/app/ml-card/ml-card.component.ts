@@ -413,7 +413,7 @@ export class MlCardComponent implements OnInit {
 
   setup() {
     this.startTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 15:40`, 'America/New_York');
-    this.stopTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 17:00`, 'America/New_York');
+    this.stopTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 15:46`, 'America/New_York');
 
     this.holdingCount = 0;
     this.warning = '';
@@ -444,176 +444,188 @@ export class MlCardComponent implements OnInit {
   sendActivation() {
     this.responseCounter = 0;
 
-    if (!this.activationHash['SPY']) {
-      this.schedulerService.schedule(() => {
+    this.schedulerService.schedule(() => {
+      if (!this.activationHash['SPY']) {
+
         this.backtestService.getDailyActivationData('SPY').subscribe(activationData => {
           this.activationHash['SPY'] = activationData;
           this.responseCounter++;
           this.handleResponse(this.responseCounter);
         });
-      }, 'ml_card_activation');
-    }
+      }
+    }, 'ml_card_activation');
 
-    if (!this.activationIntradayHash['SPY']) {
+    this.schedulerService.schedule(() => {
+      if (!this.activationIntradayHash['SPY']) {
 
-      this.schedulerService.schedule(() => {
         this.backtestService.getCurrentIntradayActivationData('SPY')
           .subscribe(intradayQuotes => {
             this.activationIntradayHash['SPY'] = intradayQuotes;
             this.responseCounter++;
             this.handleResponse(this.responseCounter);
           });
-      }, 'ml_card_activation');
-    }
+      }
+    }, 'ml_card_activation');
 
-    if (!this.activationHash['QQQ']) {
-      this.schedulerService.schedule(() => {
+
+    this.schedulerService.schedule(() => {
+      if (!this.activationHash['QQQ']) {
+
         this.backtestService.getDailyActivationData('QQQ').subscribe(activationData => {
           this.activationHash['QQQ'] = activationData;
           this.responseCounter++;
           this.handleResponse(this.responseCounter);
         });
-      }, 'ml_card_activation');
-    }
+      }
+    }, 'ml_card_activation');
 
-    if (!this.activationIntradayHash['QQQ']) {
-
-      this.schedulerService.schedule(() => {
+    this.schedulerService.schedule(() => {
+      if (!this.activationIntradayHash['QQQ']) {
         this.backtestService.getCurrentIntradayActivationData('QQQ')
           .subscribe(intradayQuotes => {
             this.activationIntradayHash['QQQ'] = intradayQuotes;
             this.responseCounter++;
             this.handleResponse(this.responseCounter);
           });
-      }, 'ml_card_activation');
-    }
+      }
+    }, 'ml_card_activation');
 
-    if (!this.activationHash['TLT']) {
-      this.schedulerService.schedule(() => {
+    this.schedulerService.schedule(() => {
+      if (!this.activationHash['TLT']) {
+
         this.backtestService.getDailyActivationData('TLT').subscribe(activationData => {
           this.activationHash['TLT'] = activationData;
           this.responseCounter++;
           this.handleResponse(this.responseCounter);
         });
-      }, 'ml_card_activation');
-    }
+      }
+    }, 'ml_card_activation');
 
-    if (!this.activationIntradayHash['TLT']) {
-      this.schedulerService.schedule(() => {
+    this.schedulerService.schedule(() => {
+      if (!this.activationIntradayHash['TLT']) {
+
         this.backtestService.getCurrentIntradayActivationData('TLT')
           .subscribe(intradayQuotes => {
             this.activationIntradayHash['TLT'] = intradayQuotes;
             this.responseCounter++;
             this.handleResponse(this.responseCounter);
           });
-      }, 'ml_card_activation');
-    }
+      }
+    }, 'ml_card_activation');
 
-    if (!this.activationHash['GLD']) {
+    this.schedulerService.schedule(() => {
+      if (!this.activationHash['GLD']) {
 
-      this.schedulerService.schedule(() => {
         this.backtestService.getDailyActivationData('GLD').subscribe(activationData => {
           this.activationHash['GLD'] = activationData;
           this.responseCounter++;
           this.handleResponse(this.responseCounter);
         });
-      }, 'ml_card_activation');
-    }
+      }
+    }, 'ml_card_activation');
 
-    if (!this.activationIntradayHash['GLD']) {
-      this.schedulerService.schedule(() => {
+    this.schedulerService.schedule(() => {
+      if (!this.activationIntradayHash['GLD']) {
+
         this.backtestService.getCurrentIntradayActivationData('GLD')
           .subscribe(intradayQuotes => {
             this.activationIntradayHash['GLD'] = intradayQuotes;
             this.responseCounter++;
             this.handleResponse(this.responseCounter);
           });
-      }, 'ml_card_activation');
-    }
+      }
+    }, 'ml_card_activation');
 
-    if (!this.activationHash['IWM']) {
-      this.schedulerService.schedule(() => {
+    this.schedulerService.schedule(() => {
+      if (!this.activationHash['IWM']) {
+
         this.backtestService.getDailyActivationData('IWM').subscribe(activationData => {
           this.activationHash['IWM'] = activationData;
           this.responseCounter++;
           this.handleResponse(this.responseCounter);
         });
-      }, 'ml_card_activation');
-    }
+      }
+    }, 'ml_card_activation');
 
-    if (!this.activationIntradayHash['IWM']) {
-      this.schedulerService.schedule(() => {
+    this.schedulerService.schedule(() => {
+      if (!this.activationIntradayHash['IWM']) {
         this.backtestService.getCurrentIntradayActivationData('IWM')
           .subscribe(intradayQuotes => {
             this.activationIntradayHash['IWM'] = intradayQuotes;
             this.responseCounter++;
             this.handleResponse(this.responseCounter);
           });
-      }, 'ml_card_activation');
-    }
+      }
+    }, 'ml_card_activation');
 
-    if (!this.activationHash['VXX']) {
-      this.schedulerService.schedule(() => {
+    this.schedulerService.schedule(() => {
+      if (!this.activationHash['VXX']) {
+
         this.backtestService.getDailyActivationData('VXX').subscribe(activationData => {
           this.activationHash['VXX'] = activationData;
           this.responseCounter++;
           this.handleResponse(this.responseCounter);
         });
-      }, 'ml_card_activation');
-    }
+      }
+    }, 'ml_card_activation');
 
-    if (!this.activationIntradayHash['VXX']) {
-      this.schedulerService.schedule(() => {
+    this.schedulerService.schedule(() => {
+      if (!this.activationIntradayHash['VXX']) {
+
         this.backtestService.getCurrentIntradayActivationData('VXX')
           .subscribe(intradayQuotes => {
             this.activationIntradayHash['VXX'] = intradayQuotes;
             this.responseCounter++;
             this.handleResponse(this.responseCounter);
           });
-      }, 'ml_card_activation');
-    }
+      }
+    }, 'ml_card_activation');
 
-    if (!this.activationHash['HYG']) {
-      this.schedulerService.schedule(() => {
+    this.schedulerService.schedule(() => {
+      if (!this.activationHash['HYG']) {
+
         this.backtestService.getDailyActivationData('HYG').subscribe(activationData => {
           this.activationHash['HYG'] = activationData;
           this.responseCounter++;
           this.handleResponse(this.responseCounter);
         });
-      }, 'ml_card_activation');
-    }
+      }
+    }, 'ml_card_activation');
 
-    if (!this.activationIntradayHash['HYG']) {
-      this.schedulerService.schedule(() => {
+    this.schedulerService.schedule(() => {
+      if (!this.activationIntradayHash['HYG']) {
+
         this.backtestService.getCurrentIntradayActivationData('HYG')
           .subscribe(intradayQuotes => {
             this.activationIntradayHash['HYG'] = intradayQuotes;
             this.responseCounter++;
             this.handleResponse(this.responseCounter);
           });
-      }, 'ml_card_activation');
-    }
+      }
+    }, 'ml_card_activation');
 
-    if (!this.activationHash[this.getTrainingStock()]) {
-      this.schedulerService.schedule(() => {
+    this.schedulerService.schedule(() => {
+      if (!this.activationHash[this.getTrainingStock()]) {
+
         this.backtestService.getDailyActivationData(this.getTrainingStock()).subscribe(activationData => {
           this.activationHash[this.getTrainingStock()] = activationData;
           this.responseCounter++;
           this.handleResponse(this.responseCounter);
         });
-      }, 'ml_card_activation');
-    }
+      }
+    }, 'ml_card_activation');
 
-    if (!this.activationIntradayHash[this.getTrainingStock()]) {
-      this.schedulerService.schedule(() => {
+    this.schedulerService.schedule(() => {
+      if (!this.activationIntradayHash[this.getTrainingStock()]) {
+
         this.backtestService.getCurrentIntradayActivationData(this.getTrainingStock())
           .subscribe(intradayQuotes => {
             this.activationIntradayHash[this.getTrainingStock()] = intradayQuotes;
             this.responseCounter++;
             this.handleResponse(this.responseCounter);
           });
-      }, 'ml_card_activation');
-    }
+      }
+    }, 'ml_card_activation');
   }
 
   handleResponse(responseCount) {
@@ -640,7 +652,7 @@ export class MlCardComponent implements OnInit {
     ];
     console.log('quote', quotes);
     console.log('intradayQuotes', intradayQuotes);
-    if (responseCount > 13 && quotes.every(quote => !!quote) && intradayQuotes.every(intra => !!intra)) {
+    if (responseCount > 14 && quotes.every(quote => !!quote) && intradayQuotes.every(intra => !!intra)) {
 
       let input = [new Date().getUTCDay()];
 
@@ -651,7 +663,7 @@ export class MlCardComponent implements OnInit {
         input = input.concat(this.buildTrainingData(quote, intraday));
       });
 
-      const activationInput = [{ input }];
+      const activationInput = input;
       this.schedulerService.schedule(() => {
         this.machineLearningService.activateBuyAtCloseModel(this.getTrainingStock(), moment().subtract({ day: 1 }), activationInput)
           .subscribe(mlResult => {
