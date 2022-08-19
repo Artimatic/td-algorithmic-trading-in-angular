@@ -50,13 +50,13 @@ export class AiPicksComponent implements OnInit, OnDestroy {
     const ThirtyDayPrediction = () => {
       this.schedulerService.schedule(() => {
         this.activate(stock, 30, 0.01, isBuy, null, () => { });
-      }, 'aipicks');
+      }, 'aipicks', 300000);
     };
 
     const FifteenDayPrediction = () => {
       this.schedulerService.schedule(() => {
         this.activate(stock, 15, 0.01, isBuy, null, ThirtyDayPrediction);
-      }, 'aipicks');
+      }, 'aipicks', 300000);
     };
 
     FifteenDayPrediction();
@@ -74,7 +74,7 @@ export class AiPicksComponent implements OnInit, OnDestroy {
         if (!activation) {
           this.schedulerService.schedule(() => {
             this.trainAndActivate(symbol, range, limit, isBuy, null, cb);
-          }, 'aipicks');
+          }, 'aipicks', 300000);
         } else {
           const prediction = { algorithm: range, prediction: activation.nextOutput, accuracy: accuracy };
           if (prediction.prediction > 0.7 || prediction.prediction < 0.3) {
@@ -87,7 +87,7 @@ export class AiPicksComponent implements OnInit, OnDestroy {
 
           this.schedulerService.schedule(() => {
             cb();
-          }, 'aipicks');
+          }, 'aipicks', 300000);
         }
         this.isLoading = false;
       }, error => {

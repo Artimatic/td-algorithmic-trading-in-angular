@@ -6,18 +6,17 @@ import * as moment from 'moment';
 })
 export class SchedulerService {
   scheduledTasks: { taskName: string; taskCb: () => {}; timeout: number; executionTime: number, timeoutId?: number }[] = [];
-  delay = 45100;
   priorityEndtime;
   lastExecutionTime;
   priorityExecutionHoldTime;
 
   constructor() { }
 
-  schedule(taskCb, taskName, stopTime = null, isPriority = false) {
+  schedule(taskCb, taskName, stopTime = null, isPriority = false, delay = 45250) {
     if (isPriority) {
-      this.priorityExecutionHoldTime = moment().add({ milliseconds: this.delay + 300 });
+      this.priorityExecutionHoldTime = moment().add({ milliseconds: delay + 300 });
 
-      if (moment().isAfter(moment(this.lastExecutionTime).add({ milliseconds: this.delay }))) {
+      if (moment().isAfter(moment(this.lastExecutionTime).add({ milliseconds: delay }))) {
         taskCb();
         this.lastExecutionTime = moment().format();
       } else {
@@ -25,7 +24,7 @@ export class SchedulerService {
           console.log('Executing priority task: ', moment().format(), taskName);
           taskCb();
           this.lastExecutionTime = moment().format();
-        }, this.delay + 100);
+        }, delay + 100);
       }
     }
 
@@ -59,8 +58,8 @@ export class SchedulerService {
       let nextTimeout;
 
       if (lastTask.executionTime > moment().valueOf()) {
-        nextExecutionTime = lastTask.executionTime + this.delay;
-        nextTimeout = nextExecutionTime - moment().valueOf() + this.delay;
+        nextExecutionTime = lastTask.executionTime + delay;
+        nextTimeout = nextExecutionTime - moment().valueOf() + delay;
         scheduledTask = { taskName, taskCb, timeout: nextTimeout, executionTime: nextExecutionTime };
 
         if (!stopTime || moment(nextExecutionTime).isBefore(moment(stopTime))) {

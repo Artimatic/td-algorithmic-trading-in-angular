@@ -124,7 +124,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
         this.stockList.forEach(stock => {
           this.schedulerService.schedule(() => {
             this.trainOpenUp(stock);
-          }, `trainOpenUp${stock}`);
+          }, `trainOpenUp${stock}`, 300000);
         });
         break;
       }
@@ -132,7 +132,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
         this.stockList.forEach(stock => {
           this.schedulerService.schedule(() => {
             this.trainPredict30(stock);
-          }, `trainPredict30${stock}`);
+          }, `trainPredict30${stock}`, 300000);
         });
         break;
       }
@@ -140,7 +140,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
         this.stockList.forEach(stock => {
           this.schedulerService.schedule(() => {
             this.calibrateOne(stock);
-          }, `calibrateOne${stock}`);
+          }, `calibrateOne${stock}`, 300000);
         });
         break;
       }
@@ -148,7 +148,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
         this.stockList.forEach(stock => {
           this.schedulerService.schedule(() => {
             this.calibrateDaily(stock);
-          }, `calibrateDaily${stock}`);
+          }, `calibrateDaily${stock}`, 300000);
         });
         break;
       }

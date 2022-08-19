@@ -76,6 +76,7 @@ export class MlCardComponent implements OnInit {
 
   activationHash = {};
   activationIntradayHash = {};
+  orderSent = false;
 
   constructor(private _formBuilder: FormBuilder,
     private portfolioService: PortfolioService,
@@ -121,7 +122,7 @@ export class MlCardComponent implements OnInit {
       Validators.required
     ]);
 
-    this.bearishPlay = new FormControl('TLT', [
+    this.bearishPlay = new FormControl('SH', [
       Validators.required
     ]);
 
@@ -424,6 +425,7 @@ export class MlCardComponent implements OnInit {
 
     this.activationHash = {};
     this.activationIntradayHash = {};
+    this.orderSent = false;
   }
 
   setTest() {
@@ -626,6 +628,7 @@ export class MlCardComponent implements OnInit {
           });
       }
     }, 'ml_card_activation');
+    this.handleResponse(this.responseCounter);
   }
 
   handleResponse(responseCount) {
@@ -652,7 +655,7 @@ export class MlCardComponent implements OnInit {
     ];
     console.log('quote', quotes);
     console.log('intradayQuotes', intradayQuotes);
-    if (responseCount > 14 && quotes.every(quote => !!quote) && intradayQuotes.every(intra => !!intra)) {
+    if (!this.orderSent && responseCount > 13 && quotes.every(quote => !!quote) && intradayQuotes.every(intra => !!intra)) {
 
       let input = [new Date().getUTCDay()];
 
@@ -664,6 +667,7 @@ export class MlCardComponent implements OnInit {
       });
 
       const activationInput = input;
+      this.orderSent = true;
       this.schedulerService.schedule(() => {
         this.machineLearningService.activateBuyAtCloseModel(this.getTrainingStock(), moment().subtract({ day: 1 }), activationInput)
           .subscribe(mlResult => {
