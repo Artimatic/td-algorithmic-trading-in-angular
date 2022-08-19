@@ -655,7 +655,7 @@ export class MlCardComponent implements OnInit {
     ];
     console.log('quote', quotes);
     console.log('intradayQuotes', intradayQuotes);
-    if (!this.orderSent && responseCount > 13 && quotes.every(quote => !!quote) && intradayQuotes.every(intra => !!intra)) {
+    if (responseCount > 13 && quotes.every(quote => !!quote) && intradayQuotes.every(intra => !!intra)) {
 
       let input = [new Date().getUTCDay()];
 
@@ -667,12 +667,13 @@ export class MlCardComponent implements OnInit {
       });
 
       const activationInput = input;
-      this.orderSent = true;
       this.schedulerService.schedule(() => {
         this.machineLearningService.activateBuyAtCloseModel(this.getTrainingStock(), moment().subtract({ day: 1 }), activationInput)
           .subscribe(mlResult => {
             console.log('ml data: ', this.getTradeDay(), mlResult);
-            if (mlResult) {
+            if (!this.orderSent && mlResult) {
+              this.orderSent = true;
+
               const bet = this.determineBet(mlResult);
               this.placeBet(bet);
               this.pendingResults = false;
