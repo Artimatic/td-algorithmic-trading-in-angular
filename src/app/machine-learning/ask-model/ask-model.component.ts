@@ -138,10 +138,12 @@ export class AskModelComponent implements OnInit, OnDestroy {
       }
       case 'calibrate': {
         this.stockList.forEach(stock => {
-          this.schedulerService.schedule(() => {
-            this.calibrateOne(stock);
-          }, `calibrateOne${stock}`, 300000);
-        });
+          setTimeout(()=> {
+            this.schedulerService.schedule(() => {
+              this.calibrateOne(stock);
+            }, `calibrateOne${stock}`, 300000);
+          });
+          }, 1000);
         break;
       }
       case 'calibrate_daily': {

@@ -42,7 +42,7 @@ export class MachineDaytradingService {
                   )
                   .subscribe((data: any[]) => {
                     // if (data[0].nextOutput > 0.5 && data[0].correct / data[0].guesses > 0.5) {
-                    if (data[0].correct / data[0].guesses > 0.6 && data[0].guesses > 100) {
+                    if (data[0].correct / data[0].guesses > 0.6 && data[0].guesses > 80) {
                       const cb = (quantity) => {
                         this.selectedStock = stock;
                         this.quantity = quantity;

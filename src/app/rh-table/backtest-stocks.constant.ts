@@ -162,6 +162,7 @@ export const stockList = [
   'CLDR',
   'CIEN',
   'COF',
+  'SHEL',
   'COST',
   'CSCO',
   'CSX',

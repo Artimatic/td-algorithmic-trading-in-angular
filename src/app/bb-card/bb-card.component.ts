@@ -342,7 +342,6 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
 
     if (this.machineControlled.value || this.order.id === 'MACHINE') {
       if (!this.machineDaytradingService.selectedStock) {
-        console.log('machine controlled ', this.order.holding.symbol);
         this.machineDaytradingService.findTrade();
       } else {
         this.order = {
