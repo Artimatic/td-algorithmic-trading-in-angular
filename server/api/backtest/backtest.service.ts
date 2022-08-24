@@ -109,6 +109,11 @@ let startTime;
 let endTime;
 
 class BacktestService {
+  tdRequestCount = 0;
+  tiingoRequestCount = 0;
+  tdThrottleExpiry = null;
+  tiingoThrottleExpiry = null;
+
   getIndicator() {
     return tulind.indicators;
   }
@@ -166,12 +171,24 @@ class BacktestService {
     return { perfectSell, perfectBuy };
   }
 
-  getCurrentDaytradeIndicators(symbol, period): Promise<Indicators> {
+  getCurrentDaytradeIndicators(symbol, period, dataSource = 'td'): Promise<Indicators> {
     const getIndicatorQuotes = [];
 
-    return PortfolioService.getIntradayV2(symbol, 1)
-      .then((intradayObj) => {
-        const quotes = intradayObj.candles;
+    return new Promise((resolve) => {
+      console.log('datasource: ', dataSource);
+      if (dataSource === 'tiingo') {
+        QuoteService.getTiingoIntraday(symbol, moment().subtract({ day: 1 }).format('YYYY-MM-DD')).then(data => {
+          console.log('tiingo data ', data);
+          resolve(data);
+        })
+      } else {
+        PortfolioService.getIntradayV2(symbol, 1).then(data => {
+          resolve(data);
+        })
+      }
+    })
+      .then(intradayObj => {
+        const quotes = (intradayObj as any).candles;
         console.log('daytrade indicator quotes: ', quotes.length, moment().format('hh:mm'));
 
         _.forEach(quotes, (value, key) => {
@@ -387,10 +404,9 @@ class BacktestService {
     };
   }
 
-  getCurrentDaytrade(symbol: string, price: number, paidPrice: number, parameters, response) {
-    return this.getCurrentDaytradeIndicators(symbol, parameters.minQuotes || 80)
+  getCurrentDaytrade(symbol: string, price: number, paidPrice: number, parameters, dataSource = 'td', response) {
+    return this.getCurrentDaytradeIndicators(symbol, parameters.minQuotes || 80, dataSource)
       .then((currentIndicators: Indicators) => {
-
         let recommendation = {
           recommendation: OrderType.None
         };

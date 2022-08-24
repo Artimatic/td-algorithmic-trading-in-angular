@@ -208,6 +208,16 @@ export class PortfolioService {
     return this.http.get('/api/portfolio/balance', options);
   }
 
+  getTdIntradayQuotes(symbol: string): Observable<any> {
+    const options = {
+      params: {
+        symbol
+      }
+    };
+
+    return this.http.get('/api/portfolio/v2/intraday', options);
+  }
+
   getAccountId() {
     if (!this.authenticationService.selectedTdaAccount) {
       this.snackBar.open('Login Missing - Please log in with TD Ameritrade account', 'Dismiss', {

@@ -6,6 +6,7 @@ const router = express.Router();
 router.get('/', handler.portfolio);
 router.get('/positions', handler.positions);
 router.get('/intraday', handler.intraday);
+router.get('/v2/intraday', handler.intradayV2);
 router.get('/quote', handler.quote);
 router.get('/daily-quote', handler.dailyQuote);
 router.get('/v2/positions', handler.tdPosition);

@@ -12,7 +12,7 @@ export class SchedulerService {
 
   constructor() { }
 
-  schedule(taskCb, taskName, stopTime = null, isPriority = false, delay = 45250) {
+  schedule(taskCb, taskName, stopTime = null, isPriority = false, delay = 15250) {
     if (isPriority) {
       this.priorityExecutionHoldTime = moment().add({ milliseconds: delay + 300 });
 
@@ -44,7 +44,7 @@ export class SchedulerService {
         if (tasksCount[taskName] > 10) {
           setTimeout(() => {
             this.schedule(taskCb, taskName, stopTime, isPriority);
-          }, 300000);
+          }, 180000);
         }
       }
     }

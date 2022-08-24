@@ -129,21 +129,23 @@ export class AskModelComponent implements OnInit, OnDestroy {
         break;
       }
       case 'predict_30': {
-        this.stockList.forEach(stock => {
-          this.schedulerService.schedule(() => {
-            this.trainPredict30(stock);
-          }, `trainPredict30${stock}`, 300000);
+        this.stockList.forEach((stock, idx) => {
+          setTimeout(() => {
+            this.schedulerService.schedule(() => {
+              this.trainPredict30(stock);
+            }, `trainPredict30${stock}`, 300000);
+          }, 1000 * idx);
         });
         break;
       }
       case 'calibrate': {
-        this.stockList.forEach(stock => {
-          setTimeout(()=> {
+        this.stockList.forEach((stock, idx) => {
+          setTimeout(() => {
             this.schedulerService.schedule(() => {
               this.calibrateOne(stock);
             }, `calibrateOne${stock}`, 300000);
-          });
-          }, 1000);
+          }, 1000 * idx);
+        });
         break;
       }
       case 'calibrate_daily': {
