@@ -134,7 +134,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
             this.schedulerService.schedule(() => {
               this.trainPredict30(stock);
             }, `trainPredict30${stock}`, null, false, 180000);
-          }, 10000 * idx);
+          }, 180000 * idx);
         });
         break;
       }
@@ -144,7 +144,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
             this.schedulerService.schedule(() => {
               this.calibrateOne(stock);
             }, `calibrateOne${stock}`, null, false, 180000);
-          }, 10000 * idx);
+          }, 180000 * idx);
         });
         break;
       }
