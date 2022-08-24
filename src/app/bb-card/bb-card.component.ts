@@ -770,12 +770,12 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
       } else if (analysis.recommendation.toLowerCase() === 'buy') {
         console.log('Received Buy recommendation: ', analysis, this.order.holding.symbol);
 
-        this.backtestService.getLastPriceTiingo({ symbol: 'EDIT' })
+        this.backtestService.getLastPriceTiingo({ symbol: this.order.holding.symbol })
           .pipe(take(1))
           .subscribe(tiingoQuote => {
             const lastPrice = tiingoQuote[0].last;
 
-            this.backtestService.getDaytradeRecommendation('EDIT', lastPrice, lastPrice, { minQuotes: 81 }, 'tiingo').subscribe(
+            this.backtestService.getDaytradeRecommendation(this.order.holding.symbol, lastPrice, lastPrice, { minQuotes: 81 }, 'tiingo').subscribe(
               analysis => {
                 console.log('tiingo analysis', analysis);
                 return null;

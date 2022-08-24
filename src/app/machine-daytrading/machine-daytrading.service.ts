@@ -29,9 +29,9 @@ export class MachineDaytradingService {
     this.schedulerService.schedule(() => {
       if (!this.selectedStock) {
         const stock = this.getRandomStock();
-        this.backtestService.getDaytradeRecommendation(stock, 0, 0, { minQuotes: 81 }).subscribe(
+        this.backtestService.getDaytradeRecommendation(stock, 0, 0, { minQuotes: 81 }, 'tiingo').subscribe(
           analysis => {
-            if (analysis.vwma.toLowerCase() === 'bullish') {
+            if (analysis.mfiTrade.toLowerCase() === 'bullish' || analysis.vwma.toLowerCase() === 'bullish') {
               this.schedulerService.schedule(() => {
                 this.machineLearningService
                   .trainPredictNext30(stock,
@@ -42,7 +42,7 @@ export class MachineDaytradingService {
                   )
                   .subscribe((data: any[]) => {
                     // if (data[0].nextOutput > 0.5 && data[0].correct / data[0].guesses > 0.5) {
-                    if (data[0].correct / data[0].guesses > 0.6 && data[0].guesses > 80) {
+                    if (data[0].correct / data[0].guesses > 0.6 && data[0].guesses > 50) {
                       const cb = (quantity) => {
                         this.selectedStock = stock;
                         this.quantity = quantity;
@@ -65,7 +65,7 @@ export class MachineDaytradingService {
                       }
                     }
                   });
-              }, 'MachineDaytradingService_ml', this.globalSettingsService.stopTime, true);
+              }, 'MachineDaytradingService_ml', this.globalSettingsService.stopTime);
             }
           }
         );
