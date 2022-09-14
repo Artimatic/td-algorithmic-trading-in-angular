@@ -223,9 +223,9 @@ export class MlCardComponent implements OnInit {
       summary: Sentiment.Neutral
     };
 
-    if (prediction.nextOutput > 0.55) {
+    if (prediction.nextOutput > 0.75) {
       bet.bullishOpen++;
-    } else if (prediction.nextOutput < 0.45) {
+    } else if (prediction.nextOutput < 0.25) {
       bet.bearishOpen++;
     }
     bet.total++;
