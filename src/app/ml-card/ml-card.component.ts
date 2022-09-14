@@ -670,7 +670,7 @@ export class MlCardComponent implements OnInit {
       this.schedulerService.schedule(() => {
         this.machineLearningService.activateBuyAtCloseModel(this.getTrainingStock(), moment().subtract({ day: 1 }), activationInput)
           .subscribe(mlResult => {
-            console.log('ml data: ', this.getTradeDay(), mlResult);
+            console.log('Daily ML card data: ', this.getTradeDay(), mlResult.nextOutput);
             if (!this.orderSent && mlResult) {
               this.orderSent = true;
 
