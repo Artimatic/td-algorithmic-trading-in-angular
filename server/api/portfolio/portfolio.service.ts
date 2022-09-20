@@ -252,7 +252,7 @@ class PortfolioService {
   renewTDAuth(accountId) {
     if (accountId === null) {
       for (const id in this.access_token) {
-        if (id) {
+        if (id && id !== 'null' && this.access_token[id]) {
           console.log('Account ID: ', id);
           accountId = id;
         }
