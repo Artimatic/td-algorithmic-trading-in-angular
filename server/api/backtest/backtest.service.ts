@@ -180,11 +180,11 @@ class BacktestService {
         QuoteService.getTiingoIntraday(symbol, moment().subtract({ day: 1 }).format('YYYY-MM-DD')).then(data => {
           console.log('tiingo data ', data);
           resolve(data);
-        })
+        });
       } else {
         PortfolioService.getIntradayV2(symbol, 1).then(data => {
           resolve(data);
-        })
+        });
       }
     })
       .then(intradayObj => {

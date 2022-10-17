@@ -776,8 +776,8 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
             const lastPrice = tiingoQuote[0].last;
 
             this.backtestService.getDaytradeRecommendation(this.order.holding.symbol, lastPrice, lastPrice, { minQuotes: 81 }, 'tiingo').subscribe(
-              analysis => {
-                console.log('tiingo analysis', analysis);
+              tiingoAnalysis => {
+                console.log('tiingo analysis', tiingoAnalysis);
                 return null;
               }
             );

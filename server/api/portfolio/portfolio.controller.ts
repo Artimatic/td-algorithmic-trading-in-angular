@@ -130,7 +130,7 @@ class PortfolioController extends BaseController {
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
-  
+
   getIntradayV2(request, response) {
     PortfolioService.getIntradayV2(request.query.symbol, 1)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))

@@ -255,7 +255,7 @@ class BacktestController extends BaseController {
       request.body.symbol,
       request.body.price,
       request.body.paidPrice,
-      request.body.parameters, 
+      request.body.parameters,
       request.body.dataSource,
       response);
   }
