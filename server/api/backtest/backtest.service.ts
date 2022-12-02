@@ -574,8 +574,8 @@ class BacktestService {
                   previous.macd = current.recommendation.macd;
                 }
 
-                if (previous.macd === DaytradeRecommendation.Bullish &&
-                  previous.macd === DaytradeRecommendation.Bullish &&
+                if (previous.demark === DaytradeRecommendation.Bullish &&
+                  previous.bband === DaytradeRecommendation.Bullish &&
                   previous.macd === DaytradeRecommendation.Bullish &&
                   !previous.hasNewLow
                 ) {
@@ -615,8 +615,8 @@ class BacktestService {
                   previous.macd = current.recommendation.macd;
                 }
 
-                if (previous.macd === DaytradeRecommendation.Bearish &&
-                  previous.macd === DaytradeRecommendation.Bearish &&
+                if (previous.demark === DaytradeRecommendation.Bearish &&
+                  previous.bband === DaytradeRecommendation.Bearish &&
                   previous.macd === DaytradeRecommendation.Bearish &&
                   !previous.hasNewHigh
                 ) {

@@ -359,7 +359,7 @@ export const stockList = [
   'UPS',
   'MRK',
   'IRM',
-  'BLL',
+  'BALL',
   'LVS',
   'WYNN',
   'WHR',
