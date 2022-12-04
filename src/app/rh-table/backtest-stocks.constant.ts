@@ -470,7 +470,7 @@ export const stockList = [
   'PINS',
   'KMB',
   'CLX',
-  'CL',
+  'WING',
   'PRU',
   'SIX',
   'TDOC',
