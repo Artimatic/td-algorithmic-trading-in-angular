@@ -58,7 +58,6 @@ export const stockList = [
   'CLF',
   'KLAC',
   'VALE',
-  'TRQ',
   'AG',
   'MT',
   'COPX',

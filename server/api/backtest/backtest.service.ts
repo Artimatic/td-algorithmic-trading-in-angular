@@ -555,10 +555,10 @@ class BacktestService {
             } else if (isMfiLowIdx > -1 && (idx - isMfiLowIdx) < 15) {
               indicator.recommendation.mfiTrade = indicators.slice(idx - 20, idx).reduce((previous, current) => {
                 if (previous.lowestLow === -1) {
-                  previous.lowestLow = current.low;
+                  previous.lowestLow = current.close;
                 } else if (current.low < previous.lowestLow && current.mfiLeft > 38) {
-                  previous.lowestLow = current.low;
-                  previous.hasNewLow = true;
+                  previous.lowestLow = current.close;
+                  previous.newLows++;
                 }
 
                 if (current.recommendation.demark9 === DaytradeRecommendation.Bullish ||
@@ -574,17 +574,16 @@ class BacktestService {
                   previous.macd = current.recommendation.macd;
                 }
 
-                if (previous.demark === DaytradeRecommendation.Bullish &&
-                  previous.bband === DaytradeRecommendation.Bullish &&
-                  previous.macd === DaytradeRecommendation.Bullish &&
-                  !previous.hasNewLow
+                if (previous.bband === DaytradeRecommendation.Bullish || (previous.demark === DaytradeRecommendation.Bullish &&
+                  previous.macd === DaytradeRecommendation.Bullish) &&
+                  (previous.newLows <= 3)
                 ) {
                   previous.recommendation = DaytradeRecommendation.Bullish;
                 }
                 return previous;
               }, {
                 lowestLow: -1,
-                hasNewLow: false,
+                newLows: 0,
                 demark: DaytradeRecommendation.Neutral,
                 bband: DaytradeRecommendation.Neutral,
                 macd: DaytradeRecommendation.Neutral,
@@ -596,10 +595,10 @@ class BacktestService {
             } else if (isMfiHighIdx > -1 && (idx - isMfiHighIdx) < 15) {
               indicator.recommendation.mfiTrade = indicators.slice(idx - 20, idx).reduce((previous, current) => {
                 if (previous.highestHigh === -1) {
-                  previous.highestHigh = current.high;
+                  previous.highestHigh = current.close;
                 } else if (current.high > previous.highestHigh && current.mfiLeft < 61) {
-                  previous.highestHigh = current.high;
-                  previous.hasNewHigh = true;
+                  previous.highestHigh = current.close;
+                  previous.newHighs++;
                 }
 
                 if (current.recommendation.demark9 === DaytradeRecommendation.Bullish ||
@@ -615,17 +614,16 @@ class BacktestService {
                   previous.macd = current.recommendation.macd;
                 }
 
-                if (previous.demark === DaytradeRecommendation.Bearish &&
-                  previous.bband === DaytradeRecommendation.Bearish &&
-                  previous.macd === DaytradeRecommendation.Bearish &&
-                  !previous.hasNewHigh
+                if (previous.bband === DaytradeRecommendation.Bearish || (previous.demark === DaytradeRecommendation.Bearish &&
+                  previous.macd === DaytradeRecommendation.Bearish) &&
+                  previous.newHighs <= 3
                 ) {
                   previous.recommendation = DaytradeRecommendation.Bearish;
                 }
                 return previous;
               }, {
                 highestHigh: -1,
-                hasNewHigh: false,
+                newHighs: 0,
                 demark: DaytradeRecommendation.Neutral,
                 bband: DaytradeRecommendation.Neutral,
                 macd: DaytradeRecommendation.Neutral,
