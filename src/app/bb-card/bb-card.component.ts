@@ -653,6 +653,10 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     return order;
   }
 
+  private getDisplaySignalTime(time: number) {
+    return moment.unix(time).format('DD.MM.YYYY hh:mm');
+  }
+
   buildBuyOrder(orderQuantity: number,
     price,
     signalTime,
@@ -660,17 +664,17 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
 
     let log = '';
     if (analysis.mfi.toLowerCase() === 'bullish') {
-      log += `[mfi oversold Event - time: ${moment.unix(signalTime).format()}]`;
+      log += `[mfi oversold Event - time: ${this.getDisplaySignalTime(signalTime)}]`;
     }
 
     if (analysis.bband.toLowerCase() === 'bullish') {
       log += `[Bollinger band bullish Event -` +
-        `time: ${moment.unix(signalTime).format()}]`;
+        `time: ${this.getDisplaySignalTime(signalTime)}]`;
     }
 
     if (analysis.roc.toLowerCase() === 'bullish') {
       log += `[Rate of Change Crossover bullish Event -` +
-        `time: ${moment.unix(signalTime).format()}}]`;
+        `time: ${this.getDisplaySignalTime(signalTime)}]`;
     }
 
     console.log(log);
@@ -681,17 +685,17 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   buildSellOrder(orderQuantity: number, price, signalTime, analysis) {
     let log = '';
     if (analysis.mfi.toLowerCase() === 'bearish') {
-      log += `[mfi overbought Event - time: ${moment.unix(signalTime).format()}]`;
+      log += `[mfi overbought Event - time: ${this.getDisplaySignalTime(signalTime)}]`;
     }
 
     if (analysis.bband.toLowerCase() === 'bearish') {
       log += `[Bollinger band bearish Event -` +
-        `time: ${moment.unix(signalTime).format()}]`;
+        `time: ${this.getDisplaySignalTime(signalTime)}]`;
     }
 
     if (analysis.roc.toLowerCase() === 'bearish') {
       log += `[Rate of Change Crossover bearish Event -` +
-        `time: ${moment.unix(signalTime).format()}}]`;
+        `time: ${this.getDisplaySignalTime(signalTime)}}]`;
     }
 
     console.log(log);
@@ -931,7 +935,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
       }
 
       if (this.isDayTrading()) {
-        if (this.order.sellAtClose && moment().isAfter(moment(this.globalSettingsService.sellAtCloseTime)) &&
+        if ((moment().isAfter(moment(this.globalSettingsService.sellAtCloseTime)) || this.isStagnantDaytrade(this.order, gains)) && this.order.sellAtClose &&
           this.positionCount > 0) {
           const log = `Closing positions: ${closePrice}/${estimatedPrice}`;
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
@@ -958,6 +962,16 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
           console.log(msg);
           return true;
         }
+      }
+    }
+    return false;
+  }
+
+  private isStagnantDaytrade(currentOrder: SmartOrder, gains: number) {
+    if (gains < 0) {
+      const durationInMinutes = moment.duration(moment().diff(moment(currentOrder.timeSubmitted))).asMinutes();
+      if (durationInMinutes > 30) {
+        return true;
       }
     }
     return false;

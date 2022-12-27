@@ -350,7 +350,6 @@ export const stockList = [
   'T',
   'TXN',
   'MMM',
-  'GRUB',
   'GILD',
   'SYK',
   'CMG',
