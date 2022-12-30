@@ -54,7 +54,7 @@
     "hammerjs": "^2.0.8",
     "highcharts": "^6.2.0",
     "jquery": "^3.5.0",
-    "json2csv": "^3.11.5",
+    "json2csv": "^5.0.7",
     "lodash": "^4.17.19",
     "mathjs": "^3.18.0",
     "method-override": "^2.3.10",
