@@ -29,6 +29,7 @@ export class GlobalSettingsService {
   daytradeAlgoSelection;
   featureList: number[][];
   autostart = false;
+  maxAccountUsage = 1;
 
   timer: Subscription;
   timerInterval = 70800;

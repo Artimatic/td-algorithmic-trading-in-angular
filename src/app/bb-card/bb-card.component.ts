@@ -773,19 +773,24 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
         this.warning = 'Global stop loss exceeded. Buying paused.';
       } else if (analysis.recommendation.toLowerCase() === 'buy') {
         console.log('Received Buy recommendation: ', analysis, this.order.holding.symbol);
+        this.machineDaytradingService.getPortfolioBalance().subscribe((data) => {
+          const usage = (data.liquidationValue - data.cashBalance) / data.liquidationValue;
+          console.log('account balance: ', data.liquidationValue, data.cashBalance, usage);
+          if (usage < this.globalSettingsService.maxAccountUsage) {
+            this.backtestService.getLastPriceTiingo({ symbol: this.order.holding.symbol })
+            .pipe(take(1))
+            .subscribe(tiingoQuote => {
+              const lastPrice = tiingoQuote[0].last;
 
-        this.backtestService.getLastPriceTiingo({ symbol: this.order.holding.symbol })
-          .pipe(take(1))
-          .subscribe(tiingoQuote => {
-            const lastPrice = tiingoQuote[0].last;
-
-            this.backtestService.getDaytradeRecommendation(this.order.holding.symbol, lastPrice, lastPrice, { minQuotes: 81 }, 'tiingo').subscribe(
-              tiingoAnalysis => {
-                console.log('tiingo analysis', tiingoAnalysis);
-                return null;
-              }
-            );
-          });
+              this.backtestService.getDaytradeRecommendation(this.order.holding.symbol, lastPrice, lastPrice, { minQuotes: 81 }, 'tiingo').subscribe(
+                tiingoAnalysis => {
+                  console.log('tiingo analysis', tiingoAnalysis);
+                  return null;
+                }
+              );
+            });
+          }
+        });
         const log = `Received buy recommendation`;
         const report = this.reportingService.addAuditLog(this.order.holding.symbol, log);
         console.log(report);
