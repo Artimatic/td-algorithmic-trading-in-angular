@@ -343,14 +343,15 @@ export class AskModelComponent implements OnInit, OnDestroy {
   }
 
   calibrateOne(stock) {
-    this.machineLearningService
-      .trainPredictNext30(stock,
-        moment(this.endDate).add({ days: 1 }).format('YYYY-MM-DD'),
-        moment(this.startDate).format('YYYY-MM-DD'),
-        0.7,
-        this.globalSettingsService.daytradeAlgo
-      )
-      .pipe(take(1))
+    const trainingRequest = this.machineLearningService
+    .trainPredictNext30(stock,
+      moment(this.endDate).add({ days: 1 }).format('YYYY-MM-DD'),
+      moment(this.startDate).format('YYYY-MM-DD'),
+      0.7,
+      this.globalSettingsService.daytradeAlgo
+    );
+    
+    trainingRequest.pipe(take(1))
       .subscribe((data: any[]) => {
         this.isLoading = false;
         if (data) {
@@ -358,7 +359,13 @@ export class AskModelComponent implements OnInit, OnDestroy {
           this.collectResult(this.globalSettingsService.daytradeAlgo, data[0].score);
         }
       }, error => {
+        console.log('Training error. Trying again in 10 minutes ', error);
         this.isLoading = false;
+        setTimeout(() => {
+          this.schedulerService.schedule(() => {
+            this.calibrateOne(stock);
+          }, `calibrateOne${stock}`, null, false, 180000);
+        }, 600000);
       });
   }
 
