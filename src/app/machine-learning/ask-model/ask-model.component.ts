@@ -344,13 +344,13 @@ export class AskModelComponent implements OnInit, OnDestroy {
 
   calibrateOne(stock) {
     const trainingRequest = this.machineLearningService
-    .trainPredictNext30(stock,
-      moment(this.endDate).add({ days: 1 }).format('YYYY-MM-DD'),
-      moment(this.startDate).format('YYYY-MM-DD'),
-      0.7,
-      this.globalSettingsService.daytradeAlgo
-    );
-    
+      .trainPredictNext30(stock,
+        moment(this.endDate).add({ days: 1 }).format('YYYY-MM-DD'),
+        moment(this.startDate).format('YYYY-MM-DD'),
+        0.7,
+        this.globalSettingsService.daytradeAlgo
+      );
+
     trainingRequest.pipe(take(1))
       .subscribe((data: any[]) => {
         this.isLoading = false;
