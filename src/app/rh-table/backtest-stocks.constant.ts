@@ -341,7 +341,6 @@ export const stockList = ['ALB',
 'TGNA',
 'DISH',
 'CNK',
-'',
 'NTES',
 'GAIA',
 'SSP',
@@ -8303,7 +8302,9 @@ export const stockList = ['ALB',
 'CLDR',
 'KSU'];
 
-export const testList = [
+export const primaryList = [
+  'QQQ',
+  'SPY',
   'KBH',
   'AAPL',
   'SHOP',
@@ -8314,9 +8315,72 @@ export const testList = [
   'GILD',
   'SIX',
   'DAL',
-  'DBX'
-];
+  'DBX',
+  'NUE',
+  'STLD',
+  'AA',
+  'FCX',
+  'TMUS',
+  'TWLO',
+  'DIS',
+  'ROKU',
+  'MTCH',
+  'META',
+  'CHTR',
+  'Z',
+  'PLAY',
+  'EA',
+  'T',
+  'NFLX',
+  'BIDU',
+  'BABA',
+  'HD',
+  'LOW',
+  'HOG',
+  'WEN',
+  'LULU',
+  'ALV',
+  'JD',
+  'F',
+  'CTHR',
+  'W',
+  'BOX',
+  'GM',
+  'PENN',
+  'LCID',
+  'GOEV',
+  'DKNG',
+  'PTON',
+  'SHAK',
+  'INTC',
+  'AMD',
+  'NVDA',
+  'CL',
+  'KMB',
+  'COST',
+  'WMT',
+  'TGT',
+  'KO',
+  'PEP',
+  'TSN',
+  'BUD',
+  'GIS',
+  'BYND',
+  'JPM',
+  'C',
+  'COF',
+  'GS',
+  'SUN',
+  'V',
+  'HIG',
+  'VOYA',
+  'BK',
+  'BMY',
+  'MRNA',
+  'VEEV',
+  'GOOG',
 
+];
 
 const Stocks: AlgoParam[] = [];
 
@@ -8324,4 +8388,11 @@ for (const s of stockList) {
   Stocks.push(createParam(s));
 }
 
+export const PrimaryList: AlgoParam[] = [];
+
+for (const p of primaryList) {
+  PrimaryList.push(createParam(p));
+}
+
 export default Stocks;
+

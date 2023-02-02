@@ -10,6 +10,7 @@ import { BacktestService, Stock, AlgoParam, PortfolioService } from '../shared';
 import { OrderDialogComponent } from '../order-dialog/order-dialog.component';
 import { Holding } from '../shared/models';
 import { FormControl } from '@angular/forms';
+import { PrimaryList } from './backtest-stocks.constant';
 import Stocks from './backtest-stocks.constant';
 import { ChartDialogComponent } from '../chart-dialog/chart-dialog.component';
 import { ChartParam } from '../shared/services/backtest.service';
@@ -98,7 +99,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   selectedColumns: any[];
   selectedStock: any;
   twoOrMoreSignalsOnly: boolean;
-  tickerList = [];
   tickerBlacklist = {};
   signalScoreTable = [];
 
@@ -121,7 +121,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     private watchListService: WatchListService) { }
 
   ngOnInit() {
-    this.tickerList = Stocks;
     this.bufferSubject = new Subject();
     this.backtestBuffer = [];
     this.callChainSub = new Subscription();
@@ -706,7 +705,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
   runDefaultBacktest() {
     this.interval = 0;
-    this.getData(this.tickerList, 'daily-indicators');
+    this.getData(Stocks, 'daily-indicators');
 
     this.progress = 0;
   }
@@ -883,7 +882,10 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
   autoActivate() {
     this.endDate = moment().format('YYYY-MM-DD');
-    this.runDefaultBacktest();
+    this.interval = 0;
+    this.getData(PrimaryList, 'daily-indicators');
+
+    this.progress = 0;
   }
 
   exportResults() {
