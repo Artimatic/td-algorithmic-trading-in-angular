@@ -3,7 +3,7 @@ import { Order } from './order';
 export interface SmartOrder extends Order {
     splits?: number;
     positionCount?: number;
-    timeSubmitted?: number;
+    timeSubmitted?: string;
     signalTime?: number;
     lossThreshold?: number;
     profitTarget?: number;
