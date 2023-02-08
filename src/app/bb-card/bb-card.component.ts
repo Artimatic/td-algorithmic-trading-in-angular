@@ -940,7 +940,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
       }
 
       if (this.isDayTrading()) {
-        if ((moment().isAfter(moment(this.globalSettingsService.sellAtCloseTime)) || this.isStagnantDaytrade(this.order, gains)) && this.order.sellAtClose &&
+        if ((moment().isAfter(moment(this.globalSettingsService.sellAtCloseTime)) && this.order.sellAtClose || this.isStagnantDaytrade(this.order, gains)) &&
           this.positionCount > 0) {
           const log = `Closing positions: ${closePrice}/${estimatedPrice}`;
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
@@ -975,6 +975,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   private isStagnantDaytrade(currentOrder: SmartOrder, gains: number) {
     if (gains < 0) {
       const durationInMinutes = moment.duration(moment().diff(moment(currentOrder.timeSubmitted))).asMinutes();
+      console.log('age of order: ', durationInMinutes, currentOrder.timeSubmitted);
       if (durationInMinutes > 30) {
         return true;
       }
