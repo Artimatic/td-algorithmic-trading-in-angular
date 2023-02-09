@@ -1,11 +1,5 @@
 import { Injectable } from '@angular/core';
-import { SmartOrder } from '@shared/index';
 import { DaytradeRecommendation } from 'server/api/backtest/backtest.service';
-
-interface PapertraderPositions {
-  stock: string;
-  orders: SmartOrder[];
-}
 
 @Injectable({
   providedIn: 'root'

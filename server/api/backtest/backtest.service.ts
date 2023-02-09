@@ -1,7 +1,6 @@
 import * as moment from 'moment';
 import * as _ from 'lodash';
 import * as RequestPromise from 'request-promise';
-import * as json2csv from 'json2csv';
 
 import QuoteService from '../quote/quote.service';
 import ReversionService from '../mean-reversion/reversion.service';
@@ -304,7 +303,6 @@ class BacktestService {
     const snapshots = [];
     return this.getData(ticker, currentDate, startDate)
       .then(quotes => {
-        const fields = ['shortTerm', 'longTerm', 'totalReturns', 'totalTrades', 'recommendedDifference'];
         for (let i = shortTerm[0]; i < shortTerm[1]; i++) {
           for (let j = longTerm[0]; j < longTerm[1]; j++) {
             if (i + 3 < j) {
