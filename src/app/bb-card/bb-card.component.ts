@@ -940,7 +940,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
       }
 
       if (this.isDayTrading()) {
-        if ((moment().isAfter(moment(this.globalSettingsService.sellAtCloseTime)) && this.order.sellAtClose || this.isStagnantDaytrade(this.order, gains)) &&
+        if ((moment().isAfter(moment(this.globalSettingsService.sellAtCloseTime)) && this.order.sellAtClose || this.isStagnantDaytrade(this.orders, gains)) &&
           this.positionCount > 0) {
           const log = `Closing positions: ${closePrice}/${estimatedPrice}`;
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
@@ -972,13 +972,16 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     return false;
   }
 
-  private isStagnantDaytrade(currentOrder: SmartOrder, gains: number) {
-    if (gains < 0) {
-      const durationInMinutes = moment.duration(moment().diff(moment(currentOrder.timeSubmitted))).asMinutes();
-      console.log('age of order: ', durationInMinutes, currentOrder.timeSubmitted);
-      if (durationInMinutes > 30) {
-        return true;
-      }
+  private isStagnantDaytrade(currentOrders: SmartOrder[], gains: number) {
+    if (gains < 0 && currentOrders.length > 0 && this.positionCount > 0) {
+      const stagnantOrderIdx = currentOrders.findIndex((order) => {
+        if (order.side.toLowerCase() === 'buy' && moment.duration(moment().diff(moment(order.timeSubmitted))).asMinutes() > 30) {
+          return true;
+        }
+        return false;
+      });
+      console.log('age of order: ', currentOrders);
+      return stagnantOrderIdx > -1;
     }
     return false;
   }
