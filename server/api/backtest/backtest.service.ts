@@ -329,11 +329,11 @@ class BacktestService {
 
         console.log('Duration: ', duration);
 
-        fs.writeFile(`${ticker}_analysis_${startDate}-${currentDate}.csv`,
-          json2csv({ data: snapshots, fields: fields }), function (err) {
-            if (err) { throw err; }
-            console.log('file saved');
-          });
+        // fs.writeFile(`${ticker}_analysis_${startDate}-${currentDate}.csv`,
+        //   json2csv({ data: snapshots, fields: fields }), function (err) {
+        //     if (err) { throw err; }
+        //     console.log('file saved');
+        //   });
         return snapshots;
       });
   }
