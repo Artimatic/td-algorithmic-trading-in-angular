@@ -291,12 +291,12 @@ class BacktestService {
   }
 
   writeCsv(name, startDate, currentDate, rows, fields, count) {
-    fs.writeFile(path.join(__dirname, '../../../tmp/' +
-      `${name}_analysis_${startDate}-${currentDate}_${++count}.csv`
-    ), json2csv({ data: rows, fields: fields }), function (err) {
-      if (err) { throw err; }
-      console.log('file saved');
-    });
+    // fs.writeFile(path.join(__dirname, '../../../tmp/' +
+    //   `${name}_analysis_${startDate}-${currentDate}_${++count}.csv`
+    // ), json2csv({ data: rows, fields: fields }), function (err) {
+    //   if (err) { throw err; }
+    //   console.log('file saved');
+    // });
     return count;
   }
 

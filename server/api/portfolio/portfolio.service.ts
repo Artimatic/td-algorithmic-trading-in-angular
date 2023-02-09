@@ -3,9 +3,6 @@ import * as Robinhood from 'robinhood';
 import * as _ from 'lodash';
 import * as moment from 'moment';
 
-const RobinHoodApi = require('robinhood-api');
-const robinhood = new RobinHoodApi();
-
 import QuoteService from '../quote/quote.service';
 import * as configurations from '../../config/environment';
 
@@ -115,8 +112,7 @@ class PortfolioService {
   getResource(instrument, reply) {
     (async () => {
       try {
-        const inst = await robinhood.getResource(instrument);
-        reply.status(200).send(inst);
+        reply.status(200).send({});
       } catch (e) {
         reply.status(500).send(e);
       }
