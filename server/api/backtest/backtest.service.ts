@@ -2,8 +2,6 @@ import * as moment from 'moment';
 import * as _ from 'lodash';
 import * as RequestPromise from 'request-promise';
 import * as json2csv from 'json2csv';
-import * as fs from 'fs';
-import * as path from 'path';
 
 import QuoteService from '../quote/quote.service';
 import ReversionService from '../mean-reversion/reversion.service';
