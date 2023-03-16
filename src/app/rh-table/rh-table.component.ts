@@ -291,6 +291,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
               (testResults: BacktestResponse) => {
                 console.log('Request finished @ ', moment().format());
                 if (testResults) {
+                  let hasRecommendations = false;
                   const symbol = param.ticker;
                   this.scoreSignals(symbol, testResults.signals);
 
@@ -313,10 +314,12 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                         result.recommendation = 'Buy';
                         bullishSignals.push(indicator);
                         this.addBullCount();
+                        hasRecommendations = true;
                       } else if (lastSignal.recommendation[indicator] === 'Bearish') {
                         result.recommendation = 'Sell';
                         bearishSignals.push(indicator);
                         this.addBearCount();
+                        hasRecommendations = true;
                       }
 
                       result.previousImpliedMovement = indicatorResults.signals[indicatorResults.signals.length - 1].impliedMovement;
@@ -334,50 +337,53 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                         lastPrice: indicatorResults.lastPrice || null,
                         ...result
                       };
-                      this.addToList(tableObj);
+                      if (hasRecommendations) {
+                        this.addToList(tableObj);
+                      }
                     }
                   }
+                  if (hasRecommendations) {
+                    this.getProbability(bullishSignals, bearishSignals, testResults.signals)
+                      .subscribe((data) => {
+                        this.findAndUpdateIndicatorScore(param.ticker, {
+                          bullishProbability: data.bullishProbability,
+                          bearishProbability: data.bearishProbability
+                        }, this.stockList);
 
-                  this.getProbability(bullishSignals, bearishSignals, testResults.signals)
-                    .subscribe((data) => {
-                      this.findAndUpdateIndicatorScore(param.ticker, {
-                        bullishProbability: data.bullishProbability,
-                        bearishProbability: data.bearishProbability
-                      }, this.stockList);
-
-                      if (data.bullishProbability > 0.4 || data.bearishProbability > 0.4) {
-                        this.runAi({ ...testResults, buySignals: bullishSignals, sellSignals: bearishSignals });
-                      }
-                    });
-
-                  setTimeout(() => {
-                    this.schedulerService.schedule(() => {
-                      if (bullishSignals && bearishSignals) {
-                        if (bearishSignals.length > bullishSignals.length) {
-                          const foundInWatchList = this.watchListService.watchList.find(item => {
-                            return item.stock === symbol;
-                          });
-                          if (foundInWatchList) {
-                            this.clientSmsService.sendSellSms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
-                              .pipe(take(1))
-                              .subscribe();
-                          }
-                          this.aiPicksService.tickerSellRecommendationQueue.next(symbol);
-                        } else if (bearishSignals.length < bullishSignals.length) {
-                          const foundInWatchList = this.watchListService.watchList.find(item => {
-                            return item.stock === symbol;
-                          });
-                          if (foundInWatchList) {
-                            this.clientSmsService.sendBuySms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
-                              .pipe(take(1))
-                              .subscribe();
-                          }
-                          this.aiPicksService.tickerBuyRecommendationQueue.next(symbol);
+                        if (data.bullishProbability > 0.4 || data.bearishProbability > 0.4) {
+                          this.runAi({ ...testResults, buySignals: bullishSignals, sellSignals: bearishSignals });
                         }
-                      }
-                      // this.getImpliedMovement(testResults);
-                    }, 'rhtable_process' + symbol);
-                  }, 1000 - this.backtestBuffer.length * 10000);
+                      });
+
+                    setTimeout(() => {
+                      this.schedulerService.schedule(() => {
+                        if (bullishSignals && bearishSignals) {
+                          if (bearishSignals.length > bullishSignals.length) {
+                            const foundInWatchList = this.watchListService.watchList.find(item => {
+                              return item.stock === symbol;
+                            });
+                            if (foundInWatchList) {
+                              this.clientSmsService.sendSellSms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
+                                .pipe(take(1))
+                                .subscribe();
+                            }
+                            this.aiPicksService.tickerSellRecommendationQueue.next(symbol);
+                          } else if (bearishSignals.length < bullishSignals.length) {
+                            const foundInWatchList = this.watchListService.watchList.find(item => {
+                              return item.stock === symbol;
+                            });
+                            if (foundInWatchList) {
+                              this.clientSmsService.sendBuySms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
+                                .pipe(take(1))
+                                .subscribe();
+                            }
+                            this.aiPicksService.tickerBuyRecommendationQueue.next(symbol);
+                          }
+                        }
+                        // this.getImpliedMovement(testResults);
+                      }, 'rhtable_process' + symbol);
+                    }, 1000 - this.backtestBuffer.length * 10000);
+                  }
                 }
                 this.incrementProgress();
               });
@@ -844,7 +850,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
               this.schedulerService.schedule(() => {
                 backtest.sub
                   .pipe(take(1))
-                  .subscribe(() => {}, () => {
+                  .subscribe(() => { }, () => {
                     this.snackBar.open(`Error on ${backtest.stock}`, 'Dismiss');
                     this.addToBlackList(backtest.stock);
                   });

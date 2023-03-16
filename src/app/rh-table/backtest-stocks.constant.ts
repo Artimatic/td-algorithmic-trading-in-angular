@@ -8378,8 +8378,7 @@ export const primaryList = [
   'BMY',
   'MRNA',
   'VEEV',
-  'GOOG',
-
+  'GOOG'
 ];
 
 const Stocks: AlgoParam[] = [];
