@@ -16,6 +16,7 @@ import { OrderRow } from '../shared/models/order-row';
 import { FormControl, Validators } from '@angular/forms';
 import { MenuItem } from 'primeng/components/common/menuitem';
 import { take, takeWhile } from 'rxjs/operators';
+import { MachineDaytradingService } from '../machine-daytrading/machine-daytrading.service';
 
 @Component({
   selector: 'app-shopping-list',
@@ -54,6 +55,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
     public snackBar: MatSnackBar,
     private portfolioService: PortfolioService,
     public globalSettingsService: GlobalSettingsService,
+    private machineDaytradingService: MachineDaytradingService,
     private tradeService: TradeService) { }
 
   ngOnInit() {
@@ -228,6 +230,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
       };
 
       this.tradeService.algoQueue.next(queueItem);
+      this.machineDaytradingService.trainStock(queueItem.symbol);
     });
 
     this.sub = TimerObservable.create(0, this.interval)

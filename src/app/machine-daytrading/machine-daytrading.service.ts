@@ -25,6 +25,18 @@ export class MachineDaytradingService {
     private portfolioService: PortfolioService,
     private machineLearningService: MachineLearningService) { }
 
+  trainStock(stock: string) {
+    this.schedulerService.schedule(() => {
+      this.machineLearningService
+        .trainPredictNext30(stock,
+          moment().add({ days: 1 }).format('YYYY-MM-DD'),
+          moment().subtract({ days: 1 }).format('YYYY-MM-DD'),
+          1,
+          this.globalSettingsService.daytradeAlgo
+        ).subscribe();
+    }, 'MachineDaytradingService_ml', this.globalSettingsService.stopTime);
+  }
+
   findTrade() {
     this.schedulerService.schedule(() => {
       if (!this.selectedStock) {

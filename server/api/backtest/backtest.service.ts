@@ -626,7 +626,6 @@ class BacktestService {
             }
 
             // 2020-07-02T05:00:00.000+0000
-            const m = moment(indicator.date);
             if (indicator.mfiLeft > indicators[idx - 1].mfiLeft &&
               indicators[idx - 1].mfiLeft > indicators[idx - 2].mfiLeft &&
               indicators[idx - 2].mfiLeft > indicators[idx - 3].mfiLeft &&
@@ -636,7 +635,6 @@ class BacktestService {
               indicators[idx - 4].close < indicators[idx - 2].close) {
               indicator.recommendation.mfiDivergence = DaytradeRecommendation.Bearish;
               indicator.recommendation.recommendation = OrderType.Sell;
-              console.log('bearish: ', m.format());
             } else if (indicator.mfiLeft < indicators[idx - 1].mfiLeft &&
               indicators[idx - 1].mfiLeft < indicators[idx - 2].mfiLeft &&
               indicators[idx - 2].mfiLeft < indicators[idx - 3].mfiLeft &&
@@ -646,7 +644,6 @@ class BacktestService {
               indicators[idx - 4].close > indicators[idx - 2].close) {
               indicator.recommendation.mfiDivergence = DaytradeRecommendation.Bullish;
               indicator.recommendation.recommendation = OrderType.Buy;
-              console.log('bullish: ', m.format());
             }
             if (indicator.recommendation.mfiTrade === DaytradeRecommendation.Bullish) {
               mfiDivergenceArr = [];
