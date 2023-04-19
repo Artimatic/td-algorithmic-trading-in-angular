@@ -811,7 +811,10 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
               this.globalSettingsService.daytradeAlgo
             )
             .subscribe((data: any[]) => {
-              console.log(`${this.order.holding.symbol} ml result: `, data[0]);
+              console.log(`${this.order.holding.symbol} ml result: `, data[0].nextOutput);
+              const mlLog = `Ml next output: ${data[0].nextOutput}`;
+              const mlReport = this.reportingService.addAuditLog(this.order.holding.symbol, mlLog);
+              console.log(mlReport);
               if (data[0].nextOutput > 0.5) {
                 this.daytradeBuy(quote, orderQuantity, timestamp, analysis);
               }

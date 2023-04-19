@@ -34,7 +34,7 @@ export class MachineDaytradingService {
           1,
           this.globalSettingsService.daytradeAlgo
         ).subscribe();
-    }, 'MachineDaytradingService_ml', this.globalSettingsService.stopTime);
+    }, 'MachineDaytradingService_ml', null, false, 300000);
   }
 
   findTrade() {
