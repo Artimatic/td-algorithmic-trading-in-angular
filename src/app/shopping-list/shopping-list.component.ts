@@ -230,7 +230,6 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
       };
 
       this.tradeService.algoQueue.next(queueItem);
-      this.machineDaytradingService.trainStock(queueItem.symbol);
     });
 
     this.sub = TimerObservable.create(0, this.interval)
