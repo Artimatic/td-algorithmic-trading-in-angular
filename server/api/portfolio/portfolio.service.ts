@@ -119,20 +119,20 @@ class PortfolioService {
     })();
   }
 
-  getQuote(symbol, accountId) {
+  getQuote(symbol, accountId, response) {
     if (!this.access_token[accountId]) {
-      return this.renewExpiredTDAccessTokenAndGetQuote(symbol, accountId);
+      return this.renewExpiredTDAccessTokenAndGetQuote(symbol, accountId, response);
     } else {
       return this.getTDMarketData(symbol, accountId)
         .then(this.processTDData)
         .then(quote => {
           if (quote[symbol].delayed) {
-            return this.renewExpiredTDAccessTokenAndGetQuote(symbol, accountId);
+            return this.renewExpiredTDAccessTokenAndGetQuote(symbol, accountId, response);
           } else {
             return quote;
           }
         })
-        .catch(error => this.renewExpiredTDAccessTokenAndGetQuote(symbol, accountId));
+        .catch(error => this.renewExpiredTDAccessTokenAndGetQuote(symbol, accountId, response));
     }
   }
 
@@ -245,7 +245,7 @@ class PortfolioService {
     });
   }
 
-  renewTDAuth(accountId) {
+  renewTDAuth(accountId, reply = null) {
     if (accountId === null) {
       for (const id in this.access_token) {
         if (id && id !== 'null' && this.access_token[id]) {
@@ -276,29 +276,37 @@ class PortfolioService {
         console.log('Token error: ', errorMessage);
         if (errorMessage === 'The access token being passed has expired or is invalid.') {
           console.log('Last token request: ', moment(this.lastTokenRequest).format());
-          if (this.lastTokenRequest === null || moment().diff(moment(this.lastTokenRequest), 'minutes') > 30) {
+          if (this.lastTokenRequest === null || moment().diff(moment(this.lastTokenRequest), 'minutes') > 29) {
             this.lastTokenRequest = moment().valueOf();
+            console.log('Requesting new token');
             return this.getTDAccessToken(accountId);
           } else {
-            return Promise.resolve(this.access_token[accountId].token);
+            const tooRecentErrMsg = 'Last token request was too recent';
+            console.log(tooRecentErrMsg);
+            if (reply) {
+              reply.status(500).send({ error: tooRecentErrMsg});
+              reply.end();
+            }
+
+            throw new Error('Last token request was too recent');
           }
         }
-        return Promise.resolve(errorMessage);
+        return Promise.reject(errorMessage);
       });
   }
 
-  getIntraday(symbol, accountId) {
+  getIntraday(symbol, accountId, reply) {
     console.log(moment().format(), 'Retrieving intraday quotes ');
     if (!accountId || !this.access_token[accountId]) {
       console.log('missing access token for ', accountId, this.access_token);
-      return this.renewTDAuth(accountId)
+      return this.renewTDAuth(accountId, reply)
         .then(() => this.getTDIntraday(symbol, accountId));
     } else {
       return this.getTDIntraday(symbol, accountId)
         .catch((error) => {
           console.log('Error retrieving intraday data ', error.error);
 
-          return this.renewTDAuth(accountId)
+          return this.renewTDAuth(accountId, reply)
             .then(() => this.getTDIntraday(symbol, accountId));
         });
     }
@@ -333,8 +341,8 @@ class PortfolioService {
       });
   }
 
-  getIntradayV2(symbol, period = 2, frequencyType = 'minute', frequency = 1) {
-    return this.renewTDAuth(null)
+  getIntradayV2(symbol, period = 2, frequencyType = 'minute', frequency = 1, reply = null) {
+    return this.renewTDAuth(null, reply)
       .then(() => this.getTDIntradayV2(symbol, period, frequencyType, frequency));
   }
 
@@ -355,6 +363,10 @@ class PortfolioService {
 
   getTDIntradayV2(symbol, period, frequencyType, frequency) {
     const accountId = this.getAccountId();
+
+    if (!this.access_token[accountId] || !this.access_token[accountId].token) {
+      throw new Error('Token missing');
+    }
 
     const query = `${tdaUrl}marketdata/${symbol}/pricehistory`;
     const options = {
@@ -379,8 +391,8 @@ class PortfolioService {
       });
   }
 
-  getIntradayV3(symbol, startDate = moment().subtract({ days: 1 }).valueOf(), endDate = moment().valueOf()) {
-    return this.renewTDAuth(null)
+  getIntradayV3(symbol, startDate = moment().subtract({ days: 1 }).valueOf(), endDate = moment().valueOf(), reply = null) {
+    return this.renewTDAuth(null, reply)
       .then(() => this.getTDIntradayV3(symbol, moment(startDate).valueOf(), moment(endDate).valueOf()));
   }
 
@@ -418,26 +430,26 @@ class PortfolioService {
       });
   }
 
-  getDailyQuotes(symbol, startDate, endDate, accountId) {
+  getDailyQuotes(symbol, startDate, endDate, accountId, reply) {
     console.log(moment().format(), 'Retrieving daily quotes ');
 
     if (!this.access_token[accountId]) {
       console.log('missing access token');
 
-      return this.renewTDAuth(accountId)
+      return this.renewTDAuth(accountId, reply)
         .then(() => this.getTDDailyQuotes(symbol, startDate, endDate, accountId));
     } else {
       return this.getTDDailyQuotes(symbol, startDate, endDate, accountId)
         .catch(error => {
           console.log(moment().format(), 'Error retrieving daily quotes ', error.error);
 
-          return this.renewTDAuth(accountId)
+          return this.renewTDAuth(accountId, reply)
             .then(() => this.getTDDailyQuotes(symbol, startDate, endDate, accountId));
         });
     }
   }
 
-  getDailyQuoteInternal(symbol, startDate, endDate) {
+  getDailyQuoteInternal(symbol, startDate, endDate, response = null) {
     let accountId;
     const accountIds = Object.getOwnPropertyNames(this.refreshToken);
     if (accountIds.length > 0) {
@@ -448,7 +460,7 @@ class PortfolioService {
     if (!accountId) {
       console.log('Missing accountId');
     }
-    return this.getDailyQuotes(symbol, startDate, endDate, accountId);
+    return this.getDailyQuotes(symbol, startDate, endDate, accountId, response);
   }
 
   getTDDailyQuotes(symbol, startDate, endDate, accountId) {
@@ -526,11 +538,14 @@ class PortfolioService {
         console.log(moment().format(), 'Set new access token');
 
         return this.access_token[accountId].token;
+      })
+      .catch((err) => {
+        return Promise.reject(err);
       });
   }
 
-  renewExpiredTDAccessTokenAndGetQuote(symbol, accountId) {
-    return this.renewTDAuth(accountId)
+  renewExpiredTDAccessTokenAndGetQuote(symbol, accountId, response) {
+    return this.renewTDAuth(accountId, response)
       .then(() => {
         return this.getTDMarketData(symbol, accountId || this.getAccountId())
           .then(this.processTDData);
@@ -541,8 +556,8 @@ class PortfolioService {
     quantity,
     price,
     type = 'LIMIT',
-    extendedHours = false, accountId) {
-    return this.renewTDAuth(accountId)
+    extendedHours = false, accountId, response) {
+    return this.renewTDAuth(accountId, response)
       .then(() => {
         return this.tdBuy(symbol,
           quantity,
@@ -597,8 +612,8 @@ class PortfolioService {
     quantity,
     price,
     type = 'LIMIT',
-    extendedHours = false, accountId) {
-    return this.renewTDAuth(accountId)
+    extendedHours = false, accountId, response) {
+    return this.renewTDAuth(accountId, response)
       .then(() => {
         return this.tdSell(symbol,
           quantity,
@@ -659,8 +674,8 @@ class PortfolioService {
       });
   }
 
-  getTdBalance(accountId) {
-    return this.renewTDAuth(accountId)
+  getTdBalance(accountId, response) {
+    return this.renewTDAuth(accountId, response)
       .then(() => {
         return this.sendTdPositionRequest(accountId)
           .then((pos) => {
@@ -709,12 +724,12 @@ class PortfolioService {
     response.status(200).send({});
   }
 
-  getOptionsStraddle(accountId, symbol, strikeCount, optionType = 'S') {
+  getOptionsStraddle(accountId, symbol, strikeCount, optionType = 'S', response) {
     if (!accountId) {
       accountId = this.getAccountId();
     }
 
-    return this.renewTDAuth(accountId)
+    return this.renewTDAuth(accountId, response)
       .then(() => {
         const query = `${tdaUrl}marketdata/chains`;
         const options = {

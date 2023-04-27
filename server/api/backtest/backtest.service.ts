@@ -171,17 +171,17 @@ class BacktestService {
   getCurrentDaytradeIndicators(symbol, period, dataSource = 'td'): Promise<Indicators> {
     const getIndicatorQuotes = [];
 
-    return new Promise((resolve) => {
-      console.log('datasource: ', dataSource);
+    return new Promise((resolve, reject) => {
       if (dataSource === 'tiingo') {
         QuoteService.getTiingoIntraday(symbol, moment().subtract({ day: 1 }).format('YYYY-MM-DD')).then(data => {
-          console.log('tiingo data ', data);
           resolve(data);
-        });
+        })
+        .catch(err => reject(err));
       } else {
-        PortfolioService.getIntradayV2(symbol, 1).then(data => {
+        PortfolioService.getIntradayV2(symbol, 1, null, null, null).then(data => {
           resolve(data);
-        });
+        })
+        .catch(err => reject(err));
       }
     })
       .then(intradayObj => {

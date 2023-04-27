@@ -1,11 +1,11 @@
 {
-  "name": "robinhood-algorithmic-trading-in-angular",
+  "name": "td-algorithmic-trading-in-angular",
   "version": "1.0.0",
   "license": "MIT",
   "main": "server/app.js",
   "scripts": {
     "ng": "ng",
-    "start": "npm run build && npm run serve",
+    "start": "npm run build && pm2 start ecosystem.config.js",
     "build": "ng build --aot && npm run build-ts && npm run tslint",
     "serve": "node dist/app.js",
     "test-server": "npm run build-ts && node server-tests.js",
@@ -63,6 +63,7 @@
     "morgan": "^1.9.0",
     "ngx-bootstrap": "^4.1.1",
     "path": "^0.12.7",
+    "pm2": "^5.3.0",
     "primeflex": "^1.0.0",
     "primeicons": "^2.0.0",
     "primeng": "^8.1.1",

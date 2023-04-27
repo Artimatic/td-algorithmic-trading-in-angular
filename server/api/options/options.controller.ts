@@ -12,7 +12,8 @@ class OptionsController extends BaseController {
             request.query.symbol.toUpperCase(),
             request.query.strikeCount,
             request.query.optionType,
-            request.query.minExpiration)
+            request.query.minExpiration,
+            response)
             .then(optionsData => {
                 response.status(200).send(optionsData);
             })

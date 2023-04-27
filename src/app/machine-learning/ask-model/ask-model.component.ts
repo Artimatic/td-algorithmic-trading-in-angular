@@ -143,8 +143,8 @@ export class AskModelComponent implements OnInit, OnDestroy {
           setTimeout(() => {
             this.schedulerService.schedule(() => {
               this.calibrateOne(stock);
-            }, `calibrateOne${stock}`, null, false, 180000);
-          }, 180000 * idx);
+            }, `calibrateOne${stock}`, null, false, 10000);
+          }, 10000 * idx);
         });
         break;
       }

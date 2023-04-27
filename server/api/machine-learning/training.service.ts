@@ -203,7 +203,7 @@ class TrainingService {
   }
 
   getCurrentIntradayActivationData(symbol) {
-    return PortfolioService.getIntradayV2(symbol);
+    return PortfolioService.getIntradayV2(symbol, null, null, null, null);
   }
 
   trainWithIntraday(symbol) {
@@ -214,7 +214,7 @@ class TrainingService {
     const startDate = moment().subtract({ day: 1 });
 
     for (const stock of stocks) {
-      intradayQuotesPromises.push(PortfolioService.getIntradayV2(stock));
+      intradayQuotesPromises.push(PortfolioService.getIntradayV2(stock, null, null, null, null));
     }
 
     for (const stock of stocks) {
