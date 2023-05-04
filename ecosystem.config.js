@@ -3,7 +3,7 @@ module.exports = {
       {
         name: "trader-main",
         script: "dist/app.js",
-        instances: 3,
+        instances: 1,
         exec_mode: "cluster",
         watch: ".",
       },

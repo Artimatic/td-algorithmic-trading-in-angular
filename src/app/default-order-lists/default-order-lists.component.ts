@@ -197,7 +197,15 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges {
   }
 
   saveToStorage(templateOrders: SmartOrder[]) {
-    sessionStorage.setItem('daytradeList', JSON.stringify(templateOrders));
+    sessionStorage.removeItem('daytradeList');
+    const ordersToSave = templateOrders.reduce((acc, val) => {
+      if (!acc.uniqueSymbols[val.holding.name]) {
+        acc.uniqueSymbols[val.holding.name] = true;
+        acc.list.push(val);
+      }
+      return acc;
+    }, {uniqueSymbols: {}, list: []}).list;
+    sessionStorage.setItem('daytradeList', JSON.stringify(ordersToSave));
     this.defaultLists = this.createDefaultList();
     console.log('default list set to ', this.defaultLists);
   }
