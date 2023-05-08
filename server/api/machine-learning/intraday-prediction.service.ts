@@ -55,7 +55,7 @@ class IntradayPredicationService extends PredictionService {
 
 
   getQuotes(symbol, start, end) {
-    return PortfolioService.getIntradayV3(symbol, start, end);
+    return PortfolioService.getIntradayV3(symbol, start, end, null);
   }
 
   getIndicators(quotes) {

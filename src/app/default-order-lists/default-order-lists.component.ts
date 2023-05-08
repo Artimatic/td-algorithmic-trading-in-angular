@@ -63,70 +63,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges {
 
     this.setAddOrderForm();
 
-    this.defaultLists = [
-      { label: 'Choose a List', value: null },
-      { label: 'CUSTOM', value: [] },
-      {
-        label: 'UPRO60 TMF40',
-        value: [
-          { stock: 'UPRO', allocation: 0.60 },
-          { stock: 'TMF', allocation: 0.40 }
-        ]
-      },
-      {
-        label: 'SPXU35 SQQQ20 TMV45',
-        value: [
-          { stock: 'SPXU', allocation: 0.35 },
-          { stock: 'SQQQ', allocation: 0.20 },
-          { stock: 'TMV', allocation: 0.45 }
-        ]
-      },
-      {
-        label: 'UPRO35 TQQQ20 TMF45',
-        value: [
-          { stock: 'UPRO', allocation: 0.35 },
-          { stock: 'TQQQ', allocation: 0.20 },
-          { stock: 'TMF', allocation: 0.45 }
-        ]
-      },
-      {
-        label: 'TQQQ50 TMF50', value: [
-          { stock: 'TQQQ', allocation: 0.50 },
-          { stock: 'TMF', allocation: 0.50 }
-        ]
-      },
-      {
-        label: 'MSFT90 VXX10', value: [
-          { stock: 'MSFT', allocation: 0.90 },
-          { stock: 'VXX', allocation: 0.10 }
-        ]
-      },
-      {
-        label: 'AMZN90 VXX10', value: [
-          { stock: 'AMZN', allocation: 0.90 },
-          { stock: 'VXX', allocation: 0.10 }
-        ]
-      },
-      {
-        label: 'NFLX90 VXX10', value: [
-          { stock: 'NFLX', allocation: 0.90 },
-          { stock: 'VXX', allocation: 0.10 }
-        ]
-      },
-      {
-        label: 'FB90 VXX10', value: [
-          { stock: 'FB', allocation: 0.90 },
-          { stock: 'VXX', allocation: 0.10 }
-        ]
-      },
-      {
-        label: 'AAPL90 VXX10', value: [
-          { stock: 'AAPL', allocation: 0.90 },
-          { stock: 'VXX', allocation: 0.10 }
-        ]
-      }
-    ];
-
+    this.defaultLists = this.createDefaultList();
     this.selectedList = [];
   }
 
@@ -147,20 +84,30 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges {
         const stock = allocationItem.stock;
         const allocationPct = allocationItem.allocation;
         const total = this.firstFormGroup.value.amount;
-        this.addOrder(stock, allocationPct, total);
+        const side = allocationItem.side;
+        this.addOrder(stock, allocationPct, total, side);
       });
     }
   }
 
-  addOrder(stock: string, allocationPct: number, total: number) {
+  addOrder(stock: string, allocationPct: number, total: number, side: string = '') {
     stock = stock.toUpperCase();
     this.schedulerService.schedule(() => {
       const cb = (quantity, price) => {
-        this.templateOrders.push(this.cartService.buildOrder(stock, quantity, price, this.addOrderFormGroup.value.side));
+        this.templateOrders.push(this.cartService.buildOrder(stock, quantity, price, side || this.addOrderFormGroup.value.side));
       };
 
-      this.machineDaytradingService.addOrder(this.addOrderFormGroup.value.side, stock, allocationPct, total, cb);
-    }, 'adding_order');
+      this.machineDaytradingService.addOrder(this.addOrderFormGroup.value.side, stock, allocationPct, total, cb, null);
+    }, 'adding_order', null, true, 10000);
+  }
+
+  addMachineTrade() {
+    const stock = 'MACHINE';
+    this.machineDaytradingService.allocationPct = this.addOrderFormGroup.value.allocation;
+    this.machineDaytradingService.allocationTotal = this.firstFormGroup.value.amount;
+    this.templateOrders.push(this.cartService.buildOrder(stock, 1, 1, this.addOrderFormGroup.value.side, 'MACHINE'));
+
+    this.errorMsg = '';
   }
 
   getQuantity(stockPrice: number, allocationPct: number, total: number) {
@@ -180,10 +127,11 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges {
   }
 
   addSelectedList() {
-    this.templateOrders.forEach((order) => {
+    this.templateOrders.forEach((order: SmartOrder) => {
       this.cartService.addToCart(order);
     });
     this.display = false;
+    this.saveToStorage(this.templateOrders);
   }
 
   addCustomList() {
@@ -246,5 +194,91 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges {
       this.updatedAmount(data.cashBalance || data.cashAvailableForTrading);
       this.isLoading = false;
     });
+  }
+
+  saveToStorage(templateOrders: SmartOrder[]) {
+    sessionStorage.removeItem('daytradeList');
+    const ordersToSave = templateOrders.reduce((acc, val) => {
+      if (!acc.uniqueSymbols[val.holding.name]) {
+        acc.uniqueSymbols[val.holding.name] = true;
+        acc.list.push(val);
+      }
+      return acc;
+    }, {uniqueSymbols: {}, list: []}).list;
+    sessionStorage.setItem('daytradeList', JSON.stringify(ordersToSave));
+    this.defaultLists = this.createDefaultList();
+    console.log('default list set to ', this.defaultLists);
+  }
+
+  createDefaultList() {
+    const daytradeList = sessionStorage.getItem('daytradeList');
+    if (daytradeList) {
+      const storedList: SmartOrder[] = JSON.parse(sessionStorage.getItem('daytradeList'));
+      console.log(storedList);
+      const allocations = [0.05, 0.1, 0.25, 0.5, 1.0];
+      const retrievedList = allocations.reduce((accumulator, currentValue) => {
+        if (currentValue) {
+          const listItem = storedList.reduce((acc, curr) => {
+            const item = {
+              stock: curr.holding.symbol,
+              allocation: currentValue,
+              side: curr.side
+            };
+            acc.label += item.stock + item.side + item.allocation + ' ';
+            acc.value.push(item);
+            return acc;
+          }, { label: '', value: [] });
+          accumulator.push(listItem);
+        }
+        return accumulator;
+      }, []);
+      return retrievedList;
+    }
+    return [
+      {
+        label: 'UPRO60 TMF40',
+        value: [
+          { stock: 'UPRO', allocation: 0.60 },
+          { stock: 'TMF', allocation: 0.40 }
+        ]
+      },
+      {
+        label: 'SPXU35 SQQQ20 TMV45',
+        value: [
+          { stock: 'SPXU', allocation: 0.35 },
+          { stock: 'SQQQ', allocation: 0.20 },
+          { stock: 'TMV', allocation: 0.45 }
+        ]
+      },
+      {
+        label: 'UPRO35 TQQQ20 TMF45',
+        value: [
+          { stock: 'UPRO', allocation: 0.35 },
+          { stock: 'TQQQ', allocation: 0.20 },
+          { stock: 'TMF', allocation: 0.45 }
+        ]
+      },
+      {
+        label: 'TQQQ50 TMF50', value: [
+          { stock: 'TQQQ', allocation: 0.50 },
+          { stock: 'TMF', allocation: 0.50 }
+        ]
+      },
+      {
+        label: 'MSFT100', value: [
+          { stock: 'MSFT', allocation: 1 },
+        ]
+      },
+      {
+        label: 'AMZN100', value: [
+          { stock: 'AMZN', allocation: 1 }
+        ]
+      },
+      {
+        label: 'AAPL100', value: [
+          { stock: 'AAPL', allocation: 1 }
+        ]
+      }
+    ];
   }
 }

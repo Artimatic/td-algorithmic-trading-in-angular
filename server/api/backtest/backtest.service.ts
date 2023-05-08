@@ -1,9 +1,6 @@
 import * as moment from 'moment';
 import * as _ from 'lodash';
 import * as RequestPromise from 'request-promise';
-import * as json2csv from 'json2csv';
-import * as fs from 'fs';
-import * as path from 'path';
 
 import QuoteService from '../quote/quote.service';
 import ReversionService from '../mean-reversion/reversion.service';
@@ -109,6 +106,11 @@ let startTime;
 let endTime;
 
 class BacktestService {
+  tdRequestCount = 0;
+  tiingoRequestCount = 0;
+  tdThrottleExpiry = null;
+  tiingoThrottleExpiry = null;
+
   getIndicator() {
     return tulind.indicators;
   }
@@ -166,12 +168,24 @@ class BacktestService {
     return { perfectSell, perfectBuy };
   }
 
-  getCurrentDaytradeIndicators(symbol, period): Promise<Indicators> {
+  getCurrentDaytradeIndicators(symbol, period, dataSource = 'td'): Promise<Indicators> {
     const getIndicatorQuotes = [];
 
-    return PortfolioService.getIntradayV2(symbol, 1)
-      .then((intradayObj) => {
-        const quotes = intradayObj.candles;
+    return new Promise((resolve, reject) => {
+      if (dataSource === 'tiingo') {
+        QuoteService.getTiingoIntraday(symbol, moment().subtract({ day: 1 }).format('YYYY-MM-DD')).then(data => {
+          resolve(data);
+        })
+        .catch(err => reject(err));
+      } else {
+        PortfolioService.getIntradayV2(symbol, 1, null, null, null).then(data => {
+          resolve(data);
+        })
+        .catch(err => reject(err));
+      }
+    })
+      .then(intradayObj => {
+        const quotes = (intradayObj as any).candles;
         console.log('daytrade indicator quotes: ', quotes.length, moment().format('hh:mm'));
 
         _.forEach(quotes, (value, key) => {
@@ -274,12 +288,12 @@ class BacktestService {
   }
 
   writeCsv(name, startDate, currentDate, rows, fields, count) {
-    fs.writeFile(path.join(__dirname, '../../../tmp/' +
-      `${name}_analysis_${startDate}-${currentDate}_${++count}.csv`
-    ), json2csv({ data: rows, fields: fields }), function (err) {
-      if (err) { throw err; }
-      console.log('file saved');
-    });
+    // fs.writeFile(path.join(__dirname, '../../../tmp/' +
+    //   `${name}_analysis_${startDate}-${currentDate}_${++count}.csv`
+    // ), json2csv({ data: rows, fields: fields }), function (err) {
+    //   if (err) { throw err; }
+    //   console.log('file saved');
+    // });
     return count;
   }
 
@@ -289,7 +303,6 @@ class BacktestService {
     const snapshots = [];
     return this.getData(ticker, currentDate, startDate)
       .then(quotes => {
-        const fields = ['shortTerm', 'longTerm', 'totalReturns', 'totalTrades', 'recommendedDifference'];
         for (let i = shortTerm[0]; i < shortTerm[1]; i++) {
           for (let j = longTerm[0]; j < longTerm[1]; j++) {
             if (i + 3 < j) {
@@ -314,11 +327,11 @@ class BacktestService {
 
         console.log('Duration: ', duration);
 
-        fs.writeFile(`${ticker}_analysis_${startDate}-${currentDate}.csv`,
-          json2csv({ data: snapshots, fields: fields }), function (err) {
-            if (err) { throw err; }
-            console.log('file saved');
-          });
+        // fs.writeFile(`${ticker}_analysis_${startDate}-${currentDate}.csv`,
+        //   json2csv({ data: snapshots, fields: fields }), function (err) {
+        //     if (err) { throw err; }
+        //     console.log('file saved');
+        //   });
         return snapshots;
       });
   }
@@ -387,10 +400,9 @@ class BacktestService {
     };
   }
 
-  getCurrentDaytrade(symbol: string, price: number, paidPrice: number, parameters, response) {
-    return this.getCurrentDaytradeIndicators(symbol, parameters.minQuotes || 80)
+  getCurrentDaytrade(symbol: string, price: number, paidPrice: number, parameters, dataSource = 'td', response) {
+    return this.getCurrentDaytradeIndicators(symbol, parameters.minQuotes || 80, dataSource)
       .then((currentIndicators: Indicators) => {
-
         let recommendation = {
           recommendation: OrderType.None
         };
@@ -463,12 +475,9 @@ class BacktestService {
     counter = AlgoService.countRecommendation(demark9Recommendation, counter);
     counter = AlgoService.countRecommendation(mfiTradeRec, counter);
 
-    if (counter.bullishCounter > 2 && counter.bullishCounter > counter.bearishCounter) {
-      // if (vwmaRecommendation !== DaytradeRecommendation.Bearish) {
-      //   recommendations.recommendation = OrderType.Buy;
-      // } else {
-      //   recommendations.recommendation = OrderType.None;
-      // }
+    if (vwmaRecommendation === DaytradeRecommendation.Bullish && counter.bullishCounter > 1 && counter.bullishCounter > counter.bearishCounter) {
+      recommendations.recommendation = OrderType.Buy;
+    } else if (counter.bullishCounter > 2 && counter.bullishCounter > counter.bearishCounter) {
       recommendations.recommendation = OrderType.Buy;
     } else if (counter.bearishCounter > 1 && counter.bearishCounter > counter.bullishCounter) {
       recommendations.recommendation = OrderType.Sell;
@@ -536,20 +545,87 @@ class BacktestService {
             if (indicator.recommendation.mfiLow === DaytradeRecommendation.Bullish ||
               indicator.recommendation.mfi === DaytradeRecommendation.Bullish) {
               isMfiLowIdx = idx;
-            } else if (isMfiLowIdx > -1 && (idx - isMfiLowIdx) < 8 &&
-              (indicator.recommendation.demark9 === DaytradeRecommendation.Bullish || indicator.recommendation.macd === DaytradeRecommendation.Bullish)) {
-              indicator.recommendation.mfiTrade = DaytradeRecommendation.Bullish;
-              indicator.recommendation.recommendation = OrderType.Buy;
+            } else if (isMfiLowIdx > -1 && (idx - isMfiLowIdx) < 15) {
+              indicator.recommendation.mfiTrade = indicators.slice(idx - 20, idx).reduce((previous, current) => {
+                if (previous.lowestLow === -1) {
+                  previous.lowestLow = current.close;
+                } else if (current.low < previous.lowestLow && current.mfiLeft > 38) {
+                  previous.lowestLow = current.close;
+                  previous.newLows++;
+                }
+
+                if (current.recommendation.demark9 === DaytradeRecommendation.Bullish ||
+                  current.recommendation.demark9 === DaytradeRecommendation.Bearish) {
+                  previous.demark = current.recommendation.demark9;
+                }
+                if (current.recommendation.bband === DaytradeRecommendation.Bullish ||
+                  current.recommendation.bband === DaytradeRecommendation.Bearish) {
+                  previous.bband = current.recommendation.bband;
+                }
+                if (current.recommendation.macd === DaytradeRecommendation.Bullish ||
+                  current.recommendation.macd === DaytradeRecommendation.Bearish) {
+                  previous.macd = current.recommendation.macd;
+                }
+
+                if (previous.bband === DaytradeRecommendation.Bullish || (previous.demark === DaytradeRecommendation.Bullish &&
+                  previous.macd === DaytradeRecommendation.Bullish) &&
+                  (previous.newLows <= 3)
+                ) {
+                  previous.recommendation = DaytradeRecommendation.Bullish;
+                }
+                return previous;
+              }, {
+                lowestLow: -1,
+                newLows: 0,
+                demark: DaytradeRecommendation.Neutral,
+                bband: DaytradeRecommendation.Neutral,
+                macd: DaytradeRecommendation.Neutral,
+                recommendation: DaytradeRecommendation.Neutral
+              }).recommendation;
+              indicator.recommendation.recommendation = indicator.recommendation.mfiTrade === DaytradeRecommendation.Bullish ? OrderType.Buy : OrderType.None;
             } else if (indicator.recommendation.mfi === DaytradeRecommendation.Bearish) {
               isMfiHighIdx = idx;
-            } else if (isMfiHighIdx > -1 && (idx - isMfiHighIdx) < 8 &&
-              (indicator.recommendation.demark9 === DaytradeRecommendation.Bearish || indicator.recommendation.macd === DaytradeRecommendation.Bearish)) {
-              indicator.recommendation.mfiTrade = DaytradeRecommendation.Bearish;
-              indicator.recommendation.recommendation = OrderType.Sell;
+            } else if (isMfiHighIdx > -1 && (idx - isMfiHighIdx) < 15) {
+              indicator.recommendation.mfiTrade = indicators.slice(idx - 20, idx).reduce((previous, current) => {
+                if (previous.highestHigh === -1) {
+                  previous.highestHigh = current.close;
+                } else if (current.high > previous.highestHigh && current.mfiLeft < 61) {
+                  previous.highestHigh = current.close;
+                  previous.newHighs++;
+                }
+
+                if (current.recommendation.demark9 === DaytradeRecommendation.Bullish ||
+                  current.recommendation.demark9 === DaytradeRecommendation.Bearish) {
+                  previous.demark = current.recommendation.demark9;
+                }
+                if (current.recommendation.bband === DaytradeRecommendation.Bullish ||
+                  current.recommendation.bband === DaytradeRecommendation.Bearish) {
+                  previous.bband = current.recommendation.bband;
+                }
+                if (current.recommendation.macd === DaytradeRecommendation.Bullish ||
+                  current.recommendation.macd === DaytradeRecommendation.Bearish) {
+                  previous.macd = current.recommendation.macd;
+                }
+
+                if (previous.bband === DaytradeRecommendation.Bearish || (previous.demark === DaytradeRecommendation.Bearish &&
+                  previous.macd === DaytradeRecommendation.Bearish) &&
+                  previous.newHighs <= 3
+                ) {
+                  previous.recommendation = DaytradeRecommendation.Bearish;
+                }
+                return previous;
+              }, {
+                highestHigh: -1,
+                newHighs: 0,
+                demark: DaytradeRecommendation.Neutral,
+                bband: DaytradeRecommendation.Neutral,
+                macd: DaytradeRecommendation.Neutral,
+                recommendation: DaytradeRecommendation.Neutral
+              }).recommendation;
+              indicator.recommendation.recommendation = indicator.recommendation.mfiTrade === DaytradeRecommendation.Bearish ? OrderType.Sell : OrderType.None;
             }
 
             // 2020-07-02T05:00:00.000+0000
-            const m = moment(indicator.date);
             if (indicator.mfiLeft > indicators[idx - 1].mfiLeft &&
               indicators[idx - 1].mfiLeft > indicators[idx - 2].mfiLeft &&
               indicators[idx - 2].mfiLeft > indicators[idx - 3].mfiLeft &&
@@ -559,7 +635,6 @@ class BacktestService {
               indicators[idx - 4].close < indicators[idx - 2].close) {
               indicator.recommendation.mfiDivergence = DaytradeRecommendation.Bearish;
               indicator.recommendation.recommendation = OrderType.Sell;
-              console.log('bearish: ', m.format());
             } else if (indicator.mfiLeft < indicators[idx - 1].mfiLeft &&
               indicators[idx - 1].mfiLeft < indicators[idx - 2].mfiLeft &&
               indicators[idx - 2].mfiLeft < indicators[idx - 3].mfiLeft &&
@@ -569,7 +644,6 @@ class BacktestService {
               indicators[idx - 4].close > indicators[idx - 2].close) {
               indicator.recommendation.mfiDivergence = DaytradeRecommendation.Bullish;
               indicator.recommendation.recommendation = OrderType.Buy;
-              console.log('bullish: ', m.format());
             }
             if (indicator.recommendation.mfiTrade === DaytradeRecommendation.Bullish) {
               mfiDivergenceArr = [];

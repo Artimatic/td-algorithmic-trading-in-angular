@@ -12,6 +12,8 @@ export interface TrainingData {
 
 class TrainingService {
 
+  timeoutPeriod = 46000;
+
   getTrainingData(symbol, endDate, startDate) {
     return BacktestService.getTrainingData(symbol, endDate, startDate, false);
   }
@@ -32,7 +34,7 @@ class TrainingService {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({});
-      }, 46000 * counter++);
+      }, this.timeoutPeriod * counter++);
     })
       .then(() => {
         return BacktestService.getTrainingData('SPY', endDate, startDate, false);
@@ -42,7 +44,7 @@ class TrainingService {
         return new Promise((resolve) => {
           setTimeout(() => {
             resolve({});
-          }, 46000 * counter++);
+          }, this.timeoutPeriod * counter++);
         });
       })
       .then(() => {
@@ -55,7 +57,7 @@ class TrainingService {
         return new Promise((resolve) => {
           setTimeout(() => {
             resolve({});
-          }, 46000 * counter++);
+          }, this.timeoutPeriod * counter++);
         });
       })
       .then(() => {
@@ -68,7 +70,7 @@ class TrainingService {
         return new Promise((resolve) => {
           setTimeout(() => {
             resolve({});
-          }, 46000 * counter++);
+          }, this.timeoutPeriod * counter++);
         });
 
       })
@@ -82,7 +84,7 @@ class TrainingService {
         return new Promise((resolve) => {
           setTimeout(() => {
             resolve({});
-          }, 46000 * counter++);
+          }, this.timeoutPeriod * counter++);
         });
 
       })
@@ -96,7 +98,7 @@ class TrainingService {
         return new Promise((resolve) => {
           setTimeout(() => {
             resolve({});
-          }, 46000 * counter++);
+          }, this.timeoutPeriod * counter++);
         });
       })
       .then(() => {
@@ -109,7 +111,7 @@ class TrainingService {
         return new Promise((resolve) => {
           setTimeout(() => {
             resolve({});
-          }, 46000 * counter++);
+          }, this.timeoutPeriod * counter++);
         });
       })
       .then(() => {
@@ -122,7 +124,7 @@ class TrainingService {
         return new Promise((resolve) => {
           setTimeout(() => {
             resolve({});
-          }, 46000 * counter++);
+          }, this.timeoutPeriod * counter++);
         });
       })
       .then(() => {
@@ -132,6 +134,8 @@ class TrainingService {
       })
       .then((targetData: any[]) => {
         // if (targetData.length === spyDataSet.length) {
+        console.log('Data size: ', targetData.length, spyDataSet.length, qqqDataSet.length, tltDataSet.length, gldDataSet.length,
+          vxxDataSet.length, iwmDataSet.length, hygDataSet.length);
         spyDataSet.forEach((spyData, idx) => {
           const target = targetData[idx];
           const qqq = qqqDataSet[idx];
@@ -174,12 +178,20 @@ class TrainingService {
               .concat(hyg.input.slice(1))
               .concat(target.input.slice(1));
 
-            dataSetObj.output = target.output;
+            dataSetObj.output = target.output || [];
 
             finalDataSet.push(dataSetObj);
+          } else {
+            console.log('Dates do not match: ', spyData.date, target.date,
+              qqq.date,
+              tlt.date,
+              gld.date,
+              vxx.date,
+              iwm.date,
+              hyg.date);
           }
         });
-
+        console.log('Data set:', finalDataSet);
         return finalDataSet;
       });
   }
@@ -191,7 +203,7 @@ class TrainingService {
   }
 
   getCurrentIntradayActivationData(symbol) {
-    return PortfolioService.getIntradayV2(symbol);
+    return PortfolioService.getIntradayV2(symbol, null, null, null, null);
   }
 
   trainWithIntraday(symbol) {
@@ -202,7 +214,7 @@ class TrainingService {
     const startDate = moment().subtract({ day: 1 });
 
     for (const stock of stocks) {
-      intradayQuotesPromises.push(PortfolioService.getIntradayV2(stock));
+      intradayQuotesPromises.push(PortfolioService.getIntradayV2(stock, null, null, null, null));
     }
 
     for (const stock of stocks) {
@@ -231,10 +243,6 @@ class TrainingService {
             return BacktestService.activateV2Model(symbol, startDate, trainingData);
           });
       });
-  }
-
-  activateBuyAtCloseModel(symbol, startDate, trainingData) {
-    return BacktestService.activateV2Model(symbol, startDate, trainingData);
   }
 
   buildDailyQuotes(symbol, startDate, endDate) {
@@ -328,7 +336,9 @@ class TrainingService {
 
   testModel(symbol, startDate, endDate, trainingSize = 0.7) {
     console.log('start - end: ', startDate, endDate);
-    return BacktestService.trainV2Model(symbol, endDate, startDate, trainingSize);
+    return this.train(symbol, startDate, endDate).then(trainingData => {
+      return BacktestService.trainCustomModel(symbol, 'buy_at_close', trainingData, trainingSize, moment().format('YYYY-MM-DD'));
+    });
   }
 
   async activateModel(symbol, startDate) {
@@ -336,7 +346,11 @@ class TrainingService {
     const yesterday = moment(startDate).add(-1, 'days').format('YYYY-MM-DD');
 
     const trainingData = await this.train(symbol, yesterday, today);
-    return BacktestService.activateV2Model(symbol, startDate, trainingData);
+    return BacktestService.activateCustomModel(symbol, 'buy_at_close', trainingData, moment().format('YYYY-MM-DD'));
+  }
+
+  activateBuyAtCloseModel(symbol, startDate, trainingData) {
+    return BacktestService.activateCustomModel(symbol, 'buy_at_close', trainingData, moment().format('YYYY-MM-DD'));
   }
 }
 

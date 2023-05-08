@@ -22,6 +22,7 @@ export default class BaseController {
     } else {
       reply.status(Boom.badImplementation().output.statusCode).send(error);
     }
+    reply.end();
   }
 
   static notFoundErrorHandler(reply, error) {

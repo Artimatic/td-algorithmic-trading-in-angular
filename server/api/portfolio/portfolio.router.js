@@ -44,6 +44,10 @@ export const intraday = (request, response) => {
   PortfolioController.getIntraday(request, response);
 }
 
+export const intradayV2 = (request, response) => {
+  PortfolioController.getIntradayV2(request, response);
+}
+
 export const dailyQuote = (request, response) => {
   PortfolioController.getDailyQuotes(request, response);
 }

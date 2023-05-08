@@ -213,7 +213,9 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
     this.globalSettingsService.setStartTimes();
     const mlStartTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 15:55`, 'America/New_York');
     let mlStopTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 16:00`, 'America/New_York');
-    console.log(`New queue set to start at ${moment(this.globalSettingsService.startTime).format()}`);
+    const log = `New queue set to start at ${moment(this.globalSettingsService.startTime).format()}`;
+    const report = this.reportingService.addAuditLog('', log);
+    console.log(report);
     this.alive = true;
     let lastIndex = 0;
     const limit = this.simultaneousOrderLimit > orders.length ? orders.length : this.simultaneousOrderLimit;
@@ -259,8 +261,8 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
         if (moment().isAfter(moment(this.globalSettingsService.stopTime)) &&
           moment().isBefore(moment(this.globalSettingsService.stopTime).add(2, 'minutes'))) {
           if (this.reportingService.logs.length > 0) {
-            const log = `Profit ${this.scoreKeeperService.total}`;
-            this.reportingService.addAuditLog(null, log);
+            const profitLog = `Profit ${this.scoreKeeperService.total}`;
+            this.reportingService.addAuditLog(null, profitLog);
             this.reportingService.exportAuditHistory();
           }
           this.interval = moment().subtract(5, 'minutes').diff(moment(this.globalSettingsService.startTime), 'milliseconds');

@@ -9,6 +9,7 @@ import { GlobalSettingsService } from '../../settings/global-settings.service';
 import * as _ from 'lodash';
 import { CartService } from '../../shared/services/cart.service';
 import { map, take, tap } from 'rxjs/operators';
+import { SchedulerService } from '@shared/service/scheduler.service';
 
 export interface TrainingResults {
   symbol?: string;
@@ -38,6 +39,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
   intradayMlResults: any[];
   selectedStock;
   prefillOrderForm;
+  stockList: string[] = [];
   private callChainSub: Subscription;
   private backtestBuffer: { stock: string }[];
   private bufferSubject: Subject<void>;
@@ -51,6 +53,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
     private globalSettingsService: GlobalSettingsService,
     private portfolioService: PortfolioService,
     private cartService: CartService,
+    private schedulerService: SchedulerService,
     public snackBar: MatSnackBar) { }
 
   ngOnInit() {
@@ -69,10 +72,10 @@ export class AskModelComponent implements OnInit, OnDestroy {
     });
 
     this.models = [
+      { name: 'Calibrate intraday model', code: 'calibrate' },
       { name: 'Calibrate daily model', code: 'calibrate_daily' },
       { name: 'Calibrate Open Price Up model', code: 'open_price_up' },
-      { name: 'Calibrate Next 30 minutes model', code: 'predict_30' },
-      { name: 'Calibrate intraday model', code: 'calibrate' }
+      { name: 'Calibrate Next 30 minutes model', code: 'predict_30' }
     ];
 
     this.cols = [
@@ -113,49 +116,84 @@ export class AskModelComponent implements OnInit, OnDestroy {
   }
 
   train() {
+    this.stockList = this.form.value.query.trim().toUpperCase().split(',');
     this.setStartDate();
+
     switch (this.selectedModel.code) {
       case 'open_price_up': {
-        this.trainOpenUp();
+        this.stockList.forEach(stock => {
+          this.schedulerService.schedule(() => {
+            this.trainOpenUp(stock);
+          }, `trainOpenUp${stock}`, null, false, 180000);
+        });
         break;
       }
       case 'predict_30': {
-        this.trainPredict30();
+        this.stockList.forEach((stock, idx) => {
+          setTimeout(() => {
+            this.schedulerService.schedule(() => {
+              this.trainPredict30(stock);
+            }, `trainPredict30${stock}`, null, false, 180000);
+          }, 180000 * idx);
+        });
         break;
       }
       case 'calibrate': {
-        this.calibrateOne();
+        this.stockList.forEach((stock, idx) => {
+          setTimeout(() => {
+            this.schedulerService.schedule(() => {
+              this.calibrateOne(stock);
+            }, `calibrateOne${stock}`, null, false, 10000);
+          }, 10000 * idx);
+        });
         break;
       }
       case 'calibrate_daily': {
-        this.calibrateDaily();
+        this.stockList.forEach(stock => {
+          this.schedulerService.schedule(() => {
+            this.calibrateDaily(stock);
+          }, `calibrateDaily${stock}`, null, false, 180000);
+        });
         break;
       }
     }
   }
 
   activate() {
+    this.stockList = this.form.value.query.toUpperCase().split(',').trim();
+
     this.setStartDate();
 
     switch (this.selectedModel.code) {
       case 'open_price_up': {
-        this.activateOpenUp();
+        this.stockList.forEach(stock => {
+          this.schedulerService.schedule(() => {
+            this.activateOpenUp(stock);
+          }, `activateOpenUp${stock}`);
+        });
+
         break;
       }
       case 'calibrate_daily': {
-        this.activateDaily();
+        this.stockList.forEach(stock => {
+          this.schedulerService.schedule(() => {
+            this.activateDaily(stock);
+          }, `activateDaily${stock}`);
+        });
+
         break;
       }
     }
   }
 
-  activateDaily() {
+  activateDaily(stock) {
     this.isLoading = true;
     const settings = this.form.value.customSettings.split(',');
     const range = settings[0] || 2;
     const limit = settings[1] || 0.003;
     console.log('setting: ', this.form.value.customSettings, settings);
-    const symbol = this.form.value.query;
+    const symbol = stock;
+
     this.machineLearningService.activateDailyV4(symbol,
       null,
       range,
@@ -173,10 +211,10 @@ export class AskModelComponent implements OnInit, OnDestroy {
       });
   }
 
-  trainOpenUp() {
+  trainOpenUp(stock) {
     this.isLoading = true;
     this.backtestService
-      .runLstmV2(this.form.value.query,
+      .runLstmV2(stock,
         moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD'),
         moment(this.startDate).format('YYYY-MM-DD')
       )
@@ -190,10 +228,10 @@ export class AskModelComponent implements OnInit, OnDestroy {
       });
   }
 
-  activateOpenUp() {
+  activateOpenUp(stock) {
     this.isLoading = true;
 
-    this.backtestService.activateLstmV2(this.form.value.query)
+    this.backtestService.activateLstmV2(stock)
       .pipe(take(1))
       .subscribe((data) => {
         this.isLoading = false;
@@ -205,10 +243,10 @@ export class AskModelComponent implements OnInit, OnDestroy {
       });
   }
 
-  trainPredict30() {
+  trainPredict30(stock) {
     this.isLoading = true;
     this.machineLearningService
-      .trainPredictNext30(this.form.value.query,
+      .trainPredictNext30(stock,
         moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD'),
         moment(this.startDate).format('YYYY-MM-DD'),
         1,
@@ -304,15 +342,16 @@ export class AskModelComponent implements OnInit, OnDestroy {
     }
   }
 
-  calibrateOne() {
-    this.machineLearningService
-      .trainPredictNext30(this.form.value.query.toUpperCase(),
+  calibrateOne(stock) {
+    const trainingRequest = this.machineLearningService
+      .trainPredictNext30(stock,
         moment(this.endDate).add({ days: 1 }).format('YYYY-MM-DD'),
         moment(this.startDate).format('YYYY-MM-DD'),
         0.7,
         this.globalSettingsService.daytradeAlgo
-      )
-      .pipe(take(1))
+      );
+
+    trainingRequest.pipe(take(1))
       .subscribe((data: any[]) => {
         this.isLoading = false;
         if (data) {
@@ -320,11 +359,17 @@ export class AskModelComponent implements OnInit, OnDestroy {
           this.collectResult(this.globalSettingsService.daytradeAlgo, data[0].score);
         }
       }, error => {
+        console.log('Training error. Trying again in 10 minutes ', error);
         this.isLoading = false;
+        setTimeout(() => {
+          this.schedulerService.schedule(() => {
+            this.calibrateOne(stock);
+          }, `calibrateOne${stock}`, null, false, 180000);
+        }, 600000);
       });
   }
 
-  calibrateDaily() {
+  calibrateDaily(stock) {
     this.isLoading = true;
 
     const settings = this.form.value.customSettings.split(',');
@@ -332,7 +377,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
     const limit = settings[1] || 0.003;
 
     console.log('setting: ', this.form.value.customSettings, settings);
-    const symbol = this.form.value.query.toUpperCase();
+    const symbol = stock;
 
     const endDate = this.endDate ? moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD') : moment().subtract({ day: 1 }).format('YYYY-MM-DD');
     const startDate = moment().subtract({ day: 365 }).format('YYYY-MM-DD');
@@ -493,39 +538,50 @@ export class AskModelComponent implements OnInit, OnDestroy {
   }
 
   getIntradayQuotes() {
+    this.stockList = this.form.value.query.toUpperCase().split(',').trim();
+
     const start = moment(this.startDate).subtract({ days: 1 }).format('YYYY-MM-DD');
     const end = moment(this.endDate).add({ days: 1 }).format('YYYY-MM-DD');
-    this.machineLearningService.getQuotes(this.form.value.query, start, end)
-      .pipe(
-        take(1),
-        map(quotes => {
-          return quotes.map(quote => {
-            quote.date = moment(quote.date).format('MM-DD hh:mm');
-            return quote;
+    this.stockList.forEach(stock => {
+      this.schedulerService.schedule(() => {
+        this.machineLearningService.getQuotes(stock, start, end)
+          .pipe(
+            take(1),
+            map(quotes => {
+              return quotes.map(quote => {
+                quote.date = moment(quote.date).format('MM-DD hh:mm');
+                return quote;
+              });
+            }))
+          .subscribe(quotes => {
+            console.log('quotes: ', quotes);
+            this.intradayMlResults = quotes;
           });
-        }))
-      .subscribe(quotes => {
-        console.log('quotes: ', quotes);
-        this.intradayMlResults = quotes;
-      });
+      }, `getQuotes${stock}`);
+    });
   }
 
   trainIntradayQuotes() {
+    this.stockList = this.form.value.query.toUpperCase().split(',').trim();
+
     const start = moment(this.endDate).subtract({ days: 3 }).format('YYYY-MM-DD');
     const end = moment(this.endDate).add({ days: 1 }).format('YYYY-MM-DD');
-
-    this.machineLearningService
-      .trainPredictNext30(this.form.value.query.toUpperCase(),
-        end,
-        start,
-        1,
-        this.globalSettingsService.daytradeAlgo
-      )
-      .pipe(take(1))
-      .subscribe((data: any[]) => {
-      }, error => {
-        console.log('daytrade ml error: ', error);
-      });
+    this.stockList.forEach(stock => {
+      this.schedulerService.schedule(() => {
+        this.machineLearningService
+          .trainPredictNext30(stock,
+            end,
+            start,
+            1,
+            this.globalSettingsService.daytradeAlgo
+          )
+          .pipe(take(1))
+          .subscribe((data: any[]) => {
+          }, error => {
+            console.log('daytrade ml error: ', error);
+          });
+      }, `trainIntradayQuotes${stock}`);
+    });
   }
 
   activateIntradayQuotes(rowData, callback = () => { }) {
@@ -548,28 +604,32 @@ export class AskModelComponent implements OnInit, OnDestroy {
   }
 
   activateAllIntradayQuotes() {
-    this.intradayMlResults.forEach((value, idx) => {
-      this.calibrationBuffer.push({ idx: idx, stock: this.form.value.query, features: this.globalSettingsService.daytradeAlgo });
-    });
+    this.stockList.forEach(stock => {
+      this.schedulerService.schedule(() => {
+        this.intradayMlResults.forEach((value, idx) => {
+          this.calibrationBuffer.push({ idx: idx, stock: stock, features: this.globalSettingsService.daytradeAlgo });
+        });
 
-    this.bufferSubject
-      .subscribe(() => {
-        const bufferItem = this.calibrationBuffer[0];
-
-        this.callChainSub.add(this.activateIntradayQuotes(bufferItem.idx, () => {
-          this.isLoading = false;
-          this.calibrationBuffer.shift();
-          this.triggerNextCalibration();
-        })
-          .pipe(take(1))
+        this.bufferSubject
           .subscribe(() => {
-          }, () => {
-            this.isLoading = false;
-            this.calibrationBuffer.shift();
-            this.triggerNextCalibration();
-          }));
-      });
-    this.triggerNextCalibration();
+            const bufferItem = this.calibrationBuffer[0];
+
+            this.callChainSub.add(this.activateIntradayQuotes(bufferItem.idx, () => {
+              this.isLoading = false;
+              this.calibrationBuffer.shift();
+              this.triggerNextCalibration();
+            })
+              .pipe(take(1))
+              .subscribe(() => {
+              }, () => {
+                this.isLoading = false;
+                this.calibrationBuffer.shift();
+                this.triggerNextCalibration();
+              }));
+          });
+        this.triggerNextCalibration();
+      }, `activateAllIntradayQuotes${stock}`);
+    });
   }
 
   ngOnDestroy() {

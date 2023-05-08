@@ -114,7 +114,7 @@ class PortfolioController extends BaseController {
   }
 
   getQuote(request, response) {
-    PortfolioService.getQuote(request.query.symbol, request.query.accountId)
+    PortfolioService.getQuote(request.query.symbol, request.query.accountId, response)
       .then((priceData) => {
         response.status(200).send({
           price: 1 * this.midPrice(priceData[request.query.symbol].askPrice, priceData[request.query.symbol].bidPrice),
@@ -126,13 +126,19 @@ class PortfolioController extends BaseController {
   }
 
   getIntraday(request, response) {
-    PortfolioService.getIntraday(request.query.symbol, request.query.accountId)
+    PortfolioService.getIntraday(request.query.symbol, request.query.accountId, response)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
+  getIntradayV2(request, response) {
+    PortfolioService.getIntradayV2(request.query.symbol, 1, null, null, response)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
   getDailyQuotes(request, response) {
-    PortfolioService.getDailyQuotes(request.query.symbol, request.query.startDate, request.query.endDate, request.query.accountId)
+    PortfolioService.getDailyQuotes(request.query.symbol, request.query.startDate, request.query.endDate, request.query.accountId, response)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
@@ -143,7 +149,8 @@ class PortfolioController extends BaseController {
       request.body.price,
       request.body.type,
       request.body.extendedHours,
-      request.body.accountId)
+      request.body.accountId,
+      response)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
@@ -154,7 +161,8 @@ class PortfolioController extends BaseController {
       request.body.price,
       request.body.type,
       request.body.extendedHours,
-      request.body.accountId)
+      request.body.accountId,
+      response)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
@@ -166,7 +174,7 @@ class PortfolioController extends BaseController {
   }
 
   tdBalance(request, response) {
-    PortfolioService.getTdBalance(request.query.accountId)
+    PortfolioService.getTdBalance(request.query.accountId, response)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }

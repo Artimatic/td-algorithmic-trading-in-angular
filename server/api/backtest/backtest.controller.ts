@@ -225,7 +225,7 @@ class BacktestController extends BaseController {
   }
 
   getDaytradeIndicators(request, response) {
-    BacktestService.getCurrentDaytradeIndicators(request.body.symbol, request.body.period)
+    BacktestService.getCurrentDaytradeIndicators(request.body.symbol, request.body.period, request.body.dataSource)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
@@ -255,7 +255,9 @@ class BacktestController extends BaseController {
       request.body.symbol,
       request.body.price,
       request.body.paidPrice,
-      request.body.parameters, response);
+      request.body.parameters,
+      request.body.dataSource,
+      response);
   }
 
   calibrateDaytrade(request, response) {

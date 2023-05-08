@@ -3,6 +3,7 @@ import { Subject } from 'rxjs';
 
 export interface AlgoQueueItem  {
   symbol: string;
+  id?: string;
   reset: boolean;
   updateOrder?: boolean;
   triggerMlBuySell?: boolean;

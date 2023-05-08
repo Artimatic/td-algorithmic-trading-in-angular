@@ -7,11 +7,13 @@
 // Set default node environment to development
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 
-process.on('unhandledRejection', (reason, p) => {
-  console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
-  // application specific logging, throwing an error, or other logic here
+process.on('unhandledRejection', (p, reason) => {
+  console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);  // application specific logging, throwing an error, or other logic here
 });
 
+process.on('uncaughtException', function (exception) {
+  console.log('uncaughtException', exception);
+});
 const express = require('express');
 
 const configurations = require('./config/environment');

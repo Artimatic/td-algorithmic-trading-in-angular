@@ -14,11 +14,6 @@ mat-chip {
   max-width: 150px;
 }
 
-.main-container {
-  min-height: 800px;
-  min-width: 200px;
-}
-
 .mat-chip-list-stacked {
   min-width: 100px;
   padding: 3px 5px 3px 5px;

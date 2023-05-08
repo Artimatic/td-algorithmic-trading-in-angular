@@ -4,7 +4,7 @@ import { PortfolioService } from './portfolio.service';
 import { OrderPref } from '../enums/order-pref.enum';
 import { SmartOrder } from '../models/smart-order';
 
-import * as moment from 'moment';
+import * as moment from 'moment-timezone';
 import * as _ from 'lodash';
 import { IndicatorsService } from './indicators.service';
 import { CartService } from './cart.service';
@@ -242,8 +242,8 @@ export class DaytradeService {
         action = 'Sold';
       }
       const orderRow = {
-        timeSubmitted: moment(orders[i].timeSubmitted).format('hh:mm'),
-        signalTime: moment(orders[i].signalTime).format('hh:mm'),
+        timeSubmitted: moment(orders[i].timeSubmitted).format('DD.MM.YYYY hh:mm'),
+        signalTime: moment(orders[i].signalTime).format('hh:mma'),
         quantity: orders[i].quantity,
         price: orders[i].price,
         action
@@ -257,8 +257,6 @@ export class DaytradeService {
     }
 
     tiles.push({ orders: currentList, cols: 1, rows: 1 });
-
-
     return tiles;
   }
 
@@ -270,7 +268,7 @@ export class DaytradeService {
       submitted: false,
       pending: false,
       side: side,
-      timeSubmitted: moment().unix(),
+      timeSubmitted: moment().utc().format(),
       signalTime: moment.unix(signalTime).valueOf()
     };
   }

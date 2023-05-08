@@ -8,4 +8,5 @@ export interface Order {
     pending: boolean;
     side: string;
     amount?: number;
+    id?: string;
 }
