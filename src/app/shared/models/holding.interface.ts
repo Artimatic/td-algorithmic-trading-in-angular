@@ -5,7 +5,6 @@ export interface Holding {
     updated_at?: Date;
     instrument: string;
     symbol: string;
-    name?: string;
     realtime_price?: number;
     Volume?: number;
     gainz?: number;

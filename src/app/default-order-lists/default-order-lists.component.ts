@@ -198,9 +198,9 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges {
 
   saveToStorage(templateOrders: SmartOrder[]) {
     sessionStorage.removeItem('daytradeList');
-    const ordersToSave = templateOrders.reduce((acc, val) => {
-      if (!acc.uniqueSymbols[val.holding.name]) {
-        acc.uniqueSymbols[val.holding.name] = true;
+    const ordersToSave = templateOrders.reduce((acc, val: SmartOrder) => {
+      if (!acc.uniqueSymbols[val.holding.symbol]) {
+        acc.uniqueSymbols[val.holding.symbol] = true;
         acc.list.push(val);
       }
       return acc;
