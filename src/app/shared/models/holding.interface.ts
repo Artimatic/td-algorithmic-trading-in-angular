@@ -10,4 +10,5 @@ export interface Holding {
     gainz?: number;
     diversification?: number;
     shares_held_for_sells?: number;
+    name?: string;
 }
