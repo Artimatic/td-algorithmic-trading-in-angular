@@ -91,14 +91,16 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges {
   }
 
   addOrder(stock: string, allocationPct: number, total: number, side: string = '') {
+    this.isLoading = true;
     stock = stock.toUpperCase();
     this.schedulerService.schedule(() => {
       const cb = (quantity, price) => {
         this.templateOrders.push(this.cartService.buildOrder(stock, quantity, price, side || this.addOrderFormGroup.value.side));
+        this.isLoading = false;
       };
 
       this.machineDaytradingService.addOrder(this.addOrderFormGroup.value.side, stock, allocationPct, total, cb, null);
-    }, 'adding_order', null, true, 10000);
+    }, 'adding_order', null, true, 9000);
   }
 
   addMachineTrade() {
