@@ -1,6 +1,6 @@
 import { Component, OnChanges, Input, OnInit, ViewChild, SimpleChanges, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { take } from 'rxjs/operators';
 
 import { Chart } from 'angular-highcharts';
@@ -28,10 +28,10 @@ import { GlobalSettingsService } from '../settings/global-settings.service';
 import { TradeService, AlgoQueueItem } from '../shared/services/trade.service';
 import { OrderingService } from '@shared/services/ordering.service';
 import { GlobalTaskQueueService } from '@shared/services/global-task-queue.service';
-import { SelectItem } from 'primeng/components/common/selectitem';
 import { ClientSmsService } from '@shared/services/client-sms.service';
 import { SchedulerService } from '@shared/service/scheduler.service';
 import { MachineDaytradingService } from '../machine-daytrading/machine-daytrading.service';
+import { SelectItem } from 'primeng';
 
 @Component({
   selector: 'app-bb-card',

@@ -22,7 +22,7 @@ class PortfolioService {
 
   access_token: { [key: string]: TokenInfo } = {};
   tdaKey = {};
-  refreshToken = {};
+  refreshTokensHash = {};
   lastTokenRequest = null;
 
   login(username, password, reply) {
@@ -451,7 +451,7 @@ class PortfolioService {
 
   getDailyQuoteInternal(symbol, startDate, endDate, response = null) {
     let accountId;
-    const accountIds = Object.getOwnPropertyNames(this.refreshToken);
+    const accountIds = Object.getOwnPropertyNames(this.refreshTokensHash);
     if (accountIds.length > 0) {
       accountId = accountIds[0];
     } else {
@@ -511,12 +511,12 @@ class PortfolioService {
     let refreshToken;
     let key;
     if (!accountId ||
-      !this.refreshToken[accountId] || !this.tdaKey[accountId]) {
+      !this.refreshTokensHash[accountId] || !this.tdaKey[accountId]) {
       accountId = this.getAccountId();
       key = configurations.tdameritrade.consumer_key;
       refreshToken = configurations.tdameritrade.refresh_token;
     } else {
-      refreshToken = this.refreshToken[accountId];
+      refreshToken = this.refreshTokensHash[accountId];
       key = this.tdaKey[accountId];
     }
 
@@ -703,13 +703,13 @@ class PortfolioService {
   }
 
   setCredentials(accountId, key, refreshToken, response) {
-    this.refreshToken[accountId] = refreshToken;
+    this.refreshTokensHash[accountId] = refreshToken;
     this.tdaKey[accountId] = key;
     response.status(200).send();
   }
 
   isSet(accountId, response) {
-    const isSet = !_.isNil(this.refreshToken[accountId]) && !_.isNil(this.tdaKey[accountId]);
+    const isSet = !_.isNil(this.refreshTokensHash[accountId]) && !_.isNil(this.tdaKey[accountId]);
 
     if (isSet) {
       response.status(200).send(isSet);
@@ -719,7 +719,7 @@ class PortfolioService {
   }
 
   deleteCredentials(accountId, response) {
-    this.refreshToken[accountId] = null;
+    this.refreshTokensHash[accountId] = null;
     this.tdaKey[accountId] = null;
     response.status(200).send({});
   }

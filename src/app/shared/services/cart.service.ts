@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { PortfolioService } from './portfolio.service';
-import { MatSnackBar } from '@angular/material';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { SmartOrder } from '../models/smart-order';
 import { TradeService, AlgoQueueItem } from './trade.service';
 import * as _ from 'lodash';

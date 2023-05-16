@@ -74,7 +74,7 @@
         </div>
       </form>
     </mat-step>
-    <mat-step [stepControl]="secondFormGroup">
+    <mat-step [stepControl]="secondFormGroup" name="secondForm" ngDefaultControl>
       <ng-template matStepLabel>Place Order</ng-template>
       <mat-card>
         <div *ngIf="live">

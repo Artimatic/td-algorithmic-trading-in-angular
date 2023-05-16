@@ -7,7 +7,7 @@ import { AuthenticationService } from './authentication.service';
 import { Holding } from '../models';
 import * as _ from 'lodash';
 import { GlobalSettingsService, Brokerage } from '../../settings/global-settings.service';
-import { MatSnackBar } from '@angular/material';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subject } from 'rxjs';
 
 export interface PortfolioInfoHolding {

@@ -12,7 +12,10 @@ function createParam(ticker: string): AlgoParam {
   };
 }
 
-export const stockList = ['AAPL',
+export const stockList = [
+  'SPY',
+  'QQQ',
+  'AAPL',
   'MSFT',
   'GOOG',
   'GOOGL',

@@ -51,8 +51,6 @@ import { ProductViewComponent } from './product-view/product-view.component';
 import { LoginComponent } from './login/login.component';
 import { LoginDialogComponent } from './login-dialog/login-dialog.component';
 import { TradeViewComponent } from './trade-view/trade-view.component';
-import { PortfolioTableComponent } from './portfolio-table/portfolio-table.component';
-import { PortfolioViewComponent } from './portfolio-view/portfolio-view.component';
 import { InstrumentPipe } from './shared/pipes/instrument.pipe';
 import { OrderDialogComponent } from './order-dialog/order-dialog.component';
 import { CartService } from './shared/services/cart.service';
@@ -79,8 +77,6 @@ describe('AppComponent', () => {
         LoginComponent,
         LoginDialogComponent,
         TradeViewComponent,
-        PortfolioTableComponent,
-        PortfolioViewComponent,
         InstrumentPipe,
         OrderDialogComponent,
         ShoppingListComponent,

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Message } from 'primeng/components/common/message';
+import { Message } from 'primeng';
 import { stockList } from '../rh-table/backtest-stocks.constant';
 import { PortfolioService } from '@shared/services';
 import { GlobalTaskQueueService } from '@shared/services/global-task-queue.service';

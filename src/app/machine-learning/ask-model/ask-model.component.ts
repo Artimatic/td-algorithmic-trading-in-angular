@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import * as moment from 'moment';
-import { MatSnackBar } from '@angular/material';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { FormGroup, FormBuilder } from '@angular/forms';
 import { BacktestService, MachineLearningService, PortfolioService } from '../../shared/index';
 import IntradayStocks from '../../intraday-backtest-view/intraday-backtest-stocks.constant';

@@ -8,7 +8,7 @@ import * as moment from 'moment-timezone';
 import { take } from 'rxjs/operators';
 import { SmartOrder } from '@shared/models/smart-order';
 import { DaytradeService } from './daytrade.service';
-import { MatSnackBar } from '@angular/material';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Injectable({
   providedIn: 'root'

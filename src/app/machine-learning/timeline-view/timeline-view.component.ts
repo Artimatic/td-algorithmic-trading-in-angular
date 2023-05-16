@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { BacktestService } from '../../shared';
 import * as moment from 'moment';
-import { MatSnackBar } from '@angular/material';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Chart } from 'angular-highcharts';
 import { FormGroup, FormBuilder } from '@angular/forms';
 import { TodoService } from '../../overview/todo-list/todo.service';

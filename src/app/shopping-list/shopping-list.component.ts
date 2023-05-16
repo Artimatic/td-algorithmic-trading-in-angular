@@ -2,7 +2,8 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CartService } from '../shared/services/cart.service';
 import { SmartOrder } from '../shared/models/smart-order';
 import { ScoreKeeperService, ReportingService, DaytradeService, PortfolioService } from '../shared';
-import { MatDialog, MatSnackBar } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import { Subscription } from 'rxjs/Subscription';
@@ -14,8 +15,9 @@ import { GlobalSettingsService } from '../settings/global-settings.service';
 import { TradeService, AlgoQueueItem } from '../shared/services/trade.service';
 import { OrderRow } from '../shared/models/order-row';
 import { FormControl, Validators } from '@angular/forms';
-import { MenuItem } from 'primeng/components/common/menuitem';
-import { take, takeWhile } from 'rxjs/operators';
+import { MenuItem } from 'primeng';
+import { takeUntil, takeWhile } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-shopping-list',
@@ -45,7 +47,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
   mlCards: SmartOrder[];
 
   multibuttonOptions: MenuItem[];
-
+  destroy$ = new Subject();
   constructor(public cartService: CartService,
     public scoreKeeperService: ScoreKeeperService,
     public dialog: MatDialog,
@@ -171,6 +173,8 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.cleanUp();
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   cleanUp() {
@@ -285,7 +289,9 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
 
           if (this.globalSettingsService.autostart) {
             this.globalSettingsService.tradeDayStart
-              .pipe(take(1))
+              .pipe(
+                takeUntil(this.destroy$)
+              )
               .subscribe(start => {
                 if (start) {
                   this.triggerStart();

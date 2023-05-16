@@ -10,7 +10,7 @@ import { PortfolioService } from '@shared/services/portfolio.service';
 import { CartService } from '@shared/services/cart.service';
 import { SmartOrder } from '@shared/models/smart-order';
 import * as _ from 'lodash';
-import { MatSnackBar } from '@angular/material';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { AiPicksService } from '@shared/services';
 import { GlobalSettingsService } from '../settings/global-settings.service';
 

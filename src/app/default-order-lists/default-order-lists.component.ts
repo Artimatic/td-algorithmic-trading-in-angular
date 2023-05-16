@@ -1,5 +1,5 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { SelectItem } from 'primeng/components/common/selectitem';
+import { Component, OnInit, Input, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
+import { SelectItem } from 'primeng';
 import { SmartOrder } from '../shared/models/smart-order';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import * as _ from 'lodash';
@@ -7,7 +7,7 @@ import { CartService } from '../shared/services/cart.service';
 import { Order } from '../shared/models/order';
 import { Subject } from 'rxjs';
 import {
-  debounceTime, distinctUntilChanged
+  debounceTime, distinctUntilChanged, takeUntil
 } from 'rxjs/operators';
 import { MachineDaytradingService } from '../machine-daytrading/machine-daytrading.service';
 import { SchedulerService } from '@shared/service/scheduler.service';
@@ -17,19 +17,20 @@ import { SchedulerService } from '@shared/service/scheduler.service';
   templateUrl: './default-order-lists.component.html',
   styleUrls: ['./default-order-lists.component.scss']
 })
-export class DefaultOrderListsComponent implements OnInit, OnChanges {
+export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy {
   @Input() display: boolean;
   @Input() hideButton: boolean;
   @Input() prefillOrderForm: Order;
   defaultLists: SelectItem[];
   templateOrders: SmartOrder[];
-  selectedList;
+  selectedList = [];
   firstFormGroup: FormGroup;
   addOrderFormGroup: FormGroup;
   private amountChange = new Subject<string>();
   isLoading = false;
   sides: SelectItem[];
   errorMsg: string;
+  destroy$ = new Subject();
 
   constructor(private _formBuilder: FormBuilder,
     private cartService: CartService,
@@ -43,8 +44,9 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges {
 
     this.amountChange
       .pipe(
-        debounceTime(400),
-        distinctUntilChanged()
+        debounceTime(200),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
       )
       .subscribe(value => {
         this.firstFormGroup.controls['amount'].setValue(value);
@@ -64,7 +66,6 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges {
     this.setAddOrderForm();
 
     this.defaultLists = this.createDefaultList();
-    this.selectedList = [];
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -95,12 +96,15 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges {
     stock = stock.toUpperCase();
     this.schedulerService.schedule(() => {
       const cb = (quantity, price) => {
-        this.templateOrders.push(this.cartService.buildOrder(stock, quantity, price, side || this.addOrderFormGroup.value.side));
+        if (this.templateOrders.findIndex(val => val.holding.symbol === stock) === -1) {
+          this.templateOrders.push(this.cartService.buildOrder(stock, quantity, price, side || this.addOrderFormGroup.value.side));
+        }
         this.isLoading = false;
       };
 
+
       this.machineDaytradingService.addOrder(this.addOrderFormGroup.value.side, stock, allocationPct, total, cb, null);
-    }, 'adding_order', null, true, 9000);
+    }, 'adding_order', null, true, 3000);
   }
 
   addMachineTrade() {
@@ -184,7 +188,8 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges {
 
   getPortfolioTotal() {
     this.isLoading = true;
-    this.machineDaytradingService.getPortfolioBalance().subscribe((data) => {
+    this.machineDaytradingService.getPortfolioBalance()
+    .subscribe((data) => {
       this.updatedAmount(data.liquidationValue);
       this.isLoading = false;
     });
@@ -282,5 +287,10 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges {
         ]
       }
     ];
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
