@@ -1,89 +1,26 @@
-<mat-sidenav-container>
-  <mat-sidenav class="side-nav" mode="side" opened>
-    <mat-list role="list">
-      <mat-nav-list role="listitem">
-        <div class="app-title">Algotrader</div>
-      </mat-nav-list>
-      <mat-nav-list role="listitem">
-        <a matTooltip="Launch login">
-          <button mat-button class="nav-item" (click)="launchLogin()">
-            <mat-icon>account_balance</mat-icon>
-            Authentication
-          </button>
-        </a>
-      </mat-nav-list>
-      <mat-nav-list role="listitem">
-        <a routerLink="/trade-view" matTooltip="Buy/sell stocks">
-          <button mat-button class="nav-item">
-            <mat-icon>shop</mat-icon>
-            Live Trading
-          </button>
-        </a>
-      </mat-nav-list>
-      <mat-nav-list role="listitem">
-        <a routerLink="/deep-analysis/machine-learning" matTooltip="Machine learning functions">
-          <button mat-button class="nav-item">
-            <mat-icon>trending_up</mat-icon>
-            Machine Learning
-          </button>
-        </a>
-      </mat-nav-list>
-      <mat-nav-list role="listitem">
-        <a routerLink="/research" matTooltip="Run backtesting on stocks, get buy/sell recommendations">
-          <button mat-button class="nav-item">
-            <mat-icon>assessment</mat-icon>
-            Recommendations
-          </button>
-        </a>
-      </mat-nav-list>
-      <mat-nav-list role="listitem">
-        <a routerLink="/portfolio-managment" matTooltip="Manage your TD Ameritrade portfolio">
-          <button mat-button class="nav-item">
-            <mat-icon>account_balance</mat-icon>
-            Portfolio Management
-          </button>
-        </a>
-      </mat-nav-list>
-      <mat-nav-list role="listitem">
-        <a routerLink="/backtest" matTooltip="Backtesting the daytrading functionality">
-          <button mat-button class="nav-item">
-            <mat-icon>archive</mat-icon>
-            Daytrade Backtest
-          </button>
-        </a>
-      </mat-nav-list>
-      <mat-nav-list class="mat-chip-list-stacked" role="listitem">
-        <div class="service-status-container">
-          <h5>Online Status:</h5>
-          <div class="services-status" (click)="checkStatus()" matTooltip="{{dataText}}">
-            <div class="online-status-text">Data Service</div>
-            <div class="status-indicator">
-              <div class="status-indicator" [ngClass]="{
-                'status-on': dataStatus,
-                'status-off': !dataStatus}"></div>
-            </div>
-          </div>
-          <div class="services-status" (click)="checkStatus()" matTooltip="{{mlText}}">
-            <div class="online-status-text">Machine Learning Service</div>
-            <div class="status-indicator">
-              <div [ngClass]="{
-                'status-on': mlStatus,
-                'status-off': !mlStatus}"></div>
-            </div>
-          </div>
-        </div>
-      </mat-nav-list>
-      <mat-nav-list role="listitem">
-        <app-reporting></app-reporting>
-      </mat-nav-list>
-    </mat-list>
-
-  </mat-sidenav>
-  <mat-sidenav-content>
-    <div class="main-container">
-      <router-outlet></router-outlet>
+<p-menubar [model]="items">
+  <div class="service-status-container">
+    <label>Online Status:</label>
+    <div class="services-status" (click)="checkStatus()" matTooltip="{{dataText}}">
+      <div class="online-status-text">Data Service</div>
+      <div class="status-indicator">
+        <div class="status-indicator" [ngClass]="{
+            'status-on': dataStatus,
+            'status-off': !dataStatus}"></div>
+      </div>
     </div>
-  </mat-sidenav-content>
-</mat-sidenav-container>
+    <div class="services-status" (click)="checkStatus()" matTooltip="{{mlText}}">
+      <div class="online-status-text">Machine Learning Service</div>
+      <div class="status-indicator">
+        <div [ngClass]="{
+            'status-on': mlStatus,
+            'status-off': !mlStatus}"></div>
+      </div>
+    </div>
+  </div>
+</p-menubar>
 
+<div class="main-container">
+  <router-outlet></router-outlet>
+</div>
 <p-toast></p-toast>

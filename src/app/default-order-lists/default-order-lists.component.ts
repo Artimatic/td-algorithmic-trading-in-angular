@@ -102,8 +102,11 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
         this.isLoading = false;
       };
 
-
-      this.machineDaytradingService.addOrder(this.addOrderFormGroup.value.side, stock, allocationPct, total, cb, null);
+      const reject = err => {
+        this.errorMsg = `${err}`;
+        this.isLoading = false;
+      }
+      this.machineDaytradingService.addOrder(this.addOrderFormGroup.value.side, stock, allocationPct, total, cb, null, reject);
     }, 'adding_order', null, true, 3000);
   }
 

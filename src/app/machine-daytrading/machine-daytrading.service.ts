@@ -90,7 +90,7 @@ export class MachineDaytradingService {
     return _.floor(totalCost / stockPrice);
   }
 
-  addOrder(orderType: string, stock: string, allocationPct: number, total: number, cb: (arg1: number, arg2: number) => void, lastPrice) {
+  addOrder(orderType: string, stock: string, allocationPct: number, total: number, cb: (arg1: number, arg2: number) => void, lastPrice, reject = err => {}) {
     if (orderType.toLowerCase() === 'sell') {
       this.portfolioService.getTdPortfolio().subscribe((data) => {
         data.forEach((holding) => {
@@ -105,13 +105,13 @@ export class MachineDaytradingService {
             }
           }
         });
-      });
+      }, err => reject(err.error.error));
     } else {
       if (!lastPrice) {
         this.portfolioService.getPrice(stock).subscribe((price) => {
           const quantity = this.getQuantity(price, allocationPct, total);
           cb(quantity, price);
-        });
+        }, err => reject(err.error.error));
       } else {
         const quantity = this.getQuantity(lastPrice, allocationPct, total);
         cb(quantity, lastPrice);

@@ -1,5 +1,6 @@
 /* You can add global styles to this file, and also import other style files */
-@import "~@angular/material/prebuilt-themes/indigo-pink.css";
+@import '~@angular/material/prebuilt-themes/indigo-pink.css';
+@import '~primeng/resources/themes/luna-amber/theme.css';
 
 body {
   display: block;
@@ -26,7 +27,6 @@ button.nav-item {
 .app-title {
   color: white;
   font-weight: 800;
-  margin: 30px 70px 25px 35px;  
   font-family: monospace;
   font-size: larger;
 }

@@ -31,7 +31,7 @@ import { GlobalTaskQueueService } from '@shared/services/global-task-queue.servi
 import { ClientSmsService } from '@shared/services/client-sms.service';
 import { SchedulerService } from '@shared/service/scheduler.service';
 import { MachineDaytradingService } from '../machine-daytrading/machine-daytrading.service';
-import { SelectItem } from 'primeng';
+import { MenuItem, SelectItem } from 'primeng';
 
 @Component({
   selector: 'app-bb-card',
@@ -39,7 +39,6 @@ import { SelectItem } from 'primeng';
   styleUrls: ['./bb-card.component.css']
 })
 export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
-  @ViewChild('stepper', { static: false }) stepper;
   @Input() order: SmartOrder;
   @Input() tearDown: boolean;
   chart: Chart;
@@ -80,6 +79,10 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
 
   smsOptions: SelectItem[];
   smsOption;
+
+  items: MenuItem[];
+
+  activeIndex: number = 1;
 
   constructor(private _formBuilder: FormBuilder,
     private backtestService: BacktestService,
@@ -130,6 +133,20 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
       { label: 'Only send SMS', value: 'only_sms' },
       { label: 'Send order and SMS', value: 'order_sms' }
     ];
+
+           this.items = [{
+                label: 'Edit',
+                command: () => {
+                    this.activeIndex = 0;
+                }
+            },
+            {
+                label: 'Submit',
+                command: () => {
+                    this.activeIndex = 1;
+                }
+            }
+        ];
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -203,8 +220,8 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     return new Date().getHours() + ':' + new Date().getMinutes();
   }
 
-  resetStepper(stepper) {
-    stepper.selectedIndex = 0;
+  resetStepper() {
+    this.activeIndex = 0;
     this.stop();
   }
 
@@ -1074,7 +1091,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
 
   setLive() {
     this.live = true;
-    this.stepper.next();
+    this.activeIndex = 1;
   }
 
   toggleChart() {
