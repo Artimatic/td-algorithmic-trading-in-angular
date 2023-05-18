@@ -31,7 +31,7 @@ import { GlobalTaskQueueService } from '@shared/services/global-task-queue.servi
 import { ClientSmsService } from '@shared/services/client-sms.service';
 import { SchedulerService } from '@shared/service/scheduler.service';
 import { MachineDaytradingService } from '../machine-daytrading/machine-daytrading.service';
-import { MenuItem, SelectItem } from 'primeng';
+import { MenuItem, SelectItem } from 'primeng/api';
 
 @Component({
   selector: 'app-bb-card',

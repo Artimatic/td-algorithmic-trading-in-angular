@@ -37,7 +37,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatInputModule } from '@angular/material/input';
-import { MenubarModule } from 'primeng';
+import { MenubarModule } from 'primeng/menubar';
 
 const materialModules = [
   MatStepperModule,

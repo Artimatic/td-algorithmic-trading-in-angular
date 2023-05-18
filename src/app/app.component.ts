@@ -8,7 +8,7 @@ import { BacktestService, AuthenticationService, ReportingService } from './shar
 import { ServiceStatus } from './shared/models/service-status';
 import { GlobalSettingsService } from './settings/global-settings.service';
 import { GlobalTaskQueueService } from '@shared/services/global-task-queue.service';
-import { MenuItem } from 'primeng';
+import { MenuItem } from 'primeng/api';
 
 @Component({
   selector: 'app-root',

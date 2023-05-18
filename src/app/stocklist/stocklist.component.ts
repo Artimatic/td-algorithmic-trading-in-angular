@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { Message } from 'primeng';
 import { stockList } from '../rh-table/backtest-stocks.constant';
 import { PortfolioService } from '@shared/services';
 import { GlobalTaskQueueService } from '@shared/services/global-task-queue.service';
@@ -10,7 +9,7 @@ import { GlobalTaskQueueService } from '@shared/services/global-task-queue.servi
   styleUrls: ['./stocklist.component.css']
 })
 export class StocklistComponent implements OnInit {
-  messages: Message[] = [];
+  messages = [];
   cleanList: string[] = [];
   constructor(private portfolioService: PortfolioService,
     private globalTaskQueueService: GlobalTaskQueueService) { }

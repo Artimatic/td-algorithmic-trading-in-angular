@@ -15,9 +15,9 @@ import { GlobalSettingsService } from '../settings/global-settings.service';
 import { TradeService, AlgoQueueItem } from '../shared/services/trade.service';
 import { OrderRow } from '../shared/models/order-row';
 import { FormControl, Validators } from '@angular/forms';
-import { MenuItem } from 'primeng';
 import { takeUntil, takeWhile } from 'rxjs/operators';
 import { Subject } from 'rxjs';
+import { MenuItem } from 'primeng/api';
 
 @Component({
   selector: 'app-shopping-list',

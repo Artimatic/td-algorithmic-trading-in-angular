@@ -3,8 +3,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { LoginDialogComponent } from '../login-dialog/login-dialog.component';
 import { AuthenticationService } from '../shared';
-import { SelectItem } from 'primeng';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
+import { SelectItem } from 'primeng/api';
 
 @Component({
   selector: 'app-login',

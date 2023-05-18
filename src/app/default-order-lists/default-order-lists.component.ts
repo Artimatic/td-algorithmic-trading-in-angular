@@ -1,5 +1,4 @@
 import { Component, OnInit, Input, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
-import { SelectItem } from 'primeng';
 import { SmartOrder } from '../shared/models/smart-order';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import * as _ from 'lodash';
@@ -11,6 +10,7 @@ import {
 } from 'rxjs/operators';
 import { MachineDaytradingService } from '../machine-daytrading/machine-daytrading.service';
 import { SchedulerService } from '@shared/service/scheduler.service';
+import { SelectItem } from 'primeng/api';
 
 @Component({
   selector: 'app-default-order-lists',
