@@ -1,4 +1,4 @@
-import { Component, OnChanges, Input, OnInit, ViewChild, SimpleChanges, OnDestroy } from '@angular/core';
+import { Component, OnChanges, Input, OnInit, SimpleChanges, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { take } from 'rxjs/operators';
@@ -82,7 +82,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
 
   items: MenuItem[];
 
-  activeIndex: number = 1;
+  activeIndex = 1;
 
   constructor(private _formBuilder: FormBuilder,
     private backtestService: BacktestService,

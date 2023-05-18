@@ -105,7 +105,8 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
       const reject = err => {
         this.errorMsg = `${err}`;
         this.isLoading = false;
-      }
+      };
+
       this.machineDaytradingService.addOrder(this.addOrderFormGroup.value.side, stock, allocationPct, total, cb, null, reject);
     }, 'adding_order', null, true, 3000);
   }
@@ -192,10 +193,10 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
   getPortfolioTotal() {
     this.isLoading = true;
     this.machineDaytradingService.getPortfolioBalance()
-    .subscribe((data) => {
-      this.updatedAmount(data.liquidationValue);
-      this.isLoading = false;
-    });
+      .subscribe((data) => {
+        this.updatedAmount(data.liquidationValue);
+        this.isLoading = false;
+      });
   }
 
   getCashBalance() {
@@ -214,7 +215,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
         acc.list.push(val);
       }
       return acc;
-    }, {uniqueSymbols: {}, list: []}).list;
+    }, { uniqueSymbols: {}, list: [] }).list;
     sessionStorage.setItem('daytradeList', JSON.stringify(ordersToSave));
     this.defaultLists = this.createDefaultList();
     console.log('default list set to ', this.defaultLists);
