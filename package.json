@@ -80,7 +80,7 @@
     "tslib": "^1.10.0",
     "tulind": "^0.8.15",
     "twilio": "^3.50.0",
-    "typescript": "4.3.5",
+    "typescript": "4.1.5",
     "websocket-extensions": "^0.1.4",
     "xlsx": "^0.14.2",
     "y18n": "^4.0.1",
