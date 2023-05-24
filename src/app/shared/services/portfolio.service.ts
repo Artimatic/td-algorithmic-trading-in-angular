@@ -21,6 +21,7 @@ export interface PortfolioInfoHolding {
   sellReasons: string;
   buyConfidence: number;
   sellConfidence: number;
+  prediction: number;
 }
 
 @Injectable()

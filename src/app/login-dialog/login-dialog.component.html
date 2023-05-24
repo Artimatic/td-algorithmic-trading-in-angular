@@ -1,23 +1,21 @@
-<div class="login-container" fxLayout="column" fxLayoutAlign="center center">
+<div class="login-container">
     <form name="form" (ngSubmit)="login()" #f="ngForm" novalidate>
         <div class="form-group">
-            <mat-form-field class="login-input">
-                <input matInput placeholder="Username" name="username" [(ngModel)]="model.username" #username="ngModel" required>
-            </mat-form-field>
+            <div class="login-input">
+                <input type="text" placeholder="Username" name="username" [(ngModel)]="model.username" required/>
+            </div>
         </div>
         <div class="form-group">
-            <mat-form-field class="login-input">
-                <input matInput placeholder="Password" [type]="hide ? 'password' : 'text'" name="password" [(ngModel)]="model.password" #password="ngModel"
-                    required>
-                <mat-icon matSuffix (click)="hide = !hide">{{hide ? 'visibility' : 'visibility_off'}}</mat-icon>
-            </mat-form-field>
+            <div class="login-input">
+                <p-password [(ngModel)]="model.password" placeholder="Password" [toggleMask]="true" [feedback]="false"></p-password>
+            </div>
         </div>
         <div class="form-group">
             <div *ngIf="loading">
-                <mat-spinner></mat-spinner>
+                <p-progressSpinner styleClass="w-4rem h-4rem" strokeWidth="8" fill="var(--surface-ground)" animationDuration="1s"></p-progressSpinner>
             </div>
             <span *ngIf="!loading">
-                <button mat-raised-button (click)="login()">Next</button>
+                <button pButton pRipple label="Next" class="p-button-success" (click)="login()"></button>
             </span>
         </div>
         <div *ngIf="error" class="alert alert-danger">{{error}}</div>

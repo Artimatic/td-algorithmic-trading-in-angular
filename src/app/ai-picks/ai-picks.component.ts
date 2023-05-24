@@ -158,6 +158,8 @@ export class AiPicksComponent implements OnInit, OnDestroy {
       this.sells[index].value.push(predictionData);
     } else {
       const sellItem = this.createListObject(symbol, predictionData);
+      this.aiPicksService.mlSellResults.next(sellItem);
+
       this.sells.push(sellItem);
     }
   }

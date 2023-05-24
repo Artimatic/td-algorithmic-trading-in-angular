@@ -255,6 +255,10 @@ class PortfolioService {
       }
     }
 
+    if (!accountId) {
+      throw new Error('Missing accountId');
+    }
+
     if (this.access_token[accountId]) {
       const diffMinutes = moment().diff(moment(this.access_token[accountId].timestamp), 'minutes');
       console.log('Found access token ', diffMinutes);
@@ -276,7 +280,7 @@ class PortfolioService {
         console.log('Token error: ', errorMessage);
         if (errorMessage === 'The access token being passed has expired or is invalid.') {
           console.log('Last token request: ', moment(this.lastTokenRequest).format());
-          if (this.lastTokenRequest === null || moment().diff(moment(this.lastTokenRequest), 'minutes') > 29) {
+          if (this.tdaKey[accountId] && (this.lastTokenRequest === null || moment().diff(moment(this.lastTokenRequest), 'minutes') > 29)) {
             this.lastTokenRequest = moment().valueOf();
             console.log('Requesting new token');
             return this.getTDAccessToken(accountId);
@@ -507,7 +511,6 @@ class PortfolioService {
   }
 
   getTDAccessToken(accountId) {
-    console.log(moment().format(), ' GETTING NEW ACCESS TOKEN');
     let refreshToken;
     let key;
     if (!accountId ||
@@ -519,6 +522,10 @@ class PortfolioService {
       refreshToken = this.refreshTokensHash[accountId];
       key = this.tdaKey[accountId];
     }
+    if (!accountId || !this.tdaKey[accountId]) {
+      throw new Error('Missing accountId');
+    }
+    console.log(moment().format(), ' GETTING NEW ACCESS TOKEN');
 
     return request.post({
       uri: tdaUrl + 'oauth2/token',

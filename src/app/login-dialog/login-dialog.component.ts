@@ -1,7 +1,5 @@
-import { Component, OnInit, Inject } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { Component, OnInit } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { LoginComponent } from '../login/login.component';
 import { AuthenticationService } from '../shared';
 
 @Component({
@@ -17,15 +15,9 @@ export class LoginDialogComponent implements OnInit {
 
   constructor(
     public snackBar: MatSnackBar,
-    public dialogRef: MatDialogRef<LoginComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any,
     private authenticationService: AuthenticationService) { }
 
   ngOnInit() { }
-
-  onNoClick(): void {
-    this.dialogRef.close();
-  }
 
   login() {
     this.loading = true;

@@ -76,6 +76,11 @@ import { AiPicksComponent } from './ai-picks/ai-picks.component';
 import { AutoBacktestSwitchComponent } from './auto-backtest-switch/auto-backtest-switch.component';
 import { WatchListComponent } from './watch-list/watch-list.component';
 import { SchedulerService } from '@shared/service/scheduler.service';
+import { DialogService, DynamicDialogModule } from 'primeng/dynamicdialog';
+import { PasswordModule } from 'primeng/password';
+import { CheckboxModule } from 'primeng/checkbox';
+import { InputTextareaModule } from 'primeng/inputtextarea';
+import { PickListModule } from 'primeng/picklist';
 
 @NgModule({
   declarations: [
@@ -146,7 +151,11 @@ import { SchedulerService } from '@shared/service/scheduler.service';
     TimepickerModule.forRoot(),
     ToastModule,
     InputTextModule,
-
+    DynamicDialogModule,
+    PasswordModule,
+    CheckboxModule,
+    InputTextareaModule,
+    PickListModule,
   ],
   providers: [
     BacktestService,
@@ -161,7 +170,8 @@ import { SchedulerService } from '@shared/service/scheduler.service';
     AlgoService,
     TradeService,
     MessageService,
-    SchedulerService
+    SchedulerService,
+    DialogService,
   ],
   bootstrap: [AppComponent]
 })

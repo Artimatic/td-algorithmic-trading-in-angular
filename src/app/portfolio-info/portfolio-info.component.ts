@@ -1,12 +1,15 @@
-import { Component, OnInit } from '@angular/core';
-import { PortfolioService, BacktestService, PortfolioInfoHolding, AiPicksService } from '@shared/services';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { PortfolioService, BacktestService, PortfolioInfoHolding, AiPicksService, AuthenticationService } from '@shared/services';
 import { BacktestResponse } from '../rh-table';
 import { DailyBacktestService } from '@shared/daily-backtest.service';
 import * as moment from 'moment';
 import { CartService } from '@shared/services/cart.service';
 import * as _ from 'lodash';
 import { SmartOrder } from '@shared/models/smart-order';
-import { take } from 'rxjs/operators';
+import { take, takeUntil } from 'rxjs/operators';
+import { SchedulerService } from '@shared/service/scheduler.service';
+import { Subject } from 'rxjs';
+import { AiPicksPredictionData } from '@shared/services/ai-picks.service';
 
 // bearishMidTermProfitLoss: 0
 // bearishMidTermSignals: 0
@@ -26,19 +29,120 @@ import { take } from 'rxjs/operators';
   templateUrl: './portfolio-info.component.html',
   styleUrls: ['./portfolio-info.component.scss']
 })
-export class PortfolioInfoComponent implements OnInit {
+export class PortfolioInfoComponent implements OnInit, OnDestroy {
   holdings: PortfolioInfoHolding[];
   prefillOrderForm;
   cols;
+  destroy$ = new Subject()
 
   constructor(private portfolioService: PortfolioService,
     private backtestService: BacktestService,
     private dailyBacktestService: DailyBacktestService,
     private cartService: CartService,
-    private aiPicksService: AiPicksService) { }
+    private aiPicksService: AiPicksService,
+    private schedulerService: SchedulerService,
+    private authenticationService: AuthenticationService
+  ) { }
 
   ngOnInit() {
     this.init();
+  }
+
+  init() {
+    this.aiPicksService.mlSellResults
+      .pipe(
+        takeUntil(this.destroy$)
+      )
+      .subscribe(sellPrediction => {
+        console.log('got sell prediction ', sellPrediction);
+        const holdingIdx = this.holdings.findIndex(val => val.name === sellPrediction.label);
+        if (holdingIdx > -1) {
+          this.holdings[holdingIdx].prediction = sellPrediction.value[0].prediction;
+          this.handleAiRecommendations(this.holdings[holdingIdx]);
+        }
+      });
+
+    this.aiPicksService.mlBuyResults
+      .pipe(
+        takeUntil(this.destroy$)
+      )
+      .subscribe(buyPrediction => {
+        console.log('got buy prediction ', buyPrediction);
+
+        const holdingIdx = this.holdings.findIndex(val => val.name === buyPrediction.label);
+        if (holdingIdx > -1) {
+          this.holdings[holdingIdx].prediction = buyPrediction.value[0].prediction;
+          this.handleAiRecommendations(this.holdings[holdingIdx]);
+        }
+      });
+
+    this.cols = [
+      { field: 'name', header: 'Holding' },
+      { field: 'pl', header: 'P/L Open' },
+      { field: 'netLiq', header: 'NetLiq' },
+      { field: 'shares', header: 'Shares' },
+      { field: 'alloc', header: 'Allocation' },
+      { field: 'recommendation', header: 'Recommendation' },
+      { field: 'buyReasons', header: 'Buy Reasons' },
+      { field: 'buyConfidence', header: 'Buy Confidence' },
+      { field: 'sellReasons', header: 'Sell Reasons' },
+      { field: 'sellConfidence', header: 'Sell Confidence' },
+      { field: 'prediction', header: 'Prediction' }
+    ];
+
+    this.holdings = [];
+    const currentDate = moment().format('YYYY-MM-DD');
+    const startDate = moment().subtract(365, 'days').format('YYYY-MM-DD');
+
+    this.authenticationService.checkCredentials(this.authenticationService?.selectedTdaAccount?.accountId)
+      .subscribe(() => {
+        this.portfolioService.getTdBalance()
+          .pipe(take(1))
+          .subscribe((balance) => {
+            const totalValue = balance.liquidationValue;
+            this.portfolioService.getTdPortfolio().subscribe((data) => {
+              if (data) {
+                data.forEach((holding) => {
+                  const stock = holding.instrument.symbol;
+                  this.runAi(stock);
+                  let pl;
+                  if (holding.instrument.assetType.toLowerCase() === 'option') {
+                    pl = holding.marketValue - (holding.averagePrice * holding.longQuantity) * 100;
+                  } else {
+                    pl = holding.marketValue - (holding.averagePrice * holding.longQuantity);
+                  }
+                  this.holdings.push({
+                    name: stock,
+                    pl,
+                    netLiq: holding.marketValue,
+                    shares: holding.longQuantity,
+                    alloc: (holding.averagePrice * holding.longQuantity) / totalValue,
+                    recommendation: 'None',
+                    buyReasons: '',
+                    sellReasons: '',
+                    buyConfidence: 0,
+                    sellConfidence: 0,
+                    prediction: null
+                  });
+
+                  if (holding.instrument.assetType.toLowerCase() === 'equity') {
+                    this.getTechnicalIndicators(holding.instrument.symbol, startDate, currentDate)
+                      .subscribe((indicators) => {
+                        const foundIdx = this.holdings.findIndex((value) => {
+                          return value.name === stock;
+                        });
+                        this.holdings[foundIdx].recommendation = indicators.recommendation.recommendation;
+                        const reasons = this.getRecommendationReason(indicators.recommendation);
+                        this.holdings[foundIdx].buyReasons = reasons.buyReasons;
+                        this.holdings[foundIdx].sellReasons = reasons.sellReasons;
+                      });
+                  }
+                });
+              }
+            });
+          });
+      });
+
   }
 
   getRecommendationReason(recommendation) {
@@ -111,9 +215,17 @@ export class PortfolioInfoComponent implements OnInit {
       }
     } else if (holding.recommendation.toLowerCase() === 'sell') {
       if (holding.sellConfidence > 0) {
-        console.log('Selling ', holding.name);
         this.portfolioSell(holding);
+
       }
+    }
+  }
+
+  handleAiRecommendations(holding: PortfolioInfoHolding) {
+    if (holding.prediction > 0.6) {
+      this.portfolioBuy(holding);
+    } else if (holding.prediction < 0.4) {
+      this.portfolioSell(holding);
     }
   }
 
@@ -181,76 +293,20 @@ export class PortfolioInfoComponent implements OnInit {
       });
   }
 
-  init() {
-    this.cols = [
-      { field: 'name', header: 'Holding' },
-      { field: 'pl', header: 'P/L Open' },
-      { field: 'netLiq', header: 'NetLiq' },
-      { field: 'shares', header: 'Shares' },
-      { field: 'alloc', header: 'Allocation' },
-      { field: 'recommendation', header: 'Recommendation' },
-      { field: 'buyReasons', header: 'Buy Reasons' },
-      { field: 'buyConfidence', header: 'Buy Confidence' },
-      { field: 'sellReasons', header: 'Sell Reasons' },
-      { field: 'sellConfidence', header: 'Sell Confidence' }
-    ];
-
-    this.holdings = [];
-    const currentDate = moment().format('YYYY-MM-DD');
-    const startDate = moment().subtract(365, 'days').format('YYYY-MM-DD');
-
-    this.portfolioService.getTdBalance()
-      .pipe(take(1))
-      .subscribe((balance) => {
-        const totalValue = balance.liquidationValue;
-        this.portfolioService.getTdPortfolio().subscribe((data) => {
-          if (data) {
-            data.forEach((holding) => {
-              const stock = holding.instrument.symbol;
-              this.runAi(stock);
-              let pl;
-              if (holding.instrument.assetType.toLowerCase() === 'option') {
-                pl = holding.marketValue - (holding.averagePrice * holding.longQuantity) * 100;
-              } else {
-                pl = holding.marketValue - (holding.averagePrice * holding.longQuantity);
-              }
-              this.holdings.push({
-                name: stock,
-                pl,
-                netLiq: holding.marketValue,
-                shares: holding.longQuantity,
-                alloc: (holding.averagePrice * holding.longQuantity) / totalValue,
-                recommendation: 'None',
-                buyReasons: '',
-                sellReasons: '',
-                buyConfidence: 0,
-                sellConfidence: 0
-              });
-
-              if (holding.instrument.assetType.toLowerCase() === 'equity') {
-                this.getTechnicalIndicators(holding.instrument.symbol, startDate, currentDate)
-                  .subscribe((indicators) => {
-                    const foundIdx = this.holdings.findIndex((value) => {
-                      return value.name === stock;
-                    });
-                    this.holdings[foundIdx].recommendation = indicators.recommendation.recommendation;
-                    const reasons = this.getRecommendationReason(indicators.recommendation);
-                    this.holdings[foundIdx].buyReasons = reasons.buyReasons;
-                    this.holdings[foundIdx].sellReasons = reasons.sellReasons;
-                  });
-              }
-            });
-          }
-        });
-      });
-  }
-
   runAi(stockName: string) {
-    this.aiPicksService.tickerSellRecommendationQueue.next(stockName);
-    this.aiPicksService.tickerBuyRecommendationQueue.next(stockName);
+    this.schedulerService.schedule(() => {
+      this.aiPicksService.tickerSellRecommendationQueue.next(stockName);
+      this.aiPicksService.tickerBuyRecommendationQueue.next(stockName);
+    }, 'portfolio_mgmt_ai');
+
   }
 
   refresh() {
     this.init();
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

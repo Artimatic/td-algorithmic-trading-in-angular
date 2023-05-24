@@ -1,10 +1,14 @@
 /* You can add global styles to this file, and also import other style files */
 @import '~@angular/material/prebuilt-themes/indigo-pink.css';
+@import '~primeng/resources/primeng.min.css';
+
 @import '~primeng/resources/themes/luna-amber/theme.css';
 
-body {
+html body {
   display: block;
   margin: 0;
+  background: #191919;
+  color: #dedede;
 }
 
 button.nav-item {
@@ -47,4 +51,9 @@ button.nav-item {
 
 .uppercase {
   text-transform: uppercase;
+}
+
+.ui-g {
+  display: flex;
+  flex-direction: column;
 }
