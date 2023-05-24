@@ -179,6 +179,12 @@ class PortfolioController extends BaseController {
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
+  getEquityMarketHours(request, response) {
+    PortfolioService.getEquityMarketHours(request.query.date)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
   setCredentials(request, response) {
     PortfolioService.setCredentials(request.body.accountId,
       request.body.key,

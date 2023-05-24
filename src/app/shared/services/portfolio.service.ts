@@ -229,4 +229,14 @@ export class PortfolioService {
       return this.authenticationService.selectedTdaAccount.accountId;
     }
   }
+
+  getEquityMarketHours(date: string) {
+    const options = {
+      params: {
+        date
+      }
+    };
+
+    return this.http.get('/api/portfolio/v3/equity-hours', options);
+  }
 }

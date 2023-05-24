@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { PortfolioService, BacktestService, PortfolioInfoHolding, AiPicksService, AuthenticationService } from '@shared/services';
+import { PortfolioService, BacktestService, PortfolioInfoHolding, AiPicksService, AuthenticationService, TradeService } from '@shared/services';
 import { BacktestResponse } from '../rh-table';
 import { DailyBacktestService } from '@shared/daily-backtest.service';
 import * as moment from 'moment';
@@ -9,7 +9,11 @@ import { SmartOrder } from '@shared/models/smart-order';
 import { take, takeUntil } from 'rxjs/operators';
 import { SchedulerService } from '@shared/service/scheduler.service';
 import { Subject } from 'rxjs';
-import { AiPicksPredictionData } from '@shared/services/ai-picks.service';
+import { PrimeIcons } from 'primeng/api';
+import { TimerObservable } from 'rxjs-compat/observable/TimerObservable';
+import { GlobalSettingsService } from '../settings/global-settings.service';
+import { DaytradeManagerService } from '@shared/services/daytrade-manager.service';
+import { AlgoQueueItem } from '@shared/services/trade.service';
 
 // bearishMidTermProfitLoss: 0
 // bearishMidTermSignals: 0
@@ -24,16 +28,25 @@ import { AiPicksPredictionData } from '@shared/services/ai-picks.service';
 // bullishShortTermSignals: 0
 // bullishSignals: 11
 
+export interface DaytradeEvents {
+  status: string;
+  orderProperties: SmartOrder;
+}
+
 @Component({
   selector: 'app-portfolio-info',
   templateUrl: './portfolio-info.component.html',
   styleUrls: ['./portfolio-info.component.scss']
 })
 export class PortfolioInfoComponent implements OnInit, OnDestroy {
+  defaultInterval = 80808;
+  interval = this.defaultInterval;
   holdings: PortfolioInfoHolding[];
   prefillOrderForm;
   cols;
   destroy$ = new Subject()
+  daytradeEvents: any[] = [];
+  simultaneousOrderLimit = 3;
 
   constructor(private portfolioService: PortfolioService,
     private backtestService: BacktestService,
@@ -41,14 +54,22 @@ export class PortfolioInfoComponent implements OnInit, OnDestroy {
     private cartService: CartService,
     private aiPicksService: AiPicksService,
     private schedulerService: SchedulerService,
-    private authenticationService: AuthenticationService
-  ) { }
+    private authenticationService: AuthenticationService,
+    private globalSettingsService: GlobalSettingsService,
+    private daytradeManager: DaytradeManagerService) { }
 
   ngOnInit() {
     this.init();
   }
 
   init() {
+    this.daytradeEvents = [
+      { status: 'Ordered', date: '15/10/2020 10:30', icon: PrimeIcons.SHOPPING_CART, color: '#9C27B0', image: 'game-controller.jpg' },
+      { status: 'Processing', date: '15/10/2020 14:00', icon: PrimeIcons.COG, color: '#673AB7' },
+      { status: 'Shipped', date: '15/10/2020 16:15', icon: PrimeIcons.ENVELOPE, color: '#FF9800' },
+      { status: 'Delivered', date: '16/10/2020 10:00', icon: PrimeIcons.CHECK, color: '#607D8B' }
+    ];
+
     this.aiPicksService.mlSellResults
       .pipe(
         takeUntil(this.destroy$)
@@ -303,6 +324,27 @@ export class PortfolioInfoComponent implements OnInit, OnDestroy {
 
   refresh() {
     this.init();
+  }
+
+  startTrading() {
+    TimerObservable.create(0, this.interval)
+    .pipe(
+      takeUntil(this.destroy$))
+    .subscribe(() => {
+      if (this.interval !== this.defaultInterval) {
+        this.interval = this.defaultInterval;
+      }
+
+      if (moment().isAfter(moment(this.globalSettingsService.startTime)) &&
+        moment().isBefore(moment(this.globalSettingsService.stopTime))) {
+          this.daytradeManager.executeDaytrade();
+      }
+
+      if (moment().isAfter(moment(this.globalSettingsService.stopTime)) &&
+        moment().isBefore(moment(this.globalSettingsService.stopTime).add(2, 'minutes'))) {
+        this.interval = moment().subtract(5, 'minutes').diff(moment(this.globalSettingsService.startTime), 'milliseconds');
+      }
+    });
   }
 
   ngOnDestroy() {

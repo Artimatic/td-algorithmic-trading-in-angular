@@ -356,7 +356,7 @@ class PortfolioService {
       return accountId;
     } else {
       for (const id in this.access_token) {
-        if (id) {
+        if (id && id !== 'null' && this.access_token[id]) {
           accountId = id;
         }
       }
@@ -760,6 +760,26 @@ class PortfolioService {
           });
       });
   }
+
+  getEquityMarketHours(date: string) {
+    const accountId = this.getAccountId();
+
+    const query = `${tdaUrl}marketdata/EQUITY/hours`;
+    const options = {
+      uri: query,
+      qs: {
+        apikey: this.tdaKey[accountId],
+        date
+      },
+      headers: {
+        Authorization: `Bearer ${this.access_token[accountId].token}`
+      }
+    };
+
+      return request.get(options)
+        .then(this.processTDData);
+  }
+
 }
 
 export default new PortfolioService();

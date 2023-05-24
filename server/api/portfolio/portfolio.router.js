@@ -79,3 +79,7 @@ export const checkAccount = (request, response) => {
 export const deleteCredentials = (request, response) => {
   PortfolioController.deleteCredentials(request, response);
 }
+
+export const getEquityMarketHours = (request, response) => {
+  PortfolioController.getEquityMarketHours(request, response);
+}

@@ -81,6 +81,7 @@ import { PasswordModule } from 'primeng/password';
 import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { PickListModule } from 'primeng/picklist';
+import {TimelineModule} from 'primeng/timeline';
 
 @NgModule({
   declarations: [
@@ -156,6 +157,7 @@ import { PickListModule } from 'primeng/picklist';
     CheckboxModule,
     InputTextareaModule,
     PickListModule,
+    TimelineModule,
   ],
   providers: [
     BacktestService,
