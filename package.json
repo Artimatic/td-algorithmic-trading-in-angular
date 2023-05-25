@@ -6,7 +6,7 @@
   "scripts": {
     "ng": "ng",
     "start": "npm run build && pm2 start ecosystem.config.js",
-    "build": "ng build --aot && npm run build-ts && npm run tslint",
+    "build": "npm run tslint && npm run lintfix && ng build --aot && npm run build-ts",
     "serve": "node dist/app.js",
     "test-server": "npm run build-ts && node server-tests.js",
     "test": "ng test",

@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { PortfolioService, BacktestService, PortfolioInfoHolding, AiPicksService, AuthenticationService, TradeService } from '@shared/services';
+import { PortfolioService, BacktestService, PortfolioInfoHolding, AiPicksService, AuthenticationService } from '@shared/services';
 import { BacktestResponse } from '../rh-table';
 import { DailyBacktestService } from '@shared/daily-backtest.service';
 import * as moment from 'moment';
@@ -13,7 +13,6 @@ import { PrimeIcons } from 'primeng/api';
 import { TimerObservable } from 'rxjs-compat/observable/TimerObservable';
 import { GlobalSettingsService } from '../settings/global-settings.service';
 import { DaytradeManagerService } from '@shared/services/daytrade-manager.service';
-import { AlgoQueueItem } from '@shared/services/trade.service';
 
 // bearishMidTermProfitLoss: 0
 // bearishMidTermSignals: 0
@@ -44,7 +43,7 @@ export class PortfolioInfoComponent implements OnInit, OnDestroy {
   holdings: PortfolioInfoHolding[];
   prefillOrderForm;
   cols;
-  destroy$ = new Subject()
+  destroy$ = new Subject();
   daytradeEvents: any[] = [];
   simultaneousOrderLimit = 3;
 
@@ -328,23 +327,23 @@ export class PortfolioInfoComponent implements OnInit, OnDestroy {
 
   startTrading() {
     TimerObservable.create(0, this.interval)
-    .pipe(
-      takeUntil(this.destroy$))
-    .subscribe(() => {
-      if (this.interval !== this.defaultInterval) {
-        this.interval = this.defaultInterval;
-      }
+      .pipe(
+        takeUntil(this.destroy$))
+      .subscribe(() => {
+        if (this.interval !== this.defaultInterval) {
+          this.interval = this.defaultInterval;
+        }
 
-      if (moment().isAfter(moment(this.globalSettingsService.startTime)) &&
-        moment().isBefore(moment(this.globalSettingsService.stopTime))) {
+        if (moment().isAfter(moment(this.globalSettingsService.startTime)) &&
+          moment().isBefore(moment(this.globalSettingsService.stopTime))) {
           this.daytradeManager.executeDaytrade();
-      }
+        }
 
-      if (moment().isAfter(moment(this.globalSettingsService.stopTime)) &&
-        moment().isBefore(moment(this.globalSettingsService.stopTime).add(2, 'minutes'))) {
-        this.interval = moment().subtract(5, 'minutes').diff(moment(this.globalSettingsService.startTime), 'milliseconds');
-      }
-    });
+        if (moment().isAfter(moment(this.globalSettingsService.stopTime)) &&
+          moment().isBefore(moment(this.globalSettingsService.stopTime).add(2, 'minutes'))) {
+          this.interval = moment().subtract(5, 'minutes').diff(moment(this.globalSettingsService.startTime), 'milliseconds');
+        }
+      });
   }
 
   ngOnDestroy() {

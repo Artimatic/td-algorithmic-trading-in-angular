@@ -20,7 +20,7 @@ export class ProductViewComponent implements OnInit, OnDestroy {
   resolving = false;
   stock: string;
   backtestResults: any[];
-  destroy$ = new Subject()
+  destroy$ = new Subject();
 
   constructor(
     public snackBar: MatSnackBar,

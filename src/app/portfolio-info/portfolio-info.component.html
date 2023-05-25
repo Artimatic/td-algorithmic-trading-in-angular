@@ -51,7 +51,7 @@
 <app-pokerhand></app-pokerhand>
 <app-ai-picks></app-ai-picks>
 
-<p-timeline [value]="dailyEvents" align="alternate">
+<p-timeline [value]="daytradeEvents" align="alternate">
   <ng-template pTemplate="marker" let-event>
       <span class="custom-marker p-shadow-2" [style.backgroundColor]="event.color">
           <i [ngClass]="event.icon"></i>
