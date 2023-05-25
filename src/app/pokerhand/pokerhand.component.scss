@@ -8,3 +8,8 @@
 .card-hover {
   bottom: 1em;
 }
+
+.poker-hand-list {
+  max-height: 30em;
+  overflow-y: scroll;
+}

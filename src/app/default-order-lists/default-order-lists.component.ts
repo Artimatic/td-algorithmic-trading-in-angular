@@ -196,6 +196,8 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
       .subscribe((data) => {
         this.updatedAmount(data.liquidationValue);
         this.isLoading = false;
+      }, () => {
+        this.isLoading = false;
       });
   }
 
@@ -203,6 +205,8 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
     this.isLoading = true;
     this.machineDaytradingService.getPortfolioBalance().subscribe((data) => {
       this.updatedAmount(data.cashBalance || data.cashAvailableForTrading);
+      this.isLoading = false;
+    }, () => {
       this.isLoading = false;
     });
   }
