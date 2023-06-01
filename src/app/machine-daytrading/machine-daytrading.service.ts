@@ -84,6 +84,8 @@ export class MachineDaytradingService {
               });
           }, 'MachineDaytradingService_ml', stopTime);
         }
+      }, () => {
+        mainCallback(null, null, null);
       }
     );
   }

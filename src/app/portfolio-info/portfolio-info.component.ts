@@ -166,7 +166,7 @@ export class PortfolioInfoComponent implements OnInit, OnDestroy {
                   }
                 });
               }
-              this.findDaytrades();
+              this.findTrades();
             });
           });
       });
@@ -354,7 +354,7 @@ export class PortfolioInfoComponent implements OnInit, OnDestroy {
       });
   }
 
-  findDaytrades() {
+  findTrades() {
     this.machineDaytradingService.allocationPct = this.determineMachineDaytradingPct();
     this.machineDaytradingService.allocationTotal = this.determineMachineDaytradingTotal();
 
