@@ -1846,7 +1846,6 @@ export const stockList = [
   'PMT',
   'ALX',
   'GDYN',
-  'RPAY',
   'CMP',
   'SSP',
   'EAT',

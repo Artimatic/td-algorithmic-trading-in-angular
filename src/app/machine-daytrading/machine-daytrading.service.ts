@@ -43,7 +43,7 @@ export class MachineDaytradingService {
     }
     this.backtestService.getDaytradeRecommendation(stockSymbol, 0, 0, { minQuotes: 81 }, 'tiingo').subscribe(
       analysis => {
-        if (analysis.mfiTrade.toLowerCase() === 'bullish' || analysis.vwma.toLowerCase() === 'bullish') {
+        if (analysis.recommendation.toLowerCase() === 'buy') {
           this.schedulerService.schedule(() => {
             this.machineLearningService
               .trainPredictNext30(stockSymbol,
