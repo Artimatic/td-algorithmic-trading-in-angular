@@ -83,6 +83,8 @@ export class MachineDaytradingService {
                 mainCallback(null, null, null);
               });
           }, 'MachineDaytradingService_ml', stopTime);
+        } else {
+          mainCallback(null, null, null);
         }
       }, () => {
         mainCallback(null, null, null);
