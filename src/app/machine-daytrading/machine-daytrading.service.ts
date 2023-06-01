@@ -37,50 +37,61 @@ export class MachineDaytradingService {
     }, 'MachineDaytradingService_ml', null, false, 300000);
   }
 
+  findSingleTrade(stockSymbol, stopTime = null, mainCallback = (stock, quantity, price) => { }) {
+    if (!stockSymbol) {
+      stockSymbol = this.getRandomStock();
+    }
+    this.backtestService.getDaytradeRecommendation(stockSymbol, 0, 0, { minQuotes: 81 }, 'tiingo').subscribe(
+      analysis => {
+        if (analysis.mfiTrade.toLowerCase() === 'bullish' || analysis.vwma.toLowerCase() === 'bullish') {
+          this.schedulerService.schedule(() => {
+            this.machineLearningService
+              .trainPredictNext30(stockSymbol,
+                moment().add({ days: 1 }).format('YYYY-MM-DD'),
+                moment().subtract({ days: 1 }).format('YYYY-MM-DD'),
+                1,
+                this.globalSettingsService.daytradeAlgo
+              )
+              .subscribe((data: any[]) => {
+                // if (data[0].nextOutput > 0.5 && data[0].correct / data[0].guesses > 0.5) {
+                if (data[0].correct / data[0].guesses > 0.6 && data[0].guesses > 50) {
+                  const cb = (quantity, price) => {
+                    this.selectedStock = stockSymbol;
+                    this.quantity = quantity;
+                    this.orderSize = _.floor(quantity / 3) || 1;
+                    console.log('Set trade: ', stockSymbol, this.quantity, this.orderSize);
+                    mainCallback(stockSymbol, quantity, price);
+                  };
+
+                  console.log('Found a trade: ', stockSymbol);
+
+                  if (this.allocationTotal !== null && this.allocationPct !== null) {
+                    console.log('Adding trade 1: ', stockSymbol);
+                    this.addOrder('daytrade', stockSymbol, this.allocationPct, this.allocationTotal, cb, analysis.data.price);
+                  } else {
+                    this.schedulerService.schedule(() => {
+                      this.getPortfolioBalance().subscribe(balance => {
+                        console.log('Adding trade 2: ', stockSymbol);
+                        this.addOrder('daytrade', stockSymbol, 1, balance.availableFunds, cb, analysis.data.price);
+                      });
+                    }, 'MachineDaytradingService_add_order', stopTime, true);
+                  }
+                } else {
+                  mainCallback(null, null, null);
+                }
+              }, () => {
+                mainCallback(null, null, null);
+              });
+          }, 'MachineDaytradingService_ml', stopTime);
+        }
+      }
+    );
+  }
+
   findTrade() {
     this.schedulerService.schedule(() => {
       if (!this.selectedStock) {
-        const stock = this.getRandomStock();
-        this.backtestService.getDaytradeRecommendation(stock, 0, 0, { minQuotes: 81 }, 'tiingo').subscribe(
-          analysis => {
-            if (analysis.mfiTrade.toLowerCase() === 'bullish' || analysis.vwma.toLowerCase() === 'bullish') {
-              this.schedulerService.schedule(() => {
-                this.machineLearningService
-                  .trainPredictNext30(stock,
-                    moment().add({ days: 1 }).format('YYYY-MM-DD'),
-                    moment().subtract({ days: 1 }).format('YYYY-MM-DD'),
-                    1,
-                    this.globalSettingsService.daytradeAlgo
-                  )
-                  .subscribe((data: any[]) => {
-                    // if (data[0].nextOutput > 0.5 && data[0].correct / data[0].guesses > 0.5) {
-                    if (data[0].correct / data[0].guesses > 0.6 && data[0].guesses > 50) {
-                      const cb = (quantity) => {
-                        this.selectedStock = stock;
-                        this.quantity = quantity;
-                        this.orderSize = _.floor(quantity / 3) || 1;
-                        console.log('Set trade: ', stock, this.quantity, this.orderSize);
-                      };
-
-                      console.log('Found a trade: ', stock);
-
-                      if (this.allocationTotal !== null && this.allocationPct !== null) {
-                        console.log('Adding trade 1: ', stock);
-                        this.addOrder('daytrade', stock, this.allocationPct, this.allocationTotal, cb, analysis.data.price);
-                      } else {
-                        this.schedulerService.schedule(() => {
-                          this.getPortfolioBalance().subscribe(balance => {
-                            console.log('Adding trade 2: ', stock);
-                            this.addOrder('daytrade', stock, 1, balance.availableFunds, cb, analysis.data.price);
-                          });
-                        }, 'MachineDaytradingService_add_order', this.globalSettingsService.stopTime, true);
-                      }
-                    }
-                  });
-              }, 'MachineDaytradingService_ml', this.globalSettingsService.stopTime);
-            }
-          }
-        );
+        this.findSingleTrade(null, this.globalSettingsService.stopTime);
       }
     }, 'MachineDaytradingService_get_recommendation', this.globalSettingsService.stopTime);
   }
@@ -90,7 +101,7 @@ export class MachineDaytradingService {
     return _.floor(totalCost / stockPrice);
   }
 
-  addOrder(orderType: string, stock: string, allocationPct: number, total: number, cb: (arg1: number, arg2: number) => void, lastPrice, reject = err => {}) {
+  addOrder(orderType: string, stock: string, allocationPct: number, total: number, cb: (arg1: number, arg2: number) => void, lastPrice, reject = err => { }) {
     if (orderType.toLowerCase() === 'sell') {
       this.portfolioService.getTdPortfolio().subscribe((data) => {
         data.forEach((holding) => {

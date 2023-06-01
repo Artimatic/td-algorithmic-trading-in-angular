@@ -9,10 +9,10 @@ import { SmartOrder } from '@shared/models/smart-order';
 import { take, takeUntil } from 'rxjs/operators';
 import { SchedulerService } from '@shared/service/scheduler.service';
 import { Subject } from 'rxjs';
-import { PrimeIcons } from 'primeng/api';
 import { TimerObservable } from 'rxjs-compat/observable/TimerObservable';
 import { GlobalSettingsService } from '../settings/global-settings.service';
 import { DaytradeManagerService } from '@shared/services/daytrade-manager.service';
+import { MachineDaytradingService } from '../machine-daytrading/machine-daytrading.service';
 
 // bearishMidTermProfitLoss: 0
 // bearishMidTermSignals: 0
@@ -43,9 +43,14 @@ export class PortfolioInfoComponent implements OnInit, OnDestroy {
   holdings: PortfolioInfoHolding[];
   prefillOrderForm;
   cols;
-  destroy$ = new Subject();
+  destroy$;
   daytradeEvents: any[] = [];
   simultaneousOrderLimit = 3;
+  autoControl = false;
+  daytradeBuffer$;
+  buyingPower = 0;
+  bettingScheme = [0.05, 0.1, 0.2, 0.5];
+  bettingIndex = -1;
 
   constructor(private portfolioService: PortfolioService,
     private backtestService: BacktestService,
@@ -55,18 +60,18 @@ export class PortfolioInfoComponent implements OnInit, OnDestroy {
     private schedulerService: SchedulerService,
     private authenticationService: AuthenticationService,
     private globalSettingsService: GlobalSettingsService,
-    private daytradeManager: DaytradeManagerService) { }
+    private daytradeManagerService: DaytradeManagerService,
+    private machineDaytradingService: MachineDaytradingService) { }
 
   ngOnInit() {
+    this.destroy$ = new Subject();
+    this.daytradeBuffer$ = new Subject();
     this.init();
   }
 
   init() {
     this.daytradeEvents = [
-      { status: 'Ordered', date: '15/10/2020 10:30' },
-      { status: 'Processing', date: '15/10/2020 14:00' },
-      { status: 'Shipped', date: '15/10/2020 16:15' },
-      { status: 'Delivered', date: '16/10/2020 10:00' }
+      { status: 'Started', date: moment().format(), message: '' }
     ];
 
     this.aiPicksService.mlSellResults
@@ -120,6 +125,8 @@ export class PortfolioInfoComponent implements OnInit, OnDestroy {
           .pipe(take(1))
           .subscribe((balance) => {
             const totalValue = balance.liquidationValue;
+            this.buyingPower = balance.buyingPower;
+
             this.portfolioService.getTdPortfolio().subscribe((data) => {
               if (data) {
                 data.forEach((holding) => {
@@ -159,6 +166,7 @@ export class PortfolioInfoComponent implements OnInit, OnDestroy {
                   }
                 });
               }
+              this.findDaytrades();
             });
           });
       });
@@ -336,7 +344,7 @@ export class PortfolioInfoComponent implements OnInit, OnDestroy {
 
         if (moment().isAfter(moment(this.globalSettingsService.startTime)) &&
           moment().isBefore(moment(this.globalSettingsService.stopTime))) {
-          this.daytradeManager.executeDaytrade();
+          this.daytradeManagerService.executeDaytrade();
         }
 
         if (moment().isAfter(moment(this.globalSettingsService.stopTime)) &&
@@ -344,6 +352,52 @@ export class PortfolioInfoComponent implements OnInit, OnDestroy {
           this.interval = moment().subtract(5, 'minutes').diff(moment(this.globalSettingsService.startTime), 'milliseconds');
         }
       });
+  }
+
+  findDaytrades() {
+    this.machineDaytradingService.allocationPct = this.determineMachineDaytradingPct();
+    this.machineDaytradingService.allocationTotal = this.determineMachineDaytradingTotal();
+
+    const cb = (stock, quantity, price) => {
+      if (stock && quantity && price) {
+        const newDaytradeOrder = this.buildOrder(stock, quantity, price, 'Daytrade');
+        this.cartService.addToCart(newDaytradeOrder);
+      }
+
+      if (this.cartService.otherOrders.length < 5) {
+        this.triggerNext();
+      }
+    };
+    this.daytradeBuffer$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.machineDaytradingService.findSingleTrade(null, null, cb);
+      }, () => {
+        cb(null, null, null);
+      });
+    this.triggerNext();
+  }
+
+  triggerNext() {
+    this.daytradeBuffer$.next();
+  }
+
+  determineMachineDaytradingPct() {
+    const lastProfitLoss = JSON.parse(sessionStorage.getItem('profitLoss'));
+    if (lastProfitLoss && lastProfitLoss.profit < 0) {
+      this.bettingIndex++;
+    } else {
+      this.bettingIndex = 0;
+    }
+    return this.bettingScheme[this.bettingIndex];
+  }
+
+  determineMachineDaytradingTotal() {
+    return this.buyingPower;
+  }
+
+  setAutoControl() {
+    this.autoControl = !this.autoControl;
   }
 
   ngOnDestroy() {

@@ -1,16 +1,21 @@
 <p-table [columns]="cols" [value]="holdings" [paginator]="true" [rows]="20" dataKey="name" selectionMode="single"
   (onRowSelect)="onRowSelect($event)" [resizableColumns]="true" columnResizeMode="expand">
   <ng-template pTemplate="caption">
-    <div class="ui-g">
-      <div class="ui-g-4">
-        <h2>Portfolio Management</h2>
-      </div>
-      <div class="ui-g-4">
+    <h2>Portfolio Management</h2>
+
+    <div class="p-d-flex">
+      <div class="p-mr-2">
         <app-default-order-lists class="default-orders-button" [prefillOrderForm]="prefillOrderForm">
         </app-default-order-lists>
       </div>
-      <div class="ui-g-4">
+      <div class="p-mr-2">
         <button pButton type="button" icon="pi pi-refresh" iconPos="left" (click)="refresh()"></button>
+      </div>
+      <div class="p-mr-2">
+        <p-inputSwitch (onChange)="setAutoControl()" [(ngModel)]="autoControl"></p-inputSwitch>
+        <div class="control-switch">
+          <label>Auto Control</label>
+        </div>
       </div>
     </div>
   </ng-template>
@@ -48,6 +53,8 @@
   </ng-template>
 </p-table>
 
+<app-terminal-view></app-terminal-view>
+
 <app-pokerhand></app-pokerhand>
 <app-ai-picks></app-ai-picks>
 
@@ -57,11 +64,9 @@
   </ng-template>
   <ng-template pTemplate="content" let-event>
     <p-card [header]="event.status" [subheader]="event.date">
-      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Inventore sed consequuntur error repudiandae numquam
-        deserunt
-        quisquam repellat libero asperiores earum nam nobis, culpa ratione quam perferendis esse, cupiditate neque quas!
+      <p>
+        {{event.message}}
       </p>
-      <button pButton label="Read more" class="p-button-text"></button>
     </p-card>
   </ng-template>
 </p-timeline>

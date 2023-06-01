@@ -268,6 +268,9 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
             const profitLog = `Profit ${this.scoreKeeperService.total}`;
             this.reportingService.addAuditLog(null, profitLog);
             this.reportingService.exportAuditHistory();
+            const profitObj = {'date': moment().format(), profit: this.scoreKeeperService.total};
+            sessionStorage.setItem('profitLoss', JSON.stringify(profitObj));
+            this.scoreKeeperService.resetTotal();
           }
           this.interval = moment().subtract(5, 'minutes').diff(moment(this.globalSettingsService.startTime), 'milliseconds');
           console.log('new interval: ', this.interval);

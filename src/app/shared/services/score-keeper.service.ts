@@ -23,6 +23,10 @@ export class ScoreKeeperService {
 
   constructor(private reportingService: ReportingService) { }
 
+  resetTotal() {
+    this.total = 0;
+  }
+
   addProfitLoss(stock: string, sum: number) {
     this.total += sum;
 
