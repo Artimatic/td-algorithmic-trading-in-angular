@@ -365,7 +365,9 @@ export class PortfolioInfoComponent implements OnInit, OnDestroy {
       }
 
       if (this.cartService.otherOrders.length < 5) {
-        this.triggerNext();
+        this.schedulerService.schedule(() => {
+          this.triggerNext();
+        }, `findTrades${stock}`, null, false, 18000);
       }
     };
     this.daytradeBuffer$

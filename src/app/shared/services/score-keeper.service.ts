@@ -20,7 +20,7 @@ export class ScoreKeeperService {
   total = 0;
   lossTally: ScoringIndex<number> = {};
   percentReturns = {};
-
+  bettingIndex = -1;
   constructor(private reportingService: ReportingService) { }
 
   resetTotal() {
