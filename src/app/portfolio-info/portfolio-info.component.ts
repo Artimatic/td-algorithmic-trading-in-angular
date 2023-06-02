@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { PortfolioService, BacktestService, PortfolioInfoHolding, AiPicksService, AuthenticationService } from '@shared/services';
+import { PortfolioService, BacktestService, PortfolioInfoHolding, AiPicksService, AuthenticationService, ScoreKeeperService } from '@shared/services';
 import { BacktestResponse } from '../rh-table';
 import { DailyBacktestService } from '@shared/daily-backtest.service';
 import * as moment from 'moment';
@@ -50,7 +50,6 @@ export class PortfolioInfoComponent implements OnInit, OnDestroy {
   daytradeBuffer$;
   buyingPower = 0;
   bettingScheme = [0.05, 0.1, 0.2, 0.5];
-  bettingIndex = -1;
 
   constructor(private portfolioService: PortfolioService,
     private backtestService: BacktestService,
@@ -61,6 +60,7 @@ export class PortfolioInfoComponent implements OnInit, OnDestroy {
     private authenticationService: AuthenticationService,
     private globalSettingsService: GlobalSettingsService,
     private daytradeManagerService: DaytradeManagerService,
+    private scoreKeeperService: ScoreKeeperService,
     private machineDaytradingService: MachineDaytradingService) { }
 
   ngOnInit() {
@@ -385,11 +385,14 @@ export class PortfolioInfoComponent implements OnInit, OnDestroy {
   determineMachineDaytradingPct() {
     const lastProfitLoss = JSON.parse(sessionStorage.getItem('profitLoss'));
     if (lastProfitLoss && lastProfitLoss.profit < 0) {
-      this.bettingIndex++;
+      this.scoreKeeperService.bettingIndex++;
     } else {
-      this.bettingIndex = 0;
+      this.scoreKeeperService.bettingIndex = 0;
     }
-    return this.bettingScheme[this.bettingIndex];
+    if (this.scoreKeeperService.bettingIndex > this.bettingScheme.length) {
+      this.scoreKeeperService.bettingIndex = 0;
+    }
+    return this.bettingScheme[this.scoreKeeperService.bettingIndex];
   }
 
   determineMachineDaytradingTotal() {
