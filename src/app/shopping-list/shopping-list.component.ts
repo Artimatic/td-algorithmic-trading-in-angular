@@ -213,7 +213,20 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
     this.queueAlgos(concat.concat(this.cartService.otherOrders));
   }
 
+  saveToStorage(templateOrders: SmartOrder[]) {
+    sessionStorage.removeItem('daytradeList');
+    const ordersToSave = templateOrders.reduce((acc, val: SmartOrder) => {
+      if (!acc.uniqueSymbols[val.holding.symbol]) {
+        acc.uniqueSymbols[val.holding.symbol] = true;
+        acc.list.push(val);
+      }
+      return acc;
+    }, { uniqueSymbols: {}, list: [] }).list;
+    sessionStorage.setItem('daytradeList', JSON.stringify(ordersToSave));
+  }
+
   queueAlgos(orders: SmartOrder[]) {
+    this.saveToStorage(orders);
     this.globalSettingsService.setStartTimes();
     const mlStartTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 15:55`, 'America/New_York');
     let mlStopTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 16:00`, 'America/New_York');
