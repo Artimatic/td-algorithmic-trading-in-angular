@@ -31,6 +31,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
   sides: SelectItem[];
   errorMsg: string;
   destroy$ = new Subject();
+  symbolsForm: FormGroup;
 
   constructor(private _formBuilder: FormBuilder,
     private cartService: CartService,
@@ -41,6 +42,10 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
     this.display = false;
     this.hideButton = false;
     this.templateOrders = [];
+
+    this.symbolsForm = this._formBuilder.group({
+      list: ''
+    });
 
     this.amountChange
       .pipe(
@@ -78,6 +83,15 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
     this.display = true;
   }
 
+  readStockList() {
+    const stockListText = this.symbolsForm.value.list.trim().toUpperCase().split(',');
+    stockListText.forEach(textSymbol => {
+      const allocationPct = this.addOrderFormGroup.value.allocation;
+      const total = this.firstFormGroup.value.amount;
+      this.addOrder(textSymbol, allocationPct, total);
+    });
+  }
+
   changedSelection(selected) {
     this.templateOrders = [];
     if (selected) {
@@ -103,12 +117,25 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
       };
 
       const reject = err => {
-        this.errorMsg = `${err}`;
+        this.errorMsg = err.error ? `${err.error}` : `${err}`;
         this.isLoading = false;
       };
 
       this.machineDaytradingService.addOrder(this.addOrderFormGroup.value.side, stock, allocationPct, total, cb, null, reject);
     }, 'adding_order', null, true, 3000);
+  }
+
+  addCustomList() {
+    if (this.addOrderFormGroup.valid) {
+      const stock = this.addOrderFormGroup.value.symbol;
+      const allocationPct = this.addOrderFormGroup.value.allocation;
+      const total = this.firstFormGroup.value.amount;
+      this.addOrder(stock, allocationPct, total);
+
+      this.errorMsg = '';
+    } else {
+      this.errorMsg = 'Please fix errors.';
+    }
   }
 
   addMachineTrade() {
@@ -142,19 +169,6 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
     });
     this.display = false;
     this.saveToStorage(this.templateOrders);
-  }
-
-  addCustomList() {
-    if (this.addOrderFormGroup.valid) {
-      const stock = this.addOrderFormGroup.value.symbol;
-      const allocationPct = this.addOrderFormGroup.value.allocation;
-      const total = this.firstFormGroup.value.amount;
-      this.addOrder(stock, allocationPct, total);
-
-      this.errorMsg = '';
-    } else {
-      this.errorMsg = 'Please fix errors.';
-    }
   }
 
   setAddOrderForm() {

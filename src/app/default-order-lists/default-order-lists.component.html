@@ -1,6 +1,6 @@
-<p-dialog header="Add Orders" [(visible)]="display" [appendTo]="'body'"
-  [contentStyle]="{width:'500px', 'max-height': '600px'}" [draggable]="true" [dismissableMask]="true"
-  [responsive]="true" (onShow)="onShow()" (onHide)="onHide()">
+<p-dialog header="Add Orders" [(visible)]="display" [appendTo]="'body'" [draggable]="true" [dismissableMask]="true"
+  [responsive]="true" (onShow)="onShow()" (onHide)="onHide()" [maximizable]="true"
+  [style]="{width: '90%', height: '80%'}">
   <div class="ui-g">
     <div class="ui-g-6">
       <p-listbox [options]="defaultLists" [(ngModel)]="selectedList" (onChange)="changedSelection($event.value)">
@@ -11,25 +11,36 @@
         <p-progressSpinner></p-progressSpinner>
       </div>
       <div *ngIf="!isLoading">
-        <div class="add-button">
-          <button pButton type="button" label="Add to Cart" class="ui-button-success"
-            (click)="addSelectedList()"></button>
-        </div>
-        <div class="add-button">
-          <button pButton type="button" label="Cash Balance" class="ui-button-info" (click)="getCashBalance()"></button>
-        </div>
-        <div class="add-button">
-          <button pButton type="button" label="Portfolio Total" class="ui-button-secondary"
-            (click)="getPortfolioTotal()"></button>
-        </div>
-        <form [formGroup]="firstFormGroup">
-          <div class="ui-inputgroup">
-            <span class="ui-inputgroup-addon">$</span>
-            <input type="text" #searchBox id="search-box" pInputText placeholder="Amount"
-              (input)="updatedAmount(searchBox.value)" formControlName="amount">
-            <span class="ui-inputgroup-addon">.00</span>
+        <div class="actions-inputs">
+          <div class="custom-controls">
+            <button pButton type="button" label="Add to Cart" class="ui-button-success"
+              (click)="addSelectedList()"></button>
           </div>
-        </form>
+          <div class="custom-controls">
+            <button pButton type="button" label="Cash Balance" class="ui-button-info"
+              (click)="getCashBalance()"></button>
+          </div>
+          <div class="custom-controls">
+            <button pButton type="button" label="Portfolio Total" class="ui-button-secondary"
+              (click)="getPortfolioTotal()"></button>
+          </div>
+          <div class="custom-controls">
+            <form [formGroup]="firstFormGroup">
+              <div class="ui-inputgroup">
+                <span class="ui-inputgroup-addon">$</span>
+                <input type="text" #searchBox id="search-box" pInputText placeholder="Amount"
+                  (input)="updatedAmount(searchBox.value)" formControlName="amount">
+                <span class="ui-inputgroup-addon">.00</span>
+              </div>
+            </form>
+          </div>
+          <div class="custom-text-input">
+            <form [formGroup]="symbolsForm" novalidate>
+              <input type="text" style="margin-bottom: 1em;" pInputText formControlName="list" placeholder="Ex. FB, AAPL, MSFT" (keyup.enter)="readStockList()" />
+            </form>
+            <p-button icon="pi pi-check" class="check-button" (keyup.enter)="readStockList()"></p-button>
+          </div>
+        </div>
         <div class="card-form">
           <p-card>
             <form [formGroup]="addOrderFormGroup">

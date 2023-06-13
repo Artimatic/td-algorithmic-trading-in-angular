@@ -226,6 +226,14 @@ export class AiPicksComponent implements OnInit, OnDestroy {
     this.history.splice(idx, 1);
   }
 
+  removeAllBuys() {
+    this.buys = [];
+  }
+
+  removeAllSells() {
+    this.sells = [];
+  }
+
   updateChart() {
     const predictionHistory = this.currentPrediction;
 

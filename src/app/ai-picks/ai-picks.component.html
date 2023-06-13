@@ -4,6 +4,7 @@
       <p-listbox [options]="buys" [listStyle]="{'max-height':'250px'}">
         <p-header>
           <img src="../../assets/bull.png" style="display:inline-block;margin:5px 0 0 5px" width="48">
+          <p-button class="ui-button-danger" icon="pi pi-times" iconPos="right" label="Remove all" (click)="removeAllBuys()"></p-button>
         </p-header>
         <ng-template let-buy pTemplate="item">
           <div class="ui-helper-clearfix">
@@ -30,6 +31,7 @@
       <p-listbox [options]="sells" [listStyle]="{'max-height':'250px'}">
         <p-header>
           <img src="../../assets/bear.png" style="display:inline-block;margin:5px 0 0 5px" width="48">
+          <p-button class="ui-button-danger" icon="pi pi-times" iconPos="right" label="Remove all" (click)="removeAllSells()"></p-button>
         </p-header>
         <ng-template let-sell pTemplate="item">
           <div class="ui-helper-clearfix">

@@ -1,5 +1,23 @@
-.add-button {
-  margin-bottom: 5px;
+.actions-inputs {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  .custom-controls {
+    margin-top: 1em;
+    margin-bottom: 1em;
+    margin-right: 1em;
+  }
+  .custom-text-input {
+    margin-top: 1em;
+    margin-bottom: 1em;
+    display: flex;
+    .check-button {
+      :host ::ng-deep .p-button.p-button-icon-only {
+        font-size: 1em;
+      }
+    }
+  }
 }
 
 .order-form-item {
