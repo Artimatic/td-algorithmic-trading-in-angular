@@ -38,6 +38,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatInputModule } from '@angular/material/input';
 import { MenubarModule } from 'primeng/menubar';
+import { DataViewModule } from 'primeng/dataview';
 
 const materialModules = [
   MatStepperModule,
@@ -58,32 +59,6 @@ const materialModules = [
   MatCheckboxModule,
   MatInputModule
 ];
-// const materialModules = [
-//   MatMenuModule,
-//   MatToolbarModule,
-//   MatIconModule,
-//   MatCardModule,
-//   MatProgressSpinnerModule,
-//   MatProgressBarModule,
-//   MatGridListModule,
-//   MatButtonModule,
-//   MatSidenavModule,
-//   MatExpansionModule,
-//   MatTableModule,
-//   MatCheckboxModule,
-//   MatRadioModule,
-//   MatDialogModule,
-//   MatFormFieldModule,
-//   MatInputModule,
-//   MatSnackBarModule,
-//   MatTabsModule,
-//   MatListModule,
-//   MatChipsModule,
-//   MatStepperModule,
-//   MatSelectModule,
-//   MatTooltipModule,
-//   MatSlideToggleModule,
-// ];
 
 const primeModules = [
   MenubarModule,
@@ -104,7 +79,8 @@ const primeModules = [
   StepsModule,
   ChartModule,
   ProgressSpinnerModule,
-  InputSwitchModule
+  InputSwitchModule,
+  DataViewModule
 ];
 
 @NgModule({

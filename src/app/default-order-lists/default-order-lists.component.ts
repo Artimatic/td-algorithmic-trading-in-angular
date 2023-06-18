@@ -253,7 +253,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
               allocation: currentValue,
               side: curr.side
             };
-            acc.label += item.stock + item.side + item.allocation + ' ';
+            acc.label += `[${item.stock} | ${item.side} | ${item.allocation}]`;
             acc.value.push(item);
             return acc;
           }, { label: '', value: [] });

@@ -12,4 +12,7 @@
 .poker-hand-list {
   max-height: 30em;
   overflow-y: scroll;
+  display: flex; 
+  flex-direction: row;
+  flex-wrap: wrap;
 }

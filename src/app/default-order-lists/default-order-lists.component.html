@@ -36,9 +36,9 @@
           </div>
           <div class="custom-text-input">
             <form [formGroup]="symbolsForm" novalidate>
-              <input type="text" style="margin-bottom: 1em;" pInputText formControlName="list" placeholder="Ex. FB, AAPL, MSFT" (keyup.enter)="readStockList()" />
+              <input type="text" style="margin-bottom: 1em;" pInputText formControlName="list" placeholder="Ex. NFLX, AAPL, MSFT" (keyup.enter)="readStockList()" />
             </form>
-            <p-button icon="pi pi-check" class="check-button" (keyup.enter)="readStockList()"></p-button>
+            <p-button icon="pi pi-check" class="check-button" (click)="readStockList()"></p-button>
           </div>
         </div>
         <div class="card-form">
@@ -69,8 +69,10 @@
             </p-footer>
           </p-card>
         </div>
-        <div *ngFor="let order of templateOrders" class="order-form-item">
-          <app-mini-card [order]="order" (delete)="delete($event)"></app-mini-card>
+        <div class="order-cards">
+          <div *ngFor="let order of templateOrders" class="order-form-item">
+            <app-mini-card [order]="order" (delete)="delete($event)"></app-mini-card>
+          </div>
         </div>
       </div>
     </div>
