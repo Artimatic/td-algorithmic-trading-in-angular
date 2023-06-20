@@ -68,6 +68,10 @@ export class AppComponent implements OnInit, AfterViewInit {
         routerLink: '/backtest'
       },
       {
+        label: 'Backtesting',
+        routerLink: '/research'
+      },
+      {
         label: 'Export Logs',
         icon: 'pi pi-fw pi-file-excel',
         command: () => {

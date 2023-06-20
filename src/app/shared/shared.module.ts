@@ -39,6 +39,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatInputModule } from '@angular/material/input';
 import { MenubarModule } from 'primeng/menubar';
 import { DataViewModule } from 'primeng/dataview';
+import {FieldsetModule} from 'primeng/fieldset';
 
 const materialModules = [
   MatStepperModule,
@@ -80,7 +81,8 @@ const primeModules = [
   ChartModule,
   ProgressSpinnerModule,
   InputSwitchModule,
-  DataViewModule
+  DataViewModule,
+  FieldsetModule
 ];
 
 @NgModule({
