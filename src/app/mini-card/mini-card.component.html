@@ -1,4 +1,4 @@
-<div class="mini-card-container" (mouseover)="mouseIn()" (mouseout)="mouseOut()">
+<div class="mini-card-container">
   <p-card>
     <div class="card-content">
       <span>
@@ -18,10 +18,10 @@
           </li>
         </ul>
       </span>
-      <span *ngIf="actionMode">
-        <button pButton type="button" label="Delete" icon="pi pi-times-circle" class="mini-card-button ui-button-danger"
-          (click)="deleteCard()"></button>
-      </span>
-    </div>
+    </div>      
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Delete" icon="pi pi-times-circle" class="mini-card-button ui-button-danger"
+      (click)="deleteCard()"></button>
+    </ng-template>
   </p-card>
 </div>
