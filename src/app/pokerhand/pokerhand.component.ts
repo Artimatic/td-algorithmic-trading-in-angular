@@ -10,7 +10,6 @@ import { CartService } from '../shared/services/cart.service';
 })
 export class PokerhandComponent implements OnInit {
   pokerhand: SmartOrder[];
-  mouseOver: string;
 
   constructor(public cartService: CartService) { }
 
@@ -38,14 +37,6 @@ export class PokerhandComponent implements OnInit {
     this.pokerhand = [
       order
     ];
-  }
-
-  onHoverOver(order: SmartOrder) {
-    this.mouseOver = order.holding.symbol;
-  }
-
-  onHoverAway() {
-    this.mouseOver = null;
   }
 
   delete(order: SmartOrder) {

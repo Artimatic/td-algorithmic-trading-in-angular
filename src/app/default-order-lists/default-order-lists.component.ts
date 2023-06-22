@@ -117,8 +117,10 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
       };
 
       const reject = err => {
-        this.errorMsg = err.error ? `${err.error}` : `${err}`;
         this.isLoading = false;
+        if (err) {
+          this.errorMsg = err.error ? `${err.error}` : `${err}`;
+        }
       };
 
       this.machineDaytradingService.addOrder(this.addOrderFormGroup.value.side, stock, allocationPct, total, cb, null, reject);

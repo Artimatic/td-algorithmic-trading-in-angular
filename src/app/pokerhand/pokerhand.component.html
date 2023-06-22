@@ -1,24 +1,18 @@
 <div class="poker-hand-list">
   <p-fieldset legend="Daytrade" [toggleable]="true">
-    <div class="ui-g-2" *ngFor="let order of cartService.otherOrders" class="single-card"
-      [class.card-hover]="mouseOver === order.holding.symbol" (mouseover)="onHoverOver(order)"
-      (mouseout)="onHoverAway()">
+    <div class="ui-g-2" *ngFor="let order of cartService.otherOrders" class="single-card">
       <app-mini-card [order]="order" [canEdit]="true" (delete)="delete(order)" (updatedOrder)="updateOrder(order)">
       </app-mini-card>
     </div>
   </p-fieldset>
   <p-fieldset legend="Buy" [toggleable]="true">
-    <div class="ui-g-2" *ngFor="let order of cartService.buyOrders" class="single-card"
-      [class.card-hover]="mouseOver === order.holding.symbol" (mouseover)="onHoverOver(order)"
-      (mouseout)="onHoverAway()">
+    <div class="ui-g-2" *ngFor="let order of cartService.buyOrders" class="single-card">
       <app-mini-card [order]="order" [canEdit]="true" (delete)="delete(order)" (updatedOrder)="updateOrder(order)">
       </app-mini-card>
     </div>
   </p-fieldset>
   <p-fieldset legend="Sell" [toggleable]="true">
-    <div class="ui-g-2" *ngFor="let order of cartService.sellOrders" class="single-card"
-      [class.card-hover]="mouseOver === order.holding.symbol" (mouseover)="onHoverOver(order)"
-      (mouseout)="onHoverAway()">
+    <div class="ui-g-2" *ngFor="let order of cartService.sellOrders" class="single-card">
       <app-mini-card [order]="order" [canEdit]="true" (delete)="delete(order)" (updatedOrder)="updateOrder(order)">
       </app-mini-card>
     </div>

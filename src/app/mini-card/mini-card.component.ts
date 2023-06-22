@@ -1,7 +1,6 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { SmartOrder } from '../shared/models/smart-order';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
-import { PortfolioService } from '../shared';
 import * as _ from 'lodash';
 
 @Component({
@@ -19,7 +18,7 @@ export class MiniCardComponent implements OnInit {
   detailMode: boolean;
   actionMode: boolean;
 
-  constructor(private _formBuilder: FormBuilder, private portfolioService: PortfolioService) { }
+  constructor(private _formBuilder: FormBuilder) { }
 
   ngOnInit() {
     this.firstFormGroup = this._formBuilder.group({
