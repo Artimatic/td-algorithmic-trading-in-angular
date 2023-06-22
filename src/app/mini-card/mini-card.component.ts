@@ -25,33 +25,9 @@ export class MiniCardComponent implements OnInit {
     this.firstFormGroup = this._formBuilder.group({
       amount: [this.order.amount, Validators.required]
     });
-
-    this.setDetailMode();
   }
 
   deleteCard() {
     this.delete.emit(this.order.holding.symbol);
-  }
-
-  setDetailMode() {
-    this.detailMode = true;
-    this.actionMode = false;
-  }
-
-  setActionMode() {
-    this.detailMode = false;
-    this.actionMode = true;
-  }
-
-  cancelEdit() {
-    this.setDetailMode();
-  }
-
-  mouseIn() {
-    this.setActionMode();
-  }
-
-  mouseOut() {
-    this.setDetailMode();
   }
 }
