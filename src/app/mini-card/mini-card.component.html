@@ -1,6 +1,6 @@
-<div class="mini-card-container">
+<div class="mini-card-container" (mouseover)="mouseIn()" (mouseout)="mouseOut()">
   <p-card>
-    <div class="card-content" (mouseover)="mouseIn()" (mouseout)="mouseOut()">
+    <div class="card-content">
       <span>
         <h4>
           {{order.holding.symbol}}
