@@ -2020,4 +2020,3 @@ for (const p of primaryList) {
 }
 
 export default Stocks;
-
