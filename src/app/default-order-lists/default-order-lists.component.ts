@@ -21,7 +21,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
   @Input() display: boolean;
   @Input() hideButton: boolean;
   @Input() prefillOrderForm: Order;
-  defaultLists: SelectItem[];
+  @Input() defaultLists: SelectItem[];
   templateOrders: SmartOrder[];
   selectedList = [];
   firstFormGroup: FormGroup;
@@ -245,7 +245,6 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
     const daytradeList = sessionStorage.getItem('daytradeList');
     if (daytradeList) {
       const storedList: SmartOrder[] = JSON.parse(sessionStorage.getItem('daytradeList'));
-      console.log(storedList);
       const allocations = [0.05, 0.1, 0.25, 0.5, 1.0];
       const retrievedList = allocations.reduce((accumulator, currentValue) => {
         if (currentValue) {
