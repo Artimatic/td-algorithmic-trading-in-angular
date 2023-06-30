@@ -1,6 +1,6 @@
 <div class="poker-hand-list">
   <p-fieldset legend="Daytrade" [toggleable]="true">
-    <app-default-order-lists class="default-orders-button" [defaultList]="cartService.otherOrders">
+    <app-default-order-lists class="default-orders-button" [defaultLists]="cartService.otherOrders">
     </app-default-order-lists>
     <div *ngFor="let order of cartService.otherOrders" class="single-card">
       <app-mini-card [order]="order" [canEdit]="true" (delete)="delete(order)" (updatedOrder)="updateOrder(order)">
@@ -8,7 +8,7 @@
     </div>
   </p-fieldset>
   <p-fieldset legend="Buy" [toggleable]="true">
-    <app-default-order-lists class="default-orders-button" [defaultList]="cartService.buyOrders">
+    <app-default-order-lists class="default-orders-button" [defaultLists]="cartService.buyOrders">
     </app-default-order-lists>
     <div *ngFor="let order of cartService.buyOrders" class="single-card">
       <app-mini-card [order]="order" [canEdit]="true" (delete)="delete(order)" (updatedOrder)="updateOrder(order)">
@@ -16,7 +16,7 @@
     </div>
   </p-fieldset>
   <p-fieldset legend="Sell" [toggleable]="true">
-    <app-default-order-lists class="default-orders-button" [defaultList]="cartService.sellOrders">
+    <app-default-order-lists class="default-orders-button" [defaultLists]="cartService.sellOrders">
     </app-default-order-lists>
     <div *ngFor="let order of cartService.sellOrders" class="single-card">
       <app-mini-card [order]="order" [canEdit]="true" (delete)="delete(order)" (updatedOrder)="updateOrder(order)">
