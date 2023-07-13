@@ -3,8 +3,74 @@
   [style]="{width: '90%', height: '80%'}">
   <div class="ui-g">
     <div class="ui-g-6">
-      <p-listbox [options]="defaultLists" [(ngModel)]="selectedList" (onChange)="changedSelection($event.value)">
-      </p-listbox>
+      <p-table [value]="defaultLists" dataKey="label" editMode="row" [(selection)]="selectedDefaultOrders">
+        <ng-template pTemplate="caption">
+          <div class="default-list-actions">
+            <div class="pull-right">
+              <div class="default-list-item">
+                <p-dropdown [options]="defaultAllocations" [(ngModel)]="selectedAllocation" editable="true"
+                  optionLabel="name" (onChange)="updateDefaultList()"></p-dropdown>
+              </div>
+              <div class="default-list-item">
+                <button pButton type="button" label="Add selected" (click)="changedSelection()"
+                  class="p-button-success"></button>
+              </div>
+
+            </div>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Name</th>
+            <th>Allocation</th>
+            <th>Side</th>
+            <th style="width:8rem"></th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-stock let-editing="editing" let-ri="rowIndex">
+          <tr [pEditableRow]="stock">
+            <td>
+              <p-cellEditor>
+                <ng-template pTemplate="input">
+                  <input pInputText type="text" [(ngModel)]="stock.label">
+                </ng-template>
+                <ng-template pTemplate="output">
+                  {{stock.label}}
+                </ng-template>
+              </p-cellEditor>
+            </td>
+            <td>
+              <p-cellEditor>
+                <ng-template pTemplate="input">
+                  <input pInputText type="text" [(ngModel)]="stock.allocation">
+                </ng-template>
+                <ng-template pTemplate="output">
+                  {{stock.allocation | percent}}
+                </ng-template>
+              </p-cellEditor>
+            </td>
+            <td>
+              <p-cellEditor>
+                <ng-template pTemplate="input">
+                  <p-dropdown [options]="sides" [(ngModel)]="stock.side" [style]="{'width':'100%'}"></p-dropdown>
+                </ng-template>
+                <ng-template pTemplate="output">
+                  {{stock.side}}
+                </ng-template>
+              </p-cellEditor>
+            </td>
+
+            <td style="text-align:center">
+              <button *ngIf="!editing" pButton pRipple type="button" pInitEditableRow icon="pi pi-pencil"
+                class="p-button-rounded p-button-text"></button>
+              <button *ngIf="editing" pButton pRipple type="button" pSaveEditableRow icon="pi pi-check"
+                class="p-button-rounded p-button-text p-button-success p-mr-2"></button>
+              <button *ngIf="editing" pButton pRipple type="button" pCancelEditableRow icon="pi pi-times"
+                class="p-button-rounded p-button-text p-button-danger"></button>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
     </div>
     <div class="ui-g-6">
       <div *ngIf="isLoading" class="loading-screen">
@@ -17,12 +83,8 @@
               (click)="addSelectedList()"></button>
           </div>
           <div class="custom-controls">
-            <button pButton type="button" label="Cash Balance" class="ui-button-info"
-              (click)="getCashBalance()"></button>
-          </div>
-          <div class="custom-controls">
-            <button pButton type="button" label="Portfolio Total" class="ui-button-secondary"
-              (click)="getPortfolioTotal()"></button>
+            <p-selectButton (onChange)="getBalance()" [options]="balanceOptions" [(ngModel)]="cashBalanceOption"
+              multiple="multiple" optionLabel="label" optionValue="value"></p-selectButton>
           </div>
           <div class="custom-controls">
             <form [formGroup]="firstFormGroup">
@@ -36,7 +98,8 @@
           </div>
           <div class="custom-text-input">
             <form [formGroup]="symbolsForm" novalidate>
-              <input type="text" style="margin-bottom: 1em;" pInputText formControlName="list" placeholder="Ex. NFLX, AAPL, MSFT" (keyup.enter)="readStockList()" />
+              <input type="text" style="margin-bottom: 1em;" pInputText formControlName="list"
+                placeholder="Ex. NFLX, AAPL, MSFT" (keyup.enter)="readStockList()" />
             </form>
             <p-button icon="pi pi-check" class="check-button" (click)="readStockList()"></p-button>
           </div>

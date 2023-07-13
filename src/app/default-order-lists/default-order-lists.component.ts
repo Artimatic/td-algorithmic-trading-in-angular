@@ -12,6 +12,12 @@ import { MachineDaytradingService } from '../machine-daytrading/machine-daytradi
 import { SchedulerService } from '@shared/service/scheduler.service';
 import { SelectItem } from 'primeng/api';
 
+export interface DefaultOrders {
+  label: string;
+  allocation: number; 
+  side: string;
+}
+
 @Component({
   selector: 'app-default-order-lists',
   templateUrl: './default-order-lists.component.html',
@@ -21,17 +27,29 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
   @Input() display: boolean;
   @Input() hideButton: boolean;
   @Input() prefillOrderForm: Order;
-  @Input() defaultLists: SelectItem[];
+  @Input() defaultLists: DefaultOrders[];
   templateOrders: SmartOrder[];
-  selectedList = [];
   firstFormGroup: FormGroup;
   addOrderFormGroup: FormGroup;
+  selectedDefaultOrders = [];
   private amountChange = new Subject<string>();
   isLoading = false;
   sides: SelectItem[];
   errorMsg: string;
   destroy$ = new Subject();
   symbolsForm: FormGroup;
+  defaultAllocations = [{ name: '0.05', value: 0.05 },
+  { name: '0.25', value: 0.25 },
+  { name: '0.5', value: 0.5 },
+  { name: '1', value: 1 }];
+
+  selectedAllocation = { name: '0.25', value: 0.25 };
+  balanceOptions = [
+    { label: 'Cash Balance', value: 'cashBal' },
+    { label: 'Portfolio Total', value: 'portTotal' }
+  ];
+
+  cashBalanceOption = 'portTotal';
 
   constructor(private _formBuilder: FormBuilder,
     private cartService: CartService,
@@ -55,7 +73,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
       )
       .subscribe(value => {
         this.firstFormGroup.controls['amount'].setValue(value);
-        this.changedSelection(this.selectedList);
+        this.changedSelection();
       });
 
     this.sides = [
@@ -92,17 +110,17 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
     });
   }
 
-  changedSelection(selected) {
+  changedSelection() {
     this.templateOrders = [];
-    if (selected) {
-      selected.forEach((allocationItem) => {
-        const stock = allocationItem.stock;
+    this.defaultLists.forEach((allocationItem) => {
+      if (allocationItem.allocation > 0) {
+        const stock = allocationItem.label;
         const allocationPct = allocationItem.allocation;
         const total = this.firstFormGroup.value.amount;
         const side = allocationItem.side;
         this.addOrder(stock, allocationPct, total, side);
-      });
-    }
+      }
+    });
   }
 
   addOrder(stock: string, allocationPct: number, total: number, side: string = '') {
@@ -170,7 +188,6 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
       this.cartService.addToCart(order);
     });
     this.display = false;
-    this.saveToStorage(this.templateOrders);
   }
 
   setAddOrderForm() {
@@ -196,6 +213,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
         side: [this.prefillOrderForm.side, Validators.required]
       });
     }
+    this.getPortfolioTotal();
   }
 
   onHide() {
@@ -204,6 +222,15 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
 
   updatedAmount(query: string) {
     this.amountChange.next(query);
+  }
+
+  getBalance() {
+    console.log(this.cashBalanceOption);
+    if (this.cashBalanceOption === 'cashBal') {
+      this.getCashBalance();
+    } else {
+      this.getPortfolioTotal();
+    }
   }
 
   getPortfolioTotal() {
@@ -245,20 +272,15 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
     const daytradeList = sessionStorage.getItem('daytradeList');
     if (daytradeList) {
       const storedList: SmartOrder[] = JSON.parse(sessionStorage.getItem('daytradeList'));
-      const allocations = [0.05, 0.1, 0.25, 0.5, 1.0];
-      const retrievedList = allocations.reduce((accumulator, currentValue) => {
+
+      const retrievedList = storedList.reduce((accumulator, currentValue) => {
         if (currentValue) {
-          const listItem = storedList.reduce((acc, curr) => {
-            const item = {
-              stock: curr.holding.symbol,
-              allocation: currentValue,
-              side: curr.side
-            };
-            acc.label += `[${item.stock} | ${item.side} | ${item.allocation}]`;
-            acc.value.push(item);
-            return acc;
-          }, { label: '', value: [] });
-          accumulator.push(listItem);
+          const newItem = {
+            label: currentValue.holding.symbol,
+            allocation: this.selectedAllocation.value || 0.25,
+            side: currentValue.side
+          };
+          accumulator.push(newItem);
         }
         return accumulator;
       }, []);
@@ -266,50 +288,18 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
     }
     return [
       {
-        label: 'UPRO60 TMF40',
-        value: [
-          { stock: 'UPRO', allocation: 0.60 },
-          { stock: 'TMF', allocation: 0.40 }
-        ]
-      },
-      {
-        label: 'SPXU35 SQQQ20 TMV45',
-        value: [
-          { stock: 'SPXU', allocation: 0.35 },
-          { stock: 'SQQQ', allocation: 0.20 },
-          { stock: 'TMV', allocation: 0.45 }
-        ]
-      },
-      {
-        label: 'UPRO35 TQQQ20 TMF45',
-        value: [
-          { stock: 'UPRO', allocation: 0.35 },
-          { stock: 'TQQQ', allocation: 0.20 },
-          { stock: 'TMF', allocation: 0.45 }
-        ]
-      },
-      {
-        label: 'TQQQ50 TMF50', value: [
-          { stock: 'TQQQ', allocation: 0.50 },
-          { stock: 'TMF', allocation: 0.50 }
-        ]
-      },
-      {
-        label: 'MSFT100', value: [
-          { stock: 'MSFT', allocation: 1 },
-        ]
-      },
-      {
-        label: 'AMZN100', value: [
-          { stock: 'AMZN', allocation: 1 }
-        ]
-      },
-      {
-        label: 'AAPL100', value: [
-          { stock: 'AAPL', allocation: 1 }
-        ]
+        label: 'TQQQ',
+        allocation: 1,
+        side: 'Buy'
       }
     ];
+  }
+
+  updateDefaultList () {
+    const allocation = this.selectedAllocation;
+    this.defaultLists.forEach(defaultItem => {
+      defaultItem.allocation = allocation.value*1;
+    });
   }
 
   ngOnDestroy() {
