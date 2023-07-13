@@ -73,7 +73,6 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
       )
       .subscribe(value => {
         this.firstFormGroup.controls['amount'].setValue(value);
-        this.changedSelection();
       });
 
     this.sides = [
