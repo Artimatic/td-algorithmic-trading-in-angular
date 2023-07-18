@@ -14,7 +14,7 @@ import { SelectItem } from 'primeng/api';
 
 export interface DefaultOrders {
   label: string;
-  allocation: number; 
+  allocation: number;
   side: string;
 }
 
@@ -294,10 +294,10 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
     ];
   }
 
-  updateDefaultList () {
+  updateDefaultList() {
     const allocation = this.selectedAllocation;
     this.defaultLists.forEach(defaultItem => {
-      defaultItem.allocation = allocation.value*1;
+      defaultItem.allocation = allocation.value * 1;
     });
   }
 
