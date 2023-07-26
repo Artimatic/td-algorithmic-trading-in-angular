@@ -1,26 +1,74 @@
 <p-dialog header="Add Orders" [(visible)]="display" [appendTo]="'body'" [draggable]="true" [dismissableMask]="true"
   [responsive]="true" (onShow)="onShow()" (onHide)="onHide()" [maximizable]="true"
   [style]="{width: '90%', height: '80%'}">
-  <div class="ui-g">
-    <div class="ui-g-6">
+
+  <p-steps [model]="pageSteps" [readonly]="true"></p-steps>
+
+  <div class="ui-g order-list-container" *ngIf="cartStep===0">
+    <div class="ui-g-6 order-list-column">
       <p-table [value]="defaultLists" dataKey="label" editMode="row" [(selection)]="selectedDefaultOrders">
         <ng-template pTemplate="caption">
           <div class="default-list-actions">
-            <div class="pull-right">
-              <div class="default-list-item">
-                <p-dropdown [options]="defaultAllocations" [(ngModel)]="selectedAllocation" editable="true"
-                  optionLabel="name" (onChange)="updateDefaultList()"></p-dropdown>
+            <span *ngIf="isLoading" class="loading-screen">
+              <p-progressBar mode="indeterminate" [style]="{ height: '1em' }"></p-progressBar>
+            </span>
+            <div>
+              <div class="actions-inputs">
+                <div class="custom-controls">
+                  <button pButton type="button" label="Queue orders" class="ui-button-success"
+                    (click)="addSelectedList()"></button>
+                </div>
+                <div class="custom-text-input">
+                  <p-autoComplete [(ngModel)]="symbolsQuery" [suggestions]="suggestionsArr"
+                    (completeMethod)="filterItems($event)" field="label" [multiple]="true" completeOnFocus="true">
+                    <ng-template let-searchItem pTemplate="item">
+                      <div style="font-size:18px;float:right;margin:10px 10px 0 0">{{searchItem.label}}</div>
+                    </ng-template>
+                  </p-autoComplete>
+                  <p-button icon="pi pi-check" class="check-button" (click)="readStockList()"></p-button>
+                </div>
               </div>
-              <div class="default-list-item">
-                <button pButton type="button" label="Add selected" (click)="changedSelection()"
-                  class="p-button-success"></button>
+              <div class="card-form">
+                <p-card>
+                  <form [formGroup]="addOrderFormGroup">
+                    <div class="order-form-item">
+                      <input type="text" pInputText placeholder="Stock" class="uppercase" formControlName="symbol">
+                      <p-dropdown [options]="sides" formControlName="side"
+                        [style]="{'minWidth':'50px', 'width':'93px', 'margin-left':'5px'}"></p-dropdown>
+                    </div>
+                    <div class="order-form-item">
+                      <p-spinner formControlName="allocation"
+                        [inputStyle]="{'width': '5em', 'height': '2em', 'margin-left': '5px'}" [step]="0.1" [min]="0"
+                        [max]="9">
+                      </p-spinner>
+                      &nbsp;x 100%
+                    </div>
+                  </form>
+                  <p-footer>
+                    <div class="order-form-item">
+                      <button pButton type="button" icon="pi pi-plus-circle" (click)="addCustomList()"
+                        class="ui-button-success"></button>
+                      &nbsp;
+                      <button pButton type="button" icon="pi pi-ticket" (click)="addMachineTrade()"
+                        class="ui-button-info"></button>
+                      <div *ngIf="errorMsg" class="error-message">{{errorMsg}}</div>
+                    </div>
+                  </p-footer>
+                </p-card>
               </div>
-
+              <div class="order-cards">
+                <div *ngFor="let order of templateOrders" class="order-form-item">
+                  <app-mini-card [order]="order" (delete)="delete($event)"></app-mini-card>
+                </div>
+              </div>
             </div>
           </div>
         </ng-template>
         <ng-template pTemplate="header">
           <tr>
+            <th style="width: 3rem">
+              <p-tableHeaderCheckbox (click)="addItem()"></p-tableHeaderCheckbox>
+            </th>
             <th>Name</th>
             <th>Allocation</th>
             <th>Side</th>
@@ -29,6 +77,9 @@
         </ng-template>
         <ng-template pTemplate="body" let-stock let-editing="editing" let-ri="rowIndex">
           <tr [pEditableRow]="stock">
+            <td>
+              <p-tableCheckbox [value]="stock" (click)="addItem()"></p-tableCheckbox>
+            </td>
             <td>
               <p-cellEditor>
                 <ng-template pTemplate="input">
@@ -72,72 +123,10 @@
         </ng-template>
       </p-table>
     </div>
-    <div class="ui-g-6">
-      <div *ngIf="isLoading" class="loading-screen">
-        <p-progressSpinner></p-progressSpinner>
-      </div>
-      <div *ngIf="!isLoading">
-        <div class="actions-inputs">
-          <div class="custom-controls">
-            <button pButton type="button" label="Add to Cart" class="ui-button-success"
-              (click)="addSelectedList()"></button>
-          </div>
-          <div class="custom-controls">
-            <p-selectButton (onChange)="getBalance()" [options]="balanceOptions" [(ngModel)]="cashBalanceOption"
-              multiple="multiple" optionLabel="label" optionValue="value"></p-selectButton>
-          </div>
-          <div class="custom-controls">
-            <form [formGroup]="firstFormGroup">
-              <div class="ui-inputgroup">
-                <span class="ui-inputgroup-addon">$</span>
-                <input type="text" #searchBox id="search-box" pInputText placeholder="Amount"
-                  (input)="updatedAmount(searchBox.value)" formControlName="amount">
-                <span class="ui-inputgroup-addon">.00</span>
-              </div>
-            </form>
-          </div>
-          <div class="custom-text-input">
-            <form [formGroup]="symbolsForm" novalidate>
-              <input type="text" style="margin-bottom: 1em;" pInputText formControlName="list"
-                placeholder="Ex. NFLX, AAPL, MSFT" (keyup.enter)="readStockList()" />
-            </form>
-            <p-button icon="pi pi-check" class="check-button" (click)="readStockList()"></p-button>
-          </div>
-        </div>
-        <div class="card-form">
-          <p-card>
-            <form [formGroup]="addOrderFormGroup">
-              <div class="order-form-item">
-                <input type="text" pInputText placeholder="Stock" class="uppercase" formControlName="symbol">
-                <p-dropdown [options]="sides" formControlName="side"
-                  [style]="{'minWidth':'50px', 'width':'93px', 'margin-left':'5px'}"></p-dropdown>
-              </div>
-              <div class="order-form-item">
-                <p-spinner formControlName="allocation"
-                  [inputStyle]="{'width': '5em', 'height': '2em', 'margin-left': '5px'}" [step]="0.1" [min]="0"
-                  [max]="9">
-                </p-spinner>
-                &nbsp;x 100%
-              </div>
-            </form>
-            <p-footer>
-              <div class="order-form-item">
-                <button pButton type="button" icon="pi pi-plus-circle" (click)="addCustomList()"
-                  class="ui-button-success"></button>
-                &nbsp;
-                <button pButton type="button" icon="pi pi-ticket" (click)="addMachineTrade()"
-                  class="ui-button-info"></button>
-                <div *ngIf="errorMsg" class="error-message">{{errorMsg}}</div>
-              </div>
-            </p-footer>
-          </p-card>
-        </div>
-        <div class="order-cards">
-          <div *ngFor="let order of templateOrders" class="order-form-item">
-            <app-mini-card [order]="order" (delete)="delete($event)"></app-mini-card>
-          </div>
-        </div>
-      </div>
+    <div class="ui-g-6 order-list-column">
+      <h2>Order Summary</h2>
+      <label>Wallet:</label> {{cashBalance}}
+      <label>Total:</label>
     </div>
   </div>
 </p-dialog>

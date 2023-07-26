@@ -41,6 +41,8 @@ import { MenubarModule } from 'primeng/menubar';
 import { DataViewModule } from 'primeng/dataview';
 import { FieldsetModule } from 'primeng/fieldset';
 import { ChipModule } from 'primeng/chip';
+import { ProgressBarModule } from 'primeng/progressbar';
+import {AutoCompleteModule} from 'primeng/autocomplete';
 
 const materialModules = [
   MatStepperModule,
@@ -84,7 +86,9 @@ const primeModules = [
   InputSwitchModule,
   DataViewModule,
   FieldsetModule,
-  ChipModule
+  ChipModule,
+  ProgressBarModule,
+  AutoCompleteModule
 ];
 
 @NgModule({

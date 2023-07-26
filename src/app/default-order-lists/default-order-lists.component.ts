@@ -10,7 +10,7 @@ import {
 } from 'rxjs/operators';
 import { MachineDaytradingService } from '../machine-daytrading/machine-daytrading.service';
 import { SchedulerService } from '@shared/service/scheduler.service';
-import { SelectItem } from 'primeng/api';
+import { MenuItem, SelectItem } from 'primeng/api';
 
 export interface DefaultOrders {
   label: string;
@@ -29,27 +29,19 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
   @Input() prefillOrderForm: Order;
   @Input() defaultLists: DefaultOrders[];
   templateOrders: SmartOrder[];
-  firstFormGroup: FormGroup;
   addOrderFormGroup: FormGroup;
   selectedDefaultOrders = [];
-  private amountChange = new Subject<string>();
+  private amountChange = new Subject<number>();
   isLoading = false;
   sides: SelectItem[];
   errorMsg: string;
   destroy$ = new Subject();
-  symbolsForm: FormGroup;
-  defaultAllocations = [{ name: '0.05', value: 0.05 },
-  { name: '0.25', value: 0.25 },
-  { name: '0.5', value: 0.5 },
-  { name: '1', value: 1 }];
 
-  selectedAllocation = { name: '0.25', value: 0.25 };
-  balanceOptions = [
-    { label: 'Cash Balance', value: 'cashBal' },
-    { label: 'Portfolio Total', value: 'portTotal' }
-  ];
-
-  cashBalanceOption = 'portTotal';
+  pageSteps: MenuItem[];
+  cartStep = 0;
+  cashBalance = null;
+  symbolsQuery = null;
+  suggestionsArr = [];
 
   constructor(private _formBuilder: FormBuilder,
     private cartService: CartService,
@@ -60,10 +52,19 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
     this.display = false;
     this.hideButton = false;
     this.templateOrders = [];
-
-    this.symbolsForm = this._formBuilder.group({
-      list: ''
-    });
+    this.pageSteps = [{
+        label: 'Shopping cart',
+        command: () => {
+          this.cartStep = 0;
+        }
+    },
+    {
+        label: 'Order confirmation',
+        command: () => {
+          this.cartStep = 1;
+        }
+    }
+  ];
 
     this.amountChange
       .pipe(
@@ -72,7 +73,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
         takeUntil(this.destroy$)
       )
       .subscribe(value => {
-        this.firstFormGroup.controls['amount'].setValue(value);
+        this.cashBalance = value
       });
 
     this.sides = [
@@ -81,13 +82,9 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
       { label: 'DayTrade', value: 'DayTrade' }
     ];
 
-    this.firstFormGroup = this._formBuilder.group({
-      amount: [1000, Validators.required]
-    });
-
     this.setAddOrderForm();
 
-    this.defaultLists = this.createDefaultList();
+    this.suggestionsArr = this.createDefaultList();
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -101,25 +98,24 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
   }
 
   readStockList() {
-    const stockListText = this.symbolsForm.value.list.trim().toUpperCase().split(',');
-    stockListText.forEach(textSymbol => {
-      const allocationPct = this.addOrderFormGroup.value.allocation;
-      const total = this.firstFormGroup.value.amount;
-      this.addOrder(textSymbol, allocationPct, total);
+    console.log('symbolsquewry ', this.symbolsQuery);
+    
+    this.symbolsQuery.forEach(query => {
+      let symbol = query.label;
+      if (symbol.includes(',')) {
+        let symbolsTextStr = query.label.trim().toUpperCase().split(',');
+        symbolsTextStr.forEach(s => {
+          this.addNewOrder(s);
+        });
+      } else {
+        this.addNewOrder(symbol);
+      }
     });
   }
 
-  changedSelection() {
-    this.templateOrders = [];
-    this.defaultLists.forEach((allocationItem) => {
-      if (allocationItem.allocation > 0) {
-        const stock = allocationItem.label;
-        const allocationPct = allocationItem.allocation;
-        const total = this.firstFormGroup.value.amount;
-        const side = allocationItem.side;
-        this.addOrder(stock, allocationPct, total, side);
-      }
-    });
+  addNewOrder (symbol) {
+    const allocationPct = this.addOrderFormGroup.value.allocation;
+    this.addOrder(symbol, allocationPct, this.cashBalance);
   }
 
   addOrder(stock: string, allocationPct: number, total: number, side: string = '') {
@@ -148,7 +144,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
     if (this.addOrderFormGroup.valid) {
       const stock = this.addOrderFormGroup.value.symbol;
       const allocationPct = this.addOrderFormGroup.value.allocation;
-      const total = this.firstFormGroup.value.amount;
+      const total = this.cashBalance;
       this.addOrder(stock, allocationPct, total);
 
       this.errorMsg = '';
@@ -160,7 +156,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
   addMachineTrade() {
     const stock = 'MACHINE';
     this.machineDaytradingService.allocationPct = this.addOrderFormGroup.value.allocation;
-    this.machineDaytradingService.allocationTotal = this.firstFormGroup.value.amount;
+    this.machineDaytradingService.allocationTotal = this.cashBalance;
     this.templateOrders.push(this.cartService.buildOrder(stock, 1, 1, this.addOrderFormGroup.value.side, 'MACHINE'));
 
     this.errorMsg = '';
@@ -219,54 +215,22 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
     this.display = false;
   }
 
-  updatedAmount(query: string) {
+  updatedAmount(query: number) {
     this.amountChange.next(query);
-  }
-
-  getBalance() {
-    console.log(this.cashBalanceOption);
-    if (this.cashBalanceOption === 'cashBal') {
-      this.getCashBalance();
-    } else {
-      this.getPortfolioTotal();
-    }
   }
 
   getPortfolioTotal() {
     this.isLoading = true;
     this.machineDaytradingService.getPortfolioBalance()
       .subscribe((data) => {
-        this.updatedAmount(data.liquidationValue);
+        const spendBalance = data.liquidationValue - data.longMarketValue;
+        this.updatedAmount(spendBalance);
         this.isLoading = false;
       }, () => {
         this.isLoading = false;
       });
   }
-
-  getCashBalance() {
-    this.isLoading = true;
-    this.machineDaytradingService.getPortfolioBalance().subscribe((data) => {
-      this.updatedAmount(data.cashBalance || data.cashAvailableForTrading);
-      this.isLoading = false;
-    }, () => {
-      this.isLoading = false;
-    });
-  }
-
-  saveToStorage(templateOrders: SmartOrder[]) {
-    sessionStorage.removeItem('daytradeList');
-    const ordersToSave = templateOrders.reduce((acc, val: SmartOrder) => {
-      if (!acc.uniqueSymbols[val.holding.symbol]) {
-        acc.uniqueSymbols[val.holding.symbol] = true;
-        acc.list.push(val);
-      }
-      return acc;
-    }, { uniqueSymbols: {}, list: [] }).list;
-    sessionStorage.setItem('daytradeList', JSON.stringify(ordersToSave));
-    this.defaultLists = this.createDefaultList();
-    console.log('default list set to ', this.defaultLists);
-  }
-
+  
   createDefaultList() {
     const daytradeList = sessionStorage.getItem('daytradeList');
     if (daytradeList) {
@@ -276,7 +240,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
         if (currentValue) {
           const newItem = {
             label: currentValue.holding.symbol,
-            allocation: this.selectedAllocation.value || 0.25,
+            allocation: this.addOrderFormGroup.value.allocation,
             side: currentValue.side
           };
           accumulator.push(newItem);
@@ -294,11 +258,18 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
     ];
   }
 
-  updateDefaultList() {
-    const allocation = this.selectedAllocation;
-    this.defaultLists.forEach(defaultItem => {
-      defaultItem.allocation = allocation.value * 1;
+  addItem() {
+    console.log(this.selectedDefaultOrders);
+    this.selectedDefaultOrders.forEach(tableRow => {
+      this.addOrder(tableRow.label, tableRow.allocation, this.cashBalance, tableRow.side);
     });
+  }
+
+  filterItems(event) {
+    console.log('filterItrems', event, this.symbolsQuery);
+    this.suggestionsArr = [
+      {label: event.query, value: event.query}
+    ]; 
   }
 
   ngOnDestroy() {

@@ -56,3 +56,10 @@
     float: right;
   }
 }
+
+.order-list-container {
+  flex-direction: row;
+  .order-list-column {
+    margin-left: 1em;
+  }
+}
