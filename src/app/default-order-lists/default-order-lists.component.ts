@@ -53,18 +53,18 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
     this.hideButton = false;
     this.templateOrders = [];
     this.pageSteps = [{
-        label: 'Shopping cart',
-        command: () => {
-          this.cartStep = 0;
-        }
+      label: 'Shopping cart',
+      command: () => {
+        this.cartStep = 0;
+      }
     },
     {
-        label: 'Order confirmation',
-        command: () => {
-          this.cartStep = 1;
-        }
+      label: 'Order confirmation',
+      command: () => {
+        this.cartStep = 1;
+      }
     }
-  ];
+    ];
 
     this.amountChange
       .pipe(
@@ -73,7 +73,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
         takeUntil(this.destroy$)
       )
       .subscribe(value => {
-        this.cashBalance = value
+        this.cashBalance = value;
       });
 
     this.sides = [
@@ -99,11 +99,11 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
 
   readStockList() {
     console.log('symbolsquewry ', this.symbolsQuery);
-    
+
     this.symbolsQuery.forEach(query => {
-      let symbol = query.label;
+      const symbol = query.label;
       if (symbol.includes(',')) {
-        let symbolsTextStr = query.label.trim().toUpperCase().split(',');
+        const symbolsTextStr = query.label.trim().toUpperCase().split(',');
         symbolsTextStr.forEach(s => {
           this.addNewOrder(s);
         });
@@ -113,7 +113,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
     });
   }
 
-  addNewOrder (symbol) {
+  addNewOrder(symbol) {
     const allocationPct = this.addOrderFormGroup.value.allocation;
     this.addOrder(symbol, allocationPct, this.cashBalance);
   }
@@ -230,7 +230,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
         this.isLoading = false;
       });
   }
-  
+
   createDefaultList() {
     const daytradeList = sessionStorage.getItem('daytradeList');
     if (daytradeList) {
@@ -268,8 +268,8 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
   filterItems(event) {
     console.log('filterItrems', event, this.symbolsQuery);
     this.suggestionsArr = [
-      {label: event.query, value: event.query}
-    ]; 
+      { label: event.query, value: event.query }
+    ];
   }
 
   ngOnDestroy() {
