@@ -728,6 +728,7 @@ class PortfolioService {
   deleteCredentials(accountId, response) {
     this.refreshTokensHash[accountId] = null;
     this.tdaKey[accountId] = null;
+    this.access_token[accountId] = null;
     this.lastTokenRequest = null;
     response.status(200).send({});
   }

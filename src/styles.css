@@ -57,3 +57,10 @@ button.nav-item {
   display: flex;
   flex-direction: column;
 }
+
+.p-steps .p-steps-item .p-menuitem-link {
+  background: transparent;
+  transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+  border-radius: 3px;
+  background: transparent;
+}

@@ -11,10 +11,10 @@
 // (imported above). For each palette, you can optionally specify a default, lighter, and darker
 // hue.
 $robinhood-merchant-primary: mat-palette($mat-green);
-$robinhood-merchant-accent:  mat-palette($mat-amber, A200, A100, A400);
+$robinhood-merchant-accent: mat-palette($mat-amber, A200, A100, A400);
 
 // The warn palette is optional (defaults to red).
-$robinhood-merchant-warn:    mat-palette($mat-red);
+$robinhood-merchant-warn: mat-palette($mat-red);
 
 // Create the theme object (a Sass map containing all of the palettes).
 $robinhood-merchant-theme: mat-light-theme($robinhood-merchant-primary, $robinhood-merchant-accent, $robinhood-merchant-warn);
@@ -23,3 +23,12 @@ $robinhood-merchant-theme: mat-light-theme($robinhood-merchant-primary, $robinho
 // Alternatively, you can import and @include the theme mixins for each component
 // that you are using.
 @include angular-material-theme($robinhood-merchant-theme);
+
+a {
+    .p-steps .p-steps-item .p-menuitem-link {
+        background: transparent;
+        transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+        border-radius: 3px;
+        background: transparent;
+    }
+}
