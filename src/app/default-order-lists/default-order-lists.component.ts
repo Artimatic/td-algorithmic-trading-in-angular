@@ -98,8 +98,6 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
   }
 
   readStockList() {
-    console.log('symbolsquewry ', this.symbolsQuery);
-
     this.symbolsQuery.forEach(query => {
       const symbol = query.label;
       if (symbol.includes(',')) {
@@ -266,11 +264,21 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
   }
 
   filterItems(event) {
-    console.log('filterItrems', event, this.symbolsQuery);
-    this.suggestionsArr = [
-      { label: event.query, value: event.query }
-    ];
-    this.suggestionsArr.concat(this.createDefaultList());
+    const mainSuggestions = this.createDefaultList().map(val => {
+      return {
+        label: val.label,
+        value: val
+      };
+    });
+    if (event.query) {
+      this.suggestionsArr = [
+        { label: event.query, value: event.query }
+      ];
+    } else {
+      this.suggestionsArr = [];
+    }
+
+    this.suggestionsArr = this.suggestionsArr.concat(mainSuggestions);
   }
 
   ngOnDestroy() {
