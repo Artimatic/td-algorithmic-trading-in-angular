@@ -270,6 +270,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
     this.suggestionsArr = [
       { label: event.query, value: event.query }
     ];
+    this.suggestionsArr.concat(this.createDefaultList());
   }
 
   ngOnDestroy() {
