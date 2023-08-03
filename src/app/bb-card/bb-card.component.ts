@@ -134,19 +134,19 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
       { label: 'Send order and SMS', value: 'order_sms' }
     ];
 
-           this.items = [{
-                label: 'Edit',
-                command: () => {
-                    this.activeIndex = 0;
-                }
-            },
-            {
-                label: 'Submit',
-                command: () => {
-                    this.activeIndex = 1;
-                }
-            }
-        ];
+    this.items = [{
+      label: 'Edit',
+      command: () => {
+        this.activeIndex = 0;
+      }
+    },
+    {
+      label: 'Submit',
+      command: () => {
+        this.activeIndex = 1;
+      }
+    }
+    ];
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -795,17 +795,17 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
           console.log('account balance: ', data.liquidationValue, data.cashBalance, usage);
           if (usage < this.globalSettingsService.maxAccountUsage) {
             this.backtestService.getLastPriceTiingo({ symbol: this.order.holding.symbol })
-            .pipe(take(1))
-            .subscribe(tiingoQuote => {
-              const lastPrice = tiingoQuote[0].last;
+              .pipe(take(1))
+              .subscribe(tiingoQuote => {
+                const lastPrice = tiingoQuote[0].last;
 
-              this.backtestService.getDaytradeRecommendation(this.order.holding.symbol, lastPrice, lastPrice, { minQuotes: 81 }, 'tiingo').subscribe(
-                tiingoAnalysis => {
-                  console.log('tiingo analysis', tiingoAnalysis);
-                  return null;
-                }
-              );
-            });
+                this.backtestService.getDaytradeRecommendation(this.order.holding.symbol, lastPrice, lastPrice, { minQuotes: 81 }, 'tiingo').subscribe(
+                  tiingoAnalysis => {
+                    console.log('tiingo analysis', tiingoAnalysis);
+                    return null;
+                  }
+                );
+              });
           }
         });
         const log = `Received buy recommendation`;
@@ -959,16 +959,14 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
         }
       }
 
-      if (this.isDayTrading()) {
-        if ((moment().isAfter(moment(this.globalSettingsService.sellAtCloseTime)) && this.order.sellAtClose || this.isStagnantDaytrade(this.orders, gains)) &&
-          this.positionCount > 0) {
-          const log = `Closing positions: ${closePrice}/${estimatedPrice}`;
-          this.reportingService.addAuditLog(this.order.holding.symbol, log);
-          console.log(log);
-          const stopLossOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
-          this.sendStopLoss(stopLossOrder);
-          return true;
-        }
+      if ((moment().isAfter(moment(this.globalSettingsService.sellAtCloseTime)) && this.order.sellAtClose || this.isStagnantDaytrade(this.orders, gains)) &&
+        this.positionCount > 0) {
+        const log = `Closing positions: ${closePrice}/${estimatedPrice}`;
+        this.reportingService.addAuditLog(this.order.holding.symbol, log);
+        console.log(log);
+        const stopLossOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
+        this.sendStopLoss(stopLossOrder);
+        return true;
       }
     }
 
@@ -1008,6 +1006,10 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
 
   isDayTrading(): boolean {
     return this.firstFormGroup.value.orderType.toLowerCase() === 'daytrade';
+  }
+
+  isSellOrder(): boolean {
+    return this.order.side.toLowerCase() === 'sell';
   }
 
   removeOrder(oldOrder) {

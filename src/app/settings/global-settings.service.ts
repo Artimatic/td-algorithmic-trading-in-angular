@@ -56,7 +56,7 @@ export class GlobalSettingsService {
   setStartTimes() {
     let beginTime = '09:50';
     let endTime = '15:50';
-    let sellTime = '15:40';
+    let sellTime = '15:30';
     let startDate = null;
     if (this.startTime) {
       beginTime = moment.tz(this.startTime.valueOf(), 'America/New_York').format('HH:mm');
