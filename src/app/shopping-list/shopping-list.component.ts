@@ -304,6 +304,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
           mlStopTime = mlStartTime;
 
           if (this.globalSettingsService.autostart) {
+            this.globalSettingsService.setAutoStart(true);
             this.globalSettingsService.tradeDayStart
               .pipe(
                 takeUntil(this.destroy$)
