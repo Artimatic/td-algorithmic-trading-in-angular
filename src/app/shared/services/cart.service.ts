@@ -108,13 +108,13 @@ export class CartService {
     switch (order.side.toLowerCase()) {
       case 'sell':
         this.deleteSell(order);
-      break;
+        break;
       case 'buy':
         this.deleteBuy(order);
-      break;
+        break;
       case 'daytrade':
         this.deleteDaytrade(order);
-      break;
+        break;
     }
   }
 
@@ -206,7 +206,7 @@ export class CartService {
       useStopLoss: false,
       useTrailingStopLoss: false,
       useTakeProfit: false,
-      sellAtClose: (side === 'DayTrade' || side ==='Sell') ? true : false,
+      sellAtClose: (side === 'DayTrade' || side === 'Sell') ? true : false,
       id
     };
   }
