@@ -12,6 +12,9 @@
         <button pButton type="button" icon="pi pi-refresh" iconPos="left" (click)="refresh()"></button>
       </div>
       <div class="p-mr-2">
+        <button pButton type="button" label="Find Daytrades" iconPos="left" (click)="findTrades()"></button>
+      </div>
+      <div class="p-mr-2">
         <p-inputSwitch (onChange)="setAutoControl()" [(ngModel)]="autoControl"></p-inputSwitch>
         <div class="control-switch">
           <label>Auto Control</label>

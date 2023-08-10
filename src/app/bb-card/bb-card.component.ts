@@ -961,7 +961,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
 
       if ((moment().isAfter(moment(this.globalSettingsService.sellAtCloseTime)) && this.order.sellAtClose || this.isStagnantDaytrade(this.orders, gains)) &&
         this.positionCount > 0) {
-        const log = `Closing positions: ${closePrice}/${estimatedPrice}`;
+        const log = `Current time: ${this.globalSettingsService.sellAtCloseTime} Is sell at close order: ${this.order.sellAtClose} Closing positions: ${closePrice}/${estimatedPrice}`;
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
         console.log(log);
         const stopLossOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
@@ -991,7 +991,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private isStagnantDaytrade(currentOrders: SmartOrder[], gains: number) {
-    if (gains < 0 && currentOrders.length > 0 && this.positionCount > 0) {
+    if (this.isDayTrading() && gains < 0 && currentOrders.length > 0 && this.positionCount > 0) {
       const stagnantOrderIdx = currentOrders.findIndex((order) => {
         if (order.side.toLowerCase() === 'buy' && moment.duration(moment().diff(moment(order.timeSubmitted))).asMinutes() > 30) {
           return true;

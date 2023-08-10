@@ -166,7 +166,6 @@ export class PortfolioInfoComponent implements OnInit, OnDestroy {
                   }
                 });
               }
-              this.findTrades();
             });
           });
       });
