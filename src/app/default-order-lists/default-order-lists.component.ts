@@ -84,7 +84,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
 
     this.setAddOrderForm();
 
-    this.suggestionsArr = this.createDefaultList();
+    this.suggestionsArr = this.createSuggestionList();
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -95,6 +95,9 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
 
   showDialog() {
     this.display = true;
+    if (!this.defaultLists.length) {
+      this.defaultLists = this.createDefaultList();
+    }
   }
 
   readStockList() {
@@ -236,6 +239,28 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
 
       const retrievedList = storedList.reduce((accumulator, currentValue) => {
         if (currentValue) {
+          const currentValueAllocation = Number((Number(currentValue.price) * Number(currentValue.quantity) / Number(this.cashBalance)).toFixed(2));
+          const newItem = {
+            label: currentValue.holding.symbol,
+            allocation:  currentValueAllocation < 1 && currentValueAllocation > 0 ? currentValueAllocation : this.addOrderFormGroup.value.allocation,
+            side: currentValue.side
+          };
+          accumulator.push(newItem);
+        }
+        return accumulator;
+      }, []);
+      return retrievedList;
+    }
+    return [];
+  }
+
+  createSuggestionList() {
+    const daytradeList = sessionStorage.getItem('daytradeList');
+    if (daytradeList) {
+      const storedList: SmartOrder[] = JSON.parse(sessionStorage.getItem('daytradeList'));
+
+      const retrievedList = storedList.reduce((accumulator, currentValue) => {
+        if (currentValue) {
           const newItem = {
             label: currentValue.holding.symbol,
             allocation: this.addOrderFormGroup.value.allocation,
@@ -264,7 +289,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
   }
 
   filterItems(event) {
-    const mainSuggestions = this.createDefaultList().map(val => {
+    const mainSuggestions = this.createSuggestionList().map(val => {
       return {
         label: val.label,
         value: val
