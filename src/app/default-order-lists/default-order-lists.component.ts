@@ -74,6 +74,9 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
       )
       .subscribe(value => {
         this.cashBalance = value;
+        if (!this.defaultLists.length) {
+          this.defaultLists = this.createDefaultList();
+        }
       });
 
     this.sides = [
@@ -95,9 +98,6 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
 
   showDialog() {
     this.display = true;
-    if (!this.defaultLists.length) {
-      this.defaultLists = this.createDefaultList();
-    }
   }
 
   readStockList() {
