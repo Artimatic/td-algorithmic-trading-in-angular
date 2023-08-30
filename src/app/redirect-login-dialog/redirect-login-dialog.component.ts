@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { MatDialogRef } from '@angular/material';
 import { Router } from '@angular/router';
+import { DynamicDialogRef } from 'primeng/dynamicdialog';
 
 @Component({
   selector: 'app-redirect-login-dialog',
@@ -9,17 +9,17 @@ import { Router } from '@angular/router';
 })
 export class RedirectLoginDialogComponent implements OnInit {
 
-  constructor(private dialogRef: MatDialogRef<RedirectLoginDialogComponent>, private router: Router) { }
+  constructor(public ref: DynamicDialogRef, private router: Router) { }
 
   ngOnInit() {
   }
 
   closeDialog() {
-    this.dialogRef.close();
+    this.ref.close();
   }
 
   redirectToLogin() {
     this.router.navigate(['/overview']);
-    this.dialogRef.close();
+    this.ref.close();
   }
 }

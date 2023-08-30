@@ -7,7 +7,9 @@ import * as moment from 'moment-timezone';
 import * as _ from 'lodash';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
-import { MatDialog, MatSnackBar } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
+
 import { PortfolioService, DaytradeService, ReportingService, BacktestService, MachineLearningService } from '../shared';
 import { Holding } from '../shared/models';
 import { GlobalSettingsService, Brokerage } from '../settings/global-settings.service';

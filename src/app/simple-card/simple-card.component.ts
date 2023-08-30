@@ -4,7 +4,9 @@ import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import { SmartOrder } from '../shared/models/smart-order';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { CartService } from '../shared/services/cart.service';
-import { MatDialog, MatSnackBar } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
+
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import * as moment from 'moment-timezone';
 import { DaytradeService, PortfolioService, ReportingService, BacktestService } from '../shared';

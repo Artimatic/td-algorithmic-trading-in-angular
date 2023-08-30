@@ -16,123 +16,128 @@
       WARNING: {{warning}}
     </div>
   </div>
-  <mat-horizontal-stepper [linear]="false" #stepper="matHorizontalStepper">
-    <mat-step [stepControl]="firstFormGroup">
-      <form [formGroup]="firstFormGroup">
-        <ng-template matStepLabel>Edit Order</ng-template>
-        <mat-chip>{{order.holding.symbol}}</mat-chip>
-        <p>{{order.holding.name}}</p>
-        <mat-form-field>
-          <mat-select placeholder="Side" formControlName="orderType" name="side" required>
-            <mat-option *ngFor="let side of sides" [value]="side">
-              {{ side }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-        <mat-form-field hintLabel="Quantity">
-          <input matInput type="number" placeholder="Quantity" formControlName="quantity" required>
-        </mat-form-field>
-        <mat-form-field hintLabel="Stop Loss">
-          <input matInput type="number" placeholder="Stop Loss" formControlName="lossThreshold" required>
-        </mat-form-field>
-        <mat-form-field hintLabel="Trailing stop loss">
-          <input matInput type="number" placeholder="Trailing Stop Loss" formControlName="trailingStop" required>
-        </mat-form-field>
-        <mat-form-field hintLabel="Profit exit">
-          <input matInput type="number" placeholder="Profit Target" formControlName="profitTarget">
-        </mat-form-field>
-        <mat-form-field hintLabel="Size of Each Order">
-          <input matInput type="number" placeholder="Orders" formControlName="orderSize" required>
-        </mat-form-field>
-        <mat-form-field>
-          <mat-select placeholder="Preferences" [formControl]="preferences" name="preferences" multiple>
-            <mat-option *ngFor="let pref of preferenceList" [value]="pref">
-              {{ pref }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-        <mat-form-field>
-          <mat-select placeholder="Multiplier" [formControl]="multiplierPreference" name="multiplier">
-            <mat-option *ngFor="let mulitiplier of multiplierList" [value]="mulitiplier">
-              {{ mulitiplier }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-        <mat-form-field>
-          <input matInput type="string" placeholder="Phone" formControlName="phoneNumber" required>
-        </mat-form-field>
-        <p-selectButton [options]="smsOptions" [formControl]="smsOption"></p-selectButton>
-        <div class="machine-switch">
-          <mat-slide-toggle [formControl]="machineControlled">
-            <a matTooltip="Machine picks the stock">
-              Machine Controlled
-            </a>
-          </mat-slide-toggle>
+
+  <p-steps [model]="items" [(activeIndex)]="activeIndex" [readonly]="false"></p-steps>
+
+  <div *ngIf="activeIndex === 0">
+    <form [formGroup]="firstFormGroup">
+      <ng-template matStepLabel>Edit Order</ng-template>
+      <mat-chip>{{order.holding.symbol}}</mat-chip>
+      <p>{{order.holding.name}}</p>
+      <mat-form-field>
+        <mat-select placeholder="Side" formControlName="orderType" name="side" required>
+          <mat-option *ngFor="let side of sides" [value]="side">
+            {{ side }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field hintLabel="Quantity">
+        <input matInput type="number" placeholder="Quantity" formControlName="quantity" required>
+      </mat-form-field>
+      <mat-form-field hintLabel="Stop Loss">
+        <input matInput type="number" placeholder="Stop Loss" formControlName="lossThreshold" required>
+      </mat-form-field>
+      <mat-form-field hintLabel="Trailing stop loss">
+        <input matInput type="number" placeholder="Trailing Stop Loss" formControlName="trailingStop" required>
+      </mat-form-field>
+      <mat-form-field hintLabel="Profit exit">
+        <input matInput type="number" placeholder="Profit Target" formControlName="profitTarget">
+      </mat-form-field>
+      <mat-form-field hintLabel="Size of Each Order">
+        <input matInput type="number" placeholder="Orders" formControlName="orderSize" required>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-select placeholder="Preferences" [formControl]="preferences" name="preferences" multiple>
+          <mat-option *ngFor="let pref of preferenceList" [value]="pref">
+            {{ pref }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-select placeholder="Multiplier" [formControl]="multiplierPreference" name="multiplier">
+          <mat-option *ngFor="let mulitiplier of multiplierList" [value]="mulitiplier">
+            {{ mulitiplier }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field>
+        <input matInput type="string" placeholder="Phone" formControlName="phoneNumber" required>
+      </mat-form-field>
+      <p-selectButton [options]="smsOptions" [formControl]="smsOption"></p-selectButton>
+      <div class="machine-switch">
+        <mat-slide-toggle [formControl]="machineControlled">
+          <a matTooltip="Machine picks the stock">
+            Machine Controlled
+          </a>
+        </mat-slide-toggle>
+      </div>
+      <div>
+        <button (click)="activeIndex=1;">Next</button>
+      </div>
+    </form>
+  </div>
+  <div *ngIf="activeIndex === 0">
+    <ng-template matStepLabel>Place Order</ng-template>
+    <p-card>
+      <div *ngIf="live">
+        <mat-chip color="warn" selected="true">LIVE</mat-chip>
+      </div>
+      <div *ngIf="!live">
+        <button mat-raised-button disabled>STALLED</button>
+      </div>
+      <div>
+        Orders Submitted: {{ buyCount + sellCount}}/{{firstFormGroup.value.quantity || 0}} shares
+      </div>
+      <div class="toolbar-content" fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px"
+        fxLayoutGap.xs="0">
+        <div fxFlex="5%">
+          <p-header>
+            <h3>{{order.holding.symbol}}</h3>
+            <p>
+              <button mat-fab *ngIf="firstFormGroup.value.orderType=='Buy'" color="primary">BUY</button>
+              <button mat-fab *ngIf="firstFormGroup.value.orderType=='Sell'" color="warn">SELL</button>
+              <button mat-fab *ngIf="firstFormGroup.value.orderType=='DayTrade'" color="accent">DAY</button>
+            </p>
+          </p-header>
+          <mat-checkbox (click)="toggleChart()">Chart</mat-checkbox>
         </div>
-        <div>
-          <button mat-button matStepperNext>Next</button>
-        </div>
-      </form>
-    </mat-step>
-    <mat-step [stepControl]="secondFormGroup">
-      <ng-template matStepLabel>Place Order</ng-template>
-      <mat-card>
-        <div *ngIf="live">
-          <mat-chip color="warn" selected="true">LIVE</mat-chip>
-        </div>
-        <div *ngIf="!live">
-          <button mat-raised-button disabled>STALLED</button>
-        </div>
-        <div>
-          Orders Submitted: {{ buyCount + sellCount}}/{{firstFormGroup.value.quantity || 0}} shares
-        </div>
-        <div class="toolbar-content" fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px"
-          fxLayoutGap.xs="0">
-          <div fxFlex="5%">
-            <mat-card-header>
-              <mat-card-title>{{order.holding.symbol}}</mat-card-title>
-              <mat-card-subtitle>
-                <button mat-fab *ngIf="firstFormGroup.value.orderType=='Buy'" color="primary">BUY</button>
-                <button mat-fab *ngIf="firstFormGroup.value.orderType=='Sell'" color="warn">SELL</button>
-                <button mat-fab *ngIf="firstFormGroup.value.orderType=='DayTrade'" color="accent">DAY</button>
-              </mat-card-subtitle>
-            </mat-card-header>
-            <mat-checkbox (click)="toggleChart()">Chart</mat-checkbox>
+        <div fxFlex="95%">
+          <div *ngIf="showChart">
+            <div [chart]="chart"></div>
+            <div [chart]="volumeChart"></div>
           </div>
-          <div fxFlex="95%">
-            <div *ngIf="showChart">
-              <div [chart]="chart"></div>
-              <div [chart]="volumeChart"></div>
-            </div>
-            <div class="order-log" *ngIf="!showChart">
-              <mat-grid-list cols="3" rowHeight="150px">
-                <mat-grid-tile *ngFor="let tile of tiles" [colspan]="tile.cols" [rowspan]="tile.rows">
-                  <div class="tiles">
-                    <table>
-                      <tr *ngFor="let order of tile.orders">
-                        <td>{{order.signalTime}}</td>
-                        <td>{{order.action}}</td>
-                        <td>{{order.quantity}}@</td>
-                        <td>${{order.price}}</td>
-                        <td> on {{order.timeSubmitted}}</td>
-                      </tr>
-                    </table>
-                  </div>
-                </mat-grid-tile>
-              </mat-grid-list>
-            </div>
+          <div class="order-log" *ngIf="!showChart">
+            <mat-grid-list cols="3" rowHeight="150px">
+              <mat-grid-tile *ngFor="let tile of tiles" [colspan]="tile.cols" [rowspan]="tile.rows">
+                <div class="tiles">
+                  <table>
+                    <tr *ngFor="let order of tile.orders">
+                      <td>{{order.signalTime}}</td>
+                      <td>{{order.action}}</td>
+                      <td>{{order.quantity}}@</td>
+                      <td>${{order.price}}</td>
+                      <td> on {{order.timeSubmitted}}</td>
+                    </tr>
+                  </table>
+                </div>
+              </mat-grid-tile>
+            </mat-grid-list>
           </div>
         </div>
-        <mat-card-actions>
-          <button mat-raised-button color="warn" (click)="resetStepper(stepper)">STOP</button>
-          <button mat-button color="primary" (click)="backtest()">Backtest</button>
-          <button mat-button color="warn" (click)="testBuy()">Buy</button>
-          <button mat-button color="warn" (click)="testSell()">Sell</button>
-          <button mat-button color="warn" (click)="testSms()">Test SMS</button>
-          <button mat-button color="warn" (click)="goLive()">Test Live</button>
-          <button mat-button color="warn" (click)="testRequests()">Test Requests</button>
-        </mat-card-actions>
-      </mat-card>
-    </mat-step>
-  </mat-horizontal-stepper>
+      </div>
+      <p-footer>
+
+      <div class="card-actions">
+        <button mat-raised-button color="warn" (click)="resetStepper()">STOP</button>
+        <button mat-button color="primary" (click)="backtest()">Backtest</button>
+        <button mat-button color="warn" (click)="testBuy()">Buy</button>
+        <button mat-button color="warn" (click)="testSell()">Sell</button>
+        <button mat-button color="warn" (click)="testSms()">Test SMS</button>
+        <button mat-button color="warn" (click)="goLive()">Test Live</button>
+        <button mat-button color="warn" (click)="testRequests()">Test Requests</button>
+      </div>
+    </p-footer>
+
+    </p-card>
+  </div>
 </p-card>

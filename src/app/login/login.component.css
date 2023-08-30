@@ -7,7 +7,6 @@
 }
 
 .available-accounts {
-  width: 20%;
   text-align: left;
   display: flex;
 }
@@ -26,7 +25,8 @@
 }
 
 .login-send-btn {
-  margin-left: 80px;
+  margin-left: 8em;
+  margin-top: 1em;
 }
 
 .available-accounts-title {

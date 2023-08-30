@@ -53,16 +53,16 @@ export class GlobalSettingsService {
     return this.http.get('/api/bonds/10y2yspread');
   }
 
-  setStartTimes() {
+  setStartTimes(nextTradeDay = false) {
     let beginTime = '09:50';
     let endTime = '15:50';
-    let sellTime = '15:40';
+    let sellTime = '15:30';
     let startDate = null;
     if (this.startTime) {
       beginTime = moment.tz(this.startTime.valueOf(), 'America/New_York').format('HH:mm');
     }
 
-    if (this.tradeDate) {
+    if (this.tradeDate && !nextTradeDay) {
       startDate = moment.tz(this.tradeDate.valueOf(), 'America/New_York');
     } else {
       startDate = this.getTradeDate();
@@ -116,9 +116,9 @@ export class GlobalSettingsService {
     return time;
   }
 
-  setAutoStart() {
-    this.autostart = !this.autostart;
-    this.setStartTimes();
+  setAutoStart(newAutostart = null) {
+    this.autostart = newAutostart === null ? !this.autostart : newAutostart;
+    this.setStartTimes(newAutostart);
     console.log('starttime ', this.startTime, this.stopTime, this.sellAtCloseTime);
   }
 

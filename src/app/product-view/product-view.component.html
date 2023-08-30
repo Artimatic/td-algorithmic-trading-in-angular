@@ -1,7 +1,7 @@
 <mat-card>
   <div>
     <span [hidden]="!resolving">
-      <mat-spinner></mat-spinner>
+      <p-progressSpinner aria-label="Loading"></p-progressSpinner>
     </span>
     <span [hidden]="resolving">
       <div [chart]="chart"></div>

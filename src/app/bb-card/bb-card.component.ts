@@ -1,6 +1,6 @@
-import { Component, OnChanges, Input, OnInit, ViewChild, SimpleChanges, OnDestroy } from '@angular/core';
+import { Component, OnChanges, Input, OnInit, SimpleChanges, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { take } from 'rxjs/operators';
 
 import { Chart } from 'angular-highcharts';
@@ -28,10 +28,10 @@ import { GlobalSettingsService } from '../settings/global-settings.service';
 import { TradeService, AlgoQueueItem } from '../shared/services/trade.service';
 import { OrderingService } from '@shared/services/ordering.service';
 import { GlobalTaskQueueService } from '@shared/services/global-task-queue.service';
-import { SelectItem } from 'primeng/components/common/selectitem';
 import { ClientSmsService } from '@shared/services/client-sms.service';
 import { SchedulerService } from '@shared/service/scheduler.service';
 import { MachineDaytradingService } from '../machine-daytrading/machine-daytrading.service';
+import { MenuItem, SelectItem } from 'primeng/api';
 
 @Component({
   selector: 'app-bb-card',
@@ -39,7 +39,6 @@ import { MachineDaytradingService } from '../machine-daytrading/machine-daytradi
   styleUrls: ['./bb-card.component.css']
 })
 export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
-  @ViewChild('stepper', { static: false }) stepper;
   @Input() order: SmartOrder;
   @Input() tearDown: boolean;
   chart: Chart;
@@ -80,6 +79,10 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
 
   smsOptions: SelectItem[];
   smsOption;
+
+  items: MenuItem[];
+
+  activeIndex = 1;
 
   constructor(private _formBuilder: FormBuilder,
     private backtestService: BacktestService,
@@ -129,6 +132,20 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
       { label: 'No SMS', value: 'none' },
       { label: 'Only send SMS', value: 'only_sms' },
       { label: 'Send order and SMS', value: 'order_sms' }
+    ];
+
+    this.items = [{
+      label: 'Edit',
+      command: () => {
+        this.activeIndex = 0;
+      }
+    },
+    {
+      label: 'Submit',
+      command: () => {
+        this.activeIndex = 1;
+      }
+    }
     ];
   }
 
@@ -203,8 +220,8 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     return new Date().getHours() + ':' + new Date().getMinutes();
   }
 
-  resetStepper(stepper) {
-    stepper.selectedIndex = 0;
+  resetStepper() {
+    this.activeIndex = 0;
     this.stop();
   }
 
@@ -778,17 +795,17 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
           console.log('account balance: ', data.liquidationValue, data.cashBalance, usage);
           if (usage < this.globalSettingsService.maxAccountUsage) {
             this.backtestService.getLastPriceTiingo({ symbol: this.order.holding.symbol })
-            .pipe(take(1))
-            .subscribe(tiingoQuote => {
-              const lastPrice = tiingoQuote[0].last;
+              .pipe(take(1))
+              .subscribe(tiingoQuote => {
+                const lastPrice = tiingoQuote[0].last;
 
-              this.backtestService.getDaytradeRecommendation(this.order.holding.symbol, lastPrice, lastPrice, { minQuotes: 81 }, 'tiingo').subscribe(
-                tiingoAnalysis => {
-                  console.log('tiingo analysis', tiingoAnalysis);
-                  return null;
-                }
-              );
-            });
+                this.backtestService.getDaytradeRecommendation(this.order.holding.symbol, lastPrice, lastPrice, { minQuotes: 81 }, 'tiingo').subscribe(
+                  tiingoAnalysis => {
+                    console.log('tiingo analysis', tiingoAnalysis);
+                    return null;
+                  }
+                );
+              });
           }
         });
         const log = `Received buy recommendation`;
@@ -942,16 +959,14 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
         }
       }
 
-      if (this.isDayTrading()) {
-        if ((moment().isAfter(moment(this.globalSettingsService.sellAtCloseTime)) && this.order.sellAtClose || this.isStagnantDaytrade(this.orders, gains)) &&
-          this.positionCount > 0) {
-          const log = `Closing positions: ${closePrice}/${estimatedPrice}`;
-          this.reportingService.addAuditLog(this.order.holding.symbol, log);
-          console.log(log);
-          const stopLossOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
-          this.sendStopLoss(stopLossOrder);
-          return true;
-        }
+      if ((moment().isAfter(moment(this.globalSettingsService.sellAtCloseTime)) && this.order.sellAtClose || this.isStagnantDaytrade(this.orders, gains)) &&
+        this.positionCount > 0) {
+        const log = `Current time: ${this.globalSettingsService.sellAtCloseTime} Is sell at close order: ${this.order.sellAtClose} Closing positions: ${closePrice}/${estimatedPrice}`;
+        this.reportingService.addAuditLog(this.order.holding.symbol, log);
+        console.log(log);
+        const stopLossOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
+        this.sendStopLoss(stopLossOrder);
+        return true;
       }
     }
 
@@ -976,7 +991,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private isStagnantDaytrade(currentOrders: SmartOrder[], gains: number) {
-    if (gains < 0 && currentOrders.length > 0 && this.positionCount > 0) {
+    if (this.isDayTrading() && gains < 0 && currentOrders.length > 0 && this.positionCount > 0) {
       const stagnantOrderIdx = currentOrders.findIndex((order) => {
         if (order.side.toLowerCase() === 'buy' && moment.duration(moment().diff(moment(order.timeSubmitted))).asMinutes() > 30) {
           return true;
@@ -991,6 +1006,10 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
 
   isDayTrading(): boolean {
     return this.firstFormGroup.value.orderType.toLowerCase() === 'daytrade';
+  }
+
+  isSellOrder(): boolean {
+    return this.order.side.toLowerCase() === 'sell';
   }
 
   removeOrder(oldOrder) {
@@ -1074,7 +1093,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
 
   setLive() {
     this.live = true;
-    this.stepper.next();
+    this.activeIndex = 1;
   }
 
   toggleChart() {

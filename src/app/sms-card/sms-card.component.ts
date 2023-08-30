@@ -1,18 +1,17 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 
-import { SelectItem } from 'primeng/components/common/selectitem';
 import * as _ from 'lodash';
 import { BacktestService, PortfolioService, MachineLearningService } from '@shared/services';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { ClientSmsService } from '@shared/services/client-sms.service';
 import { GlobalSettingsService } from '../settings/global-settings.service';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import * as moment from 'moment-timezone';
 import { Subscription } from 'rxjs';
 import { take, takeWhile } from 'rxjs/operators';
-import { MessageService } from 'primeng/api';
+import { MessageService, SelectItem } from 'primeng/api';
 import { SchedulerService } from '@shared/service/scheduler.service';
 
 @Component({

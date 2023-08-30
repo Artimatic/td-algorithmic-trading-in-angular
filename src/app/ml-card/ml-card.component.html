@@ -95,7 +95,7 @@
                 </mat-slide-toggle>
               </div>
               <div class="ml-setting-switch">
-                <mat-slide-toggle [formControl]="allIn" [disabled]="globalSettingsService.brokerage==='Robinhood'"
+                <mat-slide-toggle [formControl]="allIn"
                   (change)="activateAllIn()">
                   <a matTooltip="Buy with all available balance">
                     All In
@@ -130,7 +130,7 @@
         </div>
       </form>
     </mat-step>
-    <mat-step [stepControl]="secondFormGroup">
+    <mat-step [stepControl]="secondFormGroup" name="secondForm" ngDefaultControl>
       <ng-template matStepLabel>Place Order</ng-template>
       <mat-card>
         <div *ngIf="live">

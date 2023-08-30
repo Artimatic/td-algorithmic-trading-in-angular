@@ -1,23 +1,26 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Chart } from 'angular-highcharts';
 import * as moment from 'moment';
-import { MatSnackBar } from '@angular/material';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { BacktestService } from '../shared';
 import { ChartParam } from '../shared/services/backtest.service';
 import { AiPicksService } from '@shared/services';
 import { AiPicksPredictionData } from '@shared/services/ai-picks.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-product-view',
   templateUrl: './product-view.component.html',
   styleUrls: ['./product-view.component.css']
 })
-export class ProductViewComponent implements OnInit {
+export class ProductViewComponent implements OnInit, OnDestroy {
   chart;
   resolving = false;
   stock: string;
   backtestResults: any[];
+  destroy$ = new Subject();
 
   constructor(
     public snackBar: MatSnackBar,
@@ -25,18 +28,22 @@ export class ProductViewComponent implements OnInit {
     private aiPicksService: AiPicksService) { }
 
   ngOnInit() {
-    this.aiPicksService.predictionData.subscribe((predictionData: AiPicksPredictionData) => {
-      const predictions = predictionData.predictionHistory.reduce((previous, current) => {
-        previous[current.date] = current.prediction;
-        return previous;
-      }, {});
+    this.aiPicksService.predictionData
+      .pipe(
+        takeUntil(this.destroy$)
+      )
+      .subscribe((predictionData: AiPicksPredictionData) => {
+        const predictions = predictionData.predictionHistory.reduce((previous, current) => {
+          previous[current.date] = current.prediction;
+          return previous;
+        }, {});
 
-      this.loadMLChart({
-        algorithm: 'daily-indicators',
-        symbol: predictionData.stock,
-        date: predictionData.date
-      }, predictions);
-    });
+        this.loadMLChart({
+          algorithm: 'daily-indicators',
+          symbol: predictionData.stock,
+          date: predictionData.date
+        }, predictions);
+      });
 
     this.algo.currentChart.subscribe((chart: ChartParam) => {
       switch (chart.algorithm) {
@@ -567,5 +574,10 @@ export class ProductViewComponent implements OnInit {
       }]
     });
 
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

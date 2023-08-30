@@ -5,7 +5,7 @@ module.exports = {
         script: "dist/app.js",
         instances: 1,
         exec_mode: "fork",
-        watch: ".",
+        watch: false
       },
     ],
     deploy: {

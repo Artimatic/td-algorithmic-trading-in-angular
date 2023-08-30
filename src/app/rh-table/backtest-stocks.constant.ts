@@ -12,7 +12,11 @@ function createParam(ticker: string): AlgoParam {
   };
 }
 
-export const stockList = ['AAPL',
+export const stockList = [
+  'RKLB',
+  'SPY',
+  'QQQ',
+  'AAPL',
   'MSFT',
   'GOOG',
   'GOOGL',
@@ -1843,7 +1847,6 @@ export const stockList = ['AAPL',
   'PMT',
   'ALX',
   'GDYN',
-  'RPAY',
   'CMP',
   'SSP',
   'EAT',
@@ -2017,4 +2020,3 @@ for (const p of primaryList) {
 }
 
 export default Stocks;
-

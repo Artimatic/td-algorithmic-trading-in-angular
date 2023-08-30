@@ -2,7 +2,8 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CartService } from '../shared/services/cart.service';
 import { SmartOrder } from '../shared/models/smart-order';
 import { ScoreKeeperService, ReportingService, DaytradeService, PortfolioService } from '../shared';
-import { MatDialog, MatSnackBar } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import { Subscription } from 'rxjs/Subscription';
@@ -14,8 +15,9 @@ import { GlobalSettingsService } from '../settings/global-settings.service';
 import { TradeService, AlgoQueueItem } from '../shared/services/trade.service';
 import { OrderRow } from '../shared/models/order-row';
 import { FormControl, Validators } from '@angular/forms';
-import { MenuItem } from 'primeng/components/common/menuitem';
-import { take, takeWhile } from 'rxjs/operators';
+import { takeUntil, takeWhile } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { MenuItem } from 'primeng/api';
 
 @Component({
   selector: 'app-shopping-list',
@@ -45,7 +47,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
   mlCards: SmartOrder[];
 
   multibuttonOptions: MenuItem[];
-
+  destroy$ = new Subject();
   constructor(public cartService: CartService,
     public scoreKeeperService: ScoreKeeperService,
     public dialog: MatDialog,
@@ -171,6 +173,8 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.cleanUp();
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   cleanUp() {
@@ -209,7 +213,20 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
     this.queueAlgos(concat.concat(this.cartService.otherOrders));
   }
 
+  saveToStorage(templateOrders: SmartOrder[]) {
+    sessionStorage.removeItem('daytradeList');
+    const ordersToSave = templateOrders.reduce((acc, val: SmartOrder) => {
+      if (!acc.uniqueSymbols[val.holding.symbol]) {
+        acc.uniqueSymbols[val.holding.symbol] = true;
+        acc.list.push(val);
+      }
+      return acc;
+    }, { uniqueSymbols: {}, list: [] }).list;
+    sessionStorage.setItem('daytradeList', JSON.stringify(ordersToSave));
+  }
+
   queueAlgos(orders: SmartOrder[]) {
+    this.saveToStorage(orders);
     this.globalSettingsService.setStartTimes();
     const mlStartTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 15:55`, 'America/New_York');
     let mlStopTime = moment.tz(`${this.globalSettingsService.getTradeDate().format('YYYY-MM-DD')} 16:00`, 'America/New_York');
@@ -264,6 +281,9 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
             const profitLog = `Profit ${this.scoreKeeperService.total}`;
             this.reportingService.addAuditLog(null, profitLog);
             this.reportingService.exportAuditHistory();
+            const profitObj = {'date': moment().format(), profit: this.scoreKeeperService.total};
+            sessionStorage.setItem('profitLoss', JSON.stringify(profitObj));
+            this.scoreKeeperService.resetTotal();
           }
           this.interval = moment().subtract(5, 'minutes').diff(moment(this.globalSettingsService.startTime), 'milliseconds');
           console.log('new interval: ', this.interval);
@@ -284,8 +304,11 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
           mlStopTime = mlStartTime;
 
           if (this.globalSettingsService.autostart) {
+            this.globalSettingsService.setAutoStart(true);
             this.globalSettingsService.tradeDayStart
-              .pipe(take(1))
+              .pipe(
+                takeUntil(this.destroy$)
+              )
               .subscribe(start => {
                 if (start) {
                   this.triggerStart();

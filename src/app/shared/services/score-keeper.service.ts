@@ -20,8 +20,12 @@ export class ScoreKeeperService {
   total = 0;
   lossTally: ScoringIndex<number> = {};
   percentReturns = {};
-
+  bettingIndex = -1;
   constructor(private reportingService: ReportingService) { }
+
+  resetTotal() {
+    this.total = 0;
+  }
 
   addProfitLoss(stock: string, sum: number) {
     this.total += sum;

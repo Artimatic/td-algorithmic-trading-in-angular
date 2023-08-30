@@ -2,34 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MessagesModule } from 'primeng/messages';
 import { MessageModule } from 'primeng/message';
-import {InputSwitchModule} from 'primeng/inputswitch';
-
-import {
-  MatMenuModule,
-  MatToolbarModule,
-  MatIconModule,
-  MatCardModule,
-  MatProgressSpinnerModule,
-  MatProgressBarModule,
-  MatGridListModule,
-  MatButtonModule,
-  MatSidenavModule,
-  MatExpansionModule,
-  MatTableModule,
-  MatCheckboxModule,
-  MatRadioModule,
-  MatDialogModule,
-  MatFormFieldModule,
-  MatInputModule,
-  MatSnackBarModule,
-  MatTabsModule,
-  MatListModule,
-  MatChipsModule,
-  MatStepperModule,
-  MatSelectModule,
-  MatTooltipModule,
-  MatSlideToggleModule,
-} from '@angular/material';
+import { InputSwitchModule } from 'primeng/inputswitch';
 
 import { TableModule } from 'primeng/table';
 import { MultiSelectModule } from 'primeng/multiselect';
@@ -47,35 +20,52 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { StepsModule } from 'primeng/steps';
 import { ChartModule } from 'primeng/chart';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { MatStepperModule } from '@angular/material/stepper';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatGridListModule } from '@angular/material/grid-list';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSelectModule } from '@angular/material/select';
+import { MatListModule } from '@angular/material/list';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatInputModule } from '@angular/material/input';
+import { MenubarModule } from 'primeng/menubar';
+import { DataViewModule } from 'primeng/dataview';
+import { FieldsetModule } from 'primeng/fieldset';
+import { ChipModule } from 'primeng/chip';
+import { ProgressBarModule } from 'primeng/progressbar';
+import {AutoCompleteModule} from 'primeng/autocomplete';
 
 const materialModules = [
-  MatMenuModule,
-  MatToolbarModule,
-  MatIconModule,
-  MatCardModule,
-  MatProgressSpinnerModule,
-  MatProgressBarModule,
-  MatGridListModule,
-  MatButtonModule,
-  MatSidenavModule,
-  MatExpansionModule,
-  MatTableModule,
-  MatCheckboxModule,
-  MatRadioModule,
-  MatDialogModule,
-  MatFormFieldModule,
-  MatInputModule,
-  MatSnackBarModule,
-  MatTabsModule,
-  MatListModule,
-  MatChipsModule,
   MatStepperModule,
-  MatSelectModule,
+  MatCardModule,
+  MatIconModule,
+  MatMenuModule,
+  MatFormFieldModule,
+  MatExpansionModule,
+  MatGridListModule,
   MatTooltipModule,
-  MatSlideToggleModule,
+  MatSelectModule,
+  MatListModule,
+  MatTabsModule,
+  MatProgressBarModule,
+  MatSidenavModule,
+  MatChipsModule,
+  MatDialogModule,
+  MatCheckboxModule,
+  MatInputModule
 ];
 
 const primeModules = [
+  MenubarModule,
   TableModule,
   MultiSelectModule,
   SelectButtonModule,
@@ -93,7 +83,12 @@ const primeModules = [
   StepsModule,
   ChartModule,
   ProgressSpinnerModule,
-  InputSwitchModule
+  InputSwitchModule,
+  DataViewModule,
+  FieldsetModule,
+  ChipModule,
+  ProgressBarModule,
+  AutoCompleteModule
 ];
 
 @NgModule({

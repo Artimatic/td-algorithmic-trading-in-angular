@@ -22,7 +22,7 @@ class PortfolioService {
 
   access_token: { [key: string]: TokenInfo } = {};
   tdaKey = {};
-  refreshToken = {};
+  refreshTokensHash = {};
   lastTokenRequest = null;
 
   login(username, password, reply) {
@@ -255,6 +255,10 @@ class PortfolioService {
       }
     }
 
+    if (!accountId) {
+      throw new Error('Missing accountId');
+    }
+
     if (this.access_token[accountId]) {
       const diffMinutes = moment().diff(moment(this.access_token[accountId].timestamp), 'minutes');
       console.log('Found access token ', diffMinutes);
@@ -276,7 +280,7 @@ class PortfolioService {
         console.log('Token error: ', errorMessage);
         if (errorMessage === 'The access token being passed has expired or is invalid.') {
           console.log('Last token request: ', moment(this.lastTokenRequest).format());
-          if (this.lastTokenRequest === null || moment().diff(moment(this.lastTokenRequest), 'minutes') > 29) {
+          if (this.tdaKey[accountId] && (this.lastTokenRequest === null || moment().diff(moment(this.lastTokenRequest), 'minutes') > 29)) {
             this.lastTokenRequest = moment().valueOf();
             console.log('Requesting new token');
             return this.getTDAccessToken(accountId);
@@ -352,7 +356,7 @@ class PortfolioService {
       return accountId;
     } else {
       for (const id in this.access_token) {
-        if (id) {
+        if (id && id !== 'null' && this.access_token[id]) {
           accountId = id;
         }
       }
@@ -451,7 +455,7 @@ class PortfolioService {
 
   getDailyQuoteInternal(symbol, startDate, endDate, response = null) {
     let accountId;
-    const accountIds = Object.getOwnPropertyNames(this.refreshToken);
+    const accountIds = Object.getOwnPropertyNames(this.refreshTokensHash);
     if (accountIds.length > 0) {
       accountId = accountIds[0];
     } else {
@@ -507,18 +511,21 @@ class PortfolioService {
   }
 
   getTDAccessToken(accountId) {
-    console.log(moment().format(), ' GETTING NEW ACCESS TOKEN');
     let refreshToken;
     let key;
     if (!accountId ||
-      !this.refreshToken[accountId] || !this.tdaKey[accountId]) {
+      !this.refreshTokensHash[accountId] || !this.tdaKey[accountId]) {
       accountId = this.getAccountId();
       key = configurations.tdameritrade.consumer_key;
       refreshToken = configurations.tdameritrade.refresh_token;
     } else {
-      refreshToken = this.refreshToken[accountId];
+      refreshToken = this.refreshTokensHash[accountId];
       key = this.tdaKey[accountId];
     }
+    if (!accountId || !this.tdaKey[accountId]) {
+      throw new Error('Missing accountId');
+    }
+    console.log(moment().format(), ' GETTING NEW ACCESS TOKEN');
 
     return request.post({
       uri: tdaUrl + 'oauth2/token',
@@ -703,13 +710,13 @@ class PortfolioService {
   }
 
   setCredentials(accountId, key, refreshToken, response) {
-    this.refreshToken[accountId] = refreshToken;
+    this.refreshTokensHash[accountId] = refreshToken;
     this.tdaKey[accountId] = key;
     response.status(200).send();
   }
 
   isSet(accountId, response) {
-    const isSet = !_.isNil(this.refreshToken[accountId]) && !_.isNil(this.tdaKey[accountId]);
+    const isSet = !_.isNil(this.refreshTokensHash[accountId]) && !_.isNil(this.tdaKey[accountId]);
 
     if (isSet) {
       response.status(200).send(isSet);
@@ -719,8 +726,10 @@ class PortfolioService {
   }
 
   deleteCredentials(accountId, response) {
-    this.refreshToken[accountId] = null;
+    this.refreshTokensHash[accountId] = null;
     this.tdaKey[accountId] = null;
+    this.access_token[accountId] = null;
+    this.lastTokenRequest = null;
     response.status(200).send({});
   }
 
@@ -753,6 +762,26 @@ class PortfolioService {
           });
       });
   }
+
+  getEquityMarketHours(date: string) {
+    const accountId = this.getAccountId();
+
+    const query = `${tdaUrl}marketdata/EQUITY/hours`;
+    const options = {
+      uri: query,
+      qs: {
+        apikey: this.tdaKey[accountId],
+        date
+      },
+      headers: {
+        Authorization: `Bearer ${this.access_token[accountId].token}`
+      }
+    };
+
+      return request.get(options)
+        .then(this.processTDData);
+  }
+
 }
 
 export default new PortfolioService();

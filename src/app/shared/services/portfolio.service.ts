@@ -7,7 +7,7 @@ import { AuthenticationService } from './authentication.service';
 import { Holding } from '../models';
 import * as _ from 'lodash';
 import { GlobalSettingsService, Brokerage } from '../../settings/global-settings.service';
-import { MatSnackBar } from '@angular/material';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subject } from 'rxjs';
 
 export interface PortfolioInfoHolding {
@@ -21,6 +21,7 @@ export interface PortfolioInfoHolding {
   sellReasons: string;
   buyConfidence: number;
   sellConfidence: number;
+  prediction: number;
 }
 
 @Injectable()
@@ -227,5 +228,15 @@ export class PortfolioService {
     } else {
       return this.authenticationService.selectedTdaAccount.accountId;
     }
+  }
+
+  getEquityMarketHours(date: string) {
+    const options = {
+      params: {
+        date
+      }
+    };
+
+    return this.http.get('/api/portfolio/v3/equity-hours', options);
   }
 }

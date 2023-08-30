@@ -22,13 +22,18 @@ export class AutoBacktestSwitchComponent implements OnInit {
   handleChange(e) {
     if (e.checked) {
       this.nextBacktestDate = this.getBacktestDateTime();
-      this.timer = setTimeout(() => {
-        this.switchActivate.emit(true);
-      }, this.interval);
+      this.executeTimer();
     } else {
       clearTimeout(this.timer);
       this.nextBacktestDate = null;
     }
+  }
+
+  executeTimer() {
+    this.timer = setTimeout(() => {
+      this.switchActivate.emit(true);
+      this.handleChange({checked: this.checked});
+    }, this.interval);
   }
 
   getBacktestDateTime() {

@@ -1,8 +1,8 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
-import { MatDialog, MatSnackBar } from '@angular/material';
+import { DialogService } from 'primeng/dynamicdialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { LoginDialogComponent } from '../login-dialog/login-dialog.component';
 import { AuthenticationService } from '../shared';
-import { SelectItem } from 'primeng/components/common/selectitem';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 
 @Component({
@@ -18,13 +18,10 @@ export class LoginComponent implements OnInit {
   loading = false;
   error = '';
   selectedLogin = '';
-  loginForms: SelectItem[];
-
   tdaForm: FormGroup;
   selectedItem;
-  saveCredentials = false;
 
-  constructor(public dialog: MatDialog,
+  constructor(public dialogService: DialogService,
     public snackBar: MatSnackBar,
     public authenticationService: AuthenticationService) { }
 
@@ -35,28 +32,17 @@ export class LoginComponent implements OnInit {
       refreshToken: new FormControl('', Validators.required)
     });
 
-    this.loginForms = [
-      {
-        label: 'Robinhood',
-        value: 'robinhood'
-      },
-      {
-        label: 'TD Ameritrade',
-        value: 'tda'
-      }
-    ];
-
     this.selectedLogin = 'tda';
     this.selectedItem = '';
   }
 
   openDialog(): void {
-    const dialogRef = this.dialog.open(LoginDialogComponent, {
-      width: '500px',
-      height: '500px'
+    const dialogRef = this.dialogService.open(LoginDialogComponent, {
+      header: 'Algo Trader',
+      width: '30%'
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.onClose.subscribe(() => {
       this.checkAuthenticated();
     });
   }
@@ -74,40 +60,22 @@ export class LoginComponent implements OnInit {
     window.location.reload();
   }
 
-  login() {
-    this.loading = true;
-    this.authenticationService.login(this.model.username, this.model.password)
-      .subscribe(result => {
-        this.loading = false;
-        if (result === true) {
-          this.credentialSet.emit(true);
-        }
-      },
-      () => {
-        this.snackBar.open('Username or password is incorrect', 'Dismiss', {
-          duration: 2000,
-        });
-        this.loading = false;
-      });
-  }
-
   saveTdaLogin() {
     this.loading = true;
 
     this.authenticationService.setTdaAccount(this.tdaForm.value.accountId,
       this.tdaForm.value.consumerKey,
-      this.tdaForm.value.refreshToken,
-      this.saveCredentials)
+      this.tdaForm.value.refreshToken)
       .subscribe(() => {
         this.loading = false;
         this.tdaForm.reset();
         this.credentialSet.emit(true);
-        this.snackBar.open('Credentials saved.', 'Dismiss', {duration: 2000});
+        this.snackBar.open('Credentials saved.', 'Dismiss', { duration: 2000 });
       },
-      error => {
-        console.log(error);
-        this.snackBar.open('Error setting TDA account.', 'Dismiss');
-      });
+        error => {
+          console.log(error);
+          this.snackBar.open('Error setting TDA account.', 'Dismiss');
+        });
   }
 
   selectAccount(account) {

@@ -3,8 +3,9 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 import { Account } from '../account';
-import { MatDialog, MatSnackBar } from '@angular/material';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { RedirectLoginDialogComponent } from '../../redirect-login-dialog/redirect-login-dialog.component';
+import { DialogService } from 'primeng/dynamicdialog';
 
 export interface TdaAccount {
   accountId: string;
@@ -20,10 +21,15 @@ export class AuthenticationService {
   public tdaAccounts: TdaAccount[];
   public selectedTdaAccount: TdaAccount;
 
-  constructor(private http: HttpClient, private dialog: MatDialog, public snackBar: MatSnackBar) { }
+  constructor(private http: HttpClient,
+    public dialogService: DialogService,
+    public snackBar: MatSnackBar) { }
 
   openLoginDialog(): void {
-    this.dialog.open(RedirectLoginDialogComponent, { width: '650px' });
+    this.dialogService.open(RedirectLoginDialogComponent, {
+      header: 'Algo Trader',
+      width: '30%'
+    });
   }
 
   getToken() {
@@ -102,8 +108,7 @@ export class AuthenticationService {
         if (this.selectedTdaAccount.consumerKey && this.selectedTdaAccount.refreshKey) {
           this.setTdaAccount(this.selectedTdaAccount.accountId,
             this.selectedTdaAccount.consumerKey,
-            this.selectedTdaAccount.refreshKey,
-            true).subscribe(() => { }, () => {
+            this.selectedTdaAccount.refreshKey).subscribe(() => { }, () => {
               this.snackBar.open('Current selected account info is missing. Reenter credentials.', 'Dismiss');
             });
         } else {
@@ -112,15 +117,11 @@ export class AuthenticationService {
       });
   }
 
-  setTdaAccount(accountId, consumerKey, refreshToken, saveToBrowser: boolean): Observable<any> {
+  setTdaAccount(accountId, consumerKey, refreshToken): Observable<any> {
     const account: TdaAccount = {
       accountId
     };
 
-    if (saveToBrowser) {
-      account.consumerKey = consumerKey;
-      account.refreshKey = refreshToken;
-    }
 
     return this.setCredentials(accountId, consumerKey, refreshToken)
       .map(() => {

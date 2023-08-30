@@ -32,8 +32,6 @@ import { RhInputComponent } from './rh-input/rh-input.component';
 import { ProductViewComponent } from './product-view/product-view.component';
 import { LoginDialogComponent } from './login-dialog/login-dialog.component';
 import { TradeViewComponent } from './trade-view/trade-view.component';
-import { PortfolioTableComponent } from './portfolio-table/portfolio-table.component';
-import { PortfolioViewComponent } from './portfolio-view/portfolio-view.component';
 import { InstrumentPipe } from './shared/pipes/instrument.pipe';
 import { OrderDialogComponent } from './order-dialog/order-dialog.component';
 import { CartService } from './shared/services/cart.service';
@@ -78,6 +76,13 @@ import { AiPicksComponent } from './ai-picks/ai-picks.component';
 import { AutoBacktestSwitchComponent } from './auto-backtest-switch/auto-backtest-switch.component';
 import { WatchListComponent } from './watch-list/watch-list.component';
 import { SchedulerService } from '@shared/service/scheduler.service';
+import { DialogService, DynamicDialogModule } from 'primeng/dynamicdialog';
+import { PasswordModule } from 'primeng/password';
+import { CheckboxModule } from 'primeng/checkbox';
+import { InputTextareaModule } from 'primeng/inputtextarea';
+import { PickListModule } from 'primeng/picklist';
+import { TimelineModule } from 'primeng/timeline';
+import { DataViewModule } from 'primeng/dataview';
 
 @NgModule({
   declarations: [
@@ -89,8 +94,6 @@ import { SchedulerService } from '@shared/service/scheduler.service';
     ProductViewComponent,
     LoginDialogComponent,
     TradeViewComponent,
-    PortfolioTableComponent,
-    PortfolioViewComponent,
     InstrumentPipe,
     OrderDialogComponent,
     ShoppingListComponent,
@@ -150,7 +153,13 @@ import { SchedulerService } from '@shared/service/scheduler.service';
     TimepickerModule.forRoot(),
     ToastModule,
     InputTextModule,
-
+    DynamicDialogModule,
+    PasswordModule,
+    CheckboxModule,
+    InputTextareaModule,
+    PickListModule,
+    TimelineModule,
+    DataViewModule,
   ],
   providers: [
     BacktestService,
@@ -165,7 +174,8 @@ import { SchedulerService } from '@shared/service/scheduler.service';
     AlgoService,
     TradeService,
     MessageService,
-    SchedulerService
+    SchedulerService,
+    DialogService,
   ],
   bootstrap: [AppComponent]
 })

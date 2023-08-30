@@ -25,7 +25,6 @@
               "src/robinhood-merchant-theme.scss",
               "src/bootstrap.min.css",
               "node_modules/primeicons/primeicons.css",
-              "node_modules/primeng/resources/themes/nova-light/theme.css",
               "node_modules/primeng/resources/primeng.min.css",
               "node_modules/primeflex/primeflex.css"
             ],
@@ -34,7 +33,8 @@
               "node_modules/moment/min/moment.min.js",
               "node_modules/moment-timezone/moment-timezone.js",
               "node_modules/moment-timezone/builds/moment-timezone-with-data-2012-2022.js",
-              "node_modules/chart.js/dist/Chart.js"
+              "node_modules/chart.js/dist/Chart.js",
+              "node_modules/quill/dist/quill.js"
             ]
           },
           "configurations": {

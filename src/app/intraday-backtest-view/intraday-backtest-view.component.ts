@@ -5,7 +5,7 @@ import { ScoreKeeperService, BacktestService, PortfolioService } from '../shared
 
 import * as moment from 'moment-timezone';
 import * as _ from 'lodash';
-import { MatSnackBar } from '@angular/material';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { TodoService } from '../overview/todo-list/todo.service';
 import IntradayStocks from './intraday-backtest-stocks.constant';
 import { GlobalSettingsService } from '../settings/global-settings.service';

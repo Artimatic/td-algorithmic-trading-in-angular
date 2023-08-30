@@ -2,7 +2,7 @@ import { Component, OnInit, Input, OnChanges, SimpleChanges, OnDestroy } from '@
 import 'rxjs/add/observable/of';
 import 'rxjs/add/observable/merge';
 import 'rxjs/add/operator/finally';
-import { MatSnackBar, MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import * as moment from 'moment';
 import * as _ from 'lodash';
 
@@ -101,13 +101,13 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   twoOrMoreSignalsOnly: boolean;
   tickerBlacklist = {};
   signalScoreTable = [];
+  messages = [];
 
   private callChainSub: Subscription;
   private backtestBuffer: { stock: string; sub: Observable<any>; timeout: number; modifier: number }[];
   private bufferSubject: Subject<void>;
 
   constructor(
-    public snackBar: MatSnackBar,
     private algo: BacktestService,
     public dialog: MatDialog,
     private portfolioService: PortfolioService,
@@ -244,7 +244,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
             result => {
               this.incrementProgress();
             }, error => {
-              this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
               this.incrementProgress();
             });
         });
@@ -255,7 +254,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
             result => {
               this.incrementProgress();
             }, error => {
-              this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
               this.incrementProgress();
             });
         });
@@ -267,11 +265,9 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
               result => {
                 this.algo.postIntraday(result).subscribe(
                   () => { }, () => {
-                    this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
                     this.incrementProgress();
                   });
               }, () => {
-                this.snackBar.open(`Error on ${param.ticker}`, 'Dismiss');
                 this.incrementProgress();
               });
         });
@@ -282,7 +278,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
             .pipe(take(1))
             .map(
               (testResults: BacktestResponse) => {
-                console.log('Request finished @ ', moment().format());
                 if (testResults) {
                   let hasRecommendations = false;
                   const symbol = param.ticker;
@@ -343,7 +338,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                           bearishProbability: data.bearishProbability
                         }, this.stockList);
 
-                        if (data.bullishProbability > 0.4 || data.bearishProbability > 0.4) {
+                        if (data.bullishProbability > 0.3 || data.bearishProbability > 0.3) {
                           this.runAi({ ...testResults, buySignals: bullishSignals, sellSignals: bearishSignals });
                         }
                       });
@@ -510,7 +505,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   async iterateAlgoParams(algoParams: any[], callback: Function) {
     for (let i = 0; i < algoParams.length; i++) {
       if (this.isBlackListed(algoParams[i].ticker)) {
-        this.snackBar.open(`Skipping blacklisted ticker: ${algoParams[i].ticker}`, 'Dismiss');
+        this.messages.push({ severity: 'info', summary: 'Skipping Ticker', detail: `Skipping blacklisted ticker ${algoParams[i].ticker}` });
       } else {
         this.backtestBuffer.push({ stock: algoParams[i].ticker, sub: callback(algoParams[i]), timeout: 1000, modifier: i });
       }
@@ -820,7 +815,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
         this.callChainSub.add(backtest.sub
           .pipe(take(1))
           .subscribe(() => {
-            console.log('next buffer @ ', moment().format());
             this.backtestBuffer.shift();
             setTimeout(() => {
               this.schedulerService.schedule(() => {
@@ -829,7 +823,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
             }, 10 * (1000 - this.backtestBuffer.length));
 
           }, error => {
-            this.snackBar.open(`Error on ${backtest.stock}`, 'Dismiss');
+            this.messages.push({ severity: 'error', summary: 'Backtest Failed', detail: `Backtest failed on ${backtest.stock}` });
             console.log(`Error on ${backtest.stock}`, error.error.error, '@', moment().format());
             this.incrementProgress();
             this.backtestBuffer.shift();
@@ -844,7 +838,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                 backtest.sub
                   .pipe(take(1))
                   .subscribe(() => { }, () => {
-                    this.snackBar.open(`Error on ${backtest.stock}`, 'Dismiss');
+                    this.messages.push({ severity: 'error', summary: 'Backtest Failed', detail: `Backtest failed on ${backtest.stock}` });
                     this.addToBlackList(backtest.stock);
                   });
               }, 'rhtable_backtest' + backtest.stock);
