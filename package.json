@@ -82,7 +82,7 @@
     "twilio": "^3.50.0",
     "typescript": "4.1.5",
     "websocket-extensions": "^0.1.4",
-    "xlsx": "^0.14.2",
+    "xlsx": "^0.18.5",
     "y18n": "^4.0.1",
     "yahoo-finance-data": "^3.2.0",
     "zone.js": "^0.11.8"
