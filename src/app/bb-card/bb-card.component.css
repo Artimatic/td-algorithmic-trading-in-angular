@@ -47,3 +47,12 @@
 .machine-switch {
     padding: 3px 0 5px 3px;
 }
+
+.bb-form {
+    display: grid;
+}
+
+:host ::ng-deep .p-chip.live-chip {
+    background: var(--secondary-color);
+    color: var(--secondary-color-text);
+}

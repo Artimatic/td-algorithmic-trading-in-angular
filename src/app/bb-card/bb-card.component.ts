@@ -82,7 +82,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
 
   items: MenuItem[];
 
-  activeIndex = 1;
+  activeIndex = 0;
 
   constructor(private _formBuilder: FormBuilder,
     private backtestService: BacktestService,
@@ -206,7 +206,8 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
       profitTarget: [{ value: this.order.profitTarget || 0.01, disabled: false }, Validators.required],
       orderSize: [this.order.orderSize || this.daytradeService.getDefaultOrderSize(this.order.quantity), Validators.required],
       orderType: [this.order.side, Validators.required],
-      phoneNumber: ['']
+      phoneNumber: [''],
+      useML: false
     });
 
     this.secondFormGroup = this._formBuilder.group({
@@ -742,11 +743,39 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
           this.positionCount);
 
         if (orderQuantity > 0) {
-          const buyOrder = this.buildBuyOrder(orderQuantity,
-            quote,
-            timestamp,
-            analysis);
-          this.sendBuy(buyOrder);
+          if (this.firstFormGroup.value.useML) {
+            this.schedulerService.schedule(() => {
+              this.machineLearningService
+                .trainPredictNext30(this.order.holding.symbol.toUpperCase(),
+                  moment().add({ days: 1 }).format('YYYY-MM-DD'),
+                  moment().subtract({ days: 1 }).format('YYYY-MM-DD'),
+                  1,
+                  this.globalSettingsService.daytradeAlgo
+                )
+                .subscribe((data: any[]) => {
+                  console.log(`${this.order.holding.symbol} ml result: `, data[0].nextOutput);
+                  const mlLog = `Ml next output: ${data[0].nextOutput}`;
+                  const mlReport = this.reportingService.addAuditLog(this.order.holding.symbol, mlLog);
+                  console.log(mlReport);
+                  if (data[0].nextOutput > 0.6) {
+                    const buyOrder = this.buildBuyOrder(orderQuantity,
+                      quote,
+                      timestamp,
+                      analysis);
+                    this.sendBuy(buyOrder);
+                  }
+                }, error => {
+                  console.log('daytrade ml error: ', error);
+                  this.daytradeBuy(quote, orderQuantity, timestamp, analysis);
+                });
+            }, `${this.order.holding.symbol}_bbcard_ml`, this.globalSettingsService.stopTime, true);
+          } else {
+            const buyOrder = this.buildBuyOrder(orderQuantity,
+              quote,
+              timestamp,
+              analysis);
+            this.sendBuy(buyOrder);
+          }
         }
 
       }
@@ -759,12 +788,41 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
           this.sellCount);
 
         if (orderQuantity > 0) {
+          if (this.firstFormGroup.value.useML) {
+            this.schedulerService.schedule(() => {
+              this.machineLearningService
+                .trainPredictNext30(this.order.holding.symbol.toUpperCase(),
+                  moment().add({ days: 1 }).format('YYYY-MM-DD'),
+                  moment().subtract({ days: 1 }).format('YYYY-MM-DD'),
+                  1,
+                  this.globalSettingsService.daytradeAlgo
+                )
+                .subscribe((data: any[]) => {
+                  console.log(`${this.order.holding.symbol} ml result: `, data[0].nextOutput);
+                  const mlLog = `Ml next output: ${data[0].nextOutput}`;
+                  const mlReport = this.reportingService.addAuditLog(this.order.holding.symbol, mlLog);
+                  console.log(mlReport);
+                  if (data[0].nextOutput < 0.5) {
+                    const sellOrder = this.buildSellOrder(orderQuantity,
+                      quote,
+                      timestamp,
+                      analysis);
+          
+                    this.sendSell(sellOrder);
+                  }
+                }, error => {
+                  console.log('daytrade ml error: ', error);
+                  this.daytradeBuy(quote, orderQuantity, timestamp, analysis);
+                });
+            }, `${this.order.holding.symbol}_bbcard_ml`, this.globalSettingsService.stopTime, true);
+          } else {
           const sellOrder = this.buildSellOrder(orderQuantity,
             quote,
             timestamp,
             analysis);
 
           this.sendSell(sellOrder);
+          }
         }
       }
     } else if (this.isDayTrading()) {
@@ -832,7 +890,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
               const mlLog = `Ml next output: ${data[0].nextOutput}`;
               const mlReport = this.reportingService.addAuditLog(this.order.holding.symbol, mlLog);
               console.log(mlReport);
-              if (data[0].nextOutput > 0.5) {
+              if (data[0].nextOutput > 0.6) {
                 this.daytradeBuy(quote, orderQuantity, timestamp, analysis);
               }
               // this.machineLearningService.activate(this.order.holding.symbol,
@@ -1177,6 +1235,10 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
           }
         );
       });
+  }
+
+  checkMLService() {
+    console.log('checking ml service', this.firstFormGroup.value.useML);
   }
 
   ngOnDestroy() {

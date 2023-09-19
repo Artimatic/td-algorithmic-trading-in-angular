@@ -1,10 +1,6 @@
 <p-card>
   <span class="delete-me">
-    <button mat-icon-button>
-      <a (click)="delete()" matTooltip="delete order">
-        <mat-icon>delete_forever</mat-icon>
-      </a>
-    </button>
+    <button pButton type="button" (click)="delete()" icon="pi pi-times" iconPos="left"></button>
   </span>
   <div class="banner" *ngIf="error">
     <div class="banner-content">
@@ -20,7 +16,27 @@
   <p-steps [model]="items" [(activeIndex)]="activeIndex" [readonly]="false"></p-steps>
 
   <div *ngIf="activeIndex === 0">
-    <form [formGroup]="firstFormGroup">
+    <form [formGroup]="firstFormGroup" class="bb-form">
+      <div class="p-field-radiobutton" *ngFor="let side of sides">
+        <p-radioButton name="orderType" [value]="side" [label]="side" formControlName="orderType"></p-radioButton>
+      </div>
+      <div class="bb-form-field">
+        <p-checkbox formControlName="useML" label="Enable machine learning" (onChange)="checkMLService()"></p-checkbox>
+      </div>
+    </form>
+    <!-- <form [formGroup]="firstFormGroup">
+      <div class="p-field-radiobutton">
+        <p-radioButton name="orderType" value="Option 1" label="Option 1" formControlName="orderType" inputId="opt1"></p-radioButton>
+        
+      </div>
+      <div class="p-field-radiobutton">
+        <p-radioButton name="orderType" value="Option 2" label="Option 2" formControlName="orderType"  inputId="opt2"></p-radioButton>
+      </div>
+      <div class="p-field-radiobutton">
+        <p-radioButton name="orderType" value="Option 3" label="Option 3"  formControlName="orderType"  inputId="opt3"></p-radioButton>
+      </div>
+     </form> -->
+    <!-- <form [formGroup]="firstFormGroup">
       <ng-template matStepLabel>Edit Order</ng-template>
       <mat-chip>{{order.holding.symbol}}</mat-chip>
       <p>{{order.holding.name}}</p>
@@ -74,16 +90,15 @@
       <div>
         <button (click)="activeIndex=1;">Next</button>
       </div>
-    </form>
+    </form> -->
   </div>
-  <div *ngIf="activeIndex === 0">
-    <ng-template matStepLabel>Place Order</ng-template>
+  <div *ngIf="activeIndex === 1">
     <p-card>
       <div *ngIf="live">
-        <mat-chip color="warn" selected="true">LIVE</mat-chip>
+        <p-chip label="Live" styleClass="p-mr-2 live-chip"></p-chip>
       </div>
       <div *ngIf="!live">
-        <button mat-raised-button disabled>STALLED</button>
+        <p-chip label="Stalled"></p-chip>
       </div>
       <div>
         Orders Submitted: {{ buyCount + sellCount}}/{{firstFormGroup.value.quantity || 0}} shares
@@ -94,9 +109,9 @@
           <p-header>
             <h3>{{order.holding.symbol}}</h3>
             <p>
-              <button mat-fab *ngIf="firstFormGroup.value.orderType=='Buy'" color="primary">BUY</button>
-              <button mat-fab *ngIf="firstFormGroup.value.orderType=='Sell'" color="warn">SELL</button>
-              <button mat-fab *ngIf="firstFormGroup.value.orderType=='DayTrade'" color="accent">DAY</button>
+              <p-tag *ngIf="firstFormGroup.value.orderType=='Buy'" styleClass="p-mr-2" severity="success" value="Buy"></p-tag>
+              <p-tag *ngIf="firstFormGroup.value.orderType=='Sell'" severity="danger" value="Sell"></p-tag>
+              <p-tag *ngIf="firstFormGroup.value.orderType=='DayTrade'" styleClass="p-mr-2" severity="info" value="Daytrade"></p-tag>
             </p>
           </p-header>
           <mat-checkbox (click)="toggleChart()">Chart</mat-checkbox>
@@ -127,16 +142,16 @@
       </div>
       <p-footer>
 
-      <div class="card-actions">
-        <button mat-raised-button color="warn" (click)="resetStepper()">STOP</button>
-        <button mat-button color="primary" (click)="backtest()">Backtest</button>
-        <button mat-button color="warn" (click)="testBuy()">Buy</button>
-        <button mat-button color="warn" (click)="testSell()">Sell</button>
-        <button mat-button color="warn" (click)="testSms()">Test SMS</button>
-        <button mat-button color="warn" (click)="goLive()">Test Live</button>
-        <button mat-button color="warn" (click)="testRequests()">Test Requests</button>
-      </div>
-    </p-footer>
+        <div class="card-actions">
+          <button mat-raised-button color="warn" (click)="resetStepper()">STOP</button>
+          <button mat-button color="primary" (click)="backtest()">Backtest</button>
+          <button mat-button color="warn" (click)="testBuy()">Buy</button>
+          <button mat-button color="warn" (click)="testSell()">Sell</button>
+          <button mat-button color="warn" (click)="testSms()">Test SMS</button>
+          <button mat-button color="warn" (click)="goLive()">Test Live</button>
+          <button mat-button color="warn" (click)="testRequests()">Test Requests</button>
+        </div>
+      </p-footer>
 
     </p-card>
   </div>

@@ -43,17 +43,15 @@
                       </p-spinner>
                       &nbsp;x 100%
                     </div>
-                  </form>
-                  <p-footer>
                     <div class="order-form-item">
                       <button pButton type="button" icon="pi pi-plus-circle" (click)="addCustomList()"
-                        class="ui-button-success"></button>
+                        class="ui-button-success" type="submit" (keyup.enter)="addCustomList()"></button>
                       &nbsp;
                       <button pButton type="button" icon="pi pi-ticket" (click)="addMachineTrade()"
                         class="ui-button-info"></button>
                       <div *ngIf="errorMsg" class="error-message">{{errorMsg}}</div>
                     </div>
-                  </p-footer>
+                  </form>
                 </p-card>
               </div>
               <div class="order-cards">
@@ -122,11 +120,6 @@
           </tr>
         </ng-template>
       </p-table>
-    </div>
-    <div class="ui-g-6 order-list-column">
-      <h2>Order Summary</h2>
-      <label>Wallet:</label> {{cashBalance}}
-      <label>Total:</label>
     </div>
   </div>
 </p-dialog>

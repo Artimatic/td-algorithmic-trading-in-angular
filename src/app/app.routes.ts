@@ -9,10 +9,6 @@ import { PortfolioManagementComponent } from './portfolio-management/portfolio-m
 
 export const routes: Routes = [
   {
-    path: 'trade-view',
-    component: TradeViewComponent
-  },
-  {
     path: 'research',
     component: ResearchViewComponent
   },
@@ -38,7 +34,7 @@ export const routes: Routes = [
   },
   {
     path: '**',
-    redirectTo: '/trade-view',
+    component: TradeViewComponent,
     pathMatch: 'full'
   }
 ];

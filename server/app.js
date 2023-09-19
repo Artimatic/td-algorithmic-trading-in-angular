@@ -29,8 +29,9 @@ require('./config/express')(app);
 require('./routes')(app);
 
 // Start server
+const port = parseInt(process.env.PORT) || configurations.port;
 
-server.listen(configurations.port, configurations.ip, function () {
+server.listen(port, configurations.ip, function () {
   console.log('Express server listening on %d, in %s mode', configurations.port, app.get('env'));
 });
 

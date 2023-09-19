@@ -43,6 +43,7 @@ import { FieldsetModule } from 'primeng/fieldset';
 import { ChipModule } from 'primeng/chip';
 import { ProgressBarModule } from 'primeng/progressbar';
 import {AutoCompleteModule} from 'primeng/autocomplete';
+import { RadioButtonModule } from 'primeng/radiobutton';
 
 const materialModules = [
   MatStepperModule,
@@ -88,7 +89,8 @@ const primeModules = [
   FieldsetModule,
   ChipModule,
   ProgressBarModule,
-  AutoCompleteModule
+  AutoCompleteModule,
+  RadioButtonModule
 ];
 
 @NgModule({
