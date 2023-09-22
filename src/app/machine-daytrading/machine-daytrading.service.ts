@@ -4,7 +4,7 @@ import * as moment from 'moment-timezone';
 import * as _ from 'lodash';
 
 import { BacktestService, MachineLearningService, PortfolioService } from '@shared/services';
-import Stocks from '../rh-table/backtest-stocks.constant';
+import Stocks, { PrimaryList } from '../rh-table/backtest-stocks.constant';
 import { GlobalSettingsService } from '../settings/global-settings.service';
 import { tap } from 'rxjs/operators';
 
@@ -136,8 +136,8 @@ export class MachineDaytradingService {
 
 
   getRandomStock(): string {
-    const randomIdx = Math.floor(Math.random() * Stocks.length);
-    return Stocks[randomIdx].ticker;
+    const randomIdx = Math.floor(Math.random() * PrimaryList.length);
+    return PrimaryList[randomIdx].ticker;
   }
 
   resetStock() {

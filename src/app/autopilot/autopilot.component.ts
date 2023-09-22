@@ -13,7 +13,7 @@ import { MessageService } from 'primeng/api';
 import { AlgoQueueItem } from '@shared/services/trade.service';
 import { ScoringIndex } from '@shared/services/score-keeper.service';
 import { MachineDaytradingService } from '../machine-daytrading/machine-daytrading.service';
-import Stocks, { BearList } from '../rh-table/backtest-stocks.constant';
+import { BearList } from '../rh-table/backtest-stocks.constant';
 
 export interface PositionHoldings {
   name: string;
@@ -32,7 +32,7 @@ export interface PositionHoldings {
 export interface ProfitLossRecord {
   date: string;
   profit: number;
-  lastAlgo: string;
+  lastStrategy: string;
   profitRecord: ScoringIndex<number>;
 }
 
@@ -119,6 +119,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   backtestBuffer$;
 
+  lastBacktestDate = null;
+
   constructor(
     private authenticationService: AuthenticationService,
     private portfolioService: PortfolioService,
@@ -142,6 +144,27 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.backtestBuffer$ = new Subject();
 
     this.display = true;
+    this.startNewInterval();
+    this.interval = moment(this.getStartStopTime().startDateTime).diff(moment(), 'milliseconds');
+
+    // TimerObservable.create(0, moment(this.getStartStopTime().startDateTime).diff(moment(), 'milliseconds'))
+    //   .pipe(takeUntil(this.destroy$))
+    //   .subscribe(() => {
+    //     this.timer.unsubscribe();
+    //     console.log('dailytimer');
+
+    //     this.startNewInterval();
+    //   });
+
+    this.messageService.add({
+      key: 'autopilot_start',
+      severity: 'success',
+      summary: 'Autopilot started'
+    });
+  }
+
+  startNewInterval() {
+    console.log('startNewInterval');
     this.timer = TimerObservable.create(0, this.interval)
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
@@ -163,7 +186,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
             const profitObj: ProfitLossRecord = {
               'date': moment().format(),
               profit: this.scoreKeeperService.total,
-              lastAlgo: '',
+              lastStrategy: this.strategyList[this.strategyCounter],
               profitRecord: this.scoreKeeperService.profitLossHash
             };
             sessionStorage.setItem('profitLoss', JSON.stringify(profitObj));
@@ -171,16 +194,17 @@ export class AutopilotComponent implements OnInit, OnDestroy {
             this.resetCart();
           }
         } else {
-          this.developStrategy();
-          this.interval = moment(startStopTime.startDateTime).diff(moment(), 'milliseconds');
-          console.log('new interval ', this.interval, moment(startStopTime.startDateTime), startStopTime.startDateTime.getUTCMilliseconds(), moment(startStopTime.startDateTime).valueOf());
+          console.log('last backtest date ', this.lastBacktestDate, moment(this.lastBacktestDate).tz('America/New_York').diff(moment().tz('America/New_York'), 'milliseconds'), this.interval.valueOf());
+          if (!this.lastBacktestDate || Math.abs(moment(this.lastBacktestDate).tz('America/New_York').diff(moment().tz('America/New_York'), 'milliseconds')) > this.interval.valueOf()) {
+            this.developStrategy();
+            console.log('new interval ', this.interval, moment(startStopTime.startDateTime), startStopTime.startDateTime.getUTCMilliseconds(), moment(startStopTime.startDateTime).valueOf());
+            this.lastBacktestDate = moment();
+          }
+          this.processSellList();
+          this.processBuyList();
+          this.processDaytradeList();
         }
       });
-    this.messageService.add({
-      key: 'autopilot_start',
-      severity: 'success',
-      summary: 'Autopilot started'
-    });
   }
 
   stop() {
@@ -222,6 +246,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   developStrategy() {
+    console.log('developStrategy');
     this.processCurrentPositions();
     const lastProfitLoss = JSON.parse(sessionStorage.getItem('profitLoss'));
     console.log('lastProfitLoss sessionStorage ', lastProfitLoss);
@@ -239,9 +264,11 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         break;
       }
       case Strategy.Swingtrade: {
+        this.findSwingtrades();
         break;
       }
       case Strategy.InverseSwingtrade: {
+        this.findSwingtrades();
         break;
       }
       case Strategy.Short: {
@@ -256,9 +283,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         break;
       }
     }
-    this.processSellList();
-    this.processBuyList();
-    this.processDaytradeList();
   }
 
   findDaytrades() {
@@ -288,22 +312,36 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   findSwingtrades() {
     this.backtestBuffer$.unsubscribe();
     this.backtestBuffer$ = new Subject();
+    const aiPicks = this.aiPicksService.getBuyList();
+    if (aiPicks.length) {
+      while(this.aiPicksService.getBuyList().length > 0 && this.buyList.length < 1) {
+        const prediction = this.aiPicksService.getBuyList().pop();
+        let predictionSum = 0;
+        for(let p of prediction.value) {
+          predictionSum += p.prediction;
+        }
+  
+        if (predictionSum/prediction.value.length > 0.6) {
+          const stockHolding = {
+            name: prediction.label,
+            pl: 0,
+            netLiq: 0,
+            shares: 0,
+            alloc: 0,
+            recommendation: 'None',
+            buyReasons: '',
+            sellReasons: '',
+            buyConfidence: 0,
+            sellConfidence: 0,
+            prediction: null
+          };
+          this.buyList.push(stockHolding)
+        }
+      }
+    }
     const cb = (stock) => {
       if (stock) {
-        const stockHolding = {
-          name: stock,
-          pl: 0,
-          netLiq: 0,
-          shares: 0,
-          alloc: 0,
-          recommendation: 'None',
-          buyReasons: '',
-          sellReasons: '',
-          buyConfidence: 0,
-          sellConfidence: 0,
-          prediction: null
-        };
-        this.buyList.push(stockHolding);
+        this.runAi(stock);
       }
 
       if (this.buyList.length < 1) {
@@ -376,6 +414,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   addSell(holding: PortfolioInfoHolding) {
     if (this.sellList.findIndex(holding => holding.name === holding.name) === -1) {
+      console.log('add sell ', holding, this.sellList);
+
       this.sellList.push(holding);
     }
   }
@@ -410,7 +450,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     const endTime = '15:50';
     const currentMoment = moment().tz('America/New_York').set({ hour: 9, minute: 50 });
     const currentDay = currentMoment.day();
-    console.log('currentDay ', currentDay);
     let startDate;
 
     if (currentDay === 6) {
