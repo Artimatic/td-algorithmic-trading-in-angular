@@ -375,7 +375,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           sessionStorage.setItem('lastMlResult', JSON.stringify(latestMlResult));
         });
         this.aiPicksService.mlNeutralResults.pipe(
-          take(1),
+          take(100),
           takeUntil(this.destroy$)
           ).subscribe(latestMlResult => {
           console.log('Received neutral results', latestMlResult);
