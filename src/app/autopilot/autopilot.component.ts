@@ -200,7 +200,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           if (!this.lastBacktestDate ||
             Math.abs(moment(this.lastBacktestDate).tz('America/New_York').diff(moment().tz('America/New_York'), 'milliseconds')) > this.interval.valueOf()) {
             this.developStrategy();
-            console.log('new interval ', this.interval, moment(startStopTime.startDateTime), startStopTime.startDateTime.getUTCMilliseconds(), moment(startStopTime.startDateTime).valueOf());
+            console.log('new interval ', this.interval, moment(startStopTime.startDateTime),
+              startStopTime.startDateTime.getUTCMilliseconds(),
+              moment(startStopTime.startDateTime).valueOf());
             this.lastBacktestDate = moment();
           }
           this.processSellList();
