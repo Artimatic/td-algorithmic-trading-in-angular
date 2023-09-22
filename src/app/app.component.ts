@@ -51,7 +51,7 @@ export class AppComponent implements OnInit, AfterViewInit {
       {
         label: 'Live Trading',
         icon: 'account_balance',
-        routerLink: '/trade-view'
+        routerLink: '/'
       },
       {
         label: 'Machine Learning',

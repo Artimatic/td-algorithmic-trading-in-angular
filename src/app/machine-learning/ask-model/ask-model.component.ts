@@ -246,7 +246,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
   trainPredict30(stock) {
     this.isLoading = true;
     this.machineLearningService
-      .trainPredictNext30(stock,
+      .trainDaytrade(stock,
         moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD'),
         moment(this.startDate).format('YYYY-MM-DD'),
         1,
@@ -288,7 +288,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
       .subscribe(() => {
         const backtest = this.backtestBuffer[0];
         this.callChainSub.add(this.machineLearningService
-          .trainPredictNext30(backtest.stock.toUpperCase(),
+          .trainDaytrade(backtest.stock.toUpperCase(),
             moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD'),
             moment(this.startDate).format('YYYY-MM-DD'),
             1
@@ -303,7 +303,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
             this.isLoading = false;
             setTimeout(() => {
               this.machineLearningService
-                .trainPredictNext30(backtest.stock.toUpperCase(),
+                .trainDaytrade(backtest.stock.toUpperCase(),
                   moment(this.endDate).add({ day: 1 }).format('YYYY-MM-DD'),
                   moment(this.startDate).format('YYYY-MM-DD'),
                   0
@@ -344,7 +344,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
 
   calibrateOne(stock) {
     const trainingRequest = this.machineLearningService
-      .trainPredictNext30(stock,
+      .trainDaytrade(stock,
         moment(this.endDate).add({ days: 1 }).format('YYYY-MM-DD'),
         moment(this.startDate).format('YYYY-MM-DD'),
         0.7,
@@ -452,7 +452,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
         const bufferItem = this.calibrationBuffer[0];
 
         this.callChainSub.add(this.machineLearningService
-          .trainPredictNext30(bufferItem.stock.toUpperCase(),
+          .trainDaytrade(bufferItem.stock.toUpperCase(),
             moment(this.endDate).add({ days: 1 }).format('YYYY-MM-DD'),
             moment(this.startDate).subtract({ days: 1 }).format('YYYY-MM-DD'),
             0.7,
@@ -569,7 +569,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
     this.stockList.forEach(stock => {
       this.schedulerService.schedule(() => {
         this.machineLearningService
-          .trainPredictNext30(stock,
+          .trainDaytrade(stock,
             end,
             start,
             1,

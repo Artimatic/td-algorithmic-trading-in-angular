@@ -16,7 +16,8 @@
     "build-ts": "tsc -p ./server/tsconfig.json",
     "watch-ts": "tsc -p ./server/tsconfig.json -w",
     "tslint": "tslint -c tslint.json -p tsconfig.json",
-    "lintfix": "tslint --fix -c tslint.json -p tsconfig.json"
+    "lintfix": "tslint --fix -c tslint.json -p tsconfig.json",
+    "deploy": "copyfiles app.yaml dist && cd dist && gcloud app deploy"
   },
   "private": true,
   "dependencies": {
@@ -101,6 +102,7 @@
     "babel-preset-env": "^1.6.1",
     "babel-preset-es2016": "^6.24.1",
     "babel-preset-stage-2": "^6.24.1",
+    "copyfiles": "^2.4.1",
     "jasmine": "^3.5.0",
     "jasmine-core": "^2.99.1",
     "jasmine-spec-reporter": "^4.2.1",

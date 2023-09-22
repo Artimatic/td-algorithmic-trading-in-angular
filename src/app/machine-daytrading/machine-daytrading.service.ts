@@ -28,7 +28,7 @@ export class MachineDaytradingService {
   trainStock(stock: string) {
     this.schedulerService.schedule(() => {
       this.machineLearningService
-        .trainPredictNext30(stock,
+        .trainDaytrade(stock,
           moment().add({ days: 1 }).format('YYYY-MM-DD'),
           moment().subtract({ days: 1 }).format('YYYY-MM-DD'),
           1,
@@ -46,7 +46,7 @@ export class MachineDaytradingService {
         if (analysis.recommendation.toLowerCase() === 'buy') {
           this.schedulerService.schedule(() => {
             this.machineLearningService
-              .trainPredictNext30(stockSymbol,
+              .trainDaytrade(stockSymbol,
                 moment().add({ days: 1 }).format('YYYY-MM-DD'),
                 moment().subtract({ days: 1 }).format('YYYY-MM-DD'),
                 1,

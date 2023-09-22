@@ -1,7 +1,7 @@
 <div class="login-container">
   <form name="tdaLogin" *ngIf="selectedLogin==='tda'" (ngSubmit)="saveTdaLogin(tdaForm)" [formGroup]="tdaForm">
     <div class="p-inputgroup">
-      <input pInputText type="text" placeholder="Account ID" type="text" name="accountId" formControlName="accountId"
+      <input pInputText type="text" id="float-input" placeholder="Account ID" type="text" name="accountId" formControlName="accountId"
         required />
     </div>
     <div>

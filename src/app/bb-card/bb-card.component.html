@@ -17,25 +17,48 @@
 
   <div *ngIf="activeIndex === 0">
     <form [formGroup]="firstFormGroup" class="bb-form">
-      <div class="p-field-radiobutton" *ngFor="let side of sides">
+      <div class="p-field-radiobutton bb-form-field" *ngFor="let side of sides">
         <p-radioButton name="orderType" [value]="side" [label]="side" formControlName="orderType"></p-radioButton>
       </div>
       <div class="bb-form-field">
         <p-checkbox formControlName="useML" label="Enable machine learning" (onChange)="checkMLService()"></p-checkbox>
       </div>
+      <div class="bb-form-field">
+        <p-multiSelect [formControl]="preferences" defaultLabel="Select additional options"
+          [options]="preferenceList"></p-multiSelect>
+      </div>
+      <span class="p-float-label bb-form-field">
+        <p-inputNumber id="float-input" type="number" placeholder="Quantity" pInputText formControlName="quantity"
+          required></p-inputNumber>
+        <label for="float-input">Quantity</label>
+      </span>
+      <span class="p-float-label bb-form-field">
+        <p-inputNumber id="float-input" type="number" placeholder="Stop Loss" pInputText formControlName="lossThreshold"
+          required></p-inputNumber>
+        <label for="float-input">Stop Loss</label>
+      </span>
+      <span class="p-float-label bb-form-field">
+        <p-inputNumber id="float-input" type="number" placeholder="Trailing Stop Loss" pInputText formControlName="trailingStop"
+          required></p-inputNumber>
+          <label for="float-input">Trailing Stop Loss</label>
+      </span>
+      <span class="p-float-label bb-form-field">
+        <p-inputNumber id="float-input" type="number" pInputText formControlName="profitTarget"
+          required></p-inputNumber>
+          <label for="float-input">Profit Target</label>
+      </span>
+      <span class="p-float-label bb-form-field">
+        <p-inputNumber id="float-input" type="number" pInputText formControlName="orderSize"
+          required></p-inputNumber>
+          <label for="float-input">Orders</label>
+      </span>
+      <span class="p-float-label bb-form-field">
+        <p-inputNumber id="float-input" type="number" pInputText formControlName="orderSize"
+          required></p-inputNumber>
+          <label for="float-input">Orders</label>
+      </span>
     </form>
-    <!-- <form [formGroup]="firstFormGroup">
-      <div class="p-field-radiobutton">
-        <p-radioButton name="orderType" value="Option 1" label="Option 1" formControlName="orderType" inputId="opt1"></p-radioButton>
-        
-      </div>
-      <div class="p-field-radiobutton">
-        <p-radioButton name="orderType" value="Option 2" label="Option 2" formControlName="orderType"  inputId="opt2"></p-radioButton>
-      </div>
-      <div class="p-field-radiobutton">
-        <p-radioButton name="orderType" value="Option 3" label="Option 3"  formControlName="orderType"  inputId="opt3"></p-radioButton>
-      </div>
-     </form> -->
+
     <!-- <form [formGroup]="firstFormGroup">
       <ng-template matStepLabel>Edit Order</ng-template>
       <mat-chip>{{order.holding.symbol}}</mat-chip>
@@ -109,9 +132,11 @@
           <p-header>
             <h3>{{order.holding.symbol}}</h3>
             <p>
-              <p-tag *ngIf="firstFormGroup.value.orderType=='Buy'" styleClass="p-mr-2" severity="success" value="Buy"></p-tag>
+              <p-tag *ngIf="firstFormGroup.value.orderType=='Buy'" styleClass="p-mr-2" severity="success"
+                value="Buy"></p-tag>
               <p-tag *ngIf="firstFormGroup.value.orderType=='Sell'" severity="danger" value="Sell"></p-tag>
-              <p-tag *ngIf="firstFormGroup.value.orderType=='DayTrade'" styleClass="p-mr-2" severity="info" value="Daytrade"></p-tag>
+              <p-tag *ngIf="firstFormGroup.value.orderType=='DayTrade'" styleClass="p-mr-2" severity="info"
+                value="Daytrade"></p-tag>
             </p>
           </p-header>
           <mat-checkbox (click)="toggleChart()">Chart</mat-checkbox>
@@ -143,13 +168,13 @@
       <p-footer>
 
         <div class="card-actions">
-          <button mat-raised-button color="warn" (click)="resetStepper()">STOP</button>
-          <button mat-button color="primary" (click)="backtest()">Backtest</button>
-          <button mat-button color="warn" (click)="testBuy()">Buy</button>
-          <button mat-button color="warn" (click)="testSell()">Sell</button>
-          <button mat-button color="warn" (click)="testSms()">Test SMS</button>
-          <button mat-button color="warn" (click)="goLive()">Test Live</button>
-          <button mat-button color="warn" (click)="testRequests()">Test Requests</button>
+          <button pButton class="p-button-danger" (click)="resetStepper()">Stop</button>
+          <button pButton class="p-button-info" (click)="backtest()">Backtest</button>
+          <button pButton class="p-button-success" (click)="testBuy()">Buy</button>
+          <button pButton class="p-button-danger" (click)="testSell()">Sell</button>
+          <button pButton class="p-button-warning" (click)="testSms()">Test SMS</button>
+          <button pButton class="p-button-warning" (click)="goLive()">Test Live</button>
+          <button pButton class="p-button-warning" (click)="testRequests()">Test Requests</button>
         </div>
       </p-footer>
 

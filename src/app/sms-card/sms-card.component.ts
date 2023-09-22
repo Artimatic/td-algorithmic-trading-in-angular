@@ -193,7 +193,7 @@ export class SmsCardComponent implements OnInit, OnDestroy {
 
   train(ticker) {
     this.machineLearningService
-      .trainPredictNext30(ticker.toUpperCase(),
+      .trainDaytrade(ticker.toUpperCase(),
         moment().add({ days: 1 }).format('YYYY-MM-DD'),
         moment().subtract({ days: 5 }).format('YYYY-MM-DD'),
         1,

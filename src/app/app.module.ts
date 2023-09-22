@@ -83,6 +83,7 @@ import { InputTextareaModule } from 'primeng/inputtextarea';
 import { PickListModule } from 'primeng/picklist';
 import { TimelineModule } from 'primeng/timeline';
 import { DataViewModule } from 'primeng/dataview';
+import { AutopilotComponent } from './autopilot/autopilot.component';
 
 @NgModule({
   declarations: [
@@ -129,6 +130,7 @@ import { DataViewModule } from 'primeng/dataview';
     AiPicksComponent,
     AutoBacktestSwitchComponent,
     WatchListComponent,
+    AutopilotComponent,
   ],
   entryComponents: [
     LoginDialogComponent,

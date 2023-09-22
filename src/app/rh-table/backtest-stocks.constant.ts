@@ -2,7 +2,7 @@ import { AlgoParam } from '../shared';
 import * as moment from 'moment';
 
 const start = moment().format('YYYY-MM-DD');
-const end = moment().subtract(700, 'days').format('YYYY-MM-DD');
+const end = moment().subtract(500, 'days').format('YYYY-MM-DD');
 
 function createParam(ticker: string): AlgoParam {
   return {
@@ -2007,6 +2007,15 @@ export const primaryList = [
   'GOOG'
 ];
 
+export const bearList = [
+  'SH',
+  'QID',
+  'SQQQ',
+  'RWM',
+  'FAZ',
+  'SOXS',
+];
+
 const Stocks: AlgoParam[] = [];
 
 for (const s of stockList) {
@@ -2018,5 +2027,12 @@ export const PrimaryList: AlgoParam[] = [];
 for (const p of primaryList) {
   PrimaryList.push(createParam(p));
 }
+
+export const BearList: AlgoParam[] = [];
+
+for (const b of bearList) {
+  BearList.push(createParam(b));
+}
+
 
 export default Stocks;

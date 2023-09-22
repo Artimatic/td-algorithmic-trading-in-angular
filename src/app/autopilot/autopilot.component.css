@@ -1,0 +1,10 @@
+.autopilot-container {
+    display: block;
+    position: fixed;
+    width: 52px;
+    height: 52px;
+    bottom: 50px;
+    right: 50px;
+    z-index: 1;
+    cursor: pointer;
+}

@@ -15,7 +15,7 @@ export class MachineLearningService {
 
   constructor(private http: HttpClient) { }
 
-  trainPredictNext30(symbol: string,
+  trainDaytrade(symbol: string,
     endDate: string = null,
     startDate: string = null,
     trainingSize: number,

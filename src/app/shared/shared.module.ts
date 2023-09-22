@@ -42,8 +42,15 @@ import { DataViewModule } from 'primeng/dataview';
 import { FieldsetModule } from 'primeng/fieldset';
 import { ChipModule } from 'primeng/chip';
 import { ProgressBarModule } from 'primeng/progressbar';
-import {AutoCompleteModule} from 'primeng/autocomplete';
+import { AutoCompleteModule } from 'primeng/autocomplete';
 import { RadioButtonModule } from 'primeng/radiobutton';
+import { AccordionModule } from 'primeng/accordion';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputTextModule } from 'primeng/inputtext';
+import { InputTextareaModule } from 'primeng/inputtextarea';
+import { TagModule } from 'primeng/tag';
+import { AvatarModule } from 'primeng/avatar';
+import { AvatarGroupModule } from 'primeng/avatargroup';
 
 const materialModules = [
   MatStepperModule,
@@ -90,7 +97,14 @@ const primeModules = [
   ChipModule,
   ProgressBarModule,
   AutoCompleteModule,
-  RadioButtonModule
+  RadioButtonModule,
+  AccordionModule,
+  InputNumberModule,
+  InputTextModule,
+  InputTextareaModule,
+  TagModule,
+  AvatarModule,
+  AvatarGroupModule,
 ];
 
 @NgModule({

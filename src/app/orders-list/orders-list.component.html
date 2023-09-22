@@ -1,10 +1,5 @@
-<mat-accordion>
-  <mat-expansion-panel>
-    <mat-expansion-panel-header>
-      <mat-panel-title>
-        <h2>Orders</h2>
-      </mat-panel-title>
-    </mat-expansion-panel-header>
+<p-accordion>
+  <p-accordionTab header="Orders">
     <div *ngFor="let sell of cartService.sellOrders" class="order-card">
       <app-bb-card [order]="sell" [tearDown]="sell.stopped">
       </app-bb-card>
@@ -17,5 +12,8 @@
       <app-bb-card [order]="other" [tearDown]="other.stopped">
       </app-bb-card>
     </div>
-  </mat-expansion-panel>
-</mat-accordion>
+    <div *ngIf="!cartService.sellOrders.length && !cartService.buyOrders.length && !cartService.otherOrders.length">
+      <p>No orders found.</p>
+    </div>
+  </p-accordionTab>
+</p-accordion>

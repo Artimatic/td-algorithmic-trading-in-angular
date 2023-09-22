@@ -31,7 +31,8 @@ import { GlobalTaskQueueService } from '@shared/services/global-task-queue.servi
 import { ClientSmsService } from '@shared/services/client-sms.service';
 import { SchedulerService } from '@shared/service/scheduler.service';
 import { MachineDaytradingService } from '../machine-daytrading/machine-daytrading.service';
-import { MenuItem, SelectItem } from 'primeng/api';
+import { MenuItem, MessageService, SelectItem } from 'primeng/api';
+import { ServiceStatus } from '@shared/models/service-status';
 
 @Component({
   selector: 'app-bb-card',
@@ -99,6 +100,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     private clientSmsService: ClientSmsService,
     private schedulerService: SchedulerService,
     private machineDaytradingService: MachineDaytradingService,
+    private messageService: MessageService,
     public dialog: MatDialog) { }
 
   ngOnInit() {
@@ -746,7 +748,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
           if (this.firstFormGroup.value.useML) {
             this.schedulerService.schedule(() => {
               this.machineLearningService
-                .trainPredictNext30(this.order.holding.symbol.toUpperCase(),
+                .trainDaytrade(this.order.holding.symbol.toUpperCase(),
                   moment().add({ days: 1 }).format('YYYY-MM-DD'),
                   moment().subtract({ days: 1 }).format('YYYY-MM-DD'),
                   1,
@@ -791,7 +793,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
           if (this.firstFormGroup.value.useML) {
             this.schedulerService.schedule(() => {
               this.machineLearningService
-                .trainPredictNext30(this.order.holding.symbol.toUpperCase(),
+                .trainDaytrade(this.order.holding.symbol.toUpperCase(),
                   moment().add({ days: 1 }).format('YYYY-MM-DD'),
                   moment().subtract({ days: 1 }).format('YYYY-MM-DD'),
                   1,
@@ -807,7 +809,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
                       quote,
                       timestamp,
                       analysis);
-          
+
                     this.sendSell(sellOrder);
                   }
                 }, error => {
@@ -816,12 +818,12 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
                 });
             }, `${this.order.holding.symbol}_bbcard_ml`, this.globalSettingsService.stopTime, true);
           } else {
-          const sellOrder = this.buildSellOrder(orderQuantity,
-            quote,
-            timestamp,
-            analysis);
+            const sellOrder = this.buildSellOrder(orderQuantity,
+              quote,
+              timestamp,
+              analysis);
 
-          this.sendSell(sellOrder);
+            this.sendSell(sellOrder);
           }
         }
       }
@@ -879,7 +881,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
 
         this.schedulerService.schedule(() => {
           this.machineLearningService
-            .trainPredictNext30(this.order.holding.symbol.toUpperCase(),
+            .trainDaytrade(this.order.holding.symbol.toUpperCase(),
               moment().add({ days: 1 }).format('YYYY-MM-DD'),
               moment().subtract({ days: 1 }).format('YYYY-MM-DD'),
               1,
@@ -1238,7 +1240,36 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   checkMLService() {
+    const mlServiceError = () => {
+      this.messageService.add({
+        key: 'mlServiceStatus',
+        severity: 'danger',
+        summary: 'Machine learning service is currently offline'
+      });
+    };
+
+    this.backtestService.pingArmidillo().subscribe(
+      (data: ServiceStatus) => {
+        if (!data || data.status !== 'UP') {
+          mlServiceError();
+        }
+      },
+      () => {
+        mlServiceError();
+      });
+
     console.log('checking ml service', this.firstFormGroup.value.useML);
+    this.schedulerService.schedule(() => {
+      this.machineLearningService
+        .trainDaytrade(this.order.holding.symbol,
+          moment().add({ days: 1 }).format('YYYY-MM-DD'),
+          moment().subtract({ days: moment().day() === 0 ? 2 : 1 }).format('YYYY-MM-DD'),
+          0.7,
+          this.globalSettingsService.daytradeAlgo
+        )
+        .pipe(take(1))
+        .subscribe();
+    }, `calibrateOne${this.order.holding.symbol}`, null, false, 180000);
   }
 
   ngOnDestroy() {

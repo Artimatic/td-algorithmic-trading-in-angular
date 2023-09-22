@@ -13,9 +13,6 @@
     <mat-step [stepControl]="firstFormGroup">
       <form [formGroup]="firstFormGroup">
         <ng-template matStepLabel>Edit Order</ng-template>
-        <h3>Machine Learning</h3>
-        <p>Use RNN model to determine whether go bullish or bearish after hours.</p>
-        <h4>Current Brokerage: {{globalSettingsService.brokerage}}</h4>
         <section>
           <mat-grid-list cols="4" rowHeight="25px">
             <mat-grid-tile [colspan]="2" [rowspan]="1">

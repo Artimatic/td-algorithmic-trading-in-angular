@@ -325,7 +325,6 @@ export class PortfolioInfoComponent implements OnInit, OnDestroy {
       this.aiPicksService.tickerSellRecommendationQueue.next(stockName);
       this.aiPicksService.tickerBuyRecommendationQueue.next(stockName);
     }, 'portfolio_mgmt_ai');
-
   }
 
   refresh() {

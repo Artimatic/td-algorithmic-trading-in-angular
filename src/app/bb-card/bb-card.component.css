@@ -49,7 +49,12 @@
 }
 
 .bb-form {
-    display: grid;
+    display: flex;
+    margin: 1rem;
+}
+
+.bb-form-field {
+    margin-right: 1rem;
 }
 
 :host ::ng-deep .p-chip.live-chip {

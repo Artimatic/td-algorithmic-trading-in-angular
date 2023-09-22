@@ -4,7 +4,7 @@ import { Winloss } from '../models/winloss';
 import * as _ from 'lodash';
 import { ReportingService } from './reporting.service';
 
-interface ScoringIndex<TValue> {
+export interface ScoringIndex<TValue> {
   [id: string]: TValue;
 }
 
