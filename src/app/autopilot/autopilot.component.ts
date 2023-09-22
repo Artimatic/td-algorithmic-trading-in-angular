@@ -13,7 +13,7 @@ import { MessageService } from 'primeng/api';
 import { AlgoQueueItem } from '@shared/services/trade.service';
 import { ScoringIndex } from '@shared/services/score-keeper.service';
 import { MachineDaytradingService } from '../machine-daytrading/machine-daytrading.service';
-import { BearList } from '../rh-table/backtest-stocks.constant';
+import { BearList, PrimaryList } from '../rh-table/backtest-stocks.constant';
 
 export interface PositionHoldings {
   name: string;
@@ -189,9 +189,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           moment().isBefore(moment(startStopTime.endDateTime))) {
           if (this.isTradingStarted && (this.cartService.sellOrders.length ||
             this.cartService.buyOrders.length || this.cartService.otherOrders.length)) {
-              console.log('Executing orders');
+            console.log('Executing orders');
 
-              this.executeOrderList();
+            this.executeOrderList();
           } else {
             this.processSellList();
             this.processBuyList();
@@ -366,16 +366,24 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     } else {
       if (this.buyList.length < 1) {
         console.log('listening for ml results');
-        this.aiPicksService.mlBuyResults.pipe(take(1)).subscribe(latestMlResult => {
+        this.aiPicksService.mlBuyResults.pipe(
+          takeUntil(this.destroy$),
+          take(1)
+        ).subscribe(latestMlResult => {
           console.log('Received ml buy results', latestMlResult);
           //const lastMlResult = JSON.parse(sessionStorage.getItem('profitLoss'));
           sessionStorage.setItem('lastMlResult', JSON.stringify(latestMlResult));
         });
-        this.aiPicksService.mlNeutralResults.pipe(take(1)).subscribe(latestMlResult => {
+        this.aiPicksService.mlNeutralResults.pipe(
+          take(1),
+          takeUntil(this.destroy$)
+          ).subscribe(latestMlResult => {
           console.log('Received neutral results', latestMlResult);
+          const timerInterval = counter > PrimaryList.length ? counter * 1000 : 60000;
           this.schedulerService.schedule(() => {
             this.triggerBacktestNext();
-          }, `findTrades`, null, false, 60000);
+            counter++;
+          }, `findTrades`, null, false, timerInterval);
         });
       }
       const cb = (stock) => {
