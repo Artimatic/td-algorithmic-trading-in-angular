@@ -16,97 +16,90 @@
       WARNING: {{warning}}
     </div>
   </div>
-  <mat-horizontal-stepper [linear]="false" #stepper="matHorizontalStepper">
-    <mat-step [stepControl]="firstFormGroup">
-      <form [formGroup]="firstFormGroup">
-        <ng-template matStepLabel>Edit Order</ng-template>
-        <mat-chip>{{order.holding.symbol}}</mat-chip>
-        <p>{{order.holding.name}}</p>
-        <mat-form-field>
-          <mat-label>Stock</mat-label>
-          <mat-select formControlName="selectedOrder" (selectionChange)=selectStock($event)>
-            <mat-option value="UPRO">UPRO</mat-option>
-            <mat-option value="SPY">SPY</mat-option>
-            <mat-option value="QQQ">QQQ</mat-option>
-            <mat-option value="TQQQ">TQQQ</mat-option>
-            <mat-option value="SPXU">SPXU</mat-option>
-            <mat-option value="SH">SH</mat-option>
-            <mat-option value="TLT">TLT</mat-option>
-            <mat-option value="SHY">SHY</mat-option>
-          </mat-select>
-        </mat-form-field>
-        <mat-form-field hintLabel="Quantity" [hidden]="preferences.value === 'Sell positions on the Open'">
-          <input matInput type="number" placeholder="Quantity" formControlName="quantity" required>
-        </mat-form-field>
-        <mat-form-field>
-          <mat-select placeholder="Preferences" [formControl]="preferences" name="preferences">
-            <mat-option *ngFor="let pref of preferenceList" [value]="pref">
-              {{ pref }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-        <mat-slide-toggle [formControl]="triggerDaily">
-          Trigger Daily
-        </mat-slide-toggle>
-        <div>
-          <button mat-button matStepperNext>Next</button>
+  <p-steps [model]="stepMenuItems" [(activeIndex)]="activeIndex" [readonly]="false"></p-steps>
+  <mat-card *ngIf="activeIndex === 0">
+    
+    <form [formGroup]="firstFormGroup">
+      <mat-chip>{{order.holding.symbol}}</mat-chip>
+      <p>{{order.holding.name}}</p>
+      <mat-form-field>
+        <mat-label>Stock</mat-label>
+        <mat-select formControlName="selectedOrder" (selectionChange)=selectStock($event)>
+          <mat-option value="UPRO">UPRO</mat-option>
+          <mat-option value="SPY">SPY</mat-option>
+          <mat-option value="QQQ">QQQ</mat-option>
+          <mat-option value="TQQQ">TQQQ</mat-option>
+          <mat-option value="SPXU">SPXU</mat-option>
+          <mat-option value="SH">SH</mat-option>
+          <mat-option value="TLT">TLT</mat-option>
+          <mat-option value="SHY">SHY</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field hintLabel="Quantity" [hidden]="preferences.value === 'Sell positions on the Open'">
+        <input matInput type="number" placeholder="Quantity" formControlName="quantity" required>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-select placeholder="Preferences" [formControl]="preferences" name="preferences">
+          <mat-option *ngFor="let pref of preferenceList" [value]="pref">
+            {{ pref }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <div>
+        <p-button (click)="activeIndex = 1">Next</p-button>
+      </div>
+    </form>
+  </mat-card>
+  <div *ngIf="activeIndex === 1">
+    <mat-card>
+      <div *ngIf="live">
+        <p-tag styleClass="p-mr-2" value="Active"></p-tag>
+      </div>
+      <div *ngIf="!live">
+        <p-chip label="Inactive"></p-chip>
+      </div>
+      <div>
+        <section class="example-section">
+          <mat-progress-bar class="progress-bar" [mode]="'determinate'" [color]="'primary'" [value]="progress()">
+          </mat-progress-bar>
+        </section>
+        Orders Submitted: {{ holdingCount}}/{{firstFormGroup.value.quantity || 0}} shares
+      </div>
+      <div class="toolbar-content" fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px"
+        fxLayoutGap.xs="0">
+        <div fxFlex="5%">
+          <mat-card-header>
+            <mat-card-title>{{order.holding.symbol}}</mat-card-title>
+            <mat-card-subtitle>
+              <h5>Simple Algo</h5>
+            </mat-card-subtitle>
+          </mat-card-header>
         </div>
-      </form>
-    </mat-step>
-    <mat-step [stepControl]="secondFormGroup" name="secondForm" ngDefaultControl>
-      <ng-template matStepLabel>Place Order</ng-template>
-      <mat-card>
-        <div *ngIf="live">
-          <mat-chip color="warn" selected="true">LIVE</mat-chip>
-        </div>
-        <div *ngIf="!live">
-          <button mat-raised-button disabled>STALLED</button>
-        </div>
-        <div>
-          <section class="example-section">
-            <mat-progress-bar class="progress-bar" [mode]="'determinate'" [color]="'primary'" [value]="progress()">
-            </mat-progress-bar>
-          </section>
-          Orders Submitted: {{ holdingCount}}/{{firstFormGroup.value.quantity || 0}} shares
-        </div>
-        <div class="toolbar-content" fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px"
-          fxLayoutGap.xs="0">
-          <div fxFlex="5%">
-            <mat-card-header>
-              <mat-card-title>{{order.holding.symbol}}</mat-card-title>
-              <mat-card-subtitle>
-                <h5>Simple Algo</h5>
-              </mat-card-subtitle>
-            </mat-card-header>
-          </div>
-          <div fxFlex="95%">
-            <div class="order-log">
-              <mat-grid-list cols="3" rowHeight="150px">
-                <mat-grid-tile *ngFor="let tile of tiles" [colspan]="tile.cols" [rowspan]="tile.rows">
-                  <table>
-                    <tr *ngFor="let order of tile.orders">
-                      <td>{{order.signalTime}}</td>
-                      <td>{{order.action}}</td>
-                      <td>{{order.quantity}}@</td>
-                      <td>${{order.price}}</td>
-                      <td> on {{order.timeSubmitted}}</td>
-                    </tr>
-                  </table>
-                </mat-grid-tile>
-              </mat-grid-list>
-            </div>
+        <div fxFlex="95%">
+          <div class="order-log">
+            <mat-grid-list cols="3" rowHeight="150px">
+              <mat-grid-tile *ngFor="let tile of tiles" [colspan]="tile.cols" [rowspan]="tile.rows">
+                <table>
+                  <tr *ngFor="let order of tile.orders">
+                    <td>{{order.signalTime}}</td>
+                    <td>{{order.action}}</td>
+                    <td>{{order.quantity}}@</td>
+                    <td>${{order.price}}</td>
+                    <td> on {{order.timeSubmitted}}</td>
+                  </tr>
+                </table>
+              </mat-grid-tile>
+            </mat-grid-list>
           </div>
         </div>
-        <mat-card-actions>
-          <button mat-raised-button color="warn" (click)="resetStepper(stepper)">STOP</button>
-          <button mat-button color="warn" (click)="openDialog()">GO LIVE</button>
-          <button mat-button color="primary" (click)="buy()">Buy</button>
-          <button mat-button color="accent" (click)="sell()">Sell</button>
-          <mat-slide-toggle [formControl]="testing" (change)="setTest()">
-            Test Mode
-          </mat-slide-toggle>
-        </mat-card-actions>
-      </mat-card>
-    </mat-step>
-  </mat-horizontal-stepper>
+      </div>
+      <mat-card-actions>
+        <p-button (click)="resetStepper()" class="button-separator">STOP</p-button>
+        <p-button (click)="openDialog()" class="button-separator">GO LIVE</p-button>
+        <p-button (click)="buy()" class="button-separator">Buy</p-button>
+        <p-button (click)="sell()" class="button-separator">Sell</p-button>
+
+      </mat-card-actions>
+    </mat-card>
+  </div>
 </p-card>

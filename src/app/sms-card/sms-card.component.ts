@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 
 import * as _ from 'lodash';
@@ -20,8 +20,6 @@ import { SchedulerService } from '@shared/service/scheduler.service';
   styleUrls: ['./sms-card.component.css']
 })
 export class SmsCardComponent implements OnInit, OnDestroy {
-  @ViewChild('stepper', { static: false }) stepper;
-
   alive = false;
 
   firstFormGroup: FormGroup;
@@ -46,6 +44,19 @@ export class SmsCardComponent implements OnInit, OnDestroy {
   messagesSent = 0;
   lastSentSms: any = {};
   lastTrainedTime: any = {};
+  activeIndex = 0;
+  stepMenuItems = [{
+    label: 'Edit',
+    command: () => {
+      this.activeIndex = 0;
+    }
+  },
+  {
+    label: 'Submit',
+    command: () => {
+      this.activeIndex = 1;
+    }
+  }];
 
   constructor(private backtestService: BacktestService,
     private portfolioService: PortfolioService,
@@ -85,7 +96,7 @@ export class SmsCardComponent implements OnInit, OnDestroy {
 
   goLive() {
     this.alive = true;
-    this.stepper.next();
+    this.activeIndex = 1;
     this.setup();
     this.interval = this.defaultInterval;
     this.messagesSent = 0;
@@ -215,8 +226,8 @@ export class SmsCardComponent implements OnInit, OnDestroy {
     });
   }
 
-  resetStepper(stepper) {
-    stepper.selectedIndex = 0;
+  resetStepper() {
+    this.activeIndex = 0;
     this.stop();
   }
 
@@ -267,7 +278,6 @@ export class SmsCardComponent implements OnInit, OnDestroy {
 
     this.startTime = moment.tz(`${moment.tz(this.globalSettingsService.startTime, 'America/New_York').format('YYYY-MM-DD')} ${currentStartTime}`, 'America/New_York').toDate();
     this.stopTime = moment.tz(`${moment.tz(this.globalSettingsService.stopTime, 'America/New_York').format('YYYY-MM-DD')} ${currentStopTime}`, 'America/New_York').toDate();
-    console.log(this.startTime, ' - ', this.stopTime);
   }
 
   addToList() {
@@ -275,6 +285,11 @@ export class SmsCardComponent implements OnInit, OnDestroy {
     tickers.forEach(ticker => {
       this.stockList.push({ label: ticker.toUpperCase() });
     });
+    if (this.stockFormControl.hasError('stock') || this.stockFormControl.hasError('required') || this.stockList.length === 0) {
+      this.messageService.add({ severity: 'error', life: 1000, summary: 'Failed to add stock' });
+    } else {
+      this.setDates();
+    }
   }
 
   removeFromList(name) {

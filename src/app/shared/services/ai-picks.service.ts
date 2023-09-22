@@ -28,6 +28,7 @@ export class AiPicksService {
   tickerSellRecommendationQueue: Subject<string> = new Subject();
   mlBuyResults: Subject<AiPicksData> = new Subject();
   mlSellResults: Subject<AiPicksData> = new Subject();
+  mlNeutralResults: Subject<AiPicksData> = new Subject();
   predictionData: Subject<AiPicksPredictionData> = new Subject();
 
   clearLists: Subject<boolean> = new Subject();

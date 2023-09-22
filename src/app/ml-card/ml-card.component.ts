@@ -13,7 +13,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { PortfolioService, DaytradeService, ReportingService, BacktestService, MachineLearningService } from '../shared';
 import { Holding } from '../shared/models';
 import { GlobalSettingsService, Brokerage } from '../settings/global-settings.service';
-import { take, takeWhile } from 'rxjs/operators';
+import { takeWhile } from 'rxjs/operators';
 import { SchedulerService } from '@shared/service/scheduler.service';
 
 interface Bet {
@@ -35,8 +35,6 @@ enum Sentiment {
   styleUrls: ['./ml-card.component.css']
 })
 export class MlCardComponent implements OnInit {
-  @ViewChild('stepper', { static: false }) stepper;
-
   sub: Subscription;
 
   alive: boolean;
@@ -62,7 +60,6 @@ export class MlCardComponent implements OnInit {
   longOnly = new FormControl();
   allIn = new FormControl();
   inverse = new FormControl();
-  triggerDaily = new FormControl();
 
   startTime: moment.Moment;
   stopTime: moment.Moment;
@@ -79,6 +76,19 @@ export class MlCardComponent implements OnInit {
   activationHash = {};
   activationIntradayHash = {};
   orderSent = false;
+  activeIndex = 0;
+  stepMenuItems = [{
+    label: 'Edit',
+    command: () => {
+      this.activeIndex = 0;
+    }
+  },
+  {
+    label: 'Submit',
+    command: () => {
+      this.activeIndex = 1;
+    }
+  }];
 
   constructor(private _formBuilder: FormBuilder,
     private portfolioService: PortfolioService,
@@ -97,7 +107,6 @@ export class MlCardComponent implements OnInit {
     this.longOnly.setValue(false);
     this.allIn.setValue(false);
     this.inverse.setValue(false);
-    this.triggerDaily.setValue(false);
     this.testing.setValue(false);
 
     this.multiplierList = [
@@ -200,15 +209,6 @@ export class MlCardComponent implements OnInit {
           const momentInst = moment();
           if (momentInst.isAfter(this.startTime) &&
             momentInst.isBefore(this.stopTime) || this.testing.value) {
-            if (this.triggerDaily.value === true) {
-              this.globalSettingsService.tradeDayStart
-                .pipe(take(1))
-                .subscribe(start => {
-                  if (start) {
-                    this.goLive();
-                  }
-                });
-            }
             this.alive = false;
             this.pendingResults = true;
             this.executeNow();
@@ -409,8 +409,8 @@ export class MlCardComponent implements OnInit {
     }
   }
 
-  resetStepper(stepper) {
-    stepper.selectedIndex = 0;
+  resetStepper() {
+    this.activeIndex = 0;
     this.stop();
   }
 

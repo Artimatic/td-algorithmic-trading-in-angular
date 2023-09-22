@@ -124,4 +124,4 @@
   </div>
 </p-dialog>
 
-<button type="button" *ngIf="!hideButton" (click)="showDialog()" pButton icon="pi pi-list" label="Add"></button>
+<button type="button" *ngIf="!hideButton" (click)="showDialog()" pButton icon="pi pi-list" [label]="displayName"></button>

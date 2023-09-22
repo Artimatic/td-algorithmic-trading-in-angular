@@ -24,6 +24,8 @@ export interface DefaultOrders {
   styleUrls: ['./default-order-lists.component.scss']
 })
 export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy {
+  @Input() displayName = 'Add order';
+  @Input() defaultSide = { label: 'Buy', value: 'Buy' };
   @Input() display: boolean;
   @Input() hideButton: boolean;
   @Input() prefillOrderForm: Order;
@@ -197,8 +199,9 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
     this.addOrderFormGroup = this._formBuilder.group({
       allocation: [initAllocation, Validators.required],
       symbol: [defaultSymbol, Validators.required],
-      side: [defaultSide, Validators.required]
+      side: [this.defaultSide.value || defaultSide, Validators.required]
     });
+    console.log('side1', this.addOrderFormGroup.value.side, this.defaultSide.value);
   }
 
   onShow() {

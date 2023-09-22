@@ -1,10 +1,10 @@
 <mat-card>
   <mat-card-header>
     <div *ngIf="live">
-      <mat-chip color="warn" selected="true">LIVE</mat-chip>
+      <p-tag styleClass="p-mr-2" value="Active"></p-tag>
     </div>
     <div *ngIf="!live">
-      <button mat-raised-button disabled>STALLED</button>
+      <p-chip label="Inactive"></p-chip>
     </div>
     <div class="banner" *ngIf="error">
       <div class="banner-content">

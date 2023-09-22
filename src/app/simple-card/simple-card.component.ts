@@ -27,7 +27,6 @@ interface BuyAt3Algo {
   styleUrls: ['./simple-card.component.css']
 })
 export class SimpleCardComponent implements OnInit, OnChanges {
-  @ViewChild('stepper', { static: false }) stepper;
   @Input() order: SmartOrder;
 
   selectedOrder: FormControl;
@@ -45,7 +44,6 @@ export class SimpleCardComponent implements OnInit, OnChanges {
 
   firstFormGroup: FormGroup;
   secondFormGroup: FormGroup;
-  testing = new FormControl();
 
   marketOpenTime: moment.Moment;
   startTime: moment.Moment;
@@ -57,11 +55,22 @@ export class SimpleCardComponent implements OnInit, OnChanges {
 
   preferences: FormControl;
 
-  triggerDaily: FormControl;
   buyAt3Algo: BuyAt3Algo;
 
   tiles;
-
+  activeIndex = 0;
+  stepMenuItems = [{
+    label: 'Edit',
+    command: () => {
+      this.activeIndex = 0;
+    }
+  },
+  {
+    label: 'Submit',
+    command: () => {
+      this.activeIndex = 1;
+    }
+  }];
   constructor(private _formBuilder: FormBuilder,
     private daytradeService: DaytradeService,
     private reportingService: ReportingService,
@@ -73,8 +82,6 @@ export class SimpleCardComponent implements OnInit, OnChanges {
     public dialog: MatDialog) { }
 
   ngOnInit() {
-    this.testing.setValue(false);
-
     this.live = false;
     this.alive = true;
 
@@ -95,9 +102,6 @@ export class SimpleCardComponent implements OnInit, OnChanges {
 
     this.preferences = new FormControl();
     this.preferences.setValue(OrderPref.SellAtOpen);
-
-    this.triggerDaily = new FormControl();
-    this.triggerDaily.setValue(false);
     this.setup();
   }
 
@@ -158,7 +162,7 @@ export class SimpleCardComponent implements OnInit, OnChanges {
                 reject,
                 notFound);
             } else if ((momentInst.isAfter(buyTime) &&
-              momentInst.isBefore(sellTime) && !this.buyAt3Algo.purchaseSent) || this.testing.value) {
+              momentInst.isBefore(sellTime) && !this.buyAt3Algo.purchaseSent)) {
               this.backtestService.getTdIntraday(this.order.holding.symbol)
                 .subscribe((quotes) => {
                   const closeArr = this.prepareQuotes(quotes);
@@ -174,16 +178,6 @@ export class SimpleCardComponent implements OnInit, OnChanges {
                       }
                     });
                 });
-
-              if (this.triggerDaily.value === true) {
-                this.globalSettingsService.tradeDayStart
-                  .pipe(take(1))
-                  .subscribe(start => {
-                    if (start) {
-                      this.goLive();
-                    }
-                  });
-              }
             }
           }
         }
@@ -308,8 +302,8 @@ export class SimpleCardComponent implements OnInit, OnChanges {
     }
   }
 
-  resetStepper(stepper) {
-    stepper.selectedIndex = 0;
+  resetStepper() {
+    this.activeIndex = 0;
     this.stop();
   }
 
@@ -350,11 +344,5 @@ export class SimpleCardComponent implements OnInit, OnChanges {
           duration: 2000,
         });
       });
-  }
-
-  setTest() {
-    if (this.testing.value) {
-      this.interval = 1000;
-    }
   }
 }

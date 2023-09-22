@@ -1,82 +1,82 @@
 <p-card>
-  <mat-horizontal-stepper [linear]="false" #stepper="matHorizontalStepper">
-    <mat-step>
-      <form>
-        <ng-template matStepLabel>Edit Order</ng-template>
-        <input type="text" style="margin-right: 1em;" pInputText [formControl]="stockFormControl" placeholder="Ex. FB, AAPL, MSFT"/>
-        <mat-form-field hintLabel="Max number of text messages">
-          <input matInput type="number" placeholder="SMS Messages" [formControl]="maxMessages" required>
-        </mat-form-field>
-        <mat-form-field>
-          <input matInput type="string" placeholder="Phone" [formControl]="phoneNumber" required>
-        </mat-form-field>
-        <p-selectButton [options]="buySellOptions" [formControl]="buySellOption"></p-selectButton>
-        <div style="padding: 1em;">
-          <mat-slide-toggle [formControl]="toastOnly">
-            Toast Message Only
-          </mat-slide-toggle>
+  <p-steps [model]="stepMenuItems" [(activeIndex)]="activeIndex" [readonly]="false"></p-steps>
+  <div *ngIf="activeIndex === 0">
+    <form class="sms-form">
+      <span class="p-float-label">
+        <input id="float-input-invalid" type="text" pInputText
+          [formControl]="stockFormControl" class="ng-invalid ng-dirty">
+        <label for="float-input-invalid">Stock</label>
+      </span>
+
+      <p-inputNumber [formControl]="maxMessages" [showButtons]="true" buttonLayout="vertical" spinnerMode="vertical"
+        inputId="vertical" decrementButtonClass="p-button-secondary" incrementButtonClass="p-button-secondary"
+        incrementButtonIcon="pi pi-plus" decrementButtonIcon="pi pi-minus">
+      </p-inputNumber>
+      <span class="p-float-label">
+        <input id="float-input-invalid" type="text" pInputText placeholder="Phone"
+          class="ng-invalid ng-dirty" [formControl]="phoneNumber" required>
+        <label for="float-input-invalid">Phone number</label>
+      </span>
+      <p-selectButton [options]="buySellOptions" [formControl]="buySellOption"></p-selectButton>
+      <div style="padding: 1em;">
+        <p-inputSwitch [formControl]="toastOnly"></p-inputSwitch>
+        <label>Toast Message Only</label>
+      </div>
+      <div>
+        <p-button (click)="addToList()">Add Stock</p-button>
+      </div>
+    </form>
+    <p-listbox [options]="stockList" [listStyle]="{'max-height':'250px'}">
+      <ng-template let-stock pTemplate="item">
+        <div class="ui-helper-clearfix">
+          <h5>{{stock.label}} <i class="pi pi-times" (click)="removeFromList(stock.label)"></i></h5>
         </div>
-        <div>
-          <button mat-button (click)="addToList()">Add Stock</button>
-          <button mat-button matStepperNext [disabled]="stockFormControl.hasError('stock') || stockFormControl.hasError('required') || stockList.length === 0" (click)="setDates()">Next</button>
+      </ng-template>
+    </p-listbox>
+  </div>
+  <div *ngIf="activeIndex === 1">
+    <mat-card>
+      <div *ngIf="alive">
+        <p-tag styleClass="p-mr-2" value="Active"></p-tag>
+      </div>
+      <div *ngIf="!alive">
+        <button mat-raised-button disabled>Inactive</button>
+      </div>
+      <div class="toolbar-content" fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px"
+        fxLayoutGap.xs="0">
+        <div fxFlex="5%">
+          <mat-card-header>
+            <mat-card-subtitle>
+              <h5>SMS Card</h5>
+            </mat-card-subtitle>
+          </mat-card-header>
         </div>
-      </form>
-      <p-listbox [options]="stockList" [listStyle]="{'max-height':'250px'}">
-        <ng-template let-stock pTemplate="item">
-          <div class="ui-helper-clearfix">
-            <h5>{{stock.label}} <i class="pi pi-times" (click)="removeFromList(stock.label)"></i></h5>
-          </div>
-        </ng-template>
-      </p-listbox>
-    </mat-step>
-    <mat-step>
-      <ng-template matStepLabel>Place Order</ng-template>
-      <mat-card>
-        <div *ngIf="alive">
-          <mat-chip color="warn" selected="true">LIVE</mat-chip>
-        </div>
-        <div *ngIf="!alive">
-          <button mat-raised-button disabled>STALLED</button>
-        </div>
-        <div class="toolbar-content" fxLayout fxLayout.xs="column" fxLayoutAlign="center center" fxLayoutGap="10px"
-          fxLayoutGap.xs="0">
-          <div fxFlex="5%">
-            <mat-card-header>
-              <mat-card-subtitle>
-                <h5>SMS Card</h5>
-              </mat-card-subtitle>
-            </mat-card-header>
-          </div>
-          <div fxFlex="95%">
-            <div class="order-log">
-              <div>
-                <label matTooltip="Start time">
-                  Start
-                </label>
-                <span>&nbsp;</span>
-                <timepicker [(ngModel)]="startTime" [ngModelOptions]="{standalone: true}" [showMeridian]="true">
-                </timepicker>
-              </div>
-              <div>
-                <label matTooltip="Stop time">
-                  Stop
-                </label>
-                <span>&nbsp;</span>
-                <timepicker [(ngModel)]="stopTime" [ngModelOptions]="{standalone: true}" [showMeridian]="true">
-                </timepicker>
-              </div>
+        <div fxFlex="95%">
+          <div class="order-log">
+            <div>
+              <label matTooltip="Start time">
+                Start
+              </label>
+              <span>&nbsp;</span>
+              <timepicker [(ngModel)]="startTime" [ngModelOptions]="{standalone: true}" [showMeridian]="true">
+              </timepicker>
+            </div>
+            <div>
+              <label matTooltip="Stop time">
+                Stop
+              </label>
+              <span>&nbsp;</span>
+              <timepicker [(ngModel)]="stopTime" [ngModelOptions]="{standalone: true}" [showMeridian]="true">
+              </timepicker>
             </div>
           </div>
         </div>
-        <mat-card-actions>
-          <button mat-raised-button color="warn" (click)="resetStepper(stepper)">STOP</button>
-          <button mat-button color="warn" (click)="openDialog()">GO LIVE</button>
-          <button mat-button (click)="runTraining()">Train Model</button>
-          <mat-slide-toggle [formControl]="testing" (change)="setTest()">
-            Test Mode
-          </mat-slide-toggle>
-        </mat-card-actions>
-      </mat-card>
-    </mat-step>
-  </mat-horizontal-stepper>
+      </div>
+      <mat-card-actions>
+        <p-button (click)="runTraining()" class="button-separator">Train model</p-button>
+        <p-button (click)="resetStepper()" class="button-separator">Stop</p-button>
+        <p-button (click)="openDialog()" class="button-separator">Go live</p-button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
 </p-card>

@@ -7,13 +7,25 @@
 html body {
   display: block;
   margin: 0;
-  background: #191919;
-  color: #dedede;
+  background: #2a281c;
+  color: #f5f5f5;
+}
+
+mat-card.mat-card.mat-focus-indicator {
+  background: #a0b0b0;
+}
+
+.mat-form-field-label {
+  color: white;
 }
 
 button.nav-item {
   width:160px;
   text-align: left;
+}
+
+.button-separator {
+  margin-right: 1rem;
 }
 
 .mat-checkbox-layout {

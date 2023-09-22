@@ -371,7 +371,7 @@ export class PortfolioInfoComponent implements OnInit, OnDestroy {
     this.daytradeBuffer$
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        this.machineDaytradingService.findSingleTrade(null, null, cb);
+        this.machineDaytradingService.findSingleDaytrade(null, null, cb);
       }, () => {
         cb(null, null, null);
       });

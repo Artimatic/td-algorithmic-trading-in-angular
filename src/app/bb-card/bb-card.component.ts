@@ -147,8 +147,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
       command: () => {
         this.activeIndex = 1;
       }
-    }
-    ];
+    }];
   }
 
   ngOnChanges(changes: SimpleChanges) {

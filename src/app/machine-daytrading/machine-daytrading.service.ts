@@ -4,7 +4,7 @@ import * as moment from 'moment-timezone';
 import * as _ from 'lodash';
 
 import { BacktestService, MachineLearningService, PortfolioService } from '@shared/services';
-import { PrimaryList } from '../rh-table/backtest-stocks.constant';
+import Stocks, { PrimaryList } from '../rh-table/backtest-stocks.constant';
 import { GlobalSettingsService } from '../settings/global-settings.service';
 import { tap } from 'rxjs/operators';
 
@@ -18,6 +18,7 @@ export class MachineDaytradingService {
   public allocationPct = null;
   public allocationTotal = null;
   public lastBalance = null;
+  private counter = 0;
 
   constructor(private schedulerService: SchedulerService,
     private backtestService: BacktestService,
@@ -37,9 +38,10 @@ export class MachineDaytradingService {
     }, 'MachineDaytradingService_ml', null, false, 300000);
   }
 
-  findSingleTrade(stockSymbol, stopTime = null, mainCallback = (stock, quantity, price) => { }) {
+  findSingleDaytrade(stockSymbol, stopTime = null, mainCallback = (stock, quantity, price) => { }) {
     if (!stockSymbol) {
-      stockSymbol = this.getRandomStock();
+      stockSymbol = this.getNextStock();
+      console.log('Next stock to backtest is ', stockSymbol);
     }
     this.backtestService.getDaytradeRecommendation(stockSymbol, 0, 0, { minQuotes: 81 }, 'tiingo').subscribe(
       analysis => {
@@ -54,6 +56,7 @@ export class MachineDaytradingService {
               )
               .subscribe((data: any[]) => {
                 // if (data[0].nextOutput > 0.5 && data[0].correct / data[0].guesses > 0.5) {
+                  console.log('ml results for ', stockSymbol, data);
                 if (data[0].correct / data[0].guesses > 0.6 && data[0].guesses > 50) {
                   const cb = (quantity, price) => {
                     this.selectedStock = stockSymbol;
@@ -95,7 +98,7 @@ export class MachineDaytradingService {
   findTrade() {
     this.schedulerService.schedule(() => {
       if (!this.selectedStock) {
-        this.findSingleTrade(null, this.globalSettingsService.stopTime);
+        this.findSingleDaytrade(null, this.globalSettingsService.stopTime);
       }
     }, 'MachineDaytradingService_get_recommendation', this.globalSettingsService.stopTime);
   }
@@ -134,10 +137,18 @@ export class MachineDaytradingService {
     }
   }
 
+  getNextStock() {
+    this.counter++;
+    if (this.counter > PrimaryList.length - 1) {
+      this.counter = 0;
+      return this.getRandomStock();
+    }
+    return PrimaryList[this.counter].ticker;
+  }
 
   getRandomStock(): string {
-    const randomIdx = Math.floor(Math.random() * PrimaryList.length);
-    return PrimaryList[randomIdx].ticker;
+    const randomIdx = Math.floor(Math.random() * Stocks.length);
+    return Stocks[randomIdx].ticker;
   }
 
   resetStock() {

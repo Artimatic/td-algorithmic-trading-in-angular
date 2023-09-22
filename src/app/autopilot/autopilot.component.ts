@@ -1,8 +1,8 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Subject } from 'rxjs';
 import { TimerObservable } from 'rxjs-compat/observable/TimerObservable';
-import { finalize, takeUntil } from 'rxjs/operators';
-import * as moment from 'moment';
+import { finalize, takeUntil, take } from 'rxjs/operators';
+import * as moment from 'moment-timezone';
 import { AiPicksService, AuthenticationService, BacktestService, CartService, PortfolioInfoHolding, PortfolioService, ReportingService, ScoreKeeperService, TradeService } from '@shared/services';
 import { SchedulerService } from '@shared/service/scheduler.service';
 import { BacktestResponse } from '../rh-table';
@@ -119,7 +119,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   backtestBuffer$;
 
-  lastBacktestDate = null;
+  isBacktested = false;
+
+  isTradingStarted = false;
 
   constructor(
     private authenticationService: AuthenticationService,
@@ -169,12 +171,36 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         const startStopTime = this.getStartStopTime();
-        console.log('startStopTime ', startStopTime, new Date());
-        if (moment().isAfter(moment(startStopTime.startDateTime)) &&
+        // console.log('startStopTime ', (startStopTime.startDateTime),
+        //   (startStopTime.endDateTime),
+        //   moment().isAfter(moment(startStopTime.startDateTime)));
+        if (!this.isBacktested) {
+          this.developStrategy();
+          console.log('new interval ', this.interval, moment(startStopTime.startDateTime),
+            startStopTime.startDateTime.getUTCMilliseconds(),
+            moment(startStopTime.startDateTime).valueOf());
+          setTimeout(() => {
+            this.processSellList();
+            this.processBuyList();
+            this.processDaytradeList();
+          }, 120000);
+          this.isBacktested = true;
+        } else if (moment().isAfter(moment(startStopTime.startDateTime)) &&
           moment().isBefore(moment(startStopTime.endDateTime))) {
-          console.log('Executing orders');
+          if (this.isTradingStarted && (this.cartService.sellOrders.length ||
+            this.cartService.buyOrders.length || this.cartService.otherOrders.length)) {
+              console.log('Executing orders');
 
-          this.executeOrderList();
+              this.executeOrderList();
+          } else {
+            this.processSellList();
+            this.processBuyList();
+            this.processDaytradeList();
+            setTimeout(() => {
+              this.initializeOrders();
+              this.isTradingStarted = true;
+            }, this.defaultInterval);
+          }
         } else if (moment().isAfter(moment(startStopTime.endDateTime)) &&
           moment().isBefore(moment(startStopTime.endDateTime).add(2, 'minutes'))) {
           console.log('Stopping');
@@ -193,21 +219,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
             this.scoreKeeperService.resetTotal();
             this.resetCart();
           }
-        } else {
-          console.log('last backtest date ', this.lastBacktestDate,
-            moment(this.lastBacktestDate).tz('America/New_York').diff(moment().tz('America/New_York'), 'milliseconds'),
-            this.interval.valueOf());
-          if (!this.lastBacktestDate ||
-            Math.abs(moment(this.lastBacktestDate).tz('America/New_York').diff(moment().tz('America/New_York'), 'milliseconds')) > this.interval.valueOf()) {
-            this.developStrategy();
-            console.log('new interval ', this.interval, moment(startStopTime.startDateTime),
-              startStopTime.startDateTime.getUTCMilliseconds(),
-              moment(startStopTime.startDateTime).valueOf());
-            this.lastBacktestDate = moment();
-          }
-          this.processSellList();
-          this.processBuyList();
-          this.processDaytradeList();
         }
       });
   }
@@ -224,6 +235,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   resetCart() {
+    this.isBacktested = false;
+    this.isTradingStarted = false;
     this.buyList = [];
     this.dayTradeList = [];
     this.sellList = [];
@@ -291,6 +304,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   findDaytrades() {
+    console.log('finding day trade');
+    this.setLoading(true);
     this.backtestBuffer$.unsubscribe();
     this.backtestBuffer$ = new Subject();
     const cb = (stock, quantity, price) => {
@@ -301,13 +316,14 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       if (this.dayTradeList.length < 3) {
         this.schedulerService.schedule(() => {
           this.triggerBacktestNext();
-        }, `findTrades${stock}`, null, false, 18000);
+        }, `findTrades${stock}`, null, false, 180000);
       }
+      this.setLoading(false);
     };
     this.backtestBuffer$
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        this.machineDaytradingService.findSingleTrade(null, null, cb);
+        this.machineDaytradingService.findSingleDaytrade(null, null, cb);
       }, () => {
         cb(null, null, null);
       });
@@ -315,12 +331,16 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   findSwingtrades() {
+    console.log('finding swing trade');
     this.backtestBuffer$.unsubscribe();
     this.backtestBuffer$ = new Subject();
     const aiPicks = this.aiPicksService.getBuyList();
+    let counter = 0;
     if (aiPicks.length) {
-      while (this.aiPicksService.getBuyList().length > 0 && this.buyList.length < 1) {
+      while (this.aiPicksService.getBuyList().length > 0 && this.buyList.length < 1 && counter < 50) {
+        counter++;
         const prediction = this.aiPicksService.getBuyList().pop();
+        console.log('Popping prediction ', prediction);
         let predictionSum = 0;
         for (const p of prediction.value) {
           predictionSum += p.prediction;
@@ -343,26 +363,42 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           this.buyList.push(stockHolding);
         }
       }
-    }
-    const cb = (stock) => {
-      if (stock) {
-        this.runAi(stock);
-      }
-
+    } else {
       if (this.buyList.length < 1) {
-        this.schedulerService.schedule(() => {
-          this.triggerBacktestNext();
-        }, `findTrades${stock}`, null, false, 18000);
+        console.log('listening for ml results');
+        this.aiPicksService.mlBuyResults.pipe(take(1)).subscribe(latestMlResult => {
+          console.log('Received ml buy results', latestMlResult);
+          //const lastMlResult = JSON.parse(sessionStorage.getItem('profitLoss'));
+          sessionStorage.setItem('lastMlResult', JSON.stringify(latestMlResult));
+        });
+        this.aiPicksService.mlNeutralResults.pipe(take(1)).subscribe(latestMlResult => {
+          console.log('Received neutral results', latestMlResult);
+          this.schedulerService.schedule(() => {
+            this.triggerBacktestNext();
+          }, `findTrades`, null, false, 60000);
+        });
       }
-    };
-    this.backtestBuffer$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.machineDaytradingService.findSingleTrade(null, null, cb);
-      }, () => {
-        cb(null);
-      });
-    this.triggerBacktestNext();
+      const cb = (stock) => {
+        if (stock) {
+          console.log('run ai ', stock);
+          this.runAi(stock);
+        } else {
+          this.schedulerService.schedule(() => {
+            this.triggerBacktestNext();
+          }, `findTrades${stock}`, null, false, 60000);
+        }
+        this.setLoading(false);
+      };
+      this.backtestBuffer$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => {
+          this.setLoading(true);
+          this.machineDaytradingService.findSingleDaytrade(null, null, cb);
+        }, () => {
+          cb(null);
+        });
+      this.triggerBacktestNext();
+    }
   }
 
   findDaytradeShort() {
@@ -425,6 +461,20 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     }
   }
 
+  initializeOrders() {
+    const concat = this.cartService.sellOrders.concat(this.cartService.buyOrders);
+    const orders = concat.concat(this.cartService.otherOrders);
+    orders.forEach((order: SmartOrder) => {
+      order.stopped = false;
+      const queueItem: AlgoQueueItem = {
+        symbol: order.holding.symbol,
+        reset: true
+      };
+
+      this.tradeService.algoQueue.next(queueItem);
+    });
+  }
+
   executeOrderList() {
     const concat = this.cartService.sellOrders.concat(this.cartService.buyOrders);
     const orders = concat.concat(this.cartService.otherOrders);
@@ -454,6 +504,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   getStartStopTime() {
     const endTime = '15:50';
     const currentMoment = moment().tz('America/New_York').set({ hour: 9, minute: 50 });
+    const currentEndMoment = moment().tz('America/New_York').set({ hour: 15, minute: 50 });
     const currentDay = currentMoment.day();
     let startDate;
 
@@ -464,10 +515,10 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     } else if (currentDay === 0) {
       startDate = currentMoment.subtract({ day: 2 });
     } else {
-      if (moment().isAfter(currentMoment)) {
-        startDate = moment().tz('America/New_York').set({ hour: 9, minute: 50 }).add(1, 'days');
-      } else {
+      if (moment().isAfter(currentMoment) && moment().isBefore(currentEndMoment)) {
         startDate = currentMoment;
+      } else {
+        startDate = moment().tz('America/New_York').set({ hour: 9, minute: 50 }).add(1, 'days');
       }
     }
 
@@ -482,6 +533,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   setLoading(value = true) {
     this.isLoading = value;
   }
+
   processCurrentPositions() {
     const holdings = [];
     const currentDate = moment().format('YYYY-MM-DD');
@@ -595,7 +647,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     holdings.forEach(val => {
       const percentLoss = divide(val.pl, val.netLiq);
       if (percentLoss < -0.05) {
-        this.addSell(val);
+        this.portfolioSell(val);
       } else if (percentLoss > 0) {
         this.buyList.push(val);
       }

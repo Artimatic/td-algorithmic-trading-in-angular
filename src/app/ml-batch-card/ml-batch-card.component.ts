@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { SmartOrder } from '../shared/models/smart-order';
 import { Subscription, Subject } from 'rxjs';
 import { FormGroup, FormBuilder, Validators, FormControl } from '@angular/forms';
@@ -26,8 +26,6 @@ export interface StockAllocation {
   styleUrls: ['./ml-batch-card.component.css']
 })
 export class MlBatchCardComponent implements OnInit, OnDestroy {
-  @ViewChild('stepper', { static: false }) stepper;
-
   sub: Subscription;
 
   alive: boolean;
@@ -53,6 +51,19 @@ export class MlBatchCardComponent implements OnInit, OnDestroy {
   testing = new FormControl();
 
   stockList: StockAllocation[];
+  activeIndex = 0;
+  stepMenuItems = [{
+    label: 'Edit',
+    command: () => {
+      this.activeIndex = 0;
+    }
+  },
+  {
+    label: 'Submit',
+    command: () => {
+      this.activeIndex = 1;
+    }
+  }];
 
   private bufferSubject: Subject<void>;
   private callChainSub: Subscription;
@@ -340,8 +351,8 @@ export class MlBatchCardComponent implements OnInit, OnDestroy {
     }
   }
 
-  resetStepper(stepper) {
-    stepper.selectedIndex = 0;
+  resetStepper() {
+    this.activeIndex = 0;
     this.stop();
   }
 

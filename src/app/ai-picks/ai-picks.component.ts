@@ -77,12 +77,17 @@ export class AiPicksComponent implements OnInit, OnDestroy {
           }, 'aipicks', 300000);
         } else {
           const prediction = { algorithm: range, prediction: activation.nextOutput, accuracy: accuracy };
-          if (prediction.prediction > 0.7 || prediction.prediction < 0.3) {
+          console.log('activate prediction', prediction);
+          if (prediction.prediction > 0.5 || prediction.prediction < 0.3) {
             if (isBuy) {
               this.addBuyPick(symbol, prediction);
             } else {
               this.addSellPick(symbol, prediction);
             }
+          } else {
+            const item = this.createListObject(symbol, prediction);
+
+            this.aiPicksService.mlNeutralResults.next(item);
           }
 
           this.schedulerService.schedule(() => {
@@ -166,6 +171,7 @@ export class AiPicksComponent implements OnInit, OnDestroy {
 
   addBuyPick(symbol: string, predictionData: AiPicksPredictionData) {
     const item = this.createListObject(symbol, predictionData);
+    sessionStorage.setItem('lastBuyPick', JSON.stringify(item));
 
     this.aiPicksService.mlBuyResults.next(item);
 
