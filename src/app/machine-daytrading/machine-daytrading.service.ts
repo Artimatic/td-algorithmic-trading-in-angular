@@ -4,7 +4,7 @@ import * as moment from 'moment-timezone';
 import * as _ from 'lodash';
 
 import { BacktestService, MachineLearningService, PortfolioService } from '@shared/services';
-import Stocks, { PrimaryList } from '../rh-table/backtest-stocks.constant';
+import { PrimaryList } from '../rh-table/backtest-stocks.constant';
 import { GlobalSettingsService } from '../settings/global-settings.service';
 import { tap } from 'rxjs/operators';
 

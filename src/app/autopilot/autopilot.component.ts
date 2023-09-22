@@ -87,7 +87,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   isLoading = true;
   defaultInterval = 70800;
   interval = 70800;
-  oneDayInterval
+  oneDayInterval;
   timer;
   alive = false;
   destroy$ = new Subject();
@@ -194,8 +194,11 @@ export class AutopilotComponent implements OnInit, OnDestroy {
             this.resetCart();
           }
         } else {
-          console.log('last backtest date ', this.lastBacktestDate, moment(this.lastBacktestDate).tz('America/New_York').diff(moment().tz('America/New_York'), 'milliseconds'), this.interval.valueOf());
-          if (!this.lastBacktestDate || Math.abs(moment(this.lastBacktestDate).tz('America/New_York').diff(moment().tz('America/New_York'), 'milliseconds')) > this.interval.valueOf()) {
+          console.log('last backtest date ', this.lastBacktestDate,
+            moment(this.lastBacktestDate).tz('America/New_York').diff(moment().tz('America/New_York'), 'milliseconds'),
+            this.interval.valueOf());
+          if (!this.lastBacktestDate ||
+            Math.abs(moment(this.lastBacktestDate).tz('America/New_York').diff(moment().tz('America/New_York'), 'milliseconds')) > this.interval.valueOf()) {
             this.developStrategy();
             console.log('new interval ', this.interval, moment(startStopTime.startDateTime), startStopTime.startDateTime.getUTCMilliseconds(), moment(startStopTime.startDateTime).valueOf());
             this.lastBacktestDate = moment();
@@ -314,14 +317,14 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.backtestBuffer$ = new Subject();
     const aiPicks = this.aiPicksService.getBuyList();
     if (aiPicks.length) {
-      while(this.aiPicksService.getBuyList().length > 0 && this.buyList.length < 1) {
+      while (this.aiPicksService.getBuyList().length > 0 && this.buyList.length < 1) {
         const prediction = this.aiPicksService.getBuyList().pop();
         let predictionSum = 0;
-        for(let p of prediction.value) {
+        for (const p of prediction.value) {
           predictionSum += p.prediction;
         }
-  
-        if (predictionSum/prediction.value.length > 0.6) {
+
+        if (predictionSum / prediction.value.length > 0.6) {
           const stockHolding = {
             name: prediction.label,
             pl: 0,
@@ -335,7 +338,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
             sellConfidence: 0,
             prediction: null
           };
-          this.buyList.push(stockHolding)
+          this.buyList.push(stockHolding);
         }
       }
     }
@@ -413,7 +416,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   addSell(holding: PortfolioInfoHolding) {
-    if (this.sellList.findIndex(holding => holding.name === holding.name) === -1) {
+    if (this.sellList.findIndex(s => s.name === holding.name) === -1) {
       console.log('add sell ', holding, this.sellList);
 
       this.sellList.push(holding);
@@ -471,7 +474,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     return {
       startDateTime,
       endDateTime
-    }
+    };
   }
 
   setLoading(value = true) {
@@ -481,7 +484,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     const holdings = [];
     const currentDate = moment().format('YYYY-MM-DD');
     const startDate = moment().subtract(365, 'days').format('YYYY-MM-DD');
-    this.setLoading(true)
+    this.setLoading(true);
 
     this.authenticationService.checkCredentials(this.authenticationService?.selectedTdaAccount?.accountId)
       .subscribe(() => {
@@ -577,7 +580,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     if (holding.recommendation.toLowerCase() === 'buy') {
       if (holding.buyConfidence > 0) {
         console.log('Buying ', holding.name);
-        //this.portfolioBuy(holding);
         this.buyList.push(holding);
       }
     } else if (holding.recommendation.toLowerCase() === 'sell') {
@@ -595,7 +597,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       } else if (percentLoss > 0) {
         this.buyList.push(val);
       }
-      this.scoreKeeperService.addProfitLoss(val.name, val.pl)
+      this.scoreKeeperService.addProfitLoss(val.name, val.pl);
     });
   }
 
@@ -622,7 +624,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   getAllocationPct(totalAllocationPct: number = 0.1, numberOfOrders: number) {
-    return round(divide(totalAllocationPct, numberOfOrders), 2);;
+    return round(divide(totalAllocationPct, numberOfOrders), 2);
   }
 
   portfolioSell(holding: PortfolioInfoHolding) {
@@ -695,7 +697,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   cleanUp() {
-    this.resetCart()
+    this.resetCart();
     this.destroy$.next();
     this.destroy$.complete();
     this.backtestBuffer$.unsubscribe();
