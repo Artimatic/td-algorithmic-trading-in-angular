@@ -335,10 +335,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.backtestBuffer$.unsubscribe();
     this.backtestBuffer$ = new Subject();
     const aiPicks = this.aiPicksService.getBuyList();
-    let counter = 0;
+    let noOpportunityCounter = 0;
     if (aiPicks.length) {
-      while (this.aiPicksService.getBuyList().length > 0 && this.buyList.length < 1 && counter < 50) {
-        counter++;
+      while (this.aiPicksService.getBuyList().length > 0 && this.buyList.length < 1) {
         const prediction = this.aiPicksService.getBuyList().pop();
         console.log('Popping prediction ', prediction);
         let predictionSum = 0;
@@ -375,14 +374,17 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           sessionStorage.setItem('lastMlResult', JSON.stringify(latestMlResult));
         });
         this.aiPicksService.mlNeutralResults.pipe(
-          take(100),
+          take(501),
           takeUntil(this.destroy$)
-          ).subscribe(latestMlResult => {
+        ).subscribe(latestMlResult => {
+          noOpportunityCounter++;
+          if (noOpportunityCounter > 500) {
+            this.changeStrategy();
+          }
           console.log('Received neutral results', latestMlResult);
-          const timerInterval = counter > PrimaryList.length ? counter * 1000 : 60000;
+          const timerInterval = noOpportunityCounter > PrimaryList.length ? noOpportunityCounter * 200 : 60000;
           this.schedulerService.schedule(() => {
             this.triggerBacktestNext();
-            counter++;
           }, `findTrades`, null, false, timerInterval);
         });
       }
@@ -401,7 +403,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe(() => {
           this.setLoading(true);
-          this.machineDaytradingService.findSingleDaytrade(null, null, cb);
+          const potentialStock = (noOpportunityCounter > PrimaryList.length) ? 
+            this.machineDaytradingService.getRandomStock() : null;
+          this.machineDaytradingService.findSingleDaytrade(potentialStock, null, cb);
         }, () => {
           cb(null);
         });
