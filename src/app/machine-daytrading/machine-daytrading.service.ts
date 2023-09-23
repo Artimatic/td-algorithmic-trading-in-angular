@@ -41,7 +41,6 @@ export class MachineDaytradingService {
   findSingleDaytrade(stockSymbol, stopTime = null, mainCallback = (stock, quantity, price) => { }) {
     if (!stockSymbol) {
       stockSymbol = this.getNextStock();
-      console.log('Next stock to backtest is ', stockSymbol);
     }
     this.backtestService.getDaytradeRecommendation(stockSymbol, 0, 0, { minQuotes: 81 }, 'tiingo').subscribe(
       analysis => {

@@ -77,19 +77,15 @@ export class AiPicksComponent implements OnInit, OnDestroy {
           }, 'aipicks', 300000);
         } else {
           const prediction = { algorithm: range, prediction: activation.nextOutput, accuracy: accuracy };
-          console.log('activate prediction', prediction);
+          console.log('activate prediction', symbol, prediction);
+          const item = this.createListObject(symbol, prediction);
+          this.aiPicksService.mlNeutralResults.next(item);
           if (prediction.prediction > 0.5 || prediction.prediction < 0.3) {
             if (isBuy) {
               this.addBuyPick(symbol, prediction);
             } else {
               this.addSellPick(symbol, prediction);
-              const item = this.createListObject(symbol, prediction);
-              this.aiPicksService.mlNeutralResults.next(item);
             }
-          } else {
-            const item = this.createListObject(symbol, prediction);
-
-            this.aiPicksService.mlNeutralResults.next(item);
           }
 
           this.schedulerService.schedule(() => {
