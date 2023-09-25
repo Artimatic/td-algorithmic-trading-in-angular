@@ -201,7 +201,6 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
       symbol: [defaultSymbol, Validators.required],
       side: [this.defaultSide.value || defaultSide, Validators.required]
     });
-    console.log('side1', this.addOrderFormGroup.value.side, this.defaultSide.value);
   }
 
   onShow() {
@@ -285,7 +284,6 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
   }
 
   addItem() {
-    console.log(this.selectedDefaultOrders);
     this.selectedDefaultOrders.forEach(tableRow => {
       this.addOrder(tableRow.label, tableRow.allocation, this.cashBalance, tableRow.side);
     });

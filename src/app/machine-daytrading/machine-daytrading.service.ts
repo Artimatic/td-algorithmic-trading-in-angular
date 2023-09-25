@@ -26,16 +26,14 @@ export class MachineDaytradingService {
     private portfolioService: PortfolioService,
     private machineLearningService: MachineLearningService) { }
 
-  trainStock(stock: string) {
-    this.schedulerService.schedule(() => {
-      this.machineLearningService
-        .trainDaytrade(stock,
-          moment().add({ days: 1 }).format('YYYY-MM-DD'),
-          moment().subtract({ days: 1 }).format('YYYY-MM-DD'),
-          1,
-          this.globalSettingsService.daytradeAlgo
-        ).subscribe();
-    }, 'MachineDaytradingService_ml', null, false, 300000);
+  async trainStock(stock: string, startDate: string, endDate: string) {
+    return this.machineLearningService
+      .trainDaytrade(stock,
+        endDate,
+        startDate,
+        1,
+        this.globalSettingsService.daytradeAlgo
+      ).toPromise();
   }
 
   findSingleDaytrade(stockSymbol, stopTime = null, mainCallback = (stock, quantity, price) => { }) {
@@ -55,7 +53,7 @@ export class MachineDaytradingService {
               )
               .subscribe((data: any[]) => {
                 // if (data[0].nextOutput > 0.5 && data[0].correct / data[0].guesses > 0.5) {
-                  console.log('ml results for ', stockSymbol, data);
+                console.log('ml results for ', stockSymbol, data);
                 if (data[0].correct / data[0].guesses > 0.6 && data[0].guesses > 50) {
                   const cb = (quantity, price) => {
                     this.selectedStock = stockSymbol;
@@ -136,10 +134,12 @@ export class MachineDaytradingService {
     }
   }
 
-  getNextStock() {
+  getNextStock(resetCounter = false) {
+    if (resetCounter) {
+      this.counter = 0;
+    }
     this.counter++;
     if (this.counter > PrimaryList.length - 1) {
-      this.counter = 0;
       return this.getRandomStock();
     }
     return PrimaryList[this.counter].ticker;

@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { Subscription } from 'rxjs/Subscription';
 import { TimerObservable } from 'rxjs/observable/TimerObservable';
 import { SmartOrder } from '../shared/models/smart-order';
@@ -15,7 +15,7 @@ import { OrderPref } from '../shared/enums/order-pref.enum';
 import * as _ from 'lodash';
 import { Holding } from '../shared/models';
 import { GlobalSettingsService } from '../settings/global-settings.service';
-import { take, takeWhile } from 'rxjs/operators';
+import { takeWhile } from 'rxjs/operators';
 
 interface BuyAt3Algo {
   purchaseSent: boolean;

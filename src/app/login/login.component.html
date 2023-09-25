@@ -35,16 +35,13 @@
         <p-listbox [options]="authenticationService.tdaAccounts" [(ngModel)]="selectedItem"
           [ngModelOptions]="{standalone: true}" [listStyle]="{'max-height':'250px', 'width':'250px'}">
           <ng-template let-account pTemplate="item">
+            <div class="action-icon">
+              <div class="action-button">
+                <p-button pRipple class="p-button-danger" icon="pi pi-times" (click)="removeAccount(account)" class="p-button-rounded p-button-outlined p-button-sm"></p-button>
+              </div>
+            </div>
             <div class="item-container" (click)="selectAccount(account)">
               <div class="item-title">{{account.accountId}}</div>
-              <div class="action-icon">
-                <div class="action-button">
-                  <p-button icon="pi pi-times" (click)="removeAccount(account)" class="p-button-rounded p-button-outlined p-button-sm"></p-button>
-                </div>
-                <div class="action-button">
-                  <p-button icon="pi pi-check" (click)="selectAccount(account)" class="p-button-rounded p-button-outlined p-button-sm"></p-button>
-                </div>
-              </div>
             </div>
           </ng-template>
           <p-footer>
