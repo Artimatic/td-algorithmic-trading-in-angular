@@ -92,8 +92,9 @@ export class AiPicksComponent implements OnInit, OnDestroy {
         }
         this.isLoading = false;
       }, error => {
+        this.aiPicksService.mlNeutralResults.next(null);
         this.counter--;
-        console.log('error: ', error);
+        console.log('error on activation ', error);
         this.isLoading = false;
       });
   }

@@ -2009,11 +2009,14 @@ export const primaryList = [
 
 export const bearList = [
   'SH',
-  'QID',
   'SQQQ',
+  'TBF',
+  'QID',
   'RWM',
+  'SARK',
   'FAZ',
   'SOXS',
+  'SPXS'
 ];
 
 const Stocks: AlgoParam[] = [];
