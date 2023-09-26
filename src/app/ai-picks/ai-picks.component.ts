@@ -80,12 +80,10 @@ export class AiPicksComponent implements OnInit, OnDestroy {
           console.log('activate prediction', symbol, prediction);
           const item = this.createListObject(symbol, prediction);
           this.aiPicksService.mlNeutralResults.next(item);
-          if (prediction.prediction > 0.5 || prediction.prediction < 0.3) {
-            if (isBuy) {
-              this.addBuyPick(symbol, prediction);
-            } else {
-              this.addSellPick(symbol, prediction);
-            }
+          if (prediction.prediction > 0.5) {
+            this.addBuyPick(symbol, prediction);
+          } else {
+            this.addSellPick(symbol, prediction);
           }
 
           this.schedulerService.schedule(() => {

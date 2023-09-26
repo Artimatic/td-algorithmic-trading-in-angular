@@ -314,11 +314,14 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   isBuyPrediction(prediction: { label: string, value: AiPicksPredictionData[] }) {
     let predictionSum = 0;
+    let predictionAccuracySum = 0;
     for (const p of prediction.value) {
       predictionSum += p.prediction;
+      predictionAccuracySum += p.accuracy;
     }
 
-    if (predictionSum / prediction.value.length > 0.7) {
+    if ((predictionAccuracySum / prediction.value.length) > 0.7 &&
+      (predictionSum / prediction.value.length > 0.7)) {
       return true;
     }
     return false;
