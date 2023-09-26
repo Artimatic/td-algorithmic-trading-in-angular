@@ -134,15 +134,16 @@ export class MachineDaytradingService {
     }
   }
 
-  getNextStock(resetCounter = false) {
-    if (resetCounter) {
-      this.counter = 0;
-    }
+  getNextStock() {
     this.counter++;
     if (this.counter > PrimaryList.length - 1) {
       return this.getRandomStock();
     }
     return PrimaryList[this.counter].ticker;
+  }
+
+  resetStockCounter() {
+    this.counter = 0;
   }
 
   getRandomStock(): string {
