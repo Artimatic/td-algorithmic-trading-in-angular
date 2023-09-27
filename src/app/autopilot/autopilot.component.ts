@@ -106,7 +106,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     Strategy.Short
   ];
 
-  riskCounter = 1;
+  riskCounter = 2;
 
   riskToleranceList = [
     RiskTolerance.None,
@@ -240,6 +240,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.buyList = [];
     this.dayTradeList = [];
     this.sellList = [];
+    this.cartService.deleteCart();
   }
 
   decreaseRiskTolerance() {
@@ -274,7 +275,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     console.log('developing strategy');
 
     const lastProfitLoss = JSON.parse(sessionStorage.getItem('profitLoss'));
-    console.log('lastProfitLoss sessionStorage ', lastProfitLoss);
     if (lastProfitLoss && lastProfitLoss.profit) {
       if (lastProfitLoss.profit < 0) {
         this.decreaseRiskTolerance();
@@ -282,9 +282,14 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         this.increaseRiskTolerance();
       }
     }
+    console.log('lastProfitLoss sessionStorage ', lastProfitLoss, this.riskToleranceList[this.riskCounter]);
 
     this.processCurrentPositions();
 
+    sessionStorage.setItem('lastStrategy', JSON.stringify(this.strategyList[this.strategyCounter]));
+  }
+
+  async getNewTrades() {
     switch (this.strategyList[this.strategyCounter]) {
       case Strategy.Daytrade: {
         await this.findDaytrades();
@@ -311,7 +316,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         break;
       }
     }
-    sessionStorage.setItem('lastStrategy', JSON.stringify(this.strategyList[this.strategyCounter]));
   }
 
   isBuyPrediction(prediction: { label: string, value: AiPicksPredictionData[] }) {
@@ -345,8 +349,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       console.log('training daytrade results ', trainingResults);
       if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 50) {
         console.log('adding day trade', stock);
-        this.dayTradeList.push(stock);
-        this.portfolioDaytrade(stock, this.riskToleranceList[this.riskCounter]);
+        this.addDaytrade(stock);
+        // this.portfolioDaytrade(stock, this.riskToleranceList[this.riskCounter]);
         if (this.dayTradeList.length > 2) {
           break;
         }
@@ -363,6 +367,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.aiPicksService.mlNeutralResults.pipe(
       take(noOpportunityCounter),
       finalize(() => {
+        this.setLoading(false);
         this.processBuyList();
       })
     ).subscribe(latestMlResult => {
@@ -381,10 +386,10 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           sellConfidence: 0,
           prediction: null
         };
-        console.log('Adding buy ', stockHolding)
- ;       // const lastMlResult = JSON.parse(sessionStorage.getItem('profitLoss'));
+        console.log('Adding buy ', stockHolding);
+        // const lastMlResult = JSON.parse(sessionStorage.getItem('profitLoss'));
         sessionStorage.setItem('lastMlResult', JSON.stringify(latestMlResult));
-        this.buyList.push(stockHolding);
+        this.addBuy(stockHolding);
       }
       this.schedulerService.schedule(() => {
         this.triggerBacktestNext();
@@ -418,13 +423,14 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       console.log('training daytrade results ', trainingResults);
       if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 50) {
         console.log('adding day trade', stock);
-        this.dayTradeList.push(stock);
+        this.addDaytrade(stock);
         this.portfolioDaytrade(stock, this.riskToleranceList[this.riskCounter]);
         if (this.dayTradeList.length > 2) {
           break;
         }
       }
     }
+    this.setLoading(false);
   }
 
   findShort() {
@@ -437,6 +443,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       take(BearList.length),
       finalize(() => {
         this.processBuyList();
+        this.setLoading(false);
       })
     ).subscribe(latestMlResult => {
       console.log('Received neutral results', latestMlResult);
@@ -455,9 +462,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           prediction: null
         };
         console.log('Adding buy ', stockHolding)
- ;       // const lastMlResult = JSON.parse(sessionStorage.getItem('profitLoss'));
+          ;       // const lastMlResult = JSON.parse(sessionStorage.getItem('profitLoss'));
         sessionStorage.setItem('lastMlResult', JSON.stringify(latestMlResult));
-        this.buyList.push(stockHolding);
+        this.addBuy(stockHolding);
       }
       this.schedulerService.schedule(() => {
         this.triggerBacktestNext();
@@ -481,29 +488,29 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.backtestBuffer$.next();
   }
 
-  processBuyList() {
-    this.buyList.forEach(buyHolding => {
-      this.portfolioBuy(buyHolding, round(this.riskToleranceList[this.riskCounter] / this.buyList.length, 2));
-    });
+  async processBuyList() {
+    for (const buyHolding of this.buyList) {
+      await this.portfolioBuy(buyHolding, round(this.riskToleranceList[this.riskCounter] / this.buyList.length, 2));
+    }
   }
 
-  processDaytradeList() {
-    this.dayTradeList.forEach(stock => {
-      this.portfolioDaytrade(stock, round(this.riskToleranceList[this.riskCounter] / this.dayTradeList.length, 2));
-    });
+  async processDaytradeList() {
+    for (const stock of this.dayTradeList) {
+      await this.portfolioDaytrade(stock, round(this.riskToleranceList[this.riskCounter] / this.dayTradeList.length, 2));
+    }
   }
 
-  processSellList() {
-    this.sellList.forEach(holding => {
-      this.portfolioSell(holding);
-    });
+  async processSellList() {
+    for (const holding of this.sellList) {
+      await this.portfolioSell(holding);
+    }
   }
 
-  processLists() {
+  async processLists() {
     console.log('processing list ', this.buyList, this.sellList, this.dayTradeList);
-    this.processSellList();
-    this.processBuyList();
-    this.processDaytradeList();
+    await this.processSellList();
+    await this.processBuyList();
+    await this.processDaytradeList();
   }
 
   addSell(holding: PortfolioInfoHolding) {
@@ -511,6 +518,26 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       console.log('add sell ', holding, this.sellList);
 
       this.sellList.push(holding);
+    }
+  }
+
+  addBuy(holding: PortfolioInfoHolding) {
+    if (this.buyList.length < 10) {
+      if (this.buyList.findIndex(s => s.name === holding.name) === -1) {
+        console.log('add buy ', holding, this.sellList);
+
+        this.buyList.push(holding);
+      }
+    }
+  }
+
+  addDaytrade(stock: string) {
+    if (this.dayTradeList.length < 10) {
+      if (this.dayTradeList.findIndex(s => s === stock) === -1) {
+        console.log('add daytrade ', stock, this.sellList);
+
+        this.dayTradeList.push(stock);
+      }
     }
   }
 
@@ -599,63 +626,63 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     return moment.tz(lastTradeDate.format(), 'America/New_York');
   }
 
-  setLoading(value = true) {
+  setLoading(value: boolean) {
     this.isLoading = value;
   }
 
-  processCurrentPositions() {
+  async processCurrentPositions() {
+    await this.authenticationService.checkCredentials(this.authenticationService?.selectedTdaAccount?.accountId).toPromise();
     const holdings = [];
     const currentDate = moment().format('YYYY-MM-DD');
     const startDate = moment().subtract(365, 'days').format('YYYY-MM-DD');
     this.setLoading(true);
-    const balance: any = this.portfolioService.getTdBalance().toPromise();
-    const totalValue = balance.liquidationValue;
-    this.authenticationService.checkCredentials(this.authenticationService?.selectedTdaAccount?.accountId)
-      .subscribe(() => {
-        this.portfolioService.getTdPortfolio()
-          .pipe(
-            finalize(() => this.setLoading(false))
-          )
-          .subscribe(data => {
-            if (data) {
-              data.forEach((holding) => {
-                const stock = holding.instrument.symbol;
-                let pl;
-                if (holding.instrument.assetType.toLowerCase() === 'option') {
-                  pl = holding.marketValue - (holding.averagePrice * holding.longQuantity) * 100;
-                } else {
-                  pl = holding.marketValue - (holding.averagePrice * holding.longQuantity);
-                }
-                holdings.push({
-                  name: stock,
-                  pl,
-                  netLiq: holding.marketValue,
-                  shares: holding.longQuantity,
-                  alloc: (holding.averagePrice * holding.longQuantity) / totalValue,
-                  recommendation: 'None',
-                  buyReasons: '',
-                  sellReasons: '',
-                  buyConfidence: 0,
-                  sellConfidence: 0,
-                  prediction: null
-                });
+    const balance: any = await this.portfolioService.getTdBalance().toPromise();
+    const totalValue = balance.cashBalance;
 
-                if (holding.instrument.assetType.toLowerCase() === 'equity') {
-                  this.getTechnicalIndicators(holding.instrument.symbol, startDate, currentDate, holdings)
-                    .subscribe((indicators) => {
-                      const foundIdx = holdings.findIndex((value) => {
-                        return value.name === stock;
-                      });
-                      holdings[foundIdx].recommendation = indicators.recommendation.recommendation;
-                      const reasons = this.getRecommendationReason(indicators.recommendation);
-                      holdings[foundIdx].buyReasons = reasons.buyReasons;
-                      holdings[foundIdx].sellReasons = reasons.sellReasons;
-                    });
-                }
-              });
-            }
+    if (totalValue > 0) {
+      const data = await this.portfolioService.getTdPortfolio()
+        .pipe(
+          finalize(() => this.setLoading(false))
+        ).toPromise();
+
+      if (data) {
+        for (const holding of data) {
+          const stock = holding.instrument.symbol;
+          let pl;
+          if (holding.instrument.assetType.toLowerCase() === 'option') {
+            pl = holding.marketValue - (holding.averagePrice * holding.longQuantity) * 100;
+          } else {
+            pl = holding.marketValue - (holding.averagePrice * holding.longQuantity);
+          }
+          holdings.push({
+            name: stock,
+            pl,
+            netLiq: holding.marketValue,
+            shares: holding.longQuantity,
+            alloc: (holding.averagePrice * holding.longQuantity) / totalValue,
+            recommendation: 'None',
+            buyReasons: '',
+            sellReasons: '',
+            buyConfidence: 0,
+            sellConfidence: 0,
+            prediction: null
           });
-      });
+
+          if (holding.instrument.assetType.toLowerCase() === 'equity') {
+            const indicators = await this.getTechnicalIndicators(holding.instrument.symbol, startDate, currentDate, holdings).toPromise();
+            const foundIdx = holdings.findIndex((value) => {
+              return value.name === stock;
+            });
+            holdings[foundIdx].recommendation = indicators.recommendation.recommendation;
+            const reasons = this.getRecommendationReason(indicators.recommendation);
+            holdings[foundIdx].buyReasons = reasons.buyReasons;
+            holdings[foundIdx].sellReasons = reasons.sellReasons;
+          }
+        }
+        this.checkIfTooManyHoldings(holdings);
+      }
+      this.getNewTrades();
+    }
   }
 
   getTechnicalIndicators(stock: string, startDate: string, currentDate: string, holdings) {
@@ -699,7 +726,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     if (holding.recommendation.toLowerCase() === 'buy') {
       if (holding.buyConfidence > 0) {
         console.log('Buying ', holding.name);
-        this.buyList.push(holding);
+        this.addBuy(holding);
       }
     } else if (holding.recommendation.toLowerCase() === 'sell') {
       if (holding.sellConfidence > 0) {
@@ -714,10 +741,24 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       if (percentLoss < -0.051) {
         this.portfolioSell(val);
       } else if (percentLoss > 0) {
-        this.buyList.push(val);
+        this.addBuy(val);
       }
-      this.scoreKeeperService.addProfitLoss(val.name, val.pl);
+      if (!this.scoreKeeperService.profitLossHash[val.name]) {
+        this.scoreKeeperService.addProfitLoss(val.name, val.pl);
+      }
     });
+  }
+
+  checkIfTooManyHoldings(currentHoldings: any[]) {
+    if (currentHoldings.length > 10) {
+      currentHoldings.sort((a, b) => a.pl - b.pl);
+      const toBeSold = currentHoldings.slice(currentHoldings.length - 10, currentHoldings.length);
+      console.log('too many holdings. selling', toBeSold, 'from', currentHoldings);
+
+      if (this.strategyList[this.strategyCounter] === Strategy.Swingtrade) {
+        this.changeStrategy();
+      }
+    }
   }
 
   buildOrder(symbol: string, quantity = 0, price = 0,
@@ -748,40 +789,35 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     return round(divide(totalAllocationPct, numberOfOrders), 2);
   }
 
-  portfolioSell(holding: PortfolioInfoHolding) {
-    this.portfolioService.getPrice(holding.name).subscribe(price => {
-      const orderSizePct = (this.riskToleranceList[this.riskCounter] > 0.5) ? 0.3 : 1;
-      const order = this.buildOrder(holding.name, holding.shares, price, 'Sell',
-        orderSizePct, null, null, null);
-      this.cartService.addToCart(order);
-    });
+  async portfolioSell(holding: PortfolioInfoHolding) {
+    const price = await this.portfolioService.getPrice(holding.name).toPromise();
+    const orderSizePct = (this.riskToleranceList[this.riskCounter] > 0.5) ? 0.3 : 1;
+    const order = this.buildOrder(holding.name, holding.shares, price, 'Sell',
+      orderSizePct, null, null, null);
+    this.cartService.addToCart(order);
   }
 
-  portfolioBuy(holding: PortfolioInfoHolding, allocation: number) {
-    this.portfolioService.getPrice(holding.name).subscribe((price) => {
-      this.portfolioService.getTdBalance().subscribe((data) => {
-        const quantity = this.getQuantity(price, allocation, data.cashBalance);
-        const orderSizePct = (this.riskToleranceList[this.riskCounter] > 0.5) ? 1 : 0.3;
-        const riskTolerance = this.riskToleranceList[this.riskCounter] / 100;
-        const intraDayTolerance = riskTolerance < 0.003 ? 0.005 : round(riskTolerance, 4);
-        const order = this.buildOrder(holding.name, quantity, price, 'Buy',
-          orderSizePct, intraDayTolerance * -1, round(intraDayTolerance * 2, 4), intraDayTolerance * -1);
-        this.cartService.addToCart(order);
-      });
-    });
+  async portfolioBuy(holding: PortfolioInfoHolding, allocation: number) {
+    const price = await this.portfolioService.getPrice(holding.name).toPromise();
+    const data = await this.portfolioService.getTdBalance().toPromise();
+    const quantity = this.getQuantity(price, allocation, data.cashBalance);
+    const orderSizePct = (this.riskToleranceList[this.riskCounter] > 0.5) ? 1 : 0.3;
+    const riskTolerance = this.riskToleranceList[this.riskCounter] / 100;
+    const intraDayTolerance = riskTolerance < 0.003 ? 0.005 : round(riskTolerance, 4);
+    const order = this.buildOrder(holding.name, quantity, price, 'Buy',
+      orderSizePct, intraDayTolerance * -1, round(intraDayTolerance * 2, 4), intraDayTolerance * -1);
+    this.cartService.addToCart(order);
   }
 
-  portfolioDaytrade(symbol: string, allocation: number) {
-    this.portfolioService.getPrice(symbol).subscribe(price => {
-      this.portfolioService.getTdBalance().subscribe(data => {
-        const quantity = this.getQuantity(price, allocation, data.cashBalance);
-        const orderSizePct = (this.riskToleranceList[this.riskCounter] > 0.5) ? 1 : 0.3;
-        const riskTolerance = this.riskToleranceList[this.riskCounter] / 100;
-        const intraDayTolerance = riskTolerance < 0.003 ? 0.005 : round(riskTolerance, 4);
-        const order = this.buildOrder(symbol, quantity, price, 'Daytrade', orderSizePct, intraDayTolerance * -1, round(intraDayTolerance * 2, 4), intraDayTolerance * -1);
-        this.cartService.addToCart(order);
-      });
-    });
+  async portfolioDaytrade(symbol: string, allocation: number) {
+    const price = await this.portfolioService.getPrice(symbol).toPromise();
+    const data = await this.portfolioService.getTdBalance().toPromise();
+    const quantity = this.getQuantity(price, allocation, data.cashBalance);
+    const orderSizePct = (this.riskToleranceList[this.riskCounter] > 0.5) ? 1 : 0.3;
+    const riskTolerance = this.riskToleranceList[this.riskCounter] / 100;
+    const intraDayTolerance = riskTolerance < 0.003 ? 0.005 : round(riskTolerance, 4);
+    const order = this.buildOrder(symbol, quantity, price, 'Daytrade', orderSizePct, intraDayTolerance * -1, round(intraDayTolerance * 2, 4), intraDayTolerance * -1);
+    this.cartService.addToCart(order);
   }
 
   private getQuantity(stockPrice: number, allocationPct: number, total: number) {

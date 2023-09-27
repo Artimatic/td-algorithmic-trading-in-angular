@@ -2019,6 +2019,11 @@ export const bearList = [
   'SPXS'
 ];
 
+export const buyList = [
+  'IRBT',
+  'VTI'
+];
+
 const Stocks: AlgoParam[] = [];
 
 for (const s of stockList) {
