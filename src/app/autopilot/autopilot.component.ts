@@ -181,28 +181,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         // console.log('startStopTime ', (startStopTime.startDateTime),
         //   (startStopTime.endDateTime),
         //   moment().isAfter(moment(startStopTime.startDateTime)));
-        if (!this.isBacktested) {
-          this.developStrategy();
-          console.log('new interval ', this.interval, moment(startStopTime.startDateTime),
-            startStopTime.startDateTime.getUTCMilliseconds(),
-            moment(startStopTime.startDateTime).valueOf());
-          this.isBacktested = true;
-        } else if (moment().isAfter(moment(startStopTime.startDateTime)) &&
-          moment().isBefore(moment(startStopTime.endDateTime))) {
-          if (this.isTradingStarted && (this.cartService.sellOrders.length ||
-            this.cartService.buyOrders.length || this.cartService.otherOrders.length)) {
-            console.log('Executing orders');
-
-            this.executeOrderList();
-          } else {
-            this.processLists();
-            setTimeout(() => {
-              this.initializeOrders();
-              this.isTradingStarted = true;
-            }, this.defaultInterval);
-          }
-        } else if (moment().isAfter(moment(startStopTime.endDateTime)) &&
-          moment().isBefore(moment(startStopTime.endDateTime).add(2, 'minutes'))) {
+        if (moment().isAfter(moment(startStopTime.endDateTime)) &&
+          moment().isBefore(moment(startStopTime.endDateTime).add(5, 'minutes'))) {
           console.log('Stopping');
 
           if (this.reportingService.logs.length > 0) {
@@ -218,6 +198,24 @@ export class AutopilotComponent implements OnInit, OnDestroy {
             sessionStorage.setItem('profitLoss', JSON.stringify(profitObj));
             this.scoreKeeperService.resetTotal();
             this.resetCart();
+          }
+        } else if (!this.isBacktested) {
+          this.developStrategy();
+          console.log('new interval ', this.interval, moment(startStopTime.startDateTime),
+            startStopTime.startDateTime.getUTCMilliseconds(),
+            moment(startStopTime.startDateTime).valueOf());
+          this.isBacktested = true;
+        } else if (moment().isAfter(moment(startStopTime.startDateTime)) &&
+          moment().isBefore(moment(startStopTime.endDateTime))) {
+          if (this.isTradingStarted && (this.cartService.sellOrders.length ||
+            this.cartService.buyOrders.length || this.cartService.otherOrders.length)) {
+            this.executeOrderList();
+          } else {
+            this.processLists();
+            setTimeout(() => {
+              this.initializeOrders();
+              this.isTradingStarted = true;
+            }, this.defaultInterval);
           }
         }
       });
@@ -276,7 +274,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
     const lastProfitLoss = JSON.parse(sessionStorage.getItem('profitLoss'));
     if (lastProfitLoss && lastProfitLoss.profit) {
-      if (lastProfitLoss.profit < 0) {
+      if (lastProfitLoss.profit * 1 < 0) {
         this.decreaseRiskTolerance();
       } else {
         this.increaseRiskTolerance();
@@ -511,6 +509,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     await this.processSellList();
     await this.processBuyList();
     await this.processDaytradeList();
+    this.buyList = [];
+    this.dayTradeList = [];
+    this.sellList = [];
   }
 
   addSell(holding: PortfolioInfoHolding) {
@@ -750,14 +751,16 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   checkIfTooManyHoldings(currentHoldings: any[]) {
+    if (currentHoldings.length >= 10) {
+      if (this.strategyList[this.strategyCounter] === Strategy.Swingtrade) {
+        this.changeStrategy();
+      }
+    }
+
     if (currentHoldings.length > 10) {
       currentHoldings.sort((a, b) => a.pl - b.pl);
       const toBeSold = currentHoldings.slice(currentHoldings.length - 10, currentHoldings.length);
       console.log('too many holdings. selling', toBeSold, 'from', currentHoldings);
-
-      if (this.strategyList[this.strategyCounter] === Strategy.Swingtrade) {
-        this.changeStrategy();
-      }
     }
   }
 

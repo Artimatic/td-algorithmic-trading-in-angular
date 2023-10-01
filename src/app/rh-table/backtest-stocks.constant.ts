@@ -1929,6 +1929,7 @@ export const stockList = [
   'EB'];
 
 export const primaryList = [
+  'IRBT',
   'QQQ',
   'SPY',
   'KBH',
