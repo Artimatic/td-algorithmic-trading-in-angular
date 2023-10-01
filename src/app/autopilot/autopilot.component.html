@@ -7,7 +7,7 @@
     <ng-template pTemplate="header">
         <h3>Autopilot</h3>
         <p-tag [value]="strategyList[strategyCounter]" severity="success"></p-tag>
-        <p-tag [value]="riskTolerance[riskCounter]" severity="danger"></p-tag>
+        <p-tag [value]="riskToleranceList[riskCounter]" severity="danger"></p-tag>
     </ng-template>
     <ng-template pTemplate="content">
         <div *ngIf="isLoading">
