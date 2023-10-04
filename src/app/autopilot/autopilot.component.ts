@@ -96,7 +96,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   dayTradeList: string[] = [];
   sellList: PortfolioInfoHolding[] = [];
 
-  strategyCounter = 0;
+  strategyCounter = null;
 
   strategyList = [
     Strategy.Swingtrade,
@@ -139,13 +139,12 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-  }
-
-  open() {
     const lastStrategy = JSON.parse(sessionStorage.getItem('lastStrategy'));
     const lastStrategyCount = this.strategyList.findIndex(strat => strat === lastStrategy);
     this.strategyCounter = lastStrategyCount >= 0 ? lastStrategyCount : 0;
+  }
 
+  open() {
     this.destroy$ = new Subject();
     if (this.backtestBuffer$) {
       this.backtestBuffer$.unsubscribe();
@@ -178,9 +177,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         const startStopTime = this.getStartStopTime();
-        // console.log('startStopTime ', (startStopTime.startDateTime),
-        //   (startStopTime.endDateTime),
-        //   moment().isAfter(moment(startStopTime.startDateTime)));
         if (moment().isAfter(moment(startStopTime.endDateTime)) &&
           moment().isBefore(moment(startStopTime.endDateTime).add(5, 'minutes'))) {
           console.log('Stopping');
@@ -189,13 +185,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
             const profitLog = `Profit ${this.scoreKeeperService.total}`;
             this.reportingService.addAuditLog(null, profitLog);
             this.reportingService.exportAuditHistory();
-            const profitObj: ProfitLossRecord = {
-              'date': moment().format(),
-              profit: this.scoreKeeperService.total,
-              lastStrategy: this.strategyList[this.strategyCounter],
-              profitRecord: this.scoreKeeperService.profitLossHash
-            };
-            sessionStorage.setItem('profitLoss', JSON.stringify(profitObj));
+            this.setProfitLoss();
             this.scoreKeeperService.resetTotal();
             this.resetCart();
           }
@@ -207,9 +197,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           this.isBacktested = true;
         } else if (moment().isAfter(moment(startStopTime.startDateTime)) &&
           moment().isBefore(moment(startStopTime.endDateTime))) {
-          if (this.isTradingStarted && (this.cartService.sellOrders.length ||
-            this.cartService.buyOrders.length || this.cartService.otherOrders.length)) {
+          if (this.isTradingStarted && this.hasOrders()) {
             this.executeOrderList();
+            this.setProfitLoss();
           } else {
             this.processLists();
             setTimeout(() => {
@@ -217,10 +207,27 @@ export class AutopilotComponent implements OnInit, OnDestroy {
               this.isTradingStarted = true;
             }, this.defaultInterval);
           }
+        } else if (!this.hasOrders && this.isBacktested) {
+          this.isBacktested = false;
         }
       });
   }
 
+  hasOrders() {
+    return (this.cartService.sellOrders.length ||
+      this.cartService.buyOrders.length || this.cartService.otherOrders.length);
+  }
+
+  setProfitLoss() {
+    const profitObj: ProfitLossRecord = {
+      'date': moment().format(),
+      profit: this.scoreKeeperService.total,
+      lastStrategy: this.strategyList[this.strategyCounter],
+      profitRecord: this.scoreKeeperService.profitLossHash
+    };
+    sessionStorage.setItem('profitLoss', JSON.stringify(profitObj));
+  }
+  
   stop() {
     this.display = false;
     this.timer.unsubscribe();
@@ -267,6 +274,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       summary: `Strategy changed to ${strat}`
     });
     console.log('strategy changed ', strat);
+    sessionStorage.setItem('lastStrategy', JSON.stringify(this.strategyList[this.strategyCounter]));
   }
 
   async developStrategy() {
@@ -283,8 +291,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     console.log('lastProfitLoss sessionStorage ', lastProfitLoss, this.riskToleranceList[this.riskCounter]);
 
     this.processCurrentPositions();
-
-    sessionStorage.setItem('lastStrategy', JSON.stringify(this.strategyList[this.strategyCounter]));
   }
 
   async getNewTrades() {
@@ -343,9 +349,14 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       const stock = this.machineDaytradingService.getNextStock();
       const backtestDate = this.getLastTradeDate();
       console.log('last date', backtestDate);
-      const trainingResults = await this.machineDaytradingService.trainStock(stock, backtestDate.subtract({ days: 1 }).format('YYYY-MM-DD'), backtestDate.add({ days: 1 }).format('YYYY-MM-DD'));
+      let trainingResults = null;
+      try {
+        trainingResults = await this.machineDaytradingService.trainStock(stock, backtestDate.subtract({ days: 1 }).format('YYYY-MM-DD'), backtestDate.add({ days: 1 }).format('YYYY-MM-DD'));
+      } catch(error) {
+        console.log('error getting traing results ', error);
+      }
       console.log('training daytrade results ', trainingResults);
-      if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 50) {
+      if (trainingResults && (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 50)) {
         console.log('adding day trade', stock);
         this.addDaytrade(stock);
         // this.portfolioDaytrade(stock, this.riskToleranceList[this.riskCounter]);
@@ -459,8 +470,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           sellConfidence: 0,
           prediction: null
         };
-        console.log('Adding buy ', stockHolding)
-          ;       // const lastMlResult = JSON.parse(sessionStorage.getItem('profitLoss'));
+        console.log('Adding buy ', stockHolding);
+        // const lastMlResult = JSON.parse(sessionStorage.getItem('profitLoss'));
         sessionStorage.setItem('lastMlResult', JSON.stringify(latestMlResult));
         this.addBuy(stockHolding);
       }
@@ -583,9 +594,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   getStartStopTime() {
-    const endTime = '15:50';
+    const endTime = '16:00';
     const currentMoment = moment().tz('America/New_York').set({ hour: 9, minute: 50 });
-    const currentEndMoment = moment().tz('America/New_York').set({ hour: 15, minute: 50 });
+    const currentEndMoment = moment().tz('America/New_York').set({ hour: 16, minute: 0 });
     const currentDay = currentMoment.day();
     let startDate;
 
@@ -681,8 +692,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           }
         }
         this.checkIfTooManyHoldings(holdings);
+        this.getNewTrades();
       }
-      this.getNewTrades();
     }
   }
 
