@@ -177,8 +177,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         const startStopTime = this.getStartStopTime();
-        if (moment().isAfter(moment(startStopTime.endDateTime)) &&
-          moment().isBefore(moment(startStopTime.endDateTime).add(5, 'minutes'))) {
+        if (moment().isAfter(moment(startStopTime.endDateTime).subtract(15, 'minutes')) &&
+          moment().isBefore(moment(startStopTime.endDateTime))) {
           console.log('Stopping');
 
           if (this.reportingService.logs.length > 0) {
@@ -227,7 +227,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     };
     sessionStorage.setItem('profitLoss', JSON.stringify(profitObj));
   }
-  
+
   stop() {
     this.display = false;
     this.timer.unsubscribe();
@@ -352,7 +352,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       let trainingResults = null;
       try {
         trainingResults = await this.machineDaytradingService.trainStock(stock, backtestDate.subtract({ days: 1 }).format('YYYY-MM-DD'), backtestDate.add({ days: 1 }).format('YYYY-MM-DD'));
-      } catch(error) {
+      } catch (error) {
         console.log('error getting traing results ', error);
       }
       console.log('training daytrade results ', trainingResults);
