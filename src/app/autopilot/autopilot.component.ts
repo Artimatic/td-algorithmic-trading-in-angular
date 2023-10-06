@@ -99,8 +99,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   strategyCounter = null;
 
   strategyList = [
-    Strategy.Swingtrade,
     Strategy.Daytrade,
+    Strategy.Swingtrade,
     Strategy.InverseSwingtrade,
     Strategy.DaytradeShort,
     Strategy.Short
@@ -139,9 +139,11 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    const lastStrategy = JSON.parse(sessionStorage.getItem('lastStrategy'));
-    const lastStrategyCount = this.strategyList.findIndex(strat => strat === lastStrategy);
-    this.strategyCounter = lastStrategyCount >= 0 ? lastStrategyCount : 0;
+    const lastStrategy = JSON.parse(sessionStorage.getItem('profitLoss'));
+    if (lastStrategy && lastStrategy.lastStrategy) {
+      const lastStrategyCount = this.strategyList.findIndex(strat => strat === lastStrategy);
+      this.strategyCounter = lastStrategyCount >= 0 ? lastStrategyCount : 0;
+    }
   }
 
   open() {
