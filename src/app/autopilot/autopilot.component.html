@@ -1,12 +1,13 @@
 <div class="autopilot-container">
-    <p-avatar icon="pi pi-prime" styleClass="p-mr-2" size="xlarge" shape="circle" (click)="open()"></p-avatar>
+    <p-avatar icon="pi pi-prime" styleClass="p-mr-2" size="large" shape="circle" (click)="open()"></p-avatar>
 </div>
 
 <p-dialog [(visible)]="display" [breakpoints]="{'960px': '75vw', '640px': '100vw'}" [style]="{width: '50vw'}"
     [closable]="false">
     <ng-template pTemplate="header">
         <h3>Autopilot</h3>
-        <p-inputSwitch [(ngModel)]="display"></p-inputSwitch>
+        <p-tag [value]="strategyList[strategyCounter]" severity="success"></p-tag>
+        <p-tag [value]="riskToleranceList[riskCounter]" severity="danger"></p-tag>
     </ng-template>
     <ng-template pTemplate="content">
         <div *ngIf="isLoading">
@@ -16,9 +17,7 @@
         <app-ai-picks></app-ai-picks>
     </ng-template>
     <ng-template pTemplate="footer">
-        <label>Current strategy:&nbsp;</label>{{strategyList[strategyCounter]}}
         <p-button label="Next strategy" class="p-button-success" (click)="changeStrategy()" iconPos="left"></p-button>
-
         <p-button label="Stop autopilot" class="p-button-danger" (click)="stop()" iconPos="left"></p-button>
     </ng-template>
 </p-dialog>

@@ -423,7 +423,8 @@ class BacktestService {
         }
         response.status(200).send(recommendation);
       })
-      .catch((error) => {
+      .catch(error => {
+        console.log(error);
         response.status(500).send({ error });
       });
   }

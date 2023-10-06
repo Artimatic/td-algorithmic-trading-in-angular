@@ -1929,6 +1929,7 @@ export const stockList = [
   'EB'];
 
 export const primaryList = [
+  'IRBT',
   'QQQ',
   'SPY',
   'KBH',
@@ -2009,11 +2010,19 @@ export const primaryList = [
 
 export const bearList = [
   'SH',
-  'QID',
   'SQQQ',
+  'TBF',
+  'QID',
   'RWM',
+  'SARK',
   'FAZ',
   'SOXS',
+  'SPXS'
+];
+
+export const buyList = [
+  'IRBT',
+  'VTI'
 ];
 
 const Stocks: AlgoParam[] = [];

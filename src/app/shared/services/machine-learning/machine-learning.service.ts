@@ -19,7 +19,7 @@ export class MachineLearningService {
     endDate: string = null,
     startDate: string = null,
     trainingSize: number,
-    features: number[] = []): Observable<any> {
+    features: number[] = []) {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     const options = {
       headers: headers,

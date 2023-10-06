@@ -77,17 +77,13 @@ export class AiPicksComponent implements OnInit, OnDestroy {
           }, 'aipicks', 300000);
         } else {
           const prediction = { algorithm: range, prediction: activation.nextOutput, accuracy: accuracy };
-          console.log('activate prediction', prediction);
-          if (prediction.prediction > 0.5 || prediction.prediction < 0.3) {
-            if (isBuy) {
-              this.addBuyPick(symbol, prediction);
-            } else {
-              this.addSellPick(symbol, prediction);
-            }
+          console.log('activate prediction', symbol, prediction);
+          const item = this.createListObject(symbol, prediction);
+          this.aiPicksService.mlNeutralResults.next(item);
+          if (prediction.prediction > 0.5) {
+            this.addBuyPick(symbol, prediction);
           } else {
-            const item = this.createListObject(symbol, prediction);
-
-            this.aiPicksService.mlNeutralResults.next(item);
+            this.addSellPick(symbol, prediction);
           }
 
           this.schedulerService.schedule(() => {
@@ -96,8 +92,9 @@ export class AiPicksComponent implements OnInit, OnDestroy {
         }
         this.isLoading = false;
       }, error => {
+        this.aiPicksService.mlNeutralResults.next(null);
         this.counter--;
-        console.log('error: ', error);
+        console.log('error on activation ', error);
         this.isLoading = false;
       });
   }

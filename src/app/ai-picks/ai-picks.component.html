@@ -1,7 +1,7 @@
 <div class="ai-picks p-grid">
   <div class="p-col">
     <p-card header="Buys Predictions">
-      <p-table [value]="buys">
+      <p-table [value]="buys" [scrollable]="true" scrollHeight="200px">
         <ng-template pTemplate="caption">
           <p-button class="ui-button-danger" icon="pi pi-times" iconPos="right" label="Remove all"
             (click)="removeAllBuys()"></p-button>
@@ -31,7 +31,7 @@
   </div>
   <div class="p-col">
     <p-card header="Sells Predictions">
-      <p-table [value]="sells">
+      <p-table [value]="sells" [scrollable]="true" scrollHeight="200px">
         <ng-template pTemplate="caption">
           <p-button class="ui-button-danger" icon="pi pi-times" iconPos="right" label="Remove all"
             (click)="removeAllSells()"></p-button>
@@ -59,7 +59,7 @@
       </p-table>
     </p-card>
   </div>
-  <div class="p-col">
+  <!-- <div class="p-col">
     <p-card header="Historical Predictions">
       <p-listbox [options]="history" [listStyle]="{'max-height':'250px'}">
         <p-header>
@@ -93,5 +93,5 @@
         </ng-template>
       </p-listbox>
     </p-card>
-  </div>
+  </div> -->
 </div>
