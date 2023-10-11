@@ -106,7 +106,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   ngOnInit() {
     this.subscriptions = [];
     const algoQueueSub = this.tradeService.algoQueue.subscribe((item: AlgoQueueItem) => {
-      if (this.order.holding.symbol === item.symbol || this.order.id === item.id ||
+      if (this.order.holding.symbol === item.symbol || (this.order.id !== undefined && this.order.id === item.id) ||
         (this.machineControlled.value && this.order.id === 'MACHINE')) {
         if (item.reset) {
           this.setup();

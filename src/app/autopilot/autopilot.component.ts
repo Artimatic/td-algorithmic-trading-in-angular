@@ -122,7 +122,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   isBacktested = false;
 
   isTradingStarted = false;
-
+  simultaneousOrderLimit = 3;
+  executedIndex = 0;
+  lastOrderListIndex = 0;
   constructor(
     private authenticationService: AuthenticationService,
     private portfolioService: PortfolioService,
@@ -143,6 +145,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     if (lastStrategy && lastStrategy.lastStrategy) {
       const lastStrategyCount = this.strategyList.findIndex(strat => strat === lastStrategy);
       this.strategyCounter = lastStrategyCount >= 0 ? lastStrategyCount : 0;
+    } else {
+      this.strategyCounter = 0;
     }
   }
 
@@ -174,12 +178,12 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   startNewInterval() {
-    console.log('startNewInterval');
+    console.log('startNewInterval, ', this.interval);
     this.timer = TimerObservable.create(0, this.interval)
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         const startStopTime = this.getStartStopTime();
-        if (moment().isAfter(moment(startStopTime.endDateTime).subtract(15, 'minutes')) &&
+        if (moment().isAfter(moment(startStopTime.endDateTime).subtract(5, 'minutes')) &&
           moment().isBefore(moment(startStopTime.endDateTime))) {
           console.log('Stopping');
 
@@ -242,6 +246,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   resetCart() {
+    this.executedIndex = 0;
+    this.lastOrderListIndex = 0;
     this.isBacktested = false;
     this.isTradingStarted = false;
     this.buyList = [];
@@ -572,26 +578,27 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   executeOrderList() {
     const concat = this.cartService.sellOrders.concat(this.cartService.buyOrders);
     const orders = concat.concat(this.cartService.otherOrders);
-    const simultaneousOrderLimit = 3;
-    const limit = simultaneousOrderLimit > orders.length ? orders.length : simultaneousOrderLimit;
+    const limit = this.simultaneousOrderLimit > orders.length ? orders.length : this.simultaneousOrderLimit;
 
-    let executed = 0;
-    let lastIndex = 0;
-
-    while (executed < limit && lastIndex < orders.length) {
+    while (this.executedIndex < limit && this.lastOrderListIndex < orders.length) {
       const queueItem: AlgoQueueItem = {
-        symbol: orders[lastIndex].holding.symbol,
+        symbol: orders[this.lastOrderListIndex].holding.symbol,
         reset: false
       };
 
       setTimeout(() => {
         this.tradeService.algoQueue.next(queueItem);
-      }, 500 * lastIndex);
-      lastIndex++;
-      executed++;
+      }, 500 * this.lastOrderListIndex);
+      this.lastOrderListIndex++;
+      this.executedIndex++;
     }
-    if (lastIndex >= orders.length) {
-      lastIndex = 0;
+    if (this.lastOrderListIndex >= orders.length) {
+      this.lastOrderListIndex = 0;
+    }
+    if (this.executedIndex >= limit) {
+      setTimeout(() => {
+        this.executedIndex = 0;
+      }, 500);
     }
   }
 
@@ -635,6 +642,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       lastTradeDate = currentMoment.subtract({ day: 2 });
     } else if (currentDay === 1) {
       lastTradeDate = currentMoment.subtract({ day: 3 });
+    } else if (currentDay === 2) {
+      lastTradeDate = currentMoment.add({ day: 1 });
     }
 
     return moment.tz(lastTradeDate.format(), 'America/New_York');
