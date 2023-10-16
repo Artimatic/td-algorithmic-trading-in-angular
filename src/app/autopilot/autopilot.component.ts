@@ -141,7 +141,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    const lastStrategy = JSON.parse(sessionStorage.getItem('profitLoss'));
+    const lastStrategy = JSON.parse(localStorage.getItem('profitLoss'));
     if (lastStrategy && lastStrategy.lastStrategy) {
       const lastStrategyCount = this.strategyList.findIndex(strat => strat === lastStrategy);
       this.strategyCounter = lastStrategyCount >= 0 ? lastStrategyCount : 0;
@@ -197,13 +197,12 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           }
         } else if (!this.isBacktested) {
           this.developStrategy();
-          console.log('new interval ', this.interval, moment(startStopTime.startDateTime),
-            startStopTime.startDateTime.getUTCMilliseconds(),
-            moment(startStopTime.startDateTime).valueOf());
+          console.log('new interval ', this.interval, startStopTime);
           this.isBacktested = true;
         } else if (moment().isAfter(moment(startStopTime.startDateTime)) &&
           moment().isBefore(moment(startStopTime.endDateTime))) {
           if (this.isTradingStarted && this.hasOrders()) {
+            console.log('executing ', moment().tz('America/New_York').format('hh:mm'));
             this.executeOrderList();
             this.setProfitLoss();
           } else {
@@ -231,7 +230,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       lastStrategy: this.strategyList[this.strategyCounter],
       profitRecord: this.scoreKeeperService.profitLossHash
     };
-    sessionStorage.setItem('profitLoss', JSON.stringify(profitObj));
+    localStorage.setItem('profitLoss', JSON.stringify(profitObj));
   }
 
   stop() {
@@ -282,13 +281,13 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       summary: `Strategy changed to ${strat}`
     });
     console.log('strategy changed ', strat);
-    sessionStorage.setItem('lastStrategy', JSON.stringify(this.strategyList[this.strategyCounter]));
+    localStorage.setItem('lastStrategy', JSON.stringify(this.strategyList[this.strategyCounter]));
   }
 
   async developStrategy() {
     console.log('developing strategy');
 
-    const lastProfitLoss = JSON.parse(sessionStorage.getItem('profitLoss'));
+    const lastProfitLoss = JSON.parse(localStorage.getItem('profitLoss'));
     if (lastProfitLoss && lastProfitLoss.profit) {
       if (lastProfitLoss.profit * 1 < 0) {
         this.decreaseRiskTolerance();
@@ -296,8 +295,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         this.increaseRiskTolerance();
       }
     }
-    console.log('lastProfitLoss sessionStorage ', lastProfitLoss, this.riskToleranceList[this.riskCounter]);
-
     this.processCurrentPositions();
   }
 
@@ -328,6 +325,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         break;
       }
     }
+    this.processLists();
   }
 
   isBuyPrediction(prediction: { label: string, value: AiPicksPredictionData[] }) {
@@ -404,7 +402,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           prediction: null
         };
         console.log('Adding buy ', stockHolding);
-        // const lastMlResult = JSON.parse(sessionStorage.getItem('profitLoss'));
         sessionStorage.setItem('lastMlResult', JSON.stringify(latestMlResult));
         this.addBuy(stockHolding);
       }
@@ -479,7 +476,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           prediction: null
         };
         console.log('Adding buy ', stockHolding);
-        // const lastMlResult = JSON.parse(sessionStorage.getItem('profitLoss'));
         sessionStorage.setItem('lastMlResult', JSON.stringify(latestMlResult));
         this.addBuy(stockHolding);
       }
@@ -806,7 +802,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       useStopLoss: true,
       useTrailingStopLoss: true,
       useTakeProfit: true,
-      sellAtClose: side === 'DayTrade' ? true : false
+      sellAtClose: false
     };
   }
 
