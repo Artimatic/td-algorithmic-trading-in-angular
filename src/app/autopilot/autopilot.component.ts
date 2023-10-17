@@ -202,7 +202,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         } else if (moment().isAfter(moment(startStopTime.startDateTime)) &&
           moment().isBefore(moment(startStopTime.endDateTime))) {
           if (this.isTradingStarted && this.hasOrders()) {
-            console.log('executing ', moment().tz('America/New_York').format('hh:mm'));
             this.executeOrderList();
             this.setProfitLoss();
           } else {
@@ -285,9 +284,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   async developStrategy() {
-    console.log('developing strategy');
-
     const lastProfitLoss = JSON.parse(localStorage.getItem('profitLoss'));
+    console.log('developing strategy lastProfitLoss', lastProfitLoss);
     if (lastProfitLoss && lastProfitLoss.profit) {
       if (lastProfitLoss.profit * 1 < 0) {
         this.decreaseRiskTolerance();
@@ -325,7 +323,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         break;
       }
     }
-    this.processLists();
+    this.schedulerService.schedule(() => {
+      this.processLists();
+    }, `process lists`, null, false, 60000);
   }
 
   isBuyPrediction(prediction: { label: string, value: AiPicksPredictionData[] }) {
@@ -354,7 +354,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       counter++;
       const stock = this.machineDaytradingService.getNextStock();
       const backtestDate = this.getLastTradeDate();
-      console.log('last date', backtestDate);
       let trainingResults = null;
       try {
         trainingResults = await this.machineDaytradingService.trainStock(stock, backtestDate.subtract({ days: 1 }).format('YYYY-MM-DD'), backtestDate.add({ days: 1 }).format('YYYY-MM-DD'));
@@ -362,11 +361,10 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         console.log('error getting traing results ', error);
       }
       console.log('training daytrade results ', trainingResults);
-      if (trainingResults && (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 50)) {
-        console.log('adding day trade', stock);
+      if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 50) {
         this.addDaytrade(stock);
         // this.portfolioDaytrade(stock, this.riskToleranceList[this.riskCounter]);
-        if (this.dayTradeList.length > 2) {
+        if (this.dayTradeList.length > 5) {
           break;
         }
       }
@@ -436,10 +434,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       const trainingResults = await this.machineDaytradingService.trainStock(stock, backtestDate.subtract({ days: 1 }).format('YYYY-MM-DD'), backtestDate.add({ days: 1 }).format('YYYY-MM-DD'));
       console.log('training daytrade results ', trainingResults);
       if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 50) {
-        console.log('adding day trade', stock);
         this.addDaytrade(stock);
         this.portfolioDaytrade(stock, this.riskToleranceList[this.riskCounter]);
-        if (this.dayTradeList.length > 2) {
+        if (this.dayTradeList.length > 3) {
           break;
         }
       }
@@ -838,6 +835,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     const riskTolerance = this.riskToleranceList[this.riskCounter] / 100;
     const intraDayTolerance = riskTolerance < 0.003 ? 0.005 : round(riskTolerance, 4);
     const order = this.buildOrder(symbol, quantity, price, 'Daytrade', orderSizePct, intraDayTolerance * -1, round(intraDayTolerance * 2, 4), intraDayTolerance * -1);
+    console.log('add day trade: ', order);
     this.cartService.addToCart(order);
   }
 
