@@ -12,7 +12,19 @@ function createParam(ticker: string): AlgoParam {
   };
 }
 
-export const stockList = [
+const shuffle = (array) => {
+  let currentIndex = array.length, randomIndex;
+
+  while (currentIndex > 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+
+    [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+  }
+
+  return array;
+}
+const list1 = [
   'RKLB',
   'SPY',
   'QQQ',
@@ -1928,7 +1940,7 @@ export const stockList = [
   'DAWN',
   'EB'];
 
-export const primaryList = [
+const list2 = [
   'IRBT',
   'QQQ',
   'SPY',
@@ -2007,6 +2019,10 @@ export const primaryList = [
   'VEEV',
   'GOOG'
 ];
+
+export const stockList = shuffle(list1);
+
+export const primaryList = shuffle(list2);
 
 export const bearList = [
   'SH',

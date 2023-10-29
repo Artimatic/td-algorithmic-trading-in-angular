@@ -75,7 +75,12 @@ export enum RiskTolerance {
   Fear = 0.25,
   Neutral = 0.5,
   Greed = 0.75,
-  ExtremeGreed = 1
+  ExtremeGreed = 1,
+  XLGreed = 1.05,
+  XXLGreed = 1.1,
+  XXXLGreed = 1.25,
+  XXXXLGreed = 1.5,
+  XXXXXLGreed = 1.75,
 }
 
 @Component({
@@ -280,7 +285,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       summary: `Strategy changed to ${strat}`
     });
     console.log('strategy changed ', strat);
-    localStorage.setItem('lastStrategy', JSON.stringify(this.strategyList[this.strategyCounter]));
   }
 
   async developStrategy() {
@@ -289,7 +293,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     if (lastProfitLoss && lastProfitLoss.profit) {
       if (lastProfitLoss.profit * 1 < 0) {
         this.decreaseRiskTolerance();
-      } else {
+      } else if (lastProfitLoss.profit * 1 > 0) {
         this.increaseRiskTolerance();
       }
     }
@@ -746,7 +750,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       }
     } else if (holding.recommendation.toLowerCase() === 'sell') {
       if (holding.sellConfidence > 0) {
-        this.addSell(holding);
+        this.portfolioSell(holding);
       }
     }
   }
@@ -759,20 +763,17 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       } else if (percentLoss > 0) {
         this.addBuy(val);
       }
-      if (!this.scoreKeeperService.profitLossHash[val.name]) {
-        this.scoreKeeperService.addProfitLoss(val.name, val.pl);
-      }
     });
   }
 
   checkIfTooManyHoldings(currentHoldings: any[]) {
-    if (currentHoldings.length >= 10) {
+    if (currentHoldings.length > 4) {
       if (this.strategyList[this.strategyCounter] === Strategy.Swingtrade) {
         this.changeStrategy();
       }
     }
 
-    if (currentHoldings.length > 10) {
+    if (currentHoldings.length > 5) {
       currentHoldings.sort((a, b) => a.pl - b.pl);
       const toBeSold = currentHoldings.slice(currentHoldings.length - 10, currentHoldings.length);
       console.log('too many holdings. selling', toBeSold, 'from', currentHoldings);
