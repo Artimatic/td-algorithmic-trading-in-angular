@@ -23,7 +23,8 @@ const shuffle = (array) => {
   }
 
   return array;
-}
+};
+
 const list1 = [
   'RKLB',
   'SPY',

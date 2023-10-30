@@ -5,7 +5,7 @@
   "main": "server/app.js",
   "scripts": {
     "ng": "ng",
-    "start": "npm run build && pm2 start ecosystem.config.js",
+    "start": "pm2 start ecosystem.config.js",
     "build": "npm run tslint && npm run lintfix && ng build --aot && npm run build-ts",
     "serve": "node dist/app.js",
     "test-server": "npm run build-ts && node server-tests.js",

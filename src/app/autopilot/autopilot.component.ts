@@ -697,6 +697,11 @@ export class AutopilotComponent implements OnInit, OnDestroy {
             const reasons = this.getRecommendationReason(indicators.recommendation);
             holdings[foundIdx].buyReasons = reasons.buyReasons;
             holdings[foundIdx].sellReasons = reasons.sellReasons;
+            if (reasons.buyReasons.length > reasons.sellReasons.length) {
+              this.aiPicksService.tickerBuyRecommendationQueue.next(stock);
+            } else {
+              this.aiPicksService.tickerSellRecommendationQueue.next(stock);
+            }
           }
         }
         this.checkIfTooManyHoldings(holdings);

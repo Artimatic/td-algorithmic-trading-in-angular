@@ -139,7 +139,7 @@ export class MachineDaytradingService {
     if (this.counter > PrimaryList.length - 1) {
       return this.getRandomStock();
     }
-    return PrimaryList[this.counter].ticker;
+    return this.getRandomPrimaryStock();
   }
 
   resetStockCounter() {
@@ -149,6 +149,11 @@ export class MachineDaytradingService {
   getRandomStock(): string {
     const randomIdx = Math.floor(Math.random() * Stocks.length);
     return Stocks[randomIdx].ticker;
+  }
+
+  getRandomPrimaryStock(): string {
+    const randomIdx = Math.floor(Math.random() * PrimaryList.length);
+    return PrimaryList[randomIdx].ticker;
   }
 
   resetStock() {
