@@ -729,7 +729,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           });
 
           if (holding.instrument.assetType.toLowerCase() === 'equity') {
-            const indicators = await this.getTechnicalIndicators(holding.instrument.symbol, startDate, currentDate, holdings).toPromise();
+            const indicators = await this.getTechnicalIndicators(holding.instrument.symbol, startDate, currentDate, this.currentHoldings).toPromise();
             const foundIdx = this.currentHoldings.findIndex((value) => {
               return value.name === stock;
             });
