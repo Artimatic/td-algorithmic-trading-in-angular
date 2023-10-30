@@ -100,7 +100,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   buyList: PortfolioInfoHolding[] = [];
   dayTradeList: string[] = [];
   sellList: PortfolioInfoHolding[] = [];
-
+  currentHoldings = [];
   strategyCounter = null;
 
   strategyList = [
@@ -311,7 +311,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         break;
       }
       case Strategy.InverseSwingtrade: {
-        this.findSwingtrades();
+        await this.findDaytrades();
         break;
       }
       case Strategy.Short: {
@@ -343,6 +343,23 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
       if (prediction.value[0].accuracy === null || (predictionAccuracySum / prediction.value.length) > 0.7 &&
         (predictionSum / prediction.value.length > 0.7)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  isSellPrediction(prediction: { label: string, value: AiPicksPredictionData[] }) {
+    if (prediction) {
+      let predictionSum = 0;
+      let predictionAccuracySum = 0;
+      for (const p of prediction.value) {
+        predictionSum += p.prediction;
+        predictionAccuracySum += p.accuracy || 0;
+      }
+
+      if (prediction.value[0].accuracy === null || (predictionAccuracySum / prediction.value.length) > 0.7 &&
+        (predictionSum / prediction.value.length < 0.4)) {
         return true;
       }
     }
@@ -652,7 +669,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   async processCurrentPositions() {
     await this.authenticationService.checkCredentials(this.authenticationService?.selectedTdaAccount?.accountId).toPromise();
-    const holdings = [];
+    this.currentHoldings = [];
     const currentDate = moment().format('YYYY-MM-DD');
     const startDate = moment().subtract(365, 'days').format('YYYY-MM-DD');
     this.setLoading(true);
@@ -666,6 +683,29 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         ).toPromise();
 
       if (data) {
+        console.log('data.length', data.length);
+        this.aiPicksService.mlNeutralResults.pipe(
+          take(data.length)
+        ).subscribe(latestMlResult => {
+          console.log('Received results', latestMlResult);
+          const stockSymbol = latestMlResult.label; 
+          const order = this.cartService.buildOrder(stockSymbol);
+          const found = this.currentHoldings.find((value) => {
+            return value.name === stockSymbol;
+          });
+          if (this.isBuyPrediction(latestMlResult)) {
+            this.cartService.deleteSell(order);
+            if (found) {
+              this.addBuy(found);
+            }
+          } else if (this.isSellPrediction(latestMlResult)) {
+            this.cartService.deleteBuy(order);
+            if (found) {
+              this.addSell(found);
+            }
+          }
+        });
+
         for (const holding of data) {
           const stock = holding.instrument.symbol;
           let pl;
@@ -674,7 +714,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           } else {
             pl = holding.marketValue - (holding.averagePrice * holding.longQuantity);
           }
-          holdings.push({
+          this.currentHoldings.push({
             name: stock,
             pl,
             netLiq: holding.marketValue,
@@ -690,13 +730,13 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
           if (holding.instrument.assetType.toLowerCase() === 'equity') {
             const indicators = await this.getTechnicalIndicators(holding.instrument.symbol, startDate, currentDate, holdings).toPromise();
-            const foundIdx = holdings.findIndex((value) => {
+            const foundIdx = this.currentHoldings.findIndex((value) => {
               return value.name === stock;
             });
-            holdings[foundIdx].recommendation = indicators.recommendation.recommendation;
+            this.currentHoldings[foundIdx].recommendation = indicators.recommendation.recommendation;
             const reasons = this.getRecommendationReason(indicators.recommendation);
-            holdings[foundIdx].buyReasons = reasons.buyReasons;
-            holdings[foundIdx].sellReasons = reasons.sellReasons;
+            this.currentHoldings[foundIdx].buyReasons = reasons.buyReasons;
+            this.currentHoldings[foundIdx].sellReasons = reasons.sellReasons;
             if (reasons.buyReasons.length > reasons.sellReasons.length) {
               this.aiPicksService.tickerBuyRecommendationQueue.next(stock);
             } else {
@@ -704,7 +744,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
             }
           }
         }
-        this.checkIfTooManyHoldings(holdings);
+        this.checkIfTooManyHoldings(this.currentHoldings);
         this.getNewTrades();
       }
     }
