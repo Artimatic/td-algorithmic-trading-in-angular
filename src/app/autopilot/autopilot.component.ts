@@ -111,7 +111,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     Strategy.Short
   ];
 
-  riskCounter = 2;
+  riskCounter = 1;
 
   riskToleranceList = [
     RiskTolerance.None,
@@ -119,7 +119,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     RiskTolerance.Fear,
     RiskTolerance.Neutral,
     RiskTolerance.Greed,
-    RiskTolerance.ExtremeGreed
+    RiskTolerance.ExtremeGreed,
+    RiskTolerance.XLGreed,
+    RiskTolerance.XXLGreed
   ];
 
   backtestBuffer$;
@@ -227,6 +229,12 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       this.cartService.buyOrders.length || this.cartService.otherOrders.length);
   }
 
+  resetBacktested() {
+    setTimeout(() => {
+      this.isBacktested = false;
+    }, 18000000);
+  }
+
   setProfitLoss() {
     const profitObj: ProfitLossRecord = {
       'date': moment().format(),
@@ -251,7 +259,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   resetCart() {
     this.executedIndex = 0;
     this.lastOrderListIndex = 0;
-    this.isBacktested = false;
+    this.resetBacktested();
     this.isTradingStarted = false;
     this.buyList = [];
     this.dayTradeList = [];
@@ -292,7 +300,12 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     console.log('developing strategy lastProfitLoss', lastProfitLoss);
     if (lastProfitLoss && lastProfitLoss.profit) {
       if (lastProfitLoss.profit * 1 < 0) {
-        this.decreaseRiskTolerance();
+        if (lastProfitLoss.lastStrategy === Strategy.Daytrade &&
+          this.riskCounter < this.riskToleranceList.length) {
+            this.increaseRiskTolerance();
+        } else {
+          this.decreaseRiskTolerance();
+        }
       } else if (lastProfitLoss.profit * 1 > 0) {
         this.increaseRiskTolerance();
       }
@@ -687,8 +700,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         this.aiPicksService.mlNeutralResults.pipe(
           take(data.length)
         ).subscribe(latestMlResult => {
-          console.log('Received results', latestMlResult);
-          const stockSymbol = latestMlResult.label; 
+          console.log('Received results for current holdings', latestMlResult);
+          const stockSymbol = latestMlResult.label;
           const order = this.cartService.buildOrder(stockSymbol);
           const found = this.currentHoldings.find((value) => {
             return value.name === stockSymbol;
@@ -803,7 +816,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   checkForStopLoss(holdings: PositionHoldings[]) {
     holdings.forEach(val => {
       const percentLoss = divide(val.pl, val.netLiq);
-      if (percentLoss < -0.051) {
+      if (percentLoss < -0.05) {
         this.portfolioSell(val);
       } else if (percentLoss > 0) {
         this.addBuy(val);
@@ -822,6 +835,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       currentHoldings.sort((a, b) => a.pl - b.pl);
       const toBeSold = currentHoldings.slice(currentHoldings.length - 10, currentHoldings.length);
       console.log('too many holdings. selling', toBeSold, 'from', currentHoldings);
+      toBeSold.splice(0, 1).forEach(holdingInfo => {
+        this.portfolioSell(holdingInfo);
+      });
     }
   }
 

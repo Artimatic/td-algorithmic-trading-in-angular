@@ -1,2 +1,2 @@
 echo on
- npm i && npm start
+ npm i && npm run serve
