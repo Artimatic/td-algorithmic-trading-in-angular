@@ -835,7 +835,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       currentHoldings.sort((a, b) => a.pl - b.pl);
       const toBeSold = currentHoldings.slice(currentHoldings.length - 10, currentHoldings.length);
       console.log('too many holdings. selling', toBeSold, 'from', currentHoldings);
-      toBeSold.splice(0, 1).forEach(holdingInfo => {
+      toBeSold.slice(0, 1).forEach(holdingInfo => {
+        console.log('selling ', holdingInfo);
         this.portfolioSell(holdingInfo);
       });
     }
@@ -871,7 +872,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   async portfolioSell(holding: PortfolioInfoHolding) {
     const price = await this.portfolioService.getPrice(holding.name).toPromise();
-    const orderSizePct = (this.riskToleranceList[this.riskCounter] > 0.5) ? 0.3 : 1;
+    const orderSizePct = 1;
     const order = this.buildOrder(holding.name, holding.shares, price, 'Sell',
       orderSizePct, null, null, null);
     this.cartService.addToCart(order);
