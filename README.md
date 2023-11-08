@@ -75,7 +75,7 @@ Requires station-data-service to be set up and running. https://github.com/Artim
 Requires station-analysis-service to be set up and running. https://github.com/Artimatic/station-analysis-service
 
 ## Demo
-https://chaddaily.herokuapp.com/trade-view
+[https://chaddaily.herokuapp.com/trade-view](https://chad-daily.appspot.com/)
 
 screen shots:
 https://imgur.com/a/wNKn2fw
