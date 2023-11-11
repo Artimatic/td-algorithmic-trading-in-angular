@@ -758,6 +758,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           }
         }
         this.checkIfTooManyHoldings(this.currentHoldings);
+        this.checkForStopLoss(this.currentHoldings);
         this.getNewTrades();
       }
     }
@@ -766,7 +767,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   getTechnicalIndicators(stock: string, startDate: string, currentDate: string, holdings) {
     return this.backtestService.getBacktestEvaluation(stock, startDate, currentDate, 'daily-indicators')
       .map((indicatorResults: BacktestResponse) => {
-        this.checkForStopLoss(holdings);
         this.getIndicatorScore(stock, indicatorResults.signals, holdings);
         return indicatorResults.signals[indicatorResults.signals.length - 1];
       });
