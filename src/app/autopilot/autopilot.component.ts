@@ -835,7 +835,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       currentHoldings.sort((a, b) => a.pl - b.pl);
       const toBeSold = currentHoldings.slice(currentHoldings.length - 10, currentHoldings.length);
       console.log('too many holdings. selling', toBeSold, 'from', currentHoldings);
-      toBeSold.slice(0, 1).forEach(holdingInfo => {
+      toBeSold.slice(0, currentHoldings.length - 5).forEach(holdingInfo => {
         console.log('selling ', holdingInfo);
         this.portfolioSell(holdingInfo);
       });
