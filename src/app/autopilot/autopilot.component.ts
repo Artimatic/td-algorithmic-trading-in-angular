@@ -167,16 +167,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.display = true;
     this.startNewInterval();
     this.interval = Math.abs(moment(this.getStartStopTime().startDateTime).diff(moment(), 'milliseconds'));
-
-    // TimerObservable.create(0, moment(this.getStartStopTime().startDateTime).diff(moment(), 'milliseconds'))
-    //   .pipe(takeUntil(this.destroy$))
-    //   .subscribe(() => {
-    //     this.timer.unsubscribe();
-    //     console.log('dailytimer');
-
-    //     this.startNewInterval();
-    //   });
-
     this.messageService.add({
       key: 'autopilot_start',
       severity: 'success',
@@ -185,15 +175,12 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   startNewInterval() {
-    console.log('startNewInterval, ', this.interval);
     this.timer = TimerObservable.create(0, this.interval)
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         const startStopTime = this.getStartStopTime();
         if (moment().isAfter(moment(startStopTime.endDateTime).subtract(5, 'minutes')) &&
           moment().isBefore(moment(startStopTime.endDateTime))) {
-          console.log('Stopping');
-
           if (this.reportingService.logs.length > 0) {
             const profitLog = `Profit ${this.scoreKeeperService.total}`;
             this.reportingService.addAuditLog(null, profitLog);
@@ -204,7 +191,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           }
         } else if (!this.isBacktested) {
           this.developStrategy();
-          console.log('new interval ', this.interval, startStopTime);
           this.isBacktested = true;
         } else if (moment().isAfter(moment(startStopTime.startDateTime)) &&
           moment().isBefore(moment(startStopTime.endDateTime))) {
@@ -292,7 +278,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       severity: 'info',
       summary: `Strategy changed to ${strat}`
     });
-    console.log('strategy changed ', strat);
   }
 
   async developStrategy() {
@@ -380,7 +365,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   async findDaytrades() {
-    console.log('finding day trade');
     this.machineDaytradingService.resetStockCounter();
 
     let counter = 0;
@@ -397,7 +381,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       console.log('training daytrade results ', trainingResults);
       if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 50) {
         this.addDaytrade(stock);
-        // this.portfolioDaytrade(stock, this.riskToleranceList[this.riskCounter]);
+        const log = `Adding daytrade order ${stock}`;
+        this.reportingService.addAuditLog(stock, log);
         if (this.dayTradeList.length > 5) {
           break;
         }
@@ -436,6 +421,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         console.log('Adding buy ', stockHolding);
         sessionStorage.setItem('lastMlResult', JSON.stringify(latestMlResult));
         this.addBuy(stockHolding);
+        const log = `Adding swing trade ${stockHolding.name}`;
+        this.reportingService.addAuditLog(null, log);
       }
       this.schedulerService.schedule(() => {
         this.triggerBacktestNext();
@@ -470,6 +457,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 50) {
         this.addDaytrade(stock);
         this.portfolioDaytrade(stock, this.riskToleranceList[this.riskCounter]);
+        const log = `Adding daytrade short ${stock}`;
+        this.reportingService.addAuditLog(stock, log);
         if (this.dayTradeList.length > 3) {
           break;
         }
@@ -509,6 +498,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         console.log('Adding buy ', stockHolding);
         sessionStorage.setItem('lastMlResult', JSON.stringify(latestMlResult));
         this.addBuy(stockHolding);
+        const log = `Adding swing trade short ${stockHolding.name}`;
+        this.reportingService.addAuditLog(stockHolding.name, log);
       }
       this.schedulerService.schedule(() => {
         this.triggerBacktestNext();

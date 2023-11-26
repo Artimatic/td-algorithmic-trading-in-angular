@@ -1945,6 +1945,8 @@ const list2 = [
   'IRBT',
   'QQQ',
   'SPY',
+  'TQQQ',
+  'UPRO',
   'KBH',
   'AAPL',
   'SHOP',
