@@ -17,4 +17,5 @@ export interface SmartOrder extends Order {
     init?: boolean;
     stopped?: boolean;
     lastUpdated?: string;
+    allocation?: number;
 }

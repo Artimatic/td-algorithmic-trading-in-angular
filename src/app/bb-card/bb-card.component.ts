@@ -58,7 +58,6 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   error: string;
   color: string;
   warning: string;
-  lastPrice: number;
   preferenceList: any[];
   config: CardOptions;
   showChart: boolean;
@@ -850,65 +849,51 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
       } else if (analysis.recommendation.toLowerCase() === 'buy') {
         console.log('Received Buy recommendation: ', analysis, this.order.holding.symbol);
         this.machineDaytradingService.getPortfolioBalance().subscribe((data) => {
-          const usage = (data.liquidationValue - data.cashBalance) / data.liquidationValue;
+          const currentBalance = data.cashBalance;
+          const usage = (data.liquidationValue - currentBalance) / data.liquidationValue;
           console.log('account balance: ', data.liquidationValue, data.cashBalance, usage);
           if (usage < this.globalSettingsService.maxAccountUsage) {
-            this.backtestService.getLastPriceTiingo({ symbol: this.order.holding.symbol })
-              .pipe(take(1))
-              .subscribe(tiingoQuote => {
-                const lastPrice = tiingoQuote[0].last;
+            const log = `Received buy recommendation`;
+            const report = this.reportingService.addAuditLog(this.order.holding.symbol, log);
+            console.log(report);
+            let orderQuantity: number = this.order.allocation ? Math.floor((this.order.allocation * currentBalance) / quote) : this.daytradeService.getBuyOrderQuantity(initialQuantity,
+              this.firstFormGroup.value.orderSize,
+              this.buyCount,
+              this.positionCount);
 
-                this.backtestService.getDaytradeRecommendation(this.order.holding.symbol, lastPrice, lastPrice, { minQuotes: 81 }, 'tiingo').subscribe(
-                  tiingoAnalysis => {
-                    console.log('tiingo analysis', tiingoAnalysis);
-                    return null;
+            this.schedulerService.schedule(() => {
+              this.machineLearningService
+                .trainDaytrade(this.order.holding.symbol.toUpperCase(),
+                  moment().add({ days: 1 }).format('YYYY-MM-DD'),
+                  moment().subtract({ days: 1 }).format('YYYY-MM-DD'),
+                  1,
+                  this.globalSettingsService.daytradeAlgo
+                )
+                .subscribe((data: any[]) => {
+                  console.log(`${this.order.holding.symbol} ml result: `, data[0].nextOutput);
+                  const mlLog = `Ml next output: ${data[0].nextOutput}`;
+                  const mlReport = this.reportingService.addAuditLog(this.order.holding.symbol, mlLog);
+                  console.log(mlReport);
+                  if (data[0].nextOutput > 0.6) {
+                    this.daytradeBuy(quote, orderQuantity, timestamp, analysis);
                   }
-                );
-              });
+                  // this.machineLearningService.activate(this.order.holding.symbol,
+                  //   this.globalSettingsService.daytradeAlgo)
+                  //   .subscribe((machineResult: { nextOutput: number }) => {
+                  //     const mlLog = `RNN model result: ${machineResult.nextOutput}`;
+                  //     const mlReport = this.reportingService.addAuditLog(this.order.holding.symbol, mlLog);
+                  //     console.log(mlReport);
+                  //     if (machineResult.nextOutput > 0.4) {
+                  //       this.daytradeBuy(quote, orderQuantity, timestamp, analysis);
+                  //     }
+                  //   });
+                }, error => {
+                  console.log('daytrade ml error: ', error);
+                  this.daytradeBuy(quote, orderQuantity, timestamp, analysis);
+                });
+            }, `${this.order.holding.symbol}_bbcard_ml`, this.globalSettingsService.stopTime, true);
           }
         });
-        const log = `Received buy recommendation`;
-        const report = this.reportingService.addAuditLog(this.order.holding.symbol, log);
-        console.log(report);
-        let orderQuantity: number = this.scoringService.determineBetSize(this.order.holding.symbol, this.daytradeService.getBuyOrderQuantity(initialQuantity,
-          this.firstFormGroup.value.orderSize,
-          this.buyCount,
-          this.positionCount), this.positionCount, this.order.quantity);
-
-        const modifier = await this.globalSettingsService.globalModifier();
-        orderQuantity = _.round(_.multiply(modifier, orderQuantity), 0);
-
-        this.schedulerService.schedule(() => {
-          this.machineLearningService
-            .trainDaytrade(this.order.holding.symbol.toUpperCase(),
-              moment().add({ days: 1 }).format('YYYY-MM-DD'),
-              moment().subtract({ days: 1 }).format('YYYY-MM-DD'),
-              1,
-              this.globalSettingsService.daytradeAlgo
-            )
-            .subscribe((data: any[]) => {
-              console.log(`${this.order.holding.symbol} ml result: `, data[0].nextOutput);
-              const mlLog = `Ml next output: ${data[0].nextOutput}`;
-              const mlReport = this.reportingService.addAuditLog(this.order.holding.symbol, mlLog);
-              console.log(mlReport);
-              if (data[0].nextOutput > 0.6) {
-                this.daytradeBuy(quote, orderQuantity, timestamp, analysis);
-              }
-              // this.machineLearningService.activate(this.order.holding.symbol,
-              //   this.globalSettingsService.daytradeAlgo)
-              //   .subscribe((machineResult: { nextOutput: number }) => {
-              //     const mlLog = `RNN model result: ${machineResult.nextOutput}`;
-              //     const mlReport = this.reportingService.addAuditLog(this.order.holding.symbol, mlLog);
-              //     console.log(mlReport);
-              //     if (machineResult.nextOutput > 0.4) {
-              //       this.daytradeBuy(quote, orderQuantity, timestamp, analysis);
-              //     }
-              //   });
-            }, error => {
-              console.log('daytrade ml error: ', error);
-              this.daytradeBuy(quote, orderQuantity, timestamp, analysis);
-            });
-        }, `${this.order.holding.symbol}_bbcard_ml`, this.globalSettingsService.stopTime, true);
       }
     }
   }

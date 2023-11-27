@@ -287,7 +287,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       if (lastProfitLoss.profit * 1 < 0) {
         if (lastProfitLoss.lastStrategy === Strategy.Daytrade &&
           this.riskCounter < this.riskToleranceList.length) {
-            this.increaseRiskTolerance();
+          this.increaseRiskTolerance();
         } else {
           this.decreaseRiskTolerance();
         }
@@ -376,14 +376,14 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       try {
         trainingResults = await this.machineDaytradingService.trainStock(stock, backtestDate.subtract({ days: 1 }).format('YYYY-MM-DD'), backtestDate.add({ days: 1 }).format('YYYY-MM-DD'));
       } catch (error) {
-        console.log('error getting traing results ', error);
+        console.log('error getting training results ', error);
       }
       console.log('training daytrade results ', trainingResults);
       if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 50) {
         this.addDaytrade(stock);
         const log = `Adding daytrade order ${stock}`;
         this.reportingService.addAuditLog(stock, log);
-        if (this.dayTradeList.length > 5) {
+        if (this.dayTradeList.length > 10) {
           break;
         }
       }
@@ -835,7 +835,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   buildOrder(symbol: string, quantity = 0, price = 0,
     side = 'DayTrade', orderSizePct = 1, lossThreshold = -0.005,
-    profitTarget = 0.01, trailingStop = -0.003): SmartOrder {
+    profitTarget = 0.01, trailingStop = -0.003, allocation = null): SmartOrder {
     return {
       holding: {
         instrument: null,
@@ -853,7 +853,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       useStopLoss: true,
       useTrailingStopLoss: true,
       useTakeProfit: true,
-      sellAtClose: false
+      sellAtClose: false,
+      allocation
     };
   }
 
@@ -888,7 +889,14 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     const orderSizePct = (this.riskToleranceList[this.riskCounter] > 0.5) ? 1 : 0.3;
     const riskTolerance = this.riskToleranceList[this.riskCounter] / 100;
     const intraDayTolerance = riskTolerance < 0.003 ? 0.005 : round(riskTolerance, 4);
-    const order = this.buildOrder(symbol, quantity, price, 'Daytrade', orderSizePct, intraDayTolerance * -1, round(intraDayTolerance * 2, 4), intraDayTolerance * -1);
+    const order = this.buildOrder(symbol,
+      quantity,
+      price,
+      'Daytrade',
+      orderSizePct,
+      intraDayTolerance * -1, round(intraDayTolerance * 2, 4),
+      intraDayTolerance * -1,
+      allocation);
     console.log('add day trade: ', order);
     this.cartService.addToCart(order);
   }
