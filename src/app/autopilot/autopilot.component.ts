@@ -375,18 +375,18 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       let trainingResults = null;
       try {
         trainingResults = await this.machineDaytradingService.trainStock(stock, backtestDate.subtract({ days: 1 }).format('YYYY-MM-DD'), backtestDate.add({ days: 1 }).format('YYYY-MM-DD'));
+        if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 50) {
+          this.addDaytrade(stock);
+          const log = `Adding daytrade order ${stock}`;
+          this.reportingService.addAuditLog(stock, log);
+          if (this.dayTradeList.length > 10) {
+            break;
+          }
+        }
       } catch (error) {
         console.log('error getting training results ', error);
       }
       console.log('training daytrade results ', trainingResults);
-      if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 50) {
-        this.addDaytrade(stock);
-        const log = `Adding daytrade order ${stock}`;
-        this.reportingService.addAuditLog(stock, log);
-        if (this.dayTradeList.length > 10) {
-          break;
-        }
-      }
     }
   }
 

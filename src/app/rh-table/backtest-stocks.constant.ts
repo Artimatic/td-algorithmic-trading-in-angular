@@ -1984,7 +1984,6 @@ const list2 = [
   'ALV',
   'JD',
   'F',
-  'CTHR',
   'W',
   'BOX',
   'GM',
