@@ -851,7 +851,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
         this.machineDaytradingService.getPortfolioBalance().subscribe((data) => {
           const currentBalance = data.cashBalance;
           const usage = (data.liquidationValue - currentBalance) / data.liquidationValue;
-          console.log('account balance: ', data.liquidationValue, data.cashBalance, usage);
+
           if (usage < this.globalSettingsService.maxAccountUsage) {
             const log = `Received buy recommendation`;
             const report = this.reportingService.addAuditLog(this.order.holding.symbol, log);

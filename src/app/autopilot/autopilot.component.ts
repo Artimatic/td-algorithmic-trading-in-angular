@@ -377,8 +377,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         trainingResults = await this.machineDaytradingService.trainStock(stock, backtestDate.subtract({ days: 1 }).format('YYYY-MM-DD'), backtestDate.add({ days: 1 }).format('YYYY-MM-DD'));
         if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 50) {
           this.addDaytrade(stock);
-          const log = `Adding daytrade order ${stock}`;
-          this.reportingService.addAuditLog(stock, log);
           if (this.dayTradeList.length > 10) {
             break;
           }
@@ -457,8 +455,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 50) {
         this.addDaytrade(stock);
         this.portfolioDaytrade(stock, this.riskToleranceList[this.riskCounter]);
-        const log = `Adding daytrade short ${stock}`;
-        this.reportingService.addAuditLog(stock, log);
         if (this.dayTradeList.length > 3) {
           break;
         }
@@ -687,7 +683,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         ).toPromise();
 
       if (data) {
-        console.log('data.length', data.length);
         this.aiPicksService.mlNeutralResults.pipe(
           take(data.length)
         ).subscribe(latestMlResult => {
@@ -816,17 +811,17 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   checkIfTooManyHoldings(currentHoldings: any[]) {
-    if (currentHoldings.length > 4) {
-      if (this.strategyList[this.strategyCounter] === Strategy.Swingtrade) {
-        this.changeStrategy();
-      }
-    }
+    // if (currentHoldings.length > 4) {
+    //   if (this.strategyList[this.strategyCounter] === Strategy.Swingtrade) {
+    //     this.changeStrategy();
+    //   }
+    // }
 
     if (currentHoldings.length > 5) {
       currentHoldings.sort((a, b) => a.pl - b.pl);
-      const toBeSold = currentHoldings.slice(currentHoldings.length - 10, currentHoldings.length);
+      const toBeSold = currentHoldings.slice(0, 1);
       console.log('too many holdings. selling', toBeSold, 'from', currentHoldings);
-      toBeSold.slice(0, currentHoldings.length - 5).forEach(holdingInfo => {
+      toBeSold.forEach(holdingInfo => {
         console.log('selling ', holdingInfo);
         this.portfolioSell(holdingInfo);
       });
@@ -835,7 +830,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   buildOrder(symbol: string, quantity = 0, price = 0,
     side = 'DayTrade', orderSizePct = 1, lossThreshold = -0.005,
-    profitTarget = 0.01, trailingStop = -0.003, allocation = null): SmartOrder {
+    profitTarget = 0.008, trailingStop = -0.003, allocation = null): SmartOrder {
     return {
       holding: {
         instrument: null,
@@ -845,7 +840,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       price,
       submitted: false,
       pending: false,
-      orderSize: floor(quantity * orderSizePct),
+      orderSize: floor(quantity * orderSizePct) || 1,
       side,
       lossThreshold: lossThreshold,
       profitTarget: profitTarget,
@@ -853,7 +848,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       useStopLoss: true,
       useTrailingStopLoss: true,
       useTakeProfit: true,
-      sellAtClose: false,
+      sellAtClose: side.toUpperCase() === 'DAYTRADE' ? true : false,
       allocation
     };
   }
@@ -886,13 +881,13 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     const price = await this.portfolioService.getPrice(symbol).toPromise();
     const data = await this.portfolioService.getTdBalance().toPromise();
     const quantity = this.getQuantity(price, allocation, data.cashBalance);
-    const orderSizePct = (this.riskToleranceList[this.riskCounter] > 0.5) ? 1 : 0.3;
+    const orderSizePct = 0.5;
     const riskTolerance = this.riskToleranceList[this.riskCounter] / 100;
     const intraDayTolerance = riskTolerance < 0.003 ? 0.005 : round(riskTolerance, 4);
     const order = this.buildOrder(symbol,
       quantity,
       price,
-      'Daytrade',
+      'DayTrade',
       orderSizePct,
       intraDayTolerance * -1, round(intraDayTolerance * 2, 4),
       intraDayTolerance * -1,
