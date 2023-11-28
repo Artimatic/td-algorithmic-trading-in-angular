@@ -339,7 +339,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         predictionAccuracySum += p.accuracy || 0;
       }
 
-      if (prediction.value[0].accuracy === null || (predictionAccuracySum / prediction.value.length) > 0.7 &&
+      if (prediction.value[0].accuracy !== null && (predictionAccuracySum / prediction.value.length) > 0.7 &&
         (predictionSum / prediction.value.length > 0.7)) {
         return true;
       }
@@ -356,7 +356,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         predictionAccuracySum += p.accuracy || 0;
       }
 
-      if (prediction.value[0].accuracy === null || (predictionAccuracySum / prediction.value.length) > 0.7 &&
+      if (prediction.value[0].accuracy !== null || (predictionAccuracySum / prediction.value.length) > 0.7 &&
         (predictionSum / prediction.value.length < 0.4)) {
         return true;
       }
@@ -384,7 +384,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       } catch (error) {
         console.log('error getting training results ', error);
       }
-      console.log('training daytrade results ', trainingResults);
     }
   }
 
@@ -568,8 +567,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   addDaytrade(stock: string) {
     if (this.dayTradeList.length < 10) {
       if (this.dayTradeList.findIndex(s => s === stock) === -1) {
-        console.log('add daytrade ', stock, this.sellList);
-
         this.dayTradeList.push(stock);
       }
     }
@@ -689,19 +686,13 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           console.log('Received results for current holdings', latestMlResult);
           const stockSymbol = latestMlResult.label;
           const order = this.cartService.buildOrder(stockSymbol);
-          const found = this.currentHoldings.find((value) => {
-            return value.name === stockSymbol;
-          });
+          // const found = this.currentHoldings.find((value) => {
+          //   return value.name === stockSymbol;
+          // });
           if (this.isBuyPrediction(latestMlResult)) {
             this.cartService.deleteSell(order);
-            if (found) {
-              this.addBuy(found);
-            }
           } else if (this.isSellPrediction(latestMlResult)) {
             this.cartService.deleteBuy(order);
-            if (found) {
-              this.addSell(found);
-            }
           }
         });
 
