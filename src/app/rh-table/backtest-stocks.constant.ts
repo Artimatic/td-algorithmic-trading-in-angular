@@ -1947,8 +1947,9 @@ const list2 = [
   'SPY',
   'TQQQ',
   'UPRO',
-  'KBH',
+  'F',
   'AAPL',
+  'GOOG',
   'SHOP',
   'TSLA',
   'CRM',
@@ -1983,7 +1984,6 @@ const list2 = [
   'LULU',
   'ALV',
   'JD',
-  'F',
   'W',
   'BOX',
   'GM',
@@ -2019,7 +2019,7 @@ const list2 = [
   'BMY',
   'MRNA',
   'VEEV',
-  'GOOG'
+  'KBH'
 ];
 
 export const stockList = shuffle(list1);

@@ -339,7 +339,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         predictionAccuracySum += p.accuracy || 0;
       }
 
-      if (prediction.value[0].accuracy !== null && (predictionAccuracySum / prediction.value.length) > 0.7 &&
+      if ((prediction.value[0].accuracy === null || (predictionAccuracySum / prediction.value.length) > 0.7) &&
         (predictionSum / prediction.value.length > 0.7)) {
         return true;
       }
@@ -356,8 +356,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         predictionAccuracySum += p.accuracy || 0;
       }
 
-      if (prediction.value[0].accuracy !== null || (predictionAccuracySum / prediction.value.length) > 0.7 &&
-        (predictionSum / prediction.value.length < 0.4)) {
+      if ((prediction.value[0].accuracy === null || (predictionAccuracySum / prediction.value.length) > 0.7) &&
+        (predictionSum / prediction.value.length < 0.3)) {
         return true;
       }
     }
