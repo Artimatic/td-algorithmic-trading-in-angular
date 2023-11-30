@@ -783,9 +783,9 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
       if (this.sellCount >= initialQuantity) {
         this.stop();
       } else if (analysis.recommendation.toLowerCase() === 'sell') {
-        const orderQuantity = this.daytradeService.getOrderQuantity(initialQuantity,
-          this.firstFormGroup.value.orderSize,
-          this.sellCount);
+        let orderQuantity = this.daytradeService.getOrderQuantity(initialQuantity,
+            this.firstFormGroup.value.orderSize,
+            this.sellCount);
 
         if (orderQuantity > 0) {
           if (this.firstFormGroup.value.useML) {
@@ -831,7 +831,20 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
       } else if (analysis.recommendation.toLowerCase() === 'sell') {
         console.log('Received sell recommendation: ', analysis, this.order.holding.symbol);
         if (this.buyCount >= this.sellCount) {
-          const orderQuantity = this.positionCount;
+          let orderQuantity = 0;
+          if (this.order.allocation) {
+            const data = await this.portfolioService.getTdPortfolio().toPromise();
+            for (const holding of data) {
+              const stock = holding.instrument.symbol;
+              if (holding.instrument.assetType.toLowerCase() === 'equity' &&
+                stock.toLowerCase() === this.order.holding.symbol.toLowerCase()) {
+                orderQuantity = holding.longQuantity;
+              }
+            }
+          } else {
+            orderQuantity = this.positionCount;
+          }
+
           if (orderQuantity > 0) {
             const sellOrder = this.buildSellOrder(orderQuantity,
               quote,
