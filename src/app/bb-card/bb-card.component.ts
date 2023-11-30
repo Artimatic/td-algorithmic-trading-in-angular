@@ -850,13 +850,14 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
         console.log('Received Buy recommendation: ', analysis, this.order.holding.symbol);
         this.machineDaytradingService.getPortfolioBalance().subscribe((data) => {
           const currentBalance = data.cashBalance;
+          const availableFunds = data.availableFunds;
           const usage = (data.liquidationValue - currentBalance) / data.liquidationValue;
 
           if (usage < this.globalSettingsService.maxAccountUsage) {
             const log = `Received buy recommendation`;
             const report = this.reportingService.addAuditLog(this.order.holding.symbol, log);
             console.log(report);
-            let orderQuantity: number = this.order.allocation ? Math.floor((this.order.allocation * currentBalance) / quote) : this.daytradeService.getBuyOrderQuantity(initialQuantity,
+            let orderQuantity: number = this.order.allocation ? Math.floor((this.order.allocation * availableFunds) / quote) : this.daytradeService.getBuyOrderQuantity(initialQuantity,
               this.firstFormGroup.value.orderSize,
               this.buyCount,
               this.positionCount);

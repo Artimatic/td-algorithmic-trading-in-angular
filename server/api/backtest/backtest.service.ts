@@ -546,7 +546,7 @@ class BacktestService {
             if (indicator.recommendation.mfiLow === DaytradeRecommendation.Bullish ||
               indicator.recommendation.mfi === DaytradeRecommendation.Bullish) {
               isMfiLowIdx = idx;
-            } else if (isMfiLowIdx > -1 && (idx - isMfiLowIdx) < 15) {
+            } else if (isMfiLowIdx > -1 && (idx - isMfiLowIdx) < 45) {
               indicator.recommendation.mfiTrade = indicators.slice(idx - 20, idx).reduce((previous, current) => {
                 if (previous.lowestLow === -1) {
                   previous.lowestLow = current.close;
@@ -586,7 +586,7 @@ class BacktestService {
               indicator.recommendation.recommendation = indicator.recommendation.mfiTrade === DaytradeRecommendation.Bullish ? OrderType.Buy : OrderType.None;
             } else if (indicator.recommendation.mfi === DaytradeRecommendation.Bearish) {
               isMfiHighIdx = idx;
-            } else if (isMfiHighIdx > -1 && (idx - isMfiHighIdx) < 15) {
+            } else if (isMfiHighIdx > -1 && (idx - isMfiHighIdx) < 45) {
               indicator.recommendation.mfiTrade = indicators.slice(idx - 20, idx).reduce((previous, current) => {
                 if (previous.highestHigh === -1) {
                   previous.highestHigh = current.close;

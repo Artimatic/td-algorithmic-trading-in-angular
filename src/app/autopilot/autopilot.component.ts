@@ -820,7 +820,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   buildOrder(symbol: string, quantity = 0, price = 0,
-    side = 'DayTrade', orderSizePct = 1, lossThreshold = -0.005,
+    side = 'DayTrade', orderSizePct = 1, lossThreshold = -0.004,
     profitTarget = 0.008, trailingStop = -0.003, allocation = null): SmartOrder {
     return {
       holding: {
@@ -862,7 +862,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     const quantity = this.getQuantity(price, allocation, data.cashBalance);
     const orderSizePct = (this.riskToleranceList[this.riskCounter] > 0.5) ? 1 : 0.3;
     const riskTolerance = this.riskToleranceList[this.riskCounter] / 100;
-    const intraDayTolerance = riskTolerance < 0.003 ? 0.005 : round(riskTolerance, 4);
+    const intraDayTolerance = riskTolerance < 0.003 ? 0.004 : round(riskTolerance, 4);
     const order = this.buildOrder(holding.name, quantity, price, 'Buy',
       orderSizePct, intraDayTolerance * -1, round(intraDayTolerance * 2, 4), intraDayTolerance * -1);
     this.cartService.addToCart(order);
@@ -873,15 +873,14 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     const data = await this.portfolioService.getTdBalance().toPromise();
     const quantity = this.getQuantity(price, allocation, data.cashBalance);
     const orderSizePct = 0.5;
-    const riskTolerance = this.riskToleranceList[this.riskCounter] / 100;
-    const intraDayTolerance = riskTolerance < 0.003 ? 0.005 : round(riskTolerance, 4);
     const order = this.buildOrder(symbol,
       quantity,
       price,
       'DayTrade',
       orderSizePct,
-      intraDayTolerance * -1, round(intraDayTolerance * 2, 4),
-      intraDayTolerance * -1,
+      null, 
+      null,
+      null,
       allocation);
     console.log('add day trade: ', order);
     this.cartService.addToCart(order);
