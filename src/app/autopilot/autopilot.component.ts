@@ -779,12 +779,12 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   analyseRecommendations(holding: PortfolioInfoHolding) {
     if (holding.recommendation.toLowerCase() === 'buy') {
-      if (holding.buyConfidence > 0) {
+      if (holding.buyConfidence >= 0) {
         console.log('Buying ', holding.name);
         this.addBuy(holding);
       }
     } else if (holding.recommendation.toLowerCase() === 'sell') {
-      if (holding.sellConfidence > 0) {
+      if (holding.sellConfidence >= 0) {
         this.portfolioSell(holding);
       }
     }
