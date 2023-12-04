@@ -104,8 +104,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   strategyCounter = null;
 
   strategyList = [
-    Strategy.Daytrade,
     Strategy.Swingtrade,
+    Strategy.Daytrade,
     Strategy.InverseSwingtrade,
     Strategy.DaytradeShort,
     Strategy.Short
@@ -802,11 +802,11 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   checkIfTooManyHoldings(currentHoldings: any[]) {
-    // if (currentHoldings.length > 4) {
-    //   if (this.strategyList[this.strategyCounter] === Strategy.Swingtrade) {
-    //     this.changeStrategy();
-    //   }
-    // }
+    if (currentHoldings.length > 4) {
+      if (this.strategyList[this.strategyCounter] === Strategy.Swingtrade) {
+        this.changeStrategy();
+      }
+    }
 
     if (currentHoldings.length > 5) {
       currentHoldings.sort((a, b) => a.pl - b.pl);
