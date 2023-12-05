@@ -1018,14 +1018,14 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
       }
 
       const isStagnant = this.isStagnantDaytrade(this.orders, gains);
-      if ((moment.tz('America/New_York').isAfter(moment.tz(this.globalSettingsService.sellAtCloseTime, 'America/New_York')) && this.order.sellAtClose) || (isStagnant &&
+      if ((moment().isAfter(moment(this.globalSettingsService.sellAtCloseTime)) && this.order.sellAtClose) || (isStagnant &&
         this.positionCount > 0)) {
         if (isStagnant) {
           const log = `Order is stagnant. Closing positions: ${closePrice}/${estimatedPrice}`;
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
           console.log(log);
         } else {
-          const log = `Current time: ${this.globalSettingsService.sellAtCloseTime} Is sell at close order: ${this.order.sellAtClose} Closing positions: ${closePrice}/${estimatedPrice}`;
+          const log = `Current time: ${moment.tz('America/New_York').format()} is after ${this.globalSettingsService.sellAtCloseTime} Is sell at close order: ${this.order.sellAtClose} Closing positions: ${closePrice}/${estimatedPrice}`;
           this.reportingService.addAuditLog(this.order.holding.symbol, log);
           console.log(log);
         }

@@ -150,7 +150,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     const lastStrategy = JSON.parse(localStorage.getItem('profitLoss'));
     if (lastStrategy && lastStrategy.lastStrategy) {
-      const lastStrategyCount = this.strategyList.findIndex(strat => strat === lastStrategy);
+      const lastStrategyCount = this.strategyList.findIndex(strat => strat.toLowerCase === lastStrategy.lastStrategy.toLowerCase());
       this.strategyCounter = lastStrategyCount >= 0 ? lastStrategyCount : 0;
     } else {
       this.strategyCounter = 0;
