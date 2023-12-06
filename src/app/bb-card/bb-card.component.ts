@@ -784,8 +784,8 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
         this.stop();
       } else if (analysis.recommendation.toLowerCase() === 'sell') {
         let orderQuantity = this.daytradeService.getOrderQuantity(initialQuantity,
-            this.firstFormGroup.value.orderSize,
-            this.sellCount);
+          this.firstFormGroup.value.orderSize,
+          this.sellCount);
 
         if (orderQuantity > 0) {
           if (this.firstFormGroup.value.useML) {
@@ -1018,18 +1018,18 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
       }
 
       const isStagnant = this.isStagnantDaytrade(this.orders, gains);
-      if ((moment().isAfter(moment(this.globalSettingsService.sellAtCloseTime)) && this.order.sellAtClose) || (isStagnant &&
-        this.positionCount > 0)) {
-        if (isStagnant) {
-          const log = `Order is stagnant. Closing positions: ${closePrice}/${estimatedPrice}`;
-          this.reportingService.addAuditLog(this.order.holding.symbol, log);
-          console.log(log);
-        } else {
-          const log = `Current time: ${moment.tz('America/New_York').format()} is after ${this.globalSettingsService.sellAtCloseTime} Is sell at close order: ${this.order.sellAtClose} Closing positions: ${closePrice}/${estimatedPrice}`;
-          this.reportingService.addAuditLog(this.order.holding.symbol, log);
-          console.log(log);
-        }
-
+      if (isStagnant && this.positionCount > 0) {
+        const log = `Order is stagnant. Closing positions: ${closePrice}/${estimatedPrice}`;
+        this.reportingService.addAuditLog(this.order.holding.symbol, log);
+        console.log(log);
+        const stopLossOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
+        this.sendStopLoss(stopLossOrder);
+        return true;
+      }
+      if (this.order.sellAtClose && moment().isAfter(moment(this.globalSettingsService.sellAtCloseTime))) {
+        const log = `Current time: ${moment.tz('America/New_York').format()} is after ${this.globalSettingsService.sellAtCloseTime} Is sell at close order: ${this.order.sellAtClose} Closing positions: ${closePrice}/${estimatedPrice}`;
+        this.reportingService.addAuditLog(this.order.holding.symbol, log);
+        console.log(log);
         const stopLossOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
         this.sendStopLoss(stopLossOrder);
         return true;
