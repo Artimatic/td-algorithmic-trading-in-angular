@@ -519,7 +519,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   async processDaytradeList() {
     for (const stock of this.dayTradeList) {
-      await this.portfolioDaytrade(stock, round(this.riskToleranceList[this.riskCounter] / this.dayTradeList.length, 2));
+      await this.portfolioDaytrade(stock, round(this.riskToleranceList[this.riskCounter], 2));
     }
   }
 
