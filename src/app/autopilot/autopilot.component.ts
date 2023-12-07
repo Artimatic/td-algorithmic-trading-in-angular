@@ -686,13 +686,19 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           console.log('Received results for current holdings', latestMlResult);
           const stockSymbol = latestMlResult.label;
           const order = this.cartService.buildOrder(stockSymbol);
-          // const found = this.currentHoldings.find((value) => {
-          //   return value.name === stockSymbol;
-          // });
+          const found = this.currentHoldings.find((value) => {
+            return value.name === stockSymbol;
+          });
           if (this.isBuyPrediction(latestMlResult)) {
             this.cartService.deleteSell(order);
+            if (found) {
+              this.addBuy(found);
+            }
           } else if (this.isSellPrediction(latestMlResult)) {
             this.cartService.deleteBuy(order);
+            if (found) {
+              this.addSell(found);
+            }
           }
         });
 
