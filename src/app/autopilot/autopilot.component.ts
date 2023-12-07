@@ -35,6 +35,7 @@ export interface ProfitLossRecord {
   profit: number;
   lastStrategy: string;
   profitRecord: ScoringIndex<number>;
+  lastRiskTolerance: number;
 }
 
 export enum DaytradingAlgorithms {
@@ -70,7 +71,9 @@ export enum Strategy {
 }
 
 export enum RiskTolerance {
-  None = 0.05,
+  Zero = 0.01,
+  Lower = 0.02,
+  Low = 0.05,
   ExtremeFear = 0.1,
   Fear = 0.25,
   Neutral = 0.5,
@@ -114,14 +117,17 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   riskCounter = 1;
 
   riskToleranceList = [
-    RiskTolerance.None,
+    RiskTolerance.Zero,
+    RiskTolerance.Lower,
+    RiskTolerance.Low,
     RiskTolerance.ExtremeFear,
     RiskTolerance.Fear,
     RiskTolerance.Neutral,
     RiskTolerance.Greed,
     RiskTolerance.ExtremeGreed,
     RiskTolerance.XLGreed,
-    RiskTolerance.XXLGreed
+    RiskTolerance.XXLGreed,
+    RiskTolerance.XXXLGreed
   ];
 
   backtestBuffer$;
@@ -226,6 +232,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       'date': moment().format(),
       profit: this.scoreKeeperService.total,
       lastStrategy: this.strategyList[this.strategyCounter],
+      lastRiskTolerance: this.riskCounter,
       profitRecord: this.scoreKeeperService.profitLossHash
     };
     localStorage.setItem('profitLoss', JSON.stringify(profitObj));
@@ -292,7 +299,11 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           this.decreaseRiskTolerance();
         }
       } else if (lastProfitLoss.profit * 1 > 0) {
-        this.increaseRiskTolerance();
+        if (lastProfitLoss.lastStrategy === Strategy.Daytrade) {
+          this.decreaseRiskTolerance();
+        } else {
+          this.increaseRiskTolerance();
+        }
       }
     }
     this.processCurrentPositions();
@@ -333,35 +344,17 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   isBuyPrediction(prediction: { label: string, value: AiPicksPredictionData[] }) {
     if (prediction) {
       let predictionSum = 0;
-      let predictionAccuracySum = 0;
       for (const p of prediction.value) {
         predictionSum += p.prediction;
-        predictionAccuracySum += p.accuracy || 0;
       }
 
-      if ((prediction.value[0].accuracy === null || (predictionAccuracySum / prediction.value.length) > 0.7) &&
-        (predictionSum / prediction.value.length > 0.7)) {
+      if (predictionSum / prediction.value.length > 0.7) {
         return true;
+      } else if (predictionSum / prediction.value.length < 0.3) {
+        return false;
       }
     }
-    return false;
-  }
-
-  isSellPrediction(prediction: { label: string, value: AiPicksPredictionData[] }) {
-    if (prediction) {
-      let predictionSum = 0;
-      let predictionAccuracySum = 0;
-      for (const p of prediction.value) {
-        predictionSum += p.prediction;
-        predictionAccuracySum += p.accuracy || 0;
-      }
-
-      if ((prediction.value[0].accuracy === null || (predictionAccuracySum / prediction.value.length) > 0.7) &&
-        (predictionSum / prediction.value.length < 0.3)) {
-        return true;
-      }
-    }
-    return false;
+    return null;
   }
 
   async findDaytrades() {
@@ -689,16 +682,15 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           const found = this.currentHoldings.find((value) => {
             return value.name === stockSymbol;
           });
-          if (this.isBuyPrediction(latestMlResult)) {
+
+          const isBuy = this.isBuyPrediction(latestMlResult);
+          if (isBuy === true) {
             this.cartService.deleteSell(order);
             if (found) {
               this.addBuy(found);
             }
-          } else if (this.isSellPrediction(latestMlResult)) {
+          } else if (isBuy === false) {
             this.cartService.deleteBuy(order);
-            if (found) {
-              this.addSell(found);
-            }
           }
         });
 
@@ -884,7 +876,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       price,
       'DayTrade',
       orderSizePct,
-      null, 
+      null,
       null,
       null,
       allocation);

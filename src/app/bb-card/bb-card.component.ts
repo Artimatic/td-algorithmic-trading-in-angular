@@ -1026,8 +1026,10 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
         this.sendStopLoss(stopLossOrder);
         return true;
       }
-      if (this.order.sellAtClose && moment().isAfter(moment(this.globalSettingsService.sellAtCloseTime))) {
-        const log = `Current time: ${moment.tz('America/New_York').format()} is after ${this.globalSettingsService.sellAtCloseTime} Is sell at close order: ${this.order.sellAtClose} Closing positions: ${closePrice}/${estimatedPrice}`;
+
+      const sellTime = moment.tz(`${moment().format('YYYY-MM-DD')} 15:30`, 'America/New_York').toDate();
+      if (this.order.sellAtClose && moment().isAfter(moment(sellTime))) {
+        const log = `Current time: ${moment.tz('America/New_York').format()} is after ${sellTime} Is sell at close order: ${this.order.sellAtClose} Closing positions: ${closePrice}/${estimatedPrice}`;
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
         console.log(log);
         const stopLossOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.positionCount, closePrice, signalTime);
