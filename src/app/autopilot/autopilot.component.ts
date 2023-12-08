@@ -158,6 +158,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     if (lastStrategy && lastStrategy.lastStrategy) {
       const lastStrategyCount = this.strategyList.findIndex(strat => strat.toLowerCase() === lastStrategy.lastStrategy.toLowerCase());
       this.strategyCounter = lastStrategyCount >= 0 ? lastStrategyCount : 0;
+      this.riskCounter = lastStrategy.lastRiskTolerance || 0;
     } else {
       this.strategyCounter = 0;
     }
@@ -268,9 +269,10 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   increaseRiskTolerance() {
-    if (this.riskCounter < this.riskToleranceList.length - 1) {
+    if (this.riskCounter < this.riskToleranceList.length) {
       this.riskCounter++;
     }
+    console.log(`Increase risk to ${this.riskCounter}`);
   }
 
   changeStrategy() {
@@ -285,6 +287,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       severity: 'info',
       summary: `Strategy changed to ${strat}`
     });
+    console.log(`Strategy changed to ${strat}. Risk tolerance ${this.riskCounter}`);
   }
 
   async developStrategy() {
