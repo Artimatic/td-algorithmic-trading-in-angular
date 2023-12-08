@@ -109,7 +109,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   strategyList = [
     Strategy.Swingtrade,
     Strategy.Daytrade,
-    Strategy.InverseSwingtrade,
+    // Strategy.InverseSwingtrade,
     Strategy.DaytradeShort,
     Strategy.Short
   ];
@@ -323,7 +323,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         break;
       }
       case Strategy.InverseSwingtrade: {
-        await this.findDaytrades();
+        // TODO
         break;
       }
       case Strategy.Short: {
