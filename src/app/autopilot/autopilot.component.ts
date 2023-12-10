@@ -316,10 +316,12 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     switch (this.strategyList[this.strategyCounter]) {
       case Strategy.Daytrade: {
         await this.findDaytrades();
+        this.findSwingtrades();
         break;
       }
       case Strategy.Swingtrade: {
         this.findSwingtrades();
+        await this.findDaytrades();
         break;
       }
       case Strategy.InverseSwingtrade: {
@@ -328,10 +330,14 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       }
       case Strategy.Short: {
         this.findShort();
+        this.findSwingtrades();
+        await this.findDaytrades();
         break;
       }
       case Strategy.DaytradeShort: {
         await this.findDaytradeShort();
+        this.findSwingtrades();
+        await this.findDaytrades();
         break;
       }
       default: {
