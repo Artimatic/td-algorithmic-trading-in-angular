@@ -419,7 +419,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         const log = `Adding swing trade ${stockHolding.name}`;
         this.reportingService.addAuditLog(null, log);
       }
-      if (this.buyList.length < 3) {
+      if (this.buyList.length < 9) {
         this.schedulerService.schedule(() => {
           this.triggerBacktestNext();
         }, `findTrades`, null, false, 60000);
@@ -555,7 +555,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   addBuy(holding: PortfolioInfoHolding) {
-    if (this.buyList.length < 3) {
+    if (this.buyList.length < 9) {
       if (this.buyList.findIndex(s => s.name === holding.name) === -1) {
         console.log('add buy ', holding, this.sellList);
 
