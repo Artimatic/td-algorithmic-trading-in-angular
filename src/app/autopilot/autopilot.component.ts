@@ -328,13 +328,11 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       }
       case Strategy.Short: {
         this.findShort();
-        this.findSwingtrades();
         await this.findDaytrades();
         break;
       }
       case Strategy.DaytradeShort: {
         await this.findDaytradeShort();
-        this.findSwingtrades();
         await this.findDaytrades();
         break;
       }
@@ -421,9 +419,11 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         const log = `Adding swing trade ${stockHolding.name}`;
         this.reportingService.addAuditLog(null, log);
       }
-      this.schedulerService.schedule(() => {
-        this.triggerBacktestNext();
-      }, `findTrades`, null, false, 60000);
+      if (this.buyList.length < 3) {
+        this.schedulerService.schedule(() => {
+          this.triggerBacktestNext();
+        }, `findTrades`, null, false, 60000);
+      }
     });
     this.setLoading(true);
 
@@ -555,7 +555,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   addBuy(holding: PortfolioInfoHolding) {
-    if (this.buyList.length < 10) {
+    if (this.buyList.length < 3) {
       if (this.buyList.findIndex(s => s.name === holding.name) === -1) {
         console.log('add buy ', holding, this.sellList);
 
