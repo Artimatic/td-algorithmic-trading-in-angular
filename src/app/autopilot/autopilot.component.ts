@@ -115,17 +115,23 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   ];
 
   riskCounter = 1;
+  dayTradeRiskCounter = 1;
 
   riskToleranceList = [
     RiskTolerance.Low,
     RiskTolerance.ExtremeFear,
     RiskTolerance.Fear,
     RiskTolerance.Neutral,
+    RiskTolerance.Greed
+  ];
+
+  dayTradingRiskToleranceList = [
+    RiskTolerance.ExtremeFear,
+    RiskTolerance.Fear,
+    RiskTolerance.Neutral,
     RiskTolerance.Greed,
     RiskTolerance.ExtremeGreed,
-    RiskTolerance.XLGreed,
-    RiskTolerance.XXLGreed,
-    RiskTolerance.XXXLGreed
+    RiskTolerance.XLGreed
   ];
 
   backtestBuffer$;
@@ -266,11 +272,23 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.changeStrategy();
   }
 
+  decreaseDayTradeRiskTolerance() {
+    if (this.dayTradeRiskCounter > 0) {
+      this.dayTradeRiskCounter = 0;
+    }
+  }
+
   increaseRiskTolerance() {
     if (this.riskCounter < this.riskToleranceList.length) {
       this.riskCounter++;
     }
     console.log(`Increase risk to ${this.riskCounter}`);
+  }
+
+  increaseDayTradeRiskTolerance() {
+    if (this.dayTradeRiskCounter < this.dayTradingRiskToleranceList.length) {
+      this.dayTradeRiskCounter++;
+    }
   }
 
   changeStrategy() {
@@ -293,18 +311,11 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     console.log('developing strategy lastProfitLoss', lastProfitLoss);
     if (lastProfitLoss && lastProfitLoss.profit) {
       if (lastProfitLoss.profit * 1 < 0) {
-        if (lastProfitLoss.lastStrategy === Strategy.Daytrade &&
-          this.riskCounter < this.riskToleranceList.length) {
-          this.increaseRiskTolerance();
-        } else {
-          this.decreaseRiskTolerance();
-        }
+        this.increaseDayTradeRiskTolerance();
+        this.decreaseRiskTolerance();
       } else if (lastProfitLoss.profit * 1 > 0) {
-        if (lastProfitLoss.lastStrategy === Strategy.Daytrade) {
-          this.decreaseRiskTolerance();
-        } else {
-          this.increaseRiskTolerance();
-        }
+        this.increaseRiskTolerance();
+        this.decreaseDayTradeRiskTolerance();
       }
     }
     this.processCurrentPositions();
@@ -314,7 +325,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     switch (this.strategyList[this.strategyCounter]) {
       case Strategy.Daytrade: {
         await this.findDaytrades();
-        this.findSwingtrades();
         break;
       }
       case Strategy.Swingtrade: {
@@ -453,7 +463,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       console.log('training daytrade results ', trainingResults);
       if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 50) {
         this.addDaytrade(stock);
-        this.portfolioDaytrade(stock, this.riskToleranceList[this.riskCounter]);
+        this.portfolioDaytrade(stock, this.dayTradingRiskToleranceList[this.dayTradeRiskCounter]);
         if (this.dayTradeList.length > 3) {
           break;
         }
@@ -526,7 +536,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   async processDaytradeList() {
     for (const stock of this.dayTradeList) {
-      await this.portfolioDaytrade(stock, round(this.riskToleranceList[this.riskCounter], 2));
+      await this.portfolioDaytrade(stock, round(this.dayTradingRiskToleranceList[this.dayTradeRiskCounter], 2));
     }
   }
 
