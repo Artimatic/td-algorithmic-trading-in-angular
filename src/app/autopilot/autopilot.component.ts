@@ -115,7 +115,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   ];
 
   riskCounter = 1;
-  dayTradeRiskCounter = 1;
+  dayTradeRiskCounter = 0;
 
   riskToleranceList = [
     RiskTolerance.Low,

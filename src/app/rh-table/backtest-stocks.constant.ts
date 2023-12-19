@@ -1985,8 +1985,6 @@ const list2 = [
   'W',
   'BOX',
   'GM',
-  'LCID',
-  'GOEV',
   'DKNG',
   'PTON',
   'SHAK',
