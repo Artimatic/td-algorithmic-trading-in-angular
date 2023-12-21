@@ -126,6 +126,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   ];
 
   dayTradingRiskToleranceList = [
+    RiskTolerance.Zero,
+    RiskTolerance.Lower,
     RiskTolerance.ExtremeFear,
     RiskTolerance.Fear,
     RiskTolerance.Neutral,
@@ -329,7 +331,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       }
       case Strategy.Swingtrade: {
         this.findSwingtrades();
-        await this.findDaytrades();
         break;
       }
       case Strategy.InverseSwingtrade: {
@@ -338,12 +339,10 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       }
       case Strategy.Short: {
         this.findShort();
-        await this.findDaytrades();
         break;
       }
       case Strategy.DaytradeShort: {
         await this.findDaytradeShort();
-        await this.findDaytrades();
         break;
       }
       default: {
