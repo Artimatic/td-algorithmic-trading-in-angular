@@ -313,11 +313,18 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     console.log('developing strategy lastProfitLoss', lastProfitLoss);
     if (lastProfitLoss && lastProfitLoss.profit) {
       if (lastProfitLoss.profit * 1 < 0) {
-        this.increaseDayTradeRiskTolerance();
-        this.decreaseRiskTolerance();
+        if (lastProfitLoss.lastStrategy === Strategy.Daytrade) {
+          this.increaseDayTradeRiskTolerance();
+        } else {
+          this.decreaseRiskTolerance();
+        }
+
       } else if (lastProfitLoss.profit * 1 > 0) {
-        this.increaseRiskTolerance();
-        this.decreaseDayTradeRiskTolerance();
+        if (lastProfitLoss.lastStrategy === Strategy.Daytrade) {
+          this.decreaseDayTradeRiskTolerance();
+        } else {
+          this.increaseRiskTolerance();
+        }
       }
     }
     this.processCurrentPositions();
