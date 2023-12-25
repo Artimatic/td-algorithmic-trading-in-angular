@@ -278,6 +278,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     if (this.dayTradeRiskCounter > 0) {
       this.dayTradeRiskCounter = 0;
     }
+    this.changeStrategy();
   }
 
   increaseRiskTolerance() {
