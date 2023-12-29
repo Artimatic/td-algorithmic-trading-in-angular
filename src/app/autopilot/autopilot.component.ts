@@ -105,7 +105,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   sellList: PortfolioInfoHolding[] = [];
   currentHoldings = [];
   strategyCounter = null;
-
+  maxDaytradeList = 5;
   strategyList = [
     Strategy.Swingtrade,
     Strategy.Daytrade,
@@ -118,11 +118,11 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   dayTradeRiskCounter = 0;
 
   riskToleranceList = [
-    RiskTolerance.Low,
     RiskTolerance.ExtremeFear,
     RiskTolerance.Fear,
     RiskTolerance.Neutral,
-    RiskTolerance.Greed
+    RiskTolerance.Greed,
+    RiskTolerance.ExtremeGreed
   ];
 
   dayTradingRiskToleranceList = [
@@ -390,9 +390,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       let trainingResults = null;
       try {
         trainingResults = await this.machineDaytradingService.trainStock(stock, backtestDate.subtract({ days: 1 }).format('YYYY-MM-DD'), backtestDate.add({ days: 1 }).format('YYYY-MM-DD'));
-        if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 50) {
+        if (trainingResults[0].correct / trainingResults[0].guesses > 0.7 && trainingResults[0].guesses > 50) {
           this.addDaytrade(stock);
-          if (this.dayTradeList.length > 10) {
+          if (this.dayTradeList.length > this.maxDaytradeList) {
             break;
           }
         }
@@ -471,7 +471,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 50) {
         this.addDaytrade(stock);
         this.portfolioDaytrade(stock, this.dayTradingRiskToleranceList[this.dayTradeRiskCounter]);
-        if (this.dayTradeList.length > 3) {
+        if (this.dayTradeList.length > this.maxDaytradeList) {
           break;
         }
       }
@@ -582,7 +582,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   addDaytrade(stock: string) {
-    if (this.dayTradeList.length < 10) {
+    if (this.dayTradeList.length < this.maxDaytradeList) {
       if (this.dayTradeList.findIndex(s => s === stock) === -1) {
         this.dayTradeList.push(stock);
       }
@@ -910,7 +910,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   private getQuantity(stockPrice: number, allocationPct: number, total: number) {
     const totalCost = round(total * allocationPct, 2);
-    return floor(totalCost / stockPrice);
+    return Math.ceil(totalCost / stockPrice);
   }
 
   getRecommendationReason(recommendation) {
