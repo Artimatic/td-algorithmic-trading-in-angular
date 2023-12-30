@@ -455,6 +455,11 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       this.schedulerService.schedule(() => {
         this.triggerBacktestNext();
       }, `findTrades`, null, false, 60000);
+    }, error => {
+      console.log(error);
+      this.schedulerService.schedule(() => {
+        this.triggerBacktestNext();
+      }, `findTrades`, null, false, 60000);
     });
     this.setLoading(true);
 
@@ -567,7 +572,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   async processDaytradeList() {
     for (const stock of this.dayTradeList) {
       const currentDate = moment().format('YYYY-MM-DD');
-      const startDate = moment().subtract(5, 'days').format('YYYY-MM-DD');
+      const startDate = moment().subtract(100, 'days').format('YYYY-MM-DD');
       const indicators = await this.getTechnicalIndicators(stock, startDate, currentDate, this.currentHoldings).toPromise();
       const profitTakingThreshold = round(((indicators.high / indicators.low) - 1) / 2, 4);
       const stopLoss = round(profitTakingThreshold / 2, 4);
