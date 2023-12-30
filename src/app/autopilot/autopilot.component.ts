@@ -430,6 +430,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       finalize(() => {
         this.setLoading(false);
         this.processBuyList();
+        this.processDaytradeList();
       })
     ).subscribe(latestMlResult => {
       console.log('Received neutral results', latestMlResult);
@@ -450,13 +451,10 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         console.log('Adding buy ', stockHolding);
         sessionStorage.setItem('lastMlResult', JSON.stringify(latestMlResult));
         cb(stockHolding);
-
       }
-      if (this.buyList.length < 9) {
-        this.schedulerService.schedule(() => {
-          this.triggerBacktestNext();
-        }, `findTrades`, null, false, 60000);
-      }
+      this.schedulerService.schedule(() => {
+        this.triggerBacktestNext();
+      }, `findTrades`, null, false, 60000);
     });
     this.setLoading(true);
 
@@ -558,9 +556,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       const indicators = await this.getTechnicalIndicators(buyHolding.name, startDate, currentDate, this.currentHoldings).toPromise();
       const profitTakingThreshold = round(((indicators.high / indicators.low) - 1) / 2, 4);
       const stopLoss = round(profitTakingThreshold / 2, 4);
-  
-      await this.portfolioBuy(buyHolding, 
-        round(this.riskToleranceList[this.riskCounter] / this.buyList.length, 2), 
+
+      await this.portfolioBuy(buyHolding,
+        round(this.riskToleranceList[this.riskCounter] / this.buyList.length, 2),
         profitTakingThreshold,
         stopLoss);
     }
@@ -573,7 +571,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       const indicators = await this.getTechnicalIndicators(stock, startDate, currentDate, this.currentHoldings).toPromise();
       const profitTakingThreshold = round(((indicators.high / indicators.low) - 1) / 2, 4);
       const stopLoss = round(profitTakingThreshold / 2, 4);
-      await this.portfolioDaytrade(stock, 
+      await this.portfolioDaytrade(stock,
         round(this.dayTradingRiskToleranceList[this.dayTradeRiskCounter], 2),
         profitTakingThreshold,
         stopLoss);
@@ -912,7 +910,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.cartService.addToCart(order);
   }
 
-  async portfolioBuy(holding: PortfolioInfoHolding, 
+  async portfolioBuy(holding: PortfolioInfoHolding,
     allocation: number,
     profitThreshold: number = null,
     stopLossThreshold: number = null) {
@@ -921,12 +919,12 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     const quantity = this.getQuantity(price, allocation, data.cashBalance);
     const orderSizePct = (this.riskToleranceList[this.riskCounter] > 0.5) ? 1 : 0.3;
     const order = this.buildOrder(holding.name, quantity, price, 'Buy',
-      orderSizePct, stopLossThreshold, profitThreshold, 
+      orderSizePct, stopLossThreshold, profitThreshold,
       stopLossThreshold);
     this.cartService.addToCart(order);
   }
 
-  async portfolioDaytrade(symbol: string, 
+  async portfolioDaytrade(symbol: string,
     allocation: number,
     profitThreshold: number = null,
     stopLossThreshold: number = null) {
