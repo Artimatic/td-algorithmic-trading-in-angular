@@ -2001,7 +2001,6 @@ const list2 = [
   'TSN',
   'BUD',
   'GIS',
-  'BYND',
   'JPM',
   'C',
   'COF',
