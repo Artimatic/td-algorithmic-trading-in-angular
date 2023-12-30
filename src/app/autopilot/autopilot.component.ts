@@ -118,7 +118,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   dayTradeRiskCounter = 0;
 
   riskToleranceList = [
-    RiskTolerance.ExtremeFear,
     RiskTolerance.Fear,
     RiskTolerance.Neutral,
     RiskTolerance.Greed,
@@ -469,7 +468,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       )
       .subscribe(() => {
         const stock = this.machineDaytradingService.getNextStock();
-        console.log('run ai on ', stock);
         this.runAi(stock);
       });
     this.triggerBacktestNext();
@@ -581,13 +579,22 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     for (const stock of this.dayTradeList) {
       const currentDate = moment().format('YYYY-MM-DD');
       const startDate = moment().subtract(100, 'days').format('YYYY-MM-DD');
-      const indicators = await this.getTechnicalIndicators(stock, startDate, currentDate, this.currentHoldings).toPromise();
-      const profitTakingThreshold = round(((indicators.high / indicators.low) - 1) / 2, 4);
-      const stopLoss = round(profitTakingThreshold / 2, 4);
-      await this.portfolioDaytrade(stock,
-        round(this.dayTradingRiskToleranceList[this.dayTradeRiskCounter], 2),
-        profitTakingThreshold,
-        stopLoss);
+      try {
+        const indicators = await this.getTechnicalIndicators(stock, startDate, currentDate, this.currentHoldings).toPromise();
+        const profitTakingThreshold = round(((indicators.high / indicators.low) - 1) / 2, 4);
+        const stopLoss = round(profitTakingThreshold / 2, 4);
+        await this.portfolioDaytrade(stock,
+          round(this.dayTradingRiskToleranceList[this.dayTradeRiskCounter], 2),
+          profitTakingThreshold,
+          stopLoss);
+        } catch(error) {
+          console.log('Error getting backtest data for daytrade', stock, error);
+          await this.portfolioDaytrade(stock,
+            round(this.dayTradingRiskToleranceList[this.dayTradeRiskCounter], 2),
+            null,
+            null);
+      }
+
     }
   }
 
@@ -618,8 +625,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   addBuy(holding: PortfolioInfoHolding) {
     if (this.buyList.length < 9) {
       if (this.buyList.findIndex(s => s.name === holding.name) === -1) {
-        console.log('add buy ', holding, this.sellList);
-
         this.buyList.push(holding);
       }
     }
