@@ -94,8 +94,8 @@ export enum RiskTolerance {
 export class AutopilotComponent implements OnInit, OnDestroy {
   display = false;
   isLoading = true;
-  defaultInterval = 70800;
-  interval = 70800;
+  defaultInterval = 120000;
+  interval = 120000;
   oneDayInterval;
   timer;
   alive = false;
@@ -337,6 +337,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           try {
             trainingResults = await this.machineDaytradingService.trainStock(stock.name, backtestDate.subtract({ days: 1 }).format('YYYY-MM-DD'), backtestDate.add({ days: 1 }).format('YYYY-MM-DD'));
             if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 20) {
+              const trainingMsg = `Day trade training results correct: ${trainingResults[0].correct}, guesses: ${trainingResults[0].guesses}`;
+              this.reportingService.addAuditLog(stock.name, trainingMsg);
               this.addDaytrade(stock.name);
             }
           } catch (error) {
@@ -558,13 +560,11 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       const startDate = moment().subtract(100, 'days').format('YYYY-MM-DD');
       try {
         const indicators = await this.getTechnicalIndicators(buyHolding.name, startDate, currentDate, this.currentHoldings).toPromise();
-        const profitTakingThreshold = round(((indicators.high / indicators.low) - 1) / 2, 4);
-        const stopLoss = round(profitTakingThreshold / 2, 4);
-  
+        const thresholds = this.getStopLoss(indicators.low, indicators.high);
         await this.portfolioBuy(buyHolding,
           round(this.riskToleranceList[this.riskCounter] / this.buyList.length, 2),
-          profitTakingThreshold,
-          stopLoss);
+          thresholds.profitTakingThreshold,
+          thresholds.stopLoss);
       } catch(error) {
         console.log('Error getting backtest data for ', buyHolding.name, error);
         await this.portfolioBuy(buyHolding,
@@ -581,12 +581,11 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       const startDate = moment().subtract(100, 'days').format('YYYY-MM-DD');
       try {
         const indicators = await this.getTechnicalIndicators(stock, startDate, currentDate, this.currentHoldings).toPromise();
-        const profitTakingThreshold = round(((indicators.high / indicators.low) - 1) / 2, 4);
-        const stopLoss = round(profitTakingThreshold / 2, 4);
+        const thresholds = this.getStopLoss(indicators.low, indicators.high);
         await this.portfolioDaytrade(stock,
           round(this.dayTradingRiskToleranceList[this.dayTradeRiskCounter], 2),
-          profitTakingThreshold,
-          stopLoss);
+          thresholds.profitTakingThreshold,
+          thresholds.stopLoss);
         } catch(error) {
           console.log('Error getting backtest data for daytrade', stock, error);
           await this.portfolioDaytrade(stock,
@@ -895,7 +894,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   buildOrder(symbol: string, quantity = 0, price = 0,
-    side = 'DayTrade', orderSizePct = 1, lossThreshold = -0.004,
+    side = 'DayTrade', orderSizePct = 0.5, lossThreshold = -0.004,
     profitTarget = 0.008, trailingStop = -0.003, allocation = null): SmartOrder {
     return {
       holding: {
@@ -926,7 +925,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   async portfolioSell(holding: PortfolioInfoHolding) {
     const price = await this.portfolioService.getPrice(holding.name).toPromise();
-    const orderSizePct = 1;
+    const orderSizePct = 0.5;
     const order = this.buildOrder(holding.name, holding.shares, price, 'Sell',
       orderSizePct, null, null, null);
     this.cartService.addToCart(order);
@@ -939,7 +938,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     const price = await this.portfolioService.getPrice(holding.name).toPromise();
     const data = await this.portfolioService.getTdBalance().toPromise();
     const quantity = this.getQuantity(price, allocation, data.cashBalance);
-    const orderSizePct = (this.riskToleranceList[this.riskCounter] > 0.5) ? 1 : 0.3;
+    const orderSizePct = (this.riskToleranceList[this.riskCounter] > 0.5) ? 0.5 : 0.3;
     const order = this.buildOrder(holding.name, quantity, price, 'Buy',
       orderSizePct, stopLossThreshold, profitThreshold,
       stopLossThreshold);
@@ -1002,6 +1001,15 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       this.aiPicksService.tickerSellRecommendationQueue.next(stockName);
       this.aiPicksService.tickerBuyRecommendationQueue.next(stockName);
     }, 'portfolio_mgmt_ai');
+  }
+
+  private getStopLoss(low: number, high: number) {
+    const profitTakingThreshold = round(((high / low) - 1) / 2, 4);
+    const stopLoss = (round(profitTakingThreshold / 2, 4)) * -1;
+    return {
+      profitTakingThreshold,
+      stopLoss
+    }
   }
 
   cleanUp() {
