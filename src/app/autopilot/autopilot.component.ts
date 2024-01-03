@@ -330,16 +330,14 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   async getNewTrades() {
     switch (this.strategyList[this.strategyCounter]) {
       case Strategy.Daytrade: {
-        //await this.findDaytrades();
         const callback = async (stock: PortfolioInfoHolding) => {
           const backtestDate = this.getLastTradeDate();
-          let trainingResults = null;
           try {
-            trainingResults = await this.machineDaytradingService.trainStock(stock.name, backtestDate.subtract({ days: 1 }).format('YYYY-MM-DD'), backtestDate.add({ days: 1 }).format('YYYY-MM-DD'));
-            if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 20) {
+            const trainingResults = await this.machineDaytradingService.trainStock(stock.name, backtestDate.subtract({ days: 2 }).format('YYYY-MM-DD'), backtestDate.add({ days: 3 }).format('YYYY-MM-DD'));
+            if (trainingResults[0].correct / trainingResults[0].guesses > 0.5 && trainingResults[0].guesses > 20) {
               const trainingMsg = `Day trade training results correct: ${trainingResults[0].correct}, guesses: ${trainingResults[0].guesses}`;
               this.reportingService.addAuditLog(stock.name, trainingMsg);
-              this.addDaytrade(stock.name);
+              await this.addDaytrade(stock.name);
             }
           } catch (error) {
             console.log('error getting training results ', error);
@@ -350,8 +348,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         break;
       }
       case Strategy.Swingtrade: {
-        const callback = (stock: PortfolioInfoHolding) => {
-          this.addBuy(stock);
+        const callback = async (stock: PortfolioInfoHolding) => {
+          await this.addBuy(stock);
           const log = `Adding swing trade ${stock.name}`;
           this.reportingService.addAuditLog(null, log);
         };
@@ -372,7 +370,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         break;
       }
       default: {
-        await this.findDaytrades();
         break;
       }
     }
@@ -388,7 +385,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         predictionSum += p.prediction;
       }
 
-      if (predictionSum / prediction.value.length > 0.7) {
+      if (predictionSum / prediction.value.length > 0.6) {
         return true;
       } else if (predictionSum / prediction.value.length < 0.3) {
         return false;
@@ -397,35 +394,12 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     return null;
   }
 
-  async findDaytrades() {
-    this.machineDaytradingService.resetStockCounter();
-
-    let counter = 0;
-    while (counter < PrimaryList.length + 31) {
-      counter++;
-      const stock = this.machineDaytradingService.getNextStock();
-      const backtestDate = this.getLastTradeDate();
-      let trainingResults = null;
-      try {
-        trainingResults = await this.machineDaytradingService.trainStock(stock, backtestDate.subtract({ days: 1 }).format('YYYY-MM-DD'), backtestDate.add({ days: 1 }).format('YYYY-MM-DD'));
-        if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 20) {
-          this.addDaytrade(stock);
-          if (this.dayTradeList.length > this.maxDaytradeCount) {
-            break;
-          }
-        }
-      } catch (error) {
-        console.log('error getting training results ', error);
-      }
-    }
-  }
-
-  findSwingtrades(cb = (stock: PortfolioInfoHolding) => { }) {
+  findSwingtrades(cb = async (stock: PortfolioInfoHolding) => { }) {
     console.log('finding swing trade');
     this.machineDaytradingService.resetStockCounter();
     this.backtestBuffer$.unsubscribe();
     this.backtestBuffer$ = new Subject();
-    const noOpportunityCounter = PrimaryList.length;
+    const noOpportunityCounter = PrimaryList.length + 10;
     this.aiPicksService.mlNeutralResults.pipe(
       take(noOpportunityCounter),
       finalize(() => {
@@ -433,8 +407,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         this.processBuyList();
         this.processDaytradeList();
       })
-    ).subscribe(latestMlResult => {
-      console.log('Received neutral results', latestMlResult);
+    ).subscribe(async (latestMlResult) => {
+      console.log(`Received neutral results for ${latestMlResult.label} ${JSON.stringify(latestMlResult.value[0])}`);
       if (this.isBuyPrediction(latestMlResult)) {
         const stockHolding: PortfolioInfoHolding = {
           name: latestMlResult.label,
@@ -449,9 +423,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           sellConfidence: 0,
           prediction: null
         };
-        console.log('Adding buy ', stockHolding);
+        console.log('Found:', stockHolding);
         sessionStorage.setItem('lastMlResult', JSON.stringify(latestMlResult));
-        cb(stockHolding);
+        await cb(stockHolding);
       }
       this.schedulerService.schedule(() => {
         this.triggerBacktestNext();
@@ -488,7 +462,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       const trainingResults = await this.machineDaytradingService.trainStock(stock, backtestDate.subtract({ days: 1 }).format('YYYY-MM-DD'), backtestDate.add({ days: 1 }).format('YYYY-MM-DD'));
       console.log('training daytrade results ', trainingResults);
       if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 50) {
-        this.addDaytrade(stock);
+        await this.addDaytrade(stock);
         this.portfolioDaytrade(stock, this.dayTradingRiskToleranceList[this.dayTradeRiskCounter]);
         if (this.dayTradeList.length > this.maxDaytradeCount) {
           break;
@@ -510,8 +484,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         this.processBuyList();
         this.setLoading(false);
       })
-    ).subscribe(latestMlResult => {
-      console.log('Received neutral results', latestMlResult);
+    ).subscribe(async (latestMlResult) => {
+      console.log(`Received neutral results for ${latestMlResult.label} ${JSON.stringify(latestMlResult.value[0])}`);
       if (this.isBuyPrediction(latestMlResult)) {
         const stockHolding = {
           name: latestMlResult.label,
@@ -528,7 +502,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         };
         console.log('Adding buy ', stockHolding);
         sessionStorage.setItem('lastMlResult', JSON.stringify(latestMlResult));
-        this.addBuy(stockHolding);
+        await this.addBuy(stockHolding);
         const log = `Adding swing trade short ${stockHolding.name}`;
         this.reportingService.addAuditLog(stockHolding.name, log);
       }
@@ -608,9 +582,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     await this.processSellList();
     await this.processBuyList();
     await this.processDaytradeList();
-    this.buyList = [];
-    this.dayTradeList = [];
-    this.sellList = [];
   }
 
   addSell(holding: PortfolioInfoHolding) {
@@ -621,19 +592,41 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     }
   }
 
-  addBuy(holding: PortfolioInfoHolding) {
-    if (this.buyList.length < 9) {
-      if (this.buyList.findIndex(s => s.name === holding.name) === -1) {
-        this.buyList.push(holding);
-      }
+  async addBuy(holding: PortfolioInfoHolding) {
+    const currentDate = moment().format('YYYY-MM-DD');
+    const startDate = moment().subtract(100, 'days').format('YYYY-MM-DD');
+    try {
+      const indicators = await this.getTechnicalIndicators(holding.name, startDate, currentDate, this.currentHoldings).toPromise();
+      const thresholds = this.getStopLoss(indicators.low, indicators.high);
+      await this.portfolioBuy(holding,
+        round(this.riskToleranceList[this.riskCounter] / this.buyList.length, 2),
+        thresholds.profitTakingThreshold,
+        thresholds.stopLoss);
+    } catch(error) {
+      console.log('Error getting backtest data for ', holding.name, error);
+      await this.portfolioBuy(holding,
+        round(this.riskToleranceList[this.riskCounter] / this.buyList.length, 2),
+        null,
+        null);
     }
   }
 
-  addDaytrade(stock: string) {
-    if (this.dayTradeList.length < this.maxDaytradeCount) {
-      if (this.dayTradeList.findIndex(s => s === stock) === -1) {
-        this.dayTradeList.push(stock);
-      }
+  async addDaytrade(stock: string) {
+    const currentDate = moment().format('YYYY-MM-DD');
+    const startDate = moment().subtract(100, 'days').format('YYYY-MM-DD');
+    try {
+      const indicators = await this.getTechnicalIndicators(stock, startDate, currentDate, this.currentHoldings).toPromise();
+      const thresholds = this.getStopLoss(indicators.low, indicators.high);
+      await this.portfolioDaytrade(stock,
+        round(this.dayTradingRiskToleranceList[this.dayTradeRiskCounter], 2),
+        thresholds.profitTakingThreshold,
+        thresholds.stopLoss);
+      } catch(error) {
+        console.log('Error getting backtest data for daytrade', stock, error);
+        await this.portfolioDaytrade(stock,
+          round(this.dayTradingRiskToleranceList[this.dayTradeRiskCounter], 2),
+          null,
+          null);
     }
   }
 
@@ -747,7 +740,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       if (data) {
         this.aiPicksService.mlNeutralResults.pipe(
           take(data.length)
-        ).subscribe(latestMlResult => {
+        ).subscribe(async (latestMlResult) => {
           console.log('Received results for current holdings', latestMlResult);
           const stockSymbol = latestMlResult.label;
           const order = this.cartService.buildOrder(stockSymbol);
@@ -759,7 +752,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           if (isBuy === true) {
             this.cartService.deleteSell(order);
             if (found) {
-              this.addBuy(found);
+              await this.addBuy(found);
             }
           } else if (isBuy === false) {
             this.cartService.deleteBuy(order);
@@ -851,11 +844,11 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     });
   }
 
-  analyseRecommendations(holding: PortfolioInfoHolding) {
+  async analyseRecommendations(holding: PortfolioInfoHolding) {
     if (holding.recommendation.toLowerCase() === 'buy') {
       if (holding.buyConfidence >= 0) {
         console.log('Buying ', holding.name);
-        this.addBuy(holding);
+        await this.addBuy(holding);
       }
     } else if (holding.recommendation.toLowerCase() === 'sell') {
       if (holding.sellConfidence >= 0) {
@@ -864,13 +857,13 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     }
   }
 
-  checkForStopLoss(holdings: PositionHoldings[]) {
-    holdings.forEach(val => {
+  async checkForStopLoss(holdings: PositionHoldings[]) {
+    holdings.forEach(async (val) => {
       const percentLoss = divide(val.pl, val.netLiq);
       if (percentLoss < -0.05) {
         this.portfolioSell(val);
       } else if (percentLoss > 0) {
-        this.addBuy(val);
+        await this.addBuy(val);
       }
     });
   }

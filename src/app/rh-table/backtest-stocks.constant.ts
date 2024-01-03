@@ -1938,7 +1938,22 @@ const list1 = [
   'RXDX',
   'VERU',
   'DAWN',
-  'EB'];
+  'EB',
+  'TSM',
+  'FI',
+  'PFBC',
+  'ELV',
+  'COR',
+  'UFPT',
+  'LMAT',
+  'SLP',
+  'GRBK',
+  'HZO',
+  'HIBB',
+  'SCVL',
+  'CRMT',
+  'HWKN'
+];
 
 const list2 = [
   'IRBT',

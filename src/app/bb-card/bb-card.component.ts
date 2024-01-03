@@ -866,6 +866,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
         if (!this.priceLowerBound) {
           this.priceLowerBound = quote;
         } else if (Number(quote) < Number(this.priceLowerBound)) {
+          this.priceLowerBound = quote;
           this.machineDaytradingService.getPortfolioBalance().subscribe((data) => {
             const currentBalance = data.cashBalance;
             const availableFunds = data.availableFunds;
