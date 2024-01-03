@@ -100,12 +100,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   timer;
   alive = false;
   destroy$ = new Subject();
-  buyList: PortfolioInfoHolding[] = [];
-  dayTradeList: string[] = [];
-  sellList: PortfolioInfoHolding[] = [];
   currentHoldings = [];
   strategyCounter = null;
-  maxDaytradeCount = 5;
+  maxTradeCount = 5;
   strategyList = [
     Strategy.Swingtrade,
     Strategy.Daytrade,
@@ -207,7 +204,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
             this.executeOrderList();
             this.setProfitLoss();
           } else {
-            this.processLists();
             setTimeout(() => {
               this.initializeOrders();
               this.isTradingStarted = true;
@@ -257,9 +253,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.lastOrderListIndex = 0;
     this.resetBacktested();
     this.isTradingStarted = false;
-    this.buyList = [];
-    this.dayTradeList = [];
-    this.sellList = [];
     this.cartService.deleteCart();
   }
 
@@ -373,9 +366,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         break;
       }
     }
-    this.schedulerService.schedule(() => {
-      this.processLists();
-    }, `process lists`, null, false, 60000);
   }
 
   isBuyPrediction(prediction: { label: string, value: AiPicksPredictionData[] }) {
@@ -404,8 +394,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       take(noOpportunityCounter),
       finalize(() => {
         this.setLoading(false);
-        this.processBuyList();
-        this.processDaytradeList();
       })
     ).subscribe(async (latestMlResult) => {
       console.log(`Received neutral results for ${latestMlResult.label} ${JSON.stringify(latestMlResult.value[0])}`);
@@ -464,7 +452,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 50) {
         await this.addDaytrade(stock);
         this.portfolioDaytrade(stock, this.dayTradingRiskToleranceList[this.dayTradeRiskCounter]);
-        if (this.dayTradeList.length > this.maxDaytradeCount) {
+        if (this.cartService.otherOrders.length > this.maxTradeCount) {
           break;
         }
       }
@@ -481,7 +469,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.aiPicksService.mlNeutralResults.pipe(
       take(BearList.length),
       finalize(() => {
-        this.processBuyList();
         this.setLoading(false);
       })
     ).subscribe(async (latestMlResult) => {
@@ -528,29 +515,29 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.backtestBuffer$.next();
   }
 
-  async processBuyList() {
-    for (const buyHolding of this.buyList) {
+  async addBuy(holding: PortfolioInfoHolding) {
+    if (this.cartService.buyOrders.length < this.maxTradeCount) {
       const currentDate = moment().format('YYYY-MM-DD');
       const startDate = moment().subtract(100, 'days').format('YYYY-MM-DD');
       try {
-        const indicators = await this.getTechnicalIndicators(buyHolding.name, startDate, currentDate, this.currentHoldings).toPromise();
+        const indicators = await this.getTechnicalIndicators(holding.name, startDate, currentDate, this.currentHoldings).toPromise();
         const thresholds = this.getStopLoss(indicators.low, indicators.high);
-        await this.portfolioBuy(buyHolding,
-          round(this.riskToleranceList[this.riskCounter] / this.buyList.length, 2),
+        await this.portfolioBuy(holding,
+          round(this.riskToleranceList[this.riskCounter], 2),
           thresholds.profitTakingThreshold,
           thresholds.stopLoss);
-      } catch(error) {
-        console.log('Error getting backtest data for ', buyHolding.name, error);
-        await this.portfolioBuy(buyHolding,
-          round(this.riskToleranceList[this.riskCounter] / this.buyList.length, 2),
+      } catch (error) {
+        console.log('Error getting backtest data for ', holding.name, error);
+        await this.portfolioBuy(holding,
+          round(this.riskToleranceList[this.riskCounter], 2),
           null,
           null);
       }
     }
   }
 
-  async processDaytradeList() {
-    for (const stock of this.dayTradeList) {
+  async addDaytrade(stock: string) {
+    if (this.cartService.otherOrders.length < this.maxTradeCount) {
       const currentDate = moment().format('YYYY-MM-DD');
       const startDate = moment().subtract(100, 'days').format('YYYY-MM-DD');
       try {
@@ -560,73 +547,13 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           round(this.dayTradingRiskToleranceList[this.dayTradeRiskCounter], 2),
           thresholds.profitTakingThreshold,
           thresholds.stopLoss);
-        } catch(error) {
-          console.log('Error getting backtest data for daytrade', stock, error);
-          await this.portfolioDaytrade(stock,
-            round(this.dayTradingRiskToleranceList[this.dayTradeRiskCounter], 2),
-            null,
-            null);
-      }
-
-    }
-  }
-
-  async processSellList() {
-    for (const holding of this.sellList) {
-      await this.portfolioSell(holding);
-    }
-  }
-
-  async processLists() {
-    console.log('processing list ', this.buyList, this.sellList, this.dayTradeList);
-    await this.processSellList();
-    await this.processBuyList();
-    await this.processDaytradeList();
-  }
-
-  addSell(holding: PortfolioInfoHolding) {
-    if (this.sellList.findIndex(s => s.name === holding.name) === -1) {
-      console.log('add sell ', holding, this.sellList);
-
-      this.sellList.push(holding);
-    }
-  }
-
-  async addBuy(holding: PortfolioInfoHolding) {
-    const currentDate = moment().format('YYYY-MM-DD');
-    const startDate = moment().subtract(100, 'days').format('YYYY-MM-DD');
-    try {
-      const indicators = await this.getTechnicalIndicators(holding.name, startDate, currentDate, this.currentHoldings).toPromise();
-      const thresholds = this.getStopLoss(indicators.low, indicators.high);
-      await this.portfolioBuy(holding,
-        round(this.riskToleranceList[this.riskCounter] / this.buyList.length, 2),
-        thresholds.profitTakingThreshold,
-        thresholds.stopLoss);
-    } catch(error) {
-      console.log('Error getting backtest data for ', holding.name, error);
-      await this.portfolioBuy(holding,
-        round(this.riskToleranceList[this.riskCounter] / this.buyList.length, 2),
-        null,
-        null);
-    }
-  }
-
-  async addDaytrade(stock: string) {
-    const currentDate = moment().format('YYYY-MM-DD');
-    const startDate = moment().subtract(100, 'days').format('YYYY-MM-DD');
-    try {
-      const indicators = await this.getTechnicalIndicators(stock, startDate, currentDate, this.currentHoldings).toPromise();
-      const thresholds = this.getStopLoss(indicators.low, indicators.high);
-      await this.portfolioDaytrade(stock,
-        round(this.dayTradingRiskToleranceList[this.dayTradeRiskCounter], 2),
-        thresholds.profitTakingThreshold,
-        thresholds.stopLoss);
-      } catch(error) {
+      } catch (error) {
         console.log('Error getting backtest data for daytrade', stock, error);
         await this.portfolioDaytrade(stock,
           round(this.dayTradingRiskToleranceList[this.dayTradeRiskCounter], 2),
           null,
           null);
+      }
     }
   }
 
@@ -869,13 +796,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   checkIfTooManyHoldings(currentHoldings: any[]) {
-    if (currentHoldings.length > 4) {
-      if (this.strategyList[this.strategyCounter] === Strategy.Swingtrade) {
-        this.changeStrategy();
-      }
-    }
-
-    if (currentHoldings.length > 5) {
+    if (currentHoldings.length > this.maxTradeCount) {
       currentHoldings.sort((a, b) => a.pl - b.pl);
       const toBeSold = currentHoldings.slice(0, 1);
       console.log('too many holdings. selling', toBeSold, 'from', currentHoldings);
