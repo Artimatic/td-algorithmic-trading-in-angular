@@ -94,15 +94,15 @@ export enum RiskTolerance {
 export class AutopilotComponent implements OnInit, OnDestroy {
   display = false;
   isLoading = true;
-  defaultInterval = 90000;
-  interval = 90000;
+  defaultInterval = 70300;
+  interval = 70300;
   oneDayInterval;
   timer;
   alive = false;
   destroy$ = new Subject();
   currentHoldings = [];
   strategyCounter = null;
-  maxTradeCount = 5;
+  maxTradeCount = 15;
   strategyList = [
     Strategy.Swingtrade,
     Strategy.Daytrade,
@@ -314,7 +314,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   async developStrategy() {
     const lastProfitLoss = JSON.parse(localStorage.getItem('profitLoss'));
-    console.log('developing strategy lastProfitLoss', lastProfitLoss);
     if (lastProfitLoss && lastProfitLoss.profit) {
       if (lastProfitLoss.profit * 1 < 0) {
         if (lastProfitLoss.lastStrategy === Strategy.Daytrade) {
@@ -340,7 +339,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         const callback = async (stock: PortfolioInfoHolding) => {
           const backtestDate = this.getLastTradeDate();
           try {
-            const trainingResults = await this.machineDaytradingService.trainStock(stock.name, backtestDate.subtract({ days: 2 }).format('YYYY-MM-DD'), backtestDate.add({ days: 3 }).format('YYYY-MM-DD'));
+            const trainingResults = await this.machineDaytradingService.trainStock(stock.name, backtestDate.subtract({ days: 3 }).format('YYYY-MM-DD'), backtestDate.add({ days: 3 }).format('YYYY-MM-DD'));
             if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 20) {
               const trainingMsg = `Day trade training results correct: ${trainingResults[0].correct}, guesses: ${trainingResults[0].guesses}`;
               this.reportingService.addAuditLog(stock.name, trainingMsg);
@@ -408,7 +407,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   findSwingtrades(cb = async (stock: PortfolioInfoHolding) => { }) {
-    console.log('finding swing trade');
     this.machineDaytradingService.resetStockCounter();
     this.backtestBuffer$.unsubscribe();
     this.backtestBuffer$ = new Subject();
@@ -434,7 +432,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           sellConfidence: 0,
           prediction: null
         };
-        console.log('Found:', stockHolding);
         sessionStorage.setItem('lastMlResult', JSON.stringify(latestMlResult));
         await cb(stockHolding);
       }

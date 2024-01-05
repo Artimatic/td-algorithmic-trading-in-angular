@@ -49,12 +49,12 @@ class AlgoService {
     return DaytradeRecommendation.Neutral;
   }
 
-  checkBBand(price: number, low: number, high: number, mfi: number): DaytradeRecommendation {
-    if (price <= low && mfi < 40) {
+  checkBBand(price: number, low: number, high: number): DaytradeRecommendation {
+    if (price <= low) {
       return DaytradeRecommendation.Bullish;
     }
 
-    if (price >= high && mfi > 60) {
+    if (price >= high) {
       return DaytradeRecommendation.Bearish;
     }
 

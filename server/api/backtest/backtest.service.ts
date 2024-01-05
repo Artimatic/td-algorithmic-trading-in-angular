@@ -454,8 +454,7 @@ class BacktestService {
       indicator.roc70, indicator.roc70Previous);
 
     const bbandRecommendation = AlgoService.checkBBand(price,
-      AlgoService.getLowerBBand(indicator.bband80), AlgoService.getUpperBBand(indicator.bband80),
-      indicator.mfiLeft);
+      AlgoService.getLowerBBand(indicator.bband80), AlgoService.getUpperBBand(indicator.bband80));
 
     const vwmaRecommendation = AlgoService.checkVwma(price, indicator.vwma);
 
@@ -1830,33 +1829,42 @@ class BacktestService {
       macd: DaytradeRecommendation.Neutral,
       demark9: DaytradeRecommendation.Neutral,
       mfiDivergence: DaytradeRecommendation.Neutral,
-      mfiDivergence2: DaytradeRecommendation.Neutral
+      mfiDivergence2: DaytradeRecommendation.Neutral,
+      bband: DaytradeRecommendation.Neutral
     };
 
-    const rocCrossoverRecommendation = AlgoService.checkRocCrossover(indicator.roc70Previous, indicator.roc70, indicator.mfiLeft);
+    recommendations.roc = AlgoService.checkRocCrossover(indicator.roc70Previous, indicator.roc70, indicator.mfiLeft);
 
-    const mfiRecommendation = AlgoService.checkMfi(indicator.mfiLeft);
+    recommendations.mfi = AlgoService.checkMfi(indicator.mfiLeft);
 
-    const macdRecommendation = AlgoService.checkMacd(indicator, previousIndicator);
+    recommendations.macd = AlgoService.checkMacd(indicator, previousIndicator);
 
-    const demark9Recommendation = AlgoService.checkDemark9(indicator.demark9);
+    recommendations.demark9 = AlgoService.checkDemark9(indicator.demark9);
 
-    const mfiLowRecommendation = AlgoService.checkMfiLow(indicator.mfiLow, indicator.mfiLeft);
+    recommendations.mfiLow = AlgoService.checkMfiLow(indicator.mfiLow, indicator.mfiLeft);
+    
+    recommendations.bband = AlgoService.checkBBand(price,
+      AlgoService.getLowerBBand(indicator.bband80), AlgoService.getUpperBBand(indicator.bband80));
+    
+    recommendations.vwma = AlgoService.checkVwma(price, indicator.vwma);
+    let counter = {
+      bullishCounter: 0,
+      bearishCounter: 0
+    };
 
+    for (let rec in recommendations) {
+      if (recommendations[rec] === DaytradeRecommendation.Bullish) {
+        counter.bullishCounter++;
+      } else if (recommendations[rec] === DaytradeRecommendation.Bearish) {
+        counter.bearishCounter++;
+      }
+    }
 
-    recommendations.roc = rocCrossoverRecommendation;
-    recommendations.macd = macdRecommendation;
-    recommendations.mfi = mfiRecommendation;
-    recommendations.demark9 = demark9Recommendation;
-    recommendations.mfiLow = mfiLowRecommendation;
-
-    if (recommendations.demark9 === DaytradeRecommendation.Bullish ||
-      recommendations.mfiTrade === DaytradeRecommendation.Bullish ||
-      recommendations.macd === DaytradeRecommendation.Bullish) {
+    if (recommendations.vwma === DaytradeRecommendation.Bullish && counter.bullishCounter > 1 && counter.bullishCounter > counter.bearishCounter) {
       recommendations.recommendation = OrderType.Buy;
-    } else if (recommendations.demark9 === DaytradeRecommendation.Bearish ||
-      recommendations.mfiTrade === DaytradeRecommendation.Bearish ||
-      recommendations.macd === DaytradeRecommendation.Bearish) {
+    } else if (counter.bullishCounter > 2 && counter.bullishCounter > counter.bearishCounter) {
+      recommendations.recommendation = OrderType.Buy;
+    } else if (counter.bearishCounter > 1 && counter.bearishCounter > counter.bullishCounter) {
       recommendations.recommendation = OrderType.Sell;
     }
 
