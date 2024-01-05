@@ -57,6 +57,8 @@ export interface DaytradeAlgos {
 }
 
 export interface Recommendation {
+  name?: string,
+  time?: string,
   recommendation: OrderType;
   mfi?: DaytradeRecommendation;
   roc?: DaytradeRecommendation;
@@ -415,21 +417,17 @@ class BacktestService {
         if (isAtLimit) {
           recommendation.recommendation = OrderType.Sell;
         } else {
-
-          if (!currentIndicators) {
-            console.log('Missing indicator data: ', currentIndicators);
-          }
-          recommendation = this.getDaytradeRecommendation(currentIndicators.close, currentIndicators);
+          recommendation = this.getDaytradeRecommendation(currentIndicators.close, currentIndicators, symbol);
         }
         response.status(200).send(recommendation);
       })
       .catch(error => {
         console.log(error);
-        response.status(500).send({ error });
+        response.status(500).send({ message: error });
       });
   }
 
-  getDaytradeRecommendation(price: number, indicator: Indicators): Recommendation {
+  getDaytradeRecommendation(price: number, indicator: Indicators, name = ''): Recommendation {
     let counter = {
       bullishCounter: 0,
       bearishCounter: 0,
@@ -437,6 +435,8 @@ class BacktestService {
     };
 
     const recommendations: Recommendation = {
+      name: name,
+      time: moment().format(), 
       recommendation: OrderType.None,
       mfi: DaytradeRecommendation.Neutral,
       roc: DaytradeRecommendation.Neutral,

@@ -94,8 +94,8 @@ export enum RiskTolerance {
 export class AutopilotComponent implements OnInit, OnDestroy {
   display = false;
   isLoading = true;
-  defaultInterval = 120000;
-  interval = 120000;
+  defaultInterval = 90000;
+  interval = 90000;
   oneDayInterval;
   timer;
   alive = false;
@@ -227,12 +227,26 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   setProfitLoss() {
+    const lastProfitLoss = JSON.parse(localStorage.getItem('profitLoss'));
+    const tempProfitRecord = this.scoreKeeperService.profitLossHash;
+
+    if (lastProfitLoss && lastProfitLoss.profitRecord) {
+      for (const recordKey in lastProfitLoss.profitRecord) {
+        if (lastProfitLoss.profitRecord[recordKey]) {
+          if (tempProfitRecord[recordKey]) {
+            tempProfitRecord[recordKey] += lastProfitLoss.profitRecord[recordKey];
+          } else {
+            tempProfitRecord[recordKey] = lastProfitLoss.profitRecord[recordKey];
+          }
+        }
+      }
+    }
     const profitObj: ProfitLossRecord = {
       'date': moment().format(),
       profit: this.scoreKeeperService.total,
       lastStrategy: this.strategyList[this.strategyCounter],
       lastRiskTolerance: this.riskCounter,
-      profitRecord: this.scoreKeeperService.profitLossHash
+      profitRecord: tempProfitRecord
     };
     localStorage.setItem('profitLoss', JSON.stringify(profitObj));
   }
@@ -327,7 +341,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           const backtestDate = this.getLastTradeDate();
           try {
             const trainingResults = await this.machineDaytradingService.trainStock(stock.name, backtestDate.subtract({ days: 2 }).format('YYYY-MM-DD'), backtestDate.add({ days: 3 }).format('YYYY-MM-DD'));
-            if (trainingResults[0].correct / trainingResults[0].guesses > 0.5 && trainingResults[0].guesses > 20) {
+            if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 20) {
               const trainingMsg = `Day trade training results correct: ${trainingResults[0].correct}, guesses: ${trainingResults[0].guesses}`;
               this.reportingService.addAuditLog(stock.name, trainingMsg);
               await this.addDaytrade(stock.name);
@@ -338,6 +352,15 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         };
 
         this.findSwingtrades(callback);
+        const lastProfitLoss = JSON.parse(localStorage.getItem('profitLoss'));
+    
+        if (lastProfitLoss && lastProfitLoss.profitRecord) {
+          for (const recordKey in lastProfitLoss.profitRecord) {
+            if (lastProfitLoss.profitRecord[recordKey] > 0) {
+              await this.addDaytrade(recordKey);
+            }
+          }
+        }
         break;
       }
       case Strategy.Swingtrade: {

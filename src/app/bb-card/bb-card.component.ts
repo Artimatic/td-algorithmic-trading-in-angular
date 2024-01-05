@@ -873,7 +873,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
             const usage = (data.liquidationValue - currentBalance) / data.liquidationValue;
   
             if (usage < this.globalSettingsService.maxAccountUsage) {
-              const log = `Received buy recommendation`;
+              const log = `${moment().format()} Received buy recommendation`;
               const report = this.reportingService.addAuditLog(this.order.holding.symbol, log);
               console.log(report);
               let orderQuantity: number = this.order.allocation ? Math.floor((this.order.allocation * availableFunds) / quote) : this.daytradeService.getBuyOrderQuantity(initialQuantity,
