@@ -330,7 +330,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         }
       }
     }
-    this.processCurrentPositions();
+    this.checkCurrentPositions();
   }
 
   async getNewTrades() {
@@ -352,7 +352,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
         this.findSwingtrades(callback);
         const lastProfitLoss = JSON.parse(localStorage.getItem('profitLoss'));
-    
+
         if (lastProfitLoss && lastProfitLoss.profitRecord) {
           for (const recordKey in lastProfitLoss.profitRecord) {
             if (lastProfitLoss.profitRecord[recordKey] > 0) {
@@ -669,7 +669,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.isLoading = value;
   }
 
-  async processCurrentPositions() {
+  async checkCurrentPositions() {
     await this.authenticationService.checkCredentials(this.authenticationService?.selectedTdaAccount?.accountId).toPromise();
     this.currentHoldings = [];
     const currentDate = moment().format('YYYY-MM-DD');
@@ -688,19 +688,11 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         this.aiPicksService.mlNeutralResults.pipe(
           take(data.length)
         ).subscribe(async (latestMlResult) => {
-          console.log('Received results for current holdings', latestMlResult);
           const stockSymbol = latestMlResult.label;
           const order = this.cartService.buildOrder(stockSymbol);
-          const found = this.currentHoldings.find((value) => {
-            return value.name === stockSymbol;
-          });
-
           const isBuy = this.isBuyPrediction(latestMlResult);
           if (isBuy === true) {
             this.cartService.deleteSell(order);
-            if (found) {
-              await this.addBuy(found);
-            }
           } else if (isBuy === false) {
             this.cartService.deleteBuy(order);
           }
@@ -729,7 +721,11 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           });
 
           if (holding.instrument.assetType.toLowerCase() === 'equity') {
-            const indicators = await this.getTechnicalIndicators(holding.instrument.symbol, startDate, currentDate, this.currentHoldings).toPromise();
+            const indicators = await this.getTechnicalIndicators(holding.instrument.symbol,
+              startDate,
+              currentDate,
+              this.currentHoldings,
+              true).toPromise();
             const foundIdx = this.currentHoldings.findIndex((value) => {
               return value.name === stock;
             });
@@ -751,10 +747,12 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     }
   }
 
-  getTechnicalIndicators(stock: string, startDate: string, currentDate: string, holdings) {
+  getTechnicalIndicators(stock: string, startDate: string, currentDate: string, holdings, triggerBuySell = false) {
     return this.backtestService.getBacktestEvaluation(stock, startDate, currentDate, 'daily-indicators')
       .map((indicatorResults: BacktestResponse) => {
-        this.getIndicatorScore(stock, indicatorResults.signals, holdings);
+        if (triggerBuySell) {
+          this.getIndicatorScore(stock, indicatorResults.signals, holdings);
+        }
         return indicatorResults.signals[indicatorResults.signals.length - 1];
       });
   }
@@ -935,6 +933,10 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       this.aiPicksService.tickerSellRecommendationQueue.next(stockName);
       this.aiPicksService.tickerBuyRecommendationQueue.next(stockName);
     }, 'portfolio_mgmt_ai');
+  }
+
+  scroll() {
+    document.getElementById('#autopilot-toolbar').scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
   private getStopLoss(low: number, high: number) {

@@ -8,3 +8,16 @@
     z-index: 1;
     cursor: pointer;
 }
+
+.toolbar-header {
+    display: flex;
+    flex-direction: row;
+}
+
+.toolbar-header > h3, p-tag {
+    margin-right: 1rem;
+}
+
+.p-toolbar-group-right > p-button {
+    margin-right: 1rem;
+}

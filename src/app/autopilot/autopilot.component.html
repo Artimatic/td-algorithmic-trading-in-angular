@@ -1,24 +1,29 @@
 <div class="autopilot-container">
-    <p-avatar icon="pi pi-prime" styleClass="p-mr-2" size="large" shape="circle" (click)="open()"></p-avatar>
+    <p-avatar icon="pi pi-prime" styleClass="p-mr-2" size="large" shape="circle" (click)="scroll()"></p-avatar>
 </div>
 
-<p-dialog [(visible)]="display" [breakpoints]="{'960px': '75vw', '640px': '100vw'}" [style]="{width: '35vw'}"
-    [closable]="false">
-    <ng-template pTemplate="header">
-        <h3>Autopilot</h3>
-        <p-tag [value]="strategyList[strategyCounter]" severity="success"></p-tag>
-        <p-tag [value]="dayTradingRiskToleranceList[dayTradeRiskCounter]" severity="warning"></p-tag>
-        <p-tag [value]="riskToleranceList[riskCounter]" severity="danger"></p-tag>
-    </ng-template>
-    <ng-template pTemplate="content">
-        <div *ngIf="isLoading">
-            <label>Thinking</label>
-            <p-progressBar mode="indeterminate" [style]="{ height: '1em' }"></p-progressBar>
+<p-toolbar id="autopilot-toolbar">
+    <div class="p-toolbar-group-left">
+        <div class="toolbar-header">
+            <ng-container *ngTemplateOutlet="header"></ng-container>
+        </div>
+    </div>
+    <div class="p-toolbar">
+        <div *ngIf="display">
+            <p-tag value="Active"></p-tag>
         </div>
         <app-ai-picks></app-ai-picks>
-    </ng-template>
-    <ng-template pTemplate="footer">
-        <p-button label="Next strategy" class="p-button-success" (click)="changeStrategy()" iconPos="left"></p-button>
-        <p-button label="Stop autopilot" class="p-button-danger" (click)="stop()" iconPos="left"></p-button>
-    </ng-template>
-</p-dialog>
+    </div>
+    <div class="p-toolbar-group-right">
+        <p-button icon="pi pi-play" styleClass="p-button-danger" (click)="open()"></p-button>
+        <p-button icon="pi pi-times" styleClass="p-button-danger" (click)="stop()"></p-button>
+    </div>
+</p-toolbar>
+
+<ng-template #header>
+    <h3>Autopilot</h3>
+    <p-tag [value]="strategyList[strategyCounter]" severity="success" pTooltip="Strategy"></p-tag>
+    <p-tag [value]="dayTradingRiskToleranceList[dayTradeRiskCounter]"
+        severity="warning" pTooltip="Day trade allocation"></p-tag>
+    <p-tag [value]="riskToleranceList[riskCounter]" pTooltip="Swing trade allocation" severity="danger"></p-tag> 
+</ng-template>

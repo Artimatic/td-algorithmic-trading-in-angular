@@ -7,6 +7,7 @@ import { ChartModule } from 'angular-highcharts';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { InputTextModule } from 'primeng/inputtext';
+import { ToolbarModule } from 'primeng/toolbar';
 
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import 'hammerjs';
@@ -162,6 +163,7 @@ import { AutopilotComponent } from './autopilot/autopilot.component';
     PickListModule,
     TimelineModule,
     DataViewModule,
+    ToolbarModule,
   ],
   providers: [
     BacktestService,
