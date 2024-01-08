@@ -15,7 +15,7 @@
         <app-ai-picks></app-ai-picks>
     </div>
     <div class="p-toolbar-group-right">
-        <p-button icon="pi pi-play" *ngIf="!display" styleClass="p-button-danger" (click)="open()"></p-button>
+        <p-button icon="pi pi-play" *ngIf="!display" styleClass="p-button-success" (click)="open()"></p-button>
         <p-button icon="pi pi-times" *ngIf="display" styleClass="p-button-danger" (click)="stop()"></p-button>
     </div>
 </p-toolbar>
@@ -23,7 +23,7 @@
 <ng-template #header>
     <h3>Autopilot</h3>
     <p-tag [value]="strategyList[strategyCounter]" severity="success"></p-tag>
-    <p-tag *ngIf="strategyList[strategyCounter] === 'Daytrade'" [value]="`${dayTradingRiskToleranceList[dayTradeRiskCounter]*100}%`"
+    <p-tag *ngIf="strategyList[strategyCounter] === 'Daytrade'" [value]="dayTradingRiskToleranceList[dayTradeRiskCounter]"
         severity="warning" pTooltip="Allocation - percentage of total bp"></p-tag>
-    <p-tag *ngIf="strategyList[strategyCounter] !== 'Daytrade'"  pTooltip="Allocation - percentage of cash balance" [value]="`${riskToleranceList[riskCounter]*100}`" severity="danger"></p-tag> 
+    <p-tag *ngIf="strategyList[strategyCounter] !== 'Daytrade'"  pTooltip="Allocation - percentage of cash balance" [value]="riskToleranceList[riskCounter]" severity="danger"></p-tag> 
 </ng-template>
