@@ -925,7 +925,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
         .pipe(take(1))
         .subscribe(tiingoQuote => {
           const lastPrice = tiingoQuote[0].last;
-          if (lastPrice > quote * 1) {
+          if (lastPrice >= quote * 1) {
             const buyOrder = this.buildBuyOrder(orderQuantity,
               lastPrice,
               timestamp,
@@ -933,7 +933,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
 
             this.sendBuy(buyOrder);
           } else {
-            console.log('Current price is too low. Actual: ', lastPrice, ' Expected: ', quote);
+            console.log(`${moment().format()} Current price is too low. Actual: ${lastPrice} Expected: ${quote}`);
           }
         }, () => {
           const buyOrder = this.buildBuyOrder(orderQuantity,
@@ -943,29 +943,6 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
 
           this.sendBuy(buyOrder);
         });
-      // this.schedulerService.schedule(() => {
-      //   const getPriceSub = this.portfolioService.getPrice(this.order.holding.symbol)
-      //     .subscribe((price) => {
-      //       if (price >= quote * 0.999) {
-      //         const buyOrder = this.buildBuyOrder(orderQuantity,
-      //           price,
-      //           timestamp,
-      //           analysis);
-
-      //         this.sendBuy(buyOrder);
-      //       } else {
-      //         console.log('Current price is too low. Actual: ', price, ' Expected: ', quote);
-      //       }
-      //     }, () => {
-      //       const buyOrder = this.buildBuyOrder(orderQuantity,
-      //         quote,
-      //         timestamp,
-      //         analysis);
-
-      //       this.sendBuy(buyOrder);
-      //     });
-      //   this.subscriptions.push(getPriceSub);
-      // }, `${this.order.holding.symbol}_bbcard_buy`, this.globalSettingsService.stopTime, true);
     }
   }
 
