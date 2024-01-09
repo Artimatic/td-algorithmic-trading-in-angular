@@ -458,7 +458,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
         do {
           stock = this.machineDaytradingService.getNextStock();
-        } while(found(stock))
+        } while (found(stock))
         this.runAi(stock);
       });
     this.triggerBacktestNext();
@@ -798,14 +798,11 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   async analyseRecommendations(holding: PortfolioInfoHolding) {
     if (holding.recommendation.toLowerCase() === 'buy') {
-      if (holding.buyConfidence >= 0) {
-        console.log('Buying ', holding.name);
-        await this.addBuy(holding);
-      }
+      console.log('Buying ', holding.name);
+      await this.addBuy(holding);
     } else if (holding.recommendation.toLowerCase() === 'sell') {
-      if (holding.sellConfidence >= 0) {
-        this.portfolioSell(holding);
-      }
+      console.log('Selling ', holding.name);
+      this.portfolioSell(holding);
     }
   }
 
