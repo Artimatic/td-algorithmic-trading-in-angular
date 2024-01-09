@@ -451,7 +451,14 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         finalize(() => this.setLoading(false))
       )
       .subscribe(() => {
-        const stock = this.machineDaytradingService.getNextStock();
+        let stock;
+        const found = (name) => {
+          return Boolean(this.currentHoldings.find((value) => value.name === name));
+        };
+
+        do {
+          stock = this.machineDaytradingService.getNextStock();
+        } while(found(stock))
         this.runAi(stock);
       });
     this.triggerBacktestNext();
