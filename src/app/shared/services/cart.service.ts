@@ -119,12 +119,7 @@ export class CartService {
   }
 
   getOrderIndex(orderList: SmartOrder[], targetOrder: SmartOrder) {
-    return orderList.findIndex((order) => {
-      if (order.holding.symbol === targetOrder.holding.symbol) {
-        return true;
-      }
-      return false;
-    });
+    return orderList.findIndex((order) => order.holding.symbol === targetOrder.holding.symbol);
   }
 
   deleteCart() {

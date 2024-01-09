@@ -476,7 +476,7 @@ class BacktestService {
 
     if (vwmaRecommendation === DaytradeRecommendation.Bullish && counter.bullishCounter > 1 && counter.bullishCounter > counter.bearishCounter) {
       recommendations.recommendation = OrderType.Buy;
-    } else if (counter.bullishCounter > 2 && counter.bullishCounter > counter.bearishCounter) {
+    } else if (counter.bullishCounter > 2 && counter.bearishCounter < 2) {
       recommendations.recommendation = OrderType.Buy;
     } else if (counter.bearishCounter > 1 && counter.bearishCounter > counter.bullishCounter) {
       recommendations.recommendation = OrderType.Sell;

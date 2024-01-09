@@ -587,43 +587,49 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
 
   sendSell(sellOrder: SmartOrder) {
     if (sellOrder) {
-      const log = `ORDER SENT ${sellOrder.side} ${sellOrder.quantity} ${sellOrder.holding.symbol}@${sellOrder.price}`;
-      if (this.live && this.smsOption.value !== 'only_sms') {
-        this.incrementSell(sellOrder);
+      this.backtestService.getLastPriceTiingo({ symbol: this.order.holding.symbol })
+        .subscribe(tiingoQuote => {
+          const highPrice = tiingoQuote[0].high;
 
-        const resolve = (response) => {
-          if (this.order.side.toLowerCase() !== 'sell') {
+          sellOrder.price = _.round(highPrice, 2);
+          const log = `ORDER SENT ${sellOrder.side} ${sellOrder.quantity} ${sellOrder.holding.symbol}@${sellOrder.price}`;
+          if (this.live && this.smsOption.value !== 'only_sms') {
+            this.incrementSell(sellOrder);
+
+            const resolve = (response) => {
+              if (this.order.side.toLowerCase() !== 'sell') {
+                const pl = this.daytradeService.estimateSellProfitLoss(this.orders);
+                this.scoringService.addProfitLoss(this.order.holding.symbol, pl);
+              }
+
+              console.log(`${moment().format('hh:mm')} ${log}`);
+              this.reportingService.addAuditLog(this.order.holding.symbol, log);
+            };
+
+            const reject = (error) => {
+              this.error = error._body;
+            };
+
+            const handleNotFound = () => {
+              this.removeOrder(sellOrder);
+              this.setWarning(`Trying to sell position that doesn\'t exists`);
+            };
+
+            this.daytradeService.sendSell(sellOrder, 'limit', resolve, reject, handleNotFound);
+          } else {
+            this.incrementSell(sellOrder);
+
             const pl = this.daytradeService.estimateSellProfitLoss(this.orders);
-            this.scoringService.addProfitLoss(this.order.holding.symbol, pl);
+            if (this.order.side.toLowerCase() !== 'sell') {
+              this.scoringService.addProfitLoss(this.order.holding.symbol, pl);
+            }
+
+            console.log(`${moment(sellOrder.signalTime).format('hh:mm')} ${log}`);
+            this.reportingService.addAuditLog(this.order.holding.symbol, log);
+            const sellSmsSub = this.clientSmsService.sendSellSms(sellOrder.holding.symbol, this.firstFormGroup.value.phoneNumber, sellOrder.price, sellOrder.quantity).subscribe();
+            this.subscriptions.push(sellSmsSub);
           }
-
-          console.log(`${moment().format('hh:mm')} ${log}`);
-          this.reportingService.addAuditLog(this.order.holding.symbol, log);
-        };
-
-        const reject = (error) => {
-          this.error = error._body;
-        };
-
-        const handleNotFound = () => {
-          this.removeOrder(sellOrder);
-          this.setWarning(`Trying to sell position that doesn\'t exists`);
-        };
-
-        this.daytradeService.sendSell(sellOrder, 'limit', resolve, reject, handleNotFound);
-      } else {
-        this.incrementSell(sellOrder);
-
-        const pl = this.daytradeService.estimateSellProfitLoss(this.orders);
-        if (this.order.side.toLowerCase() !== 'sell') {
-          this.scoringService.addProfitLoss(this.order.holding.symbol, pl);
-        }
-
-        console.log(`${moment(sellOrder.signalTime).format('hh:mm')} ${log}`);
-        this.reportingService.addAuditLog(this.order.holding.symbol, log);
-        const sellSmsSub = this.clientSmsService.sendSellSms(sellOrder.holding.symbol, this.firstFormGroup.value.phoneNumber, sellOrder.price, sellOrder.quantity).subscribe();
-        this.subscriptions.push(sellSmsSub);
-      }
+        });
     }
     return sellOrder;
   }
@@ -760,11 +766,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
                   const mlReport = this.reportingService.addAuditLog(this.order.holding.symbol, mlLog);
                   console.log(mlReport);
                   if (data[0].nextOutput > 0.6) {
-                    const buyOrder = this.buildBuyOrder(orderQuantity,
-                      quote,
-                      timestamp,
-                      analysis);
-                    this.sendBuy(buyOrder);
+                    this.daytradeBuy(quote, orderQuantity, timestamp, analysis);
                   }
                 }, error => {
                   console.log('daytrade ml error: ', error);
@@ -871,7 +873,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
             const currentBalance = data.cashBalance;
             const availableFunds = data.availableFunds;
             const usage = (data.liquidationValue - currentBalance) / data.liquidationValue;
-  
+
             if (usage < this.globalSettingsService.maxAccountUsage) {
               const log = `${moment().format()} Received buy recommendation`;
               const report = this.reportingService.addAuditLog(this.order.holding.symbol, log);
@@ -880,7 +882,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
                 this.firstFormGroup.value.orderSize,
                 this.buyCount,
                 this.positionCount);
-  
+
               this.schedulerService.schedule(() => {
                 this.machineLearningService
                   .trainDaytrade(this.order.holding.symbol.toUpperCase(),
@@ -922,12 +924,13 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   private daytradeBuy(quote: number, orderQuantity: number, timestamp: number, analysis) {
     if (orderQuantity > 0) {
       this.backtestService.getLastPriceTiingo({ symbol: this.order.holding.symbol })
-        .pipe(take(1))
         .subscribe(tiingoQuote => {
           const lastPrice = tiingoQuote[0].last;
+          const lowPrice = tiingoQuote[0].low;
+
           if (lastPrice >= quote * 1) {
             const buyOrder = this.buildBuyOrder(orderQuantity,
-              lastPrice,
+              _.round(lowPrice, 2),
               timestamp,
               analysis);
 

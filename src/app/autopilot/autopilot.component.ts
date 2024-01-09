@@ -22,7 +22,7 @@ export interface PositionHoldings {
   netLiq: number;
   shares: number;
   alloc: number;
-  recommendation: 'None' | 'Bullish' | 'Bearish';
+  recommendation: 'None' | 'Bullish' | 'Bearish' | null;
   buyReasons: string;
   sellReasons: string;
   buyConfidence: number;
@@ -713,19 +713,21 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           } else {
             pl = holding.marketValue - (holding.averagePrice * holding.longQuantity);
           }
-          this.currentHoldings.push({
+          const tempHoldingObj = {
             name: stock,
             pl,
             netLiq: holding.marketValue,
             shares: holding.longQuantity,
             alloc: (holding.averagePrice * holding.longQuantity) / totalValue,
-            recommendation: 'None',
+            recommendation: null,
             buyReasons: '',
             sellReasons: '',
             buyConfidence: 0,
             sellConfidence: 0,
             prediction: null
-          });
+          }
+          this.currentHoldings.push(tempHoldingObj);
+          await this.checkStopLoss(tempHoldingObj);
 
           if (holding.instrument.assetType.toLowerCase() === 'equity') {
             const indicators = await this.getTechnicalIndicators(holding.instrument.symbol,
@@ -748,7 +750,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           }
         }
         this.checkIfTooManyHoldings(this.currentHoldings);
-        this.checkForStopLoss(this.currentHoldings);
         this.getNewTrades();
       }
     }
@@ -806,15 +807,13 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     }
   }
 
-  async checkForStopLoss(holdings: PositionHoldings[]) {
-    holdings.forEach(async (val) => {
-      const percentLoss = divide(val.pl, val.netLiq);
+  async checkStopLoss(holding: PositionHoldings) {
+      const percentLoss = divide(holding.pl, holding.netLiq);
       if (percentLoss < -0.05) {
-        this.portfolioSell(val);
+        this.portfolioSell(holding);
       } else if (percentLoss > 0) {
-        await this.addBuy(val);
+        await this.addBuy(holding);
       }
-    });
   }
 
   checkIfTooManyHoldings(currentHoldings: any[]) {
