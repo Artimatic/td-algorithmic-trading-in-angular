@@ -589,9 +589,9 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     if (sellOrder) {
       this.backtestService.getLastPriceTiingo({ symbol: this.order.holding.symbol })
         .subscribe(tiingoQuote => {
-          const highPrice = tiingoQuote[0].high;
+          const lastPrice = tiingoQuote[0].last;
 
-          sellOrder.price = _.round(highPrice, 2);
+          sellOrder.price = _.round(lastPrice, 2);
           const log = `ORDER SENT ${sellOrder.side} ${sellOrder.quantity} ${sellOrder.holding.symbol}@${sellOrder.price}`;
           if (this.live && this.smsOption.value !== 'only_sms') {
             this.incrementSell(sellOrder);
@@ -926,11 +926,10 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
       this.backtestService.getLastPriceTiingo({ symbol: this.order.holding.symbol })
         .subscribe(tiingoQuote => {
           const lastPrice = tiingoQuote[0].last;
-          const lowPrice = tiingoQuote[0].low;
 
           if (lastPrice >= quote * 1) {
             const buyOrder = this.buildBuyOrder(orderQuantity,
-              _.round(lowPrice, 2),
+              _.round(lastPrice, 2),
               timestamp,
               analysis);
 
