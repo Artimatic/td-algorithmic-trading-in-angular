@@ -32,32 +32,5 @@ export class AiPicksService {
   predictionData: Subject<AiPicksPredictionData> = new Subject();
 
   clearLists: Subject<boolean> = new Subject();
-  private buyList: AiPicksData[] = [];
-  private sellList: AiPicksData[] = [];
-
   constructor() { }
-
-  getBuyList() {
-    return this.buyList;
-  }
-
-  addBuy(recommendation: AiPicksData) {
-    this.buyList.push(recommendation);
-  }
-
-  clearBuyList() {
-    this.buyList = [];
-  }
-
-  getSellList() {
-    return this.sellList;
-  }
-
-  addSell(recommendation: AiPicksData) {
-    this.sellList.push(recommendation);
-  }
-
-  clearSellList() {
-    this.sellList = [];
-  }
 }

@@ -333,8 +333,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.checkCurrentPositions();
   }
 
-  async getNewTrades() {
-    switch (this.strategyList[this.strategyCounter]) {
+  async getNewTrades(strategy = this.strategyList[this.strategyCounter]) {
+    switch (strategy) {
       case Strategy.Daytrade: {
         const callback = async (stock: PortfolioInfoHolding) => {
           const backtestDate = this.getLastTradeDate();
@@ -344,6 +344,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
               const trainingMsg = `Day trade training results correct: ${trainingResults[0].correct}, guesses: ${trainingResults[0].guesses}`;
               this.reportingService.addAuditLog(stock.name, trainingMsg);
               await this.addDaytrade(stock.name);
+            } else {
+              await this.addBuy(stock, RiskTolerance.Zero);
             }
           } catch (error) {
             console.log('error getting training results ', error);
@@ -542,7 +544,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.backtestBuffer$.next();
   }
 
-  async addBuy(holding: PortfolioInfoHolding) {
+  async addBuy(holding: PortfolioInfoHolding, allocation = round(this.riskToleranceList[this.riskCounter], 2)) {
     if (this.cartService.buyOrders.length < this.maxTradeCount) {
       const currentDate = moment().format('YYYY-MM-DD');
       const startDate = moment().subtract(100, 'days').format('YYYY-MM-DD');
@@ -550,7 +552,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         const indicators = await this.getTechnicalIndicators(holding.name, startDate, currentDate, this.currentHoldings).toPromise();
         const thresholds = this.getStopLoss(indicators.low, indicators.high);
         await this.portfolioBuy(holding,
-          round(this.riskToleranceList[this.riskCounter], 2),
+          allocation,
           thresholds.profitTakingThreshold,
           thresholds.stopLoss);
       } catch (error) {
@@ -813,6 +815,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         this.portfolioSell(holding);
       } else if (percentLoss > 0) {
         await this.addBuy(holding);
+      } else {
+        await this.addBuy(holding, RiskTolerance.Zero);
       }
   }
 

@@ -77,7 +77,6 @@ export class AiPicksComponent implements OnInit, OnDestroy {
           }, 'aipicks', 300000);
         } else {
           const prediction = { algorithm: range, prediction: activation.nextOutput, accuracy: accuracy };
-          console.log('activate prediction', symbol, prediction);
           const item = this.createListObject(symbol, prediction);
           this.aiPicksService.mlNeutralResults.next(item);
           if (prediction.prediction > 0.5) {
@@ -116,7 +115,6 @@ export class AiPicksComponent implements OnInit, OnDestroy {
       limit
     )
       .subscribe((data) => {
-        console.log('Trained: ', data);
         const score = _.round(data[0].score, 3);
         this.counter--;
         let delay = 0;
