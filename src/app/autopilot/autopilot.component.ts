@@ -107,8 +107,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     Strategy.Swingtrade,
     Strategy.Daytrade,
     // Strategy.InverseSwingtrade,
-    Strategy.DaytradeShort,
-    Strategy.Short
+    // Strategy.DaytradeShort,
+    // Strategy.Short
   ];
 
   riskCounter = 1;
@@ -235,9 +235,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       for (const recordKey in lastProfitLoss.profitRecord) {
         if (lastProfitLoss.profitRecord[recordKey]) {
           if (tempProfitRecord[recordKey]) {
-            tempProfitRecord[recordKey] += lastProfitLoss.profitRecord[recordKey];
+            tempProfitRecord[recordKey] += round(lastProfitLoss.profitRecord[recordKey], 2);
           } else {
-            tempProfitRecord[recordKey] = lastProfitLoss.profitRecord[recordKey];
+            tempProfitRecord[recordKey] = round(lastProfitLoss.profitRecord[recordKey], 2);
           }
         }
       }
@@ -342,9 +342,12 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           try {
             const trainingResults = await this.machineDaytradingService.trainStock(stock.name, backtestDate.subtract({ days: 3 }).format('YYYY-MM-DD'), backtestDate.add({ days: 3 }).format('YYYY-MM-DD'));
             if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 20) {
-              const trainingMsg = `Day trade training results correct: ${trainingResults[0].correct}, guesses: ${trainingResults[0].guesses}`;
-              this.reportingService.addAuditLog(stock.name, trainingMsg);
-              await this.addDaytrade(stock.name);
+              const lastProfitLoss = JSON.parse(localStorage.getItem('profitLoss'));
+              if (lastProfitLoss && lastProfitLoss.profitRecord && lastProfitLoss.profitRecord[stock.name] && lastProfitLoss.profitRecord[stock.name] < 10) {
+                const trainingMsg = `Day trade training results correct: ${trainingResults[0].correct}, guesses: ${trainingResults[0].guesses}`;
+                this.reportingService.addAuditLog(stock.name, trainingMsg);
+                await this.addDaytrade(stock.name);
+              }
             } else {
               await this.addBuy(stock, RiskTolerance.Zero);
             }
