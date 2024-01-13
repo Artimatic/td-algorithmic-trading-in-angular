@@ -121,7 +121,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
             this.lastTriggeredTime = this.getTimeStamp();
             this.runMlBuySell();
           }
-        } else {
+        } else if (this.alive) {
           const currentTimeStamp = this.getTimeStamp();
           if (this.lastTriggeredTime !== currentTimeStamp) {
             this.lastTriggeredTime = this.getTimeStamp();
