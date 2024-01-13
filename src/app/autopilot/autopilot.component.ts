@@ -115,6 +115,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   dayTradeRiskCounter = 0;
 
   riskToleranceList = [
+    RiskTolerance.Low,
+    RiskTolerance.ExtremeFear,
     RiskTolerance.Fear,
     RiskTolerance.Neutral,
     RiskTolerance.Greed,
@@ -122,7 +124,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   ];
 
   dayTradingRiskToleranceList = [
-    RiskTolerance.Low,
     RiskTolerance.ExtremeFear,
     RiskTolerance.Fear,
     RiskTolerance.Neutral,
@@ -880,7 +881,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     const orderSizePct = (this.riskToleranceList[this.riskCounter] > 0.5) ? 0.5 : 0.3;
     const order = this.buildOrder(holding.name, quantity, price, 'Buy',
       orderSizePct, stopLossThreshold, profitThreshold,
-      stopLossThreshold);
+      stopLossThreshold, allocation);
     this.cartService.addToCart(order);
   }
 
