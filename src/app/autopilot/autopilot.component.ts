@@ -318,6 +318,21 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     const lastProfitLoss = JSON.parse(localStorage.getItem('profitLoss'));
     if (lastProfitLoss && lastProfitLoss.profit) {
       if (lastProfitLoss.profit * 1 < 0) {
+        const stockHolding = {
+          name: 'SH',
+          pl: 0,
+          netLiq: 0,
+          shares: 0,
+          alloc: 0,
+          recommendation: 'None',
+          buyReasons: '',
+          sellReasons: '',
+          buyConfidence: 0,
+          sellConfidence: 0,
+          prediction: null
+        };
+        await this.addBuy(stockHolding, RiskTolerance.Zero);
+
         if (lastProfitLoss.lastStrategy === Strategy.Daytrade) {
           this.increaseDayTradeRiskTolerance();
         } else {
@@ -367,6 +382,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
             }
           }
         }
+
+        await this.addDaytrade('QQQ');
+
         break;
       }
       case Strategy.Swingtrade: {

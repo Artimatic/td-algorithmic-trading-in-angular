@@ -712,21 +712,14 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
             const report = this.reportingService.addAuditLog(this.order.holding.symbol, log);
             console.log(report);
 
-            let orderQuantity = null;
-            if (this.order.allocation) {
-              const tradeAmount = this.order.allocation * availableFunds;
-              if (tradeAmount > currentBalance) {
-                orderQuantity = Math.floor((this.order.allocation * availableFunds) / quote);
-              } else {
-                orderQuantity = Math.floor(currentBalance / quote)
-              }
-            } else {
-              orderQuantity = this.daytradeService.getBuyOrderQuantity(initialQuantity,
-                this.firstFormGroup.value.orderSize,
-                this.buyCount,
-                this.positionCount);
+            let orderQuantity = this.daytradeService.getBuyOrderQuantity(initialQuantity,
+              this.firstFormGroup.value.orderSize,
+              this.buyCount,
+              this.positionCount);
+            const tradeCost = orderQuantity * quote;
+            if (tradeCost > currentBalance) {
+              orderQuantity = Math.floor(currentBalance / quote)
             }
-
             this.schedulerService.schedule(() => {
               this.machineLearningService
                 .trainDaytrade(this.order.holding.symbol.toUpperCase(),
@@ -994,7 +987,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     const tradeType = this.firstFormGroup.value.orderType.toLowerCase();
     if (this.isDayTrading()) {
       return (this.buyCount >= this.firstFormGroup.value.quantity) &&
-      (this.sellCount >= this.firstFormGroup.value.quantity);
+        (this.sellCount >= this.firstFormGroup.value.quantity);
     } else if (tradeType === 'buy') {
       return (this.buyCount >= this.firstFormGroup.value.quantity);
     } else if (tradeType === 'sell') {
