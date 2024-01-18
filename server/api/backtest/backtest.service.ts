@@ -215,6 +215,8 @@ class BacktestService {
     let isMfiHighIdx = -1;
     let macdBuyIdx = -1;
     let macdSellIdx = -1;
+    let bbandBuyIdx = -1;
+
     _.forEach(indicators, (indicator, idx) => {
       if (idx > 80) {
         const mfi = AlgoService.checkMfi(indicator.mfiLeft);
@@ -222,6 +224,9 @@ class BacktestService {
         if ((idx - isMfiHighIdx) > 5 || (idx - isMfiLowIdx) > 5) {
           indicators[idx].mfiTrend = null;
         }
+
+        const bbandRecommendation = AlgoService.checkBBand(indicator.close,
+          AlgoService.getLowerBBand(indicator.bband80), AlgoService.getUpperBBand(indicator.bband80));
 
         if (mfi === DaytradeRecommendation.Bullish) {
           isMfiLowIdx = idx;
@@ -237,13 +242,15 @@ class BacktestService {
           macdBuyIdx = idx;
         } else if (macd === DaytradeRecommendation.Bearish) {
           macdSellIdx = idx;
+        } else if (bbandRecommendation === DaytradeRecommendation.Bullish) {
+          bbandBuyIdx = idx;
         }
-
-        const bbandRecommendation = AlgoService.checkBBand(indicator.close,
-          AlgoService.getLowerBBand(indicator.bband80), AlgoService.getUpperBBand(indicator.bband80));
 
         if (isMfiLowIdx > -1 && (idx - isMfiLowIdx) < 33 && (idx - isMfiLowIdx) > 5 &&
           (bbandRecommendation === DaytradeRecommendation.Bullish || (idx - macdBuyIdx) < 3)) {
+          indicators[idx].mfiTrend = true;
+        } else if ((isMfiLowIdx > -1 && bbandBuyIdx > -1 && macdBuyIdx > -1) && 
+        ((idx - isMfiLowIdx) < 6) && ((idx - bbandBuyIdx) < 6) && ((idx - macdBuyIdx) < 6)) {
           indicators[idx].mfiTrend = true;
         }
       }
