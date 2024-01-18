@@ -140,7 +140,7 @@ export class AiPicksComponent implements OnInit, OnDestroy {
         this.isLoading = false;
       }, error => {
         this.counter--;
-
+        this.activate(symbol, range, limit, isBuy, 0, cb);
         console.log('error: ', error);
         this.isLoading = false;
       });

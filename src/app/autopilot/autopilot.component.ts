@@ -912,8 +912,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     stopLossThreshold: number = null) {
     const price = await this.portfolioService.getPrice(symbol).toPromise();
     const data = await this.portfolioService.getTdBalance().toPromise();
-    const quantity = this.getQuantity(price, allocation, data.cashBalance);
-    const orderSizePct = 0.5;
+    const quantity = this.getQuantity(price, allocation, data.availableFunds);
+    const orderSizePct = 0.3;
     const order = this.buildOrder(symbol,
       quantity,
       price,
