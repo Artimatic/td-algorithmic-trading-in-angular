@@ -359,7 +359,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
             console.log(`Intraday training results for ${stock.name} Correct: ${trainingResults[0].correct} Guesses: ${trainingResults[0].guesses}`);
             if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 10) {
               const lastProfitLoss = JSON.parse(localStorage.getItem('profitLoss'));
-              if (lastProfitLoss && lastProfitLoss.profitRecord && lastProfitLoss.profitRecord[stock.name] && lastProfitLoss.profitRecord[stock.name] < 10) {
+              if (!(lastProfitLoss && lastProfitLoss.profitRecord && lastProfitLoss.profitRecord[stock.name] && lastProfitLoss.profitRecord[stock.name] < 10)) {
                 const trainingMsg = `Day trade training results correct: ${trainingResults[0].correct}, guesses: ${trainingResults[0].guesses}`;
                 this.reportingService.addAuditLog(stock.name, trainingMsg);
                 await this.addDaytrade(stock.name);
