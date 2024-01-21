@@ -186,33 +186,39 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         const startStopTime = this.getStartStopTime();
-        if (moment().isAfter(moment(startStopTime.endDateTime).subtract(5, 'minutes')) &&
-          moment().isBefore(moment(startStopTime.endDateTime))) {
-          if (this.reportingService.logs.length > 0) {
-            const profitLog = `Profit ${this.scoreKeeperService.total}`;
-            this.reportingService.addAuditLog(null, profitLog);
-            this.reportingService.exportAuditHistory();
-            this.setProfitLoss();
-            this.scoreKeeperService.resetTotal();
-            this.resetCart();
-          }
-        } else if (!this.isBacktested) {
-          this.developStrategy();
-          this.isBacktested = true;
-        } else if (moment().isAfter(moment(startStopTime.startDateTime)) &&
-          moment().isBefore(moment(startStopTime.endDateTime))) {
-          if (this.isTradingStarted && this.hasOrders()) {
-            this.executeOrderList();
-            this.setProfitLoss();
-          } else {
-            setTimeout(() => {
-              this.initializeOrders();
-              this.isTradingStarted = true;
-            }, this.defaultInterval);
-          }
-        } else if (!this.hasOrders && this.isBacktested) {
-          this.isBacktested = false;
-        }
+        const marketHours = this.portfolioService.getEquityMarketHours(moment().format('yyyy-MM-dd'))
+          .subscribe((marketHour: any) => {
+            console.log(marketHour);
+            console.log(marketHour.equity.equity.isOpen);
+
+            if (moment().isAfter(moment(startStopTime.endDateTime).subtract(5, 'minutes')) &&
+              moment().isBefore(moment(startStopTime.endDateTime))) {
+              if (this.reportingService.logs.length > 0) {
+                const profitLog = `Profit ${this.scoreKeeperService.total}`;
+                this.reportingService.addAuditLog(null, profitLog);
+                this.reportingService.exportAuditHistory();
+                this.setProfitLoss();
+                this.scoreKeeperService.resetTotal();
+                this.resetCart();
+              }
+            } else if (!this.isBacktested) {
+              this.developStrategy();
+              this.isBacktested = true;
+            } else if (moment().isAfter(moment(startStopTime.startDateTime)) &&
+              moment().isBefore(moment(startStopTime.endDateTime))) {
+              if (this.isTradingStarted && this.hasOrders()) {
+                this.executeOrderList();
+                this.setProfitLoss();
+              } else {
+                setTimeout(() => {
+                  this.initializeOrders();
+                  this.isTradingStarted = true;
+                }, this.defaultInterval);
+              }
+            } else if (!this.hasOrders && this.isBacktested) {
+              this.isBacktested = false;
+            }
+          });
       });
   }
 
@@ -833,14 +839,14 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   async checkStopLoss(holding: PositionHoldings) {
-      const percentLoss = divide(holding.pl, holding.netLiq);
-      if (percentLoss < -0.05) {
-        this.portfolioSell(holding);
-      } else if (percentLoss > 0) {
-        await this.addBuy(holding);
-      } else {
-        await this.addBuy(holding, RiskTolerance.ExtremeFear);
-      }
+    const percentLoss = divide(holding.pl, holding.netLiq);
+    if (percentLoss < -0.05) {
+      this.portfolioSell(holding);
+    } else if (percentLoss > 0) {
+      await this.addBuy(holding);
+    } else {
+      await this.addBuy(holding, RiskTolerance.ExtremeFear);
+    }
   }
 
   checkIfTooManyHoldings(currentHoldings: any[]) {
