@@ -186,7 +186,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         const startStopTime = this.getStartStopTime();
-        const marketHours = this.portfolioService.getEquityMarketHours(moment().format('yyyy-MM-dd'))
+        const marketHours = this.portfolioService.getEquityMarketHours(moment().format('YYYY-MM-DD'))
           .subscribe((marketHour: any) => {
             console.log(marketHour);
             console.log(marketHour.equity.equity.isOpen);
@@ -242,8 +242,10 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         if (lastProfitLoss.profitRecord[recordKey]) {
           if (tempProfitRecord[recordKey]) {
             tempProfitRecord[recordKey] += round(lastProfitLoss.profitRecord[recordKey], 2);
-          } else {
-            tempProfitRecord[recordKey] = round(lastProfitLoss.profitRecord[recordKey], 2);
+          }
+        } else {
+          if (tempProfitRecord[recordKey]) {
+            tempProfitRecord[recordKey] = round(Number(lastProfitLoss.profitRecord[recordKey]), 2);
           }
         }
       }
