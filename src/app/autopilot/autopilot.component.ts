@@ -186,39 +186,39 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         const startStopTime = this.getStartStopTime();
-        const marketHours = this.portfolioService.getEquityMarketHours(moment().format('YYYY-MM-DD'))
-          .subscribe((marketHour: any) => {
-            console.log(marketHour);
-            console.log(marketHour.equity.equity.isOpen);
 
-            if (moment().isAfter(moment(startStopTime.endDateTime).subtract(5, 'minutes')) &&
-              moment().isBefore(moment(startStopTime.endDateTime))) {
-              if (this.reportingService.logs.length > 0) {
-                const profitLog = `Profit ${this.scoreKeeperService.total}`;
-                this.reportingService.addAuditLog(null, profitLog);
-                this.reportingService.exportAuditHistory();
-                this.setProfitLoss();
-                this.scoreKeeperService.resetTotal();
-                this.resetCart();
+        if (moment().isAfter(moment(startStopTime.endDateTime).subtract(5, 'minutes')) &&
+          moment().isBefore(moment(startStopTime.endDateTime))) {
+          if (this.reportingService.logs.length > 0) {
+            const profitLog = `Profit ${this.scoreKeeperService.total}`;
+            this.reportingService.addAuditLog(null, profitLog);
+            this.reportingService.exportAuditHistory();
+            this.setProfitLoss();
+            this.scoreKeeperService.resetTotal();
+            this.resetCart();
+          }
+        } else if (!this.isBacktested) {
+          this.developStrategy();
+          this.isBacktested = true;
+        } else if (moment().isAfter(moment(startStopTime.startDateTime)) &&
+          moment().isBefore(moment(startStopTime.endDateTime))) {
+            this.portfolioService.getEquityMarketHours(moment().format('YYYY-MM-DD'))
+            .subscribe((marketHour: any) => {
+              if (marketHour.equity.equity.isOpen) {
+                if (this.isTradingStarted && this.hasOrders()) {
+                  this.executeOrderList();
+                  this.setProfitLoss();
+                } else {
+                  setTimeout(() => {
+                    this.initializeOrders();
+                    this.isTradingStarted = true;
+                  }, this.defaultInterval);
+                }
               }
-            } else if (!this.isBacktested) {
-              this.developStrategy();
-              this.isBacktested = true;
-            } else if (moment().isAfter(moment(startStopTime.startDateTime)) &&
-              moment().isBefore(moment(startStopTime.endDateTime))) {
-              if (this.isTradingStarted && this.hasOrders()) {
-                this.executeOrderList();
-                this.setProfitLoss();
-              } else {
-                setTimeout(() => {
-                  this.initializeOrders();
-                  this.isTradingStarted = true;
-                }, this.defaultInterval);
-              }
-            } else if (!this.hasOrders && this.isBacktested) {
-              this.isBacktested = false;
-            }
-          });
+            });  
+        } else if (!this.hasOrders && this.isBacktested) {
+          this.isBacktested = false;
+        }
       });
   }
 
