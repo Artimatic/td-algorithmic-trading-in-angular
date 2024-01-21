@@ -330,7 +330,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           sellConfidence: 0,
           prediction: null
         };
-        await this.addBuy(stockHolding, RiskTolerance.Zero);
+        await this.addBuy(stockHolding, RiskTolerance.ExtremeFear);
 
         if (lastProfitLoss.lastStrategy === Strategy.Daytrade) {
           this.increaseDayTradeRiskTolerance();
@@ -355,8 +355,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         const callback = async (stock: PortfolioInfoHolding) => {
           const backtestDate = this.getLastTradeDate();
           try {
-            const trainingResults = await this.machineDaytradingService.trainStock(stock.name, backtestDate.subtract({ days: 3 }).format('YYYY-MM-DD'), backtestDate.add({ days: 3 }).format('YYYY-MM-DD'));
-            if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 20) {
+            const trainingResults = await this.machineDaytradingService.trainStock(stock.name, backtestDate.subtract({ days: 3 }).format('YYYY-MM-DD'), backtestDate.add({ days: 2 }).format('YYYY-MM-DD'));
+            console.log(`Intraday training results for ${stock.name} Correct: ${trainingResults[0].correct} Guesses: ${trainingResults[0].guesses}`);
+            if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 10) {
               const lastProfitLoss = JSON.parse(localStorage.getItem('profitLoss'));
               if (lastProfitLoss && lastProfitLoss.profitRecord && lastProfitLoss.profitRecord[stock.name] && lastProfitLoss.profitRecord[stock.name] < 10) {
                 const trainingMsg = `Day trade training results correct: ${trainingResults[0].correct}, guesses: ${trainingResults[0].guesses}`;
@@ -364,7 +365,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
                 await this.addDaytrade(stock.name);
               }
             } else {
-              await this.addBuy(stock, RiskTolerance.Zero);
+              await this.addBuy(stock, RiskTolerance.ExtremeFear);
             }
           } catch (error) {
             console.log('error getting training results ', error);
@@ -823,10 +824,10 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   async analyseRecommendations(holding: PortfolioInfoHolding) {
     if (holding.recommendation.toLowerCase() === 'buy') {
-      console.log('Buying ', holding.name);
+      console.log('Will buy ', holding.name);
       await this.addBuy(holding);
     } else if (holding.recommendation.toLowerCase() === 'sell') {
-      console.log('Selling ', holding.name);
+      console.log('Will sell ', holding.name);
       this.portfolioSell(holding);
     }
   }
@@ -838,7 +839,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       } else if (percentLoss > 0) {
         await this.addBuy(holding);
       } else {
-        await this.addBuy(holding, RiskTolerance.Zero);
+        await this.addBuy(holding, RiskTolerance.ExtremeFear);
       }
   }
 
@@ -898,7 +899,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     stopLossThreshold: number = null) {
     const price = await this.portfolioService.getPrice(holding.name).toPromise();
     const data = await this.portfolioService.getTdBalance().toPromise();
-    const quantity = this.getQuantity(price, allocation, data.cashBalance);
+    const quantity = this.getQuantity(price, allocation, data.availableFunds);
     const orderSizePct = (this.riskToleranceList[this.riskCounter] > 0.5) ? 0.5 : 0.3;
     const order = this.buildOrder(holding.name, quantity, price, 'Buy',
       orderSizePct, stopLossThreshold, profitThreshold,
