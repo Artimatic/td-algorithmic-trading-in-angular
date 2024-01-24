@@ -33,6 +33,7 @@ import { SchedulerService } from '@shared/service/scheduler.service';
 import { MachineDaytradingService } from '../machine-daytrading/machine-daytrading.service';
 import { MenuItem, MessageService, SelectItem } from 'primeng/api';
 import { ServiceStatus } from '@shared/models/service-status';
+import { DaytradeAlgorithms } from '@shared/enums/daytrade-algorithms.enum';
 
 @Component({
   selector: 'app-bb-card',
@@ -58,7 +59,6 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   error: string;
   color: string;
   warning: string;
-  preferenceList: any[];
   config: CardOptions;
   showChart: boolean;
   tiles;
@@ -68,7 +68,10 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   isBacktest: boolean;
   indicators: Indicators;
   trailingHighPrice: number;
+
   preferences: FormControl;
+  preferenceList: any[];
+
   subscriptions: Subscription[];
 
   multiplierPreference: FormControl;
@@ -86,6 +89,9 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
 
   priceLowerBound = null;
   priceUpperBound = null;
+
+  selectedAlgorithm: FormControl;
+  algorithmList: any[];
 
   constructor(private _formBuilder: FormBuilder,
     private backtestService: BacktestService,
@@ -173,6 +179,13 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
       OrderPref.SellAtClose,
       OrderPref.MlBuySellAtClose
     ];
+
+    this.algorithmList = [
+      DaytradeAlgorithms.Default
+    ];
+
+    this.selectedAlgorithm = new FormControl();
+    this.selectedAlgorithm.setValue(this.algorithmList[0]);
 
     Highcharts.setOptions({
       global: {
@@ -853,7 +866,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
 
         const trailingChange = this.daytradeService.getPercentChange(closePrice, this.trailingHighPrice);
 
-        if (trailingChange && -0.002 > trailingChange) {
+        if (gains > 0 && trailingChange > 0 && this.getStopLossSetting() > trailingChange) {
           this.setWarning('Trailing Stop Loss triggered. Sending sell order. Estimated gain: ' +
             `${this.daytradeService.convertToFixedNumber(trailingChange, 4) * 100}`);
           const log = `Trailing Stop Loss triggered: ${closePrice}/${estimatedPrice}`;
@@ -935,6 +948,14 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
 
   isDayTrading(): boolean {
     return this.firstFormGroup.value.orderType.toLowerCase() === 'daytrade';
+  }
+
+  getStopLossSetting(): number {
+    if (this.firstFormGroup.value.lossThreshold < 0) {
+      return this.firstFormGroup.value.lossThreshold;
+    } else {
+      return this.firstFormGroup.value.lossThreshold * -1;
+    }
   }
 
   isSellOrder(): boolean {

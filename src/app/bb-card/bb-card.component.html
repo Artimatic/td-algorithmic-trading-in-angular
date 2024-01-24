@@ -24,6 +24,9 @@
         <p-checkbox formControlName="useML" label="Enable machine learning" (onChange)="checkMLService()"></p-checkbox>
       </div>
       <div class="bb-form-field">
+        <p-dropdown [options]="algorithmList" [formControl]="selectedAlgorithm" optionLabel="Select an Algorithm"></p-dropdown>
+      </div>
+      <div class="bb-form-field">
         <p-multiSelect [formControl]="preferences" defaultLabel="Select additional options"
           [options]="preferenceList"></p-multiSelect>
       </div>

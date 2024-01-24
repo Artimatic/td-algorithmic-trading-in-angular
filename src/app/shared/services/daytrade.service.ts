@@ -277,7 +277,7 @@ export class DaytradeService {
     if (boughtPrice === 0 || currentPrice === boughtPrice) {
       return 0;
     } else {
-      return (currentPrice - boughtPrice) / boughtPrice;
+      return _.round((currentPrice - boughtPrice) / boughtPrice, 3);
     }
   }
 
