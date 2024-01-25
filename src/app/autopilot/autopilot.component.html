@@ -22,8 +22,13 @@
 
 <ng-template #header>
     <h3>Autopilot</h3>
-    <p-tag [value]="strategyList[strategyCounter]" severity="success"></p-tag>
-    <p-tag *ngIf="strategyList[strategyCounter] === 'Daytrade'" [value]="dayTradingRiskToleranceList[dayTradeRiskCounter]"
-        severity="warning" pTooltip="Allocation - percentage of total bp"></p-tag>
-    <p-tag *ngIf="strategyList[strategyCounter] !== 'Daytrade'"  pTooltip="Allocation - percentage of cash balance" [value]="riskToleranceList[riskCounter]" severity="danger"></p-tag> 
+    <span *ngIf="strategyList[strategyCounter] === 'Daytrade'">
+        <p-tag [value]="strategyList[strategyCounter]" severity="warning"></p-tag>
+    </span>
+    <span *ngIf="strategyList[strategyCounter] !== 'Daytrade'">
+        <p-tag [value]="strategyList[strategyCounter]" severity="danger"></p-tag>
+    </span>
+    <p-tag [value]="dayTradingRiskToleranceList[dayTradeRiskCounter]"
+        severity="warning" pTooltip="Day trade allocation - percentage of total bp"></p-tag>
+    <p-tag pTooltip="Swing trade allocation - percentage of cash balance" [value]="riskToleranceList[riskCounter]" severity="danger"></p-tag> 
 </ng-template>

@@ -338,7 +338,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           sellConfidence: 0,
           prediction: null
         };
-        await this.addBuy(stockHolding, RiskTolerance.ExtremeFear);
+        await this.addBuy(stockHolding);
 
         if (lastProfitLoss.lastStrategy === Strategy.Daytrade) {
           this.increaseDayTradeRiskTolerance();
@@ -373,7 +373,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
                 await this.addDaytrade(stock.name);
               }
             } else {
-              await this.addBuy(stock, RiskTolerance.ExtremeFear);
+              await this.addBuy(stock);
             }
           } catch (error) {
             console.log('error getting training results ', error);
@@ -846,8 +846,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       this.portfolioSell(holding);
     } else if (percentLoss > 0) {
       await this.addBuy(holding);
-    } else {
-      await this.addBuy(holding, RiskTolerance.ExtremeFear);
+    } else if (percentLoss < -0.02) {
+      await this.addBuy(holding);
     }
   }
 
