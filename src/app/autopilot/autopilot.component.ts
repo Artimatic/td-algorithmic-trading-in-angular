@@ -294,14 +294,14 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   increaseRiskTolerance() {
-    if (this.riskCounter < this.riskToleranceList.length) {
+    if (this.riskCounter < this.riskToleranceList.length - 1) {
       this.riskCounter++;
     }
     console.log(`Increase risk to ${this.riskCounter}`);
   }
 
   increaseDayTradeRiskTolerance() {
-    if (this.dayTradeRiskCounter < this.dayTradingRiskToleranceList.length) {
+    if (this.dayTradeRiskCounter < this.dayTradingRiskToleranceList.length - 1) {
       this.dayTradeRiskCounter++;
     }
   }
