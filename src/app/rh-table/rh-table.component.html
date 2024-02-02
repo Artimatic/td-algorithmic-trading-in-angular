@@ -63,7 +63,11 @@
             defaultLabel="All Recommendations" (onChange)="filter()" selectedItemsLabel="{0} recommendations selected"
             *ngIf="additionalOptions">
           </p-multiSelect>
-          <p-multiSelect class="filter" [options]="cols" [(ngModel)]="selectedColumns" optionLabel="header"
+          <p-multiSelect class="filter" [options]="indicatorsList" [(ngModel)]="selectedColumns" optionLabel="header"
+            selectedItemsLabel="{0} columns selected" [style]="{minWidth: '200px'}" defaultLabel="Choose Columns"
+            *ngIf="additionalOptions">
+          </p-multiSelect>
+          <p-multiSelect class="filter" [options]="indicators" [(ngModel)]="selectedIndicators" optionLabel="header"
             selectedItemsLabel="{0} columns selected" [style]="{minWidth: '200px'}" defaultLabel="Choose Columns"
             *ngIf="additionalOptions">
           </p-multiSelect>
@@ -108,8 +112,8 @@
           {{element?.previousImpliedMovement | percent}}
         </span>
         <span *ngSwitchCase="'kellyCriterion'">
-          <button mat-button color="primary" *ngIf=!element.kellyCriterion
-            (click)="getKellyCriterion(element)">Get Allocation</button>
+          <button mat-button color="primary" *ngIf=!element.kellyCriterion (click)="getKellyCriterion(element)">Get
+            Allocation</button>
           <span *ngIf=element.kellyCriterion>{{element.kellyCriterion}}</span>
         </span>
         <span *ngSwitchDefault>

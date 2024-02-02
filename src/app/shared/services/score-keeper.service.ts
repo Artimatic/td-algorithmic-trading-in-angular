@@ -28,6 +28,7 @@ export class ScoreKeeperService {
   }
 
   addProfitLoss(stock: string, sum: number) {
+    sum = _.round(Number(sum), 2);
     this.total += sum;
 
     if (this.profitLossHash[stock]) {
@@ -36,7 +37,6 @@ export class ScoreKeeperService {
       this.profitLossHash[stock] = sum;
     }
 
-    this.profitLossHash[stock] = _.round(this.profitLossHash[stock], 2);
     this.addSell(stock, sum);
     const log = `${this.profitLossHash[stock]}`;
     console.log(stock, ': ', log);

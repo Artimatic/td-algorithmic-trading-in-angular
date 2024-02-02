@@ -94,9 +94,11 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       ]
     }
   ];
+  indicatorsList = [];
   recommendations: any[];
   cols: any[];
   selectedColumns: any[];
+  selectedIndicators: any[];
   selectedStock: any;
   twoOrMoreSignalsOnly: boolean;
   tickerBlacklist = {};
@@ -193,6 +195,12 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       { field: 'demark9Bullish', header: 'BBand Bullish' }
     ];
 
+    this.indicatorsList = [
+      { value: 'mfiTrade', label: 'Mfi Trade' },
+      { value: 'mfi', label: 'Mfi' },
+      { value: 'mfiDivergence', label: 'Mfi Divergence' }
+    ];
+    
     this.selectedColumns = [
       { field: 'stock', header: 'Stock' },
       { field: 'buySignals', header: 'Buy' },
@@ -550,8 +558,11 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
   filter() {
     this.filterRecommendation();
-    if (this.twoOrMoreSignalsOnly) {
+    if (this.twoOrMoreSignalsOnly || this.currentList.length > 100) {
       this.filterTwoOrMoreSignalsOnly();
+    }
+    if (this.stockList.length > 100) {
+      this.stockList = this.stockList.filter((stockItem: Stock) => (stockItem.buySignals.length > 0 || stockItem.sellSignals.length > 0));
     }
   }
 

@@ -102,7 +102,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   destroy$ = new Subject();
   currentHoldings = [];
   strategyCounter = null;
-  maxTradeCount = 5;
+  maxTradeCount = 3;
   strategyList = [
     Strategy.Swingtrade,
     Strategy.Daytrade,
@@ -204,7 +204,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           moment().isBefore(moment(startStopTime.endDateTime))) {
             this.portfolioService.getEquityMarketHours(moment().format('YYYY-MM-DD'))
             .subscribe((marketHour: any) => {
-              if (marketHour.equity.equity.isOpen) {
+              if (marketHour.equity.EQ.isOpen) {
                 if (this.isTradingStarted && this.hasOrders()) {
                   this.executeOrderList();
                   this.setProfitLoss();
@@ -392,7 +392,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         }
 
         await this.addDaytrade('QQQ');
-
         break;
       }
       case Strategy.Swingtrade: {
@@ -430,7 +429,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         predictionSum += p.prediction;
       }
 
-      if (predictionSum / prediction.value.length > 0.6) {
+      if (predictionSum / prediction.value.length > 0.7) {
         return true;
       } else if (predictionSum / prediction.value.length < 0.3) {
         return false;
@@ -725,19 +724,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         ).toPromise();
 
       if (data) {
-        this.aiPicksService.mlNeutralResults.pipe(
-          take(data.length)
-        ).subscribe(async (latestMlResult) => {
-          const stockSymbol = latestMlResult.label;
-          const order = this.cartService.buildOrder(stockSymbol);
-          const isBuy = this.isBuyPrediction(latestMlResult);
-          if (isBuy === true) {
-            this.cartService.deleteSell(order);
-          } else if (isBuy === false) {
-            this.cartService.deleteBuy(order);
-          }
-        });
-
         for (const holding of data) {
           const stock = holding.instrument.symbol;
           let pl;
