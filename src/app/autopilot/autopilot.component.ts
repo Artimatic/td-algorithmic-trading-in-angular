@@ -216,7 +216,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
                   this.isTradingStarted = true;
                 }, this.defaultInterval);
               }
-            } else if (this.lastMarketHourCheck.diff(moment(), 'hours') > 1) {
+            } else if (!this.lastMarketHourCheck || this.lastMarketHourCheck.diff(moment(), 'hours') > 1) {
               this.portfolioService.getEquityMarketHours(moment().format('YYYY-MM-DD'))
               .subscribe((marketHour: any) => {
                 if (marketHour.equity.EQ.isOpen) {
@@ -472,24 +472,27 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         this.setLoading(false);
       })
     ).subscribe(async (latestMlResult) => {
-      console.log(`Received neutral results for ${latestMlResult.label} ${JSON.stringify(latestMlResult.value[0])}`);
-      if (this.isBuyPrediction(latestMlResult)) {
-        const stockHolding: PortfolioInfoHolding = {
-          name: latestMlResult.label,
-          pl: 0,
-          netLiq: 0,
-          shares: 0,
-          alloc: 0,
-          recommendation: 'None',
-          buyReasons: '',
-          sellReasons: '',
-          buyConfidence: 0,
-          sellConfidence: 0,
-          prediction: null
-        };
-        sessionStorage.setItem('lastMlResult', JSON.stringify(latestMlResult));
-        await cb(stockHolding);
+      if (latestMlResult) {
+        console.log(`Received neutral results for ${latestMlResult.label} ${JSON.stringify(latestMlResult.value[0])}`);
+        if (this.isBuyPrediction(latestMlResult)) {
+          const stockHolding: PortfolioInfoHolding = {
+            name: latestMlResult.label,
+            pl: 0,
+            netLiq: 0,
+            shares: 0,
+            alloc: 0,
+            recommendation: 'None',
+            buyReasons: '',
+            sellReasons: '',
+            buyConfidence: 0,
+            sellConfidence: 0,
+            prediction: null
+          };
+          sessionStorage.setItem('lastMlResult', JSON.stringify(latestMlResult));
+          await cb(stockHolding);
+        }
       }
+
       this.schedulerService.schedule(() => {
         this.triggerBacktestNext();
       }, `findTrades`, null, false, 60000);
