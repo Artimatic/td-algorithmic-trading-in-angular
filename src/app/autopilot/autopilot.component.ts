@@ -107,8 +107,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     Strategy.Swingtrade,
     Strategy.Daytrade,
     // Strategy.InverseSwingtrade,
-    // Strategy.DaytradeShort,
-    // Strategy.Short
+    Strategy.DaytradeShort,
+    Strategy.Short
   ];
 
   riskCounter = 1;
@@ -138,6 +138,10 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   simultaneousOrderLimit = 3;
   executedIndex = 0;
   lastOrderListIndex = 0;
+
+  lastMarketHourCheck = null;
+  isLive = false;
+
   constructor(
     private authenticationService: AuthenticationService,
     private portfolioService: PortfolioService,
@@ -202,20 +206,27 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           this.isBacktested = true;
         } else if (moment().isAfter(moment(startStopTime.startDateTime)) &&
           moment().isBefore(moment(startStopTime.endDateTime))) {
-            this.portfolioService.getEquityMarketHours(moment().format('YYYY-MM-DD'))
-            .subscribe((marketHour: any) => {
-              if (marketHour.equity.EQ.isOpen) {
-                if (this.isTradingStarted && this.hasOrders()) {
-                  this.executeOrderList();
-                  this.setProfitLoss();
-                } else {
-                  setTimeout(() => {
-                    this.initializeOrders();
-                    this.isTradingStarted = true;
-                  }, this.defaultInterval);
-                }
+            if (this.isLive) {
+              if (this.isTradingStarted && this.hasOrders()) {
+                this.executeOrderList();
+                this.setProfitLoss();
+              } else {
+                setTimeout(() => {
+                  this.initializeOrders();
+                  this.isTradingStarted = true;
+                }, this.defaultInterval);
               }
-            });  
+            } else if (this.lastMarketHourCheck.diff(moment(), 'hours') > 1) {
+              this.portfolioService.getEquityMarketHours(moment().format('YYYY-MM-DD'))
+              .subscribe((marketHour: any) => {
+                if (marketHour.equity.EQ.isOpen) {
+                  this.isLive = true;
+                } else{
+                  this.lastMarketHourCheck = moment();
+                  this.isLive = false;
+                }
+              });  
+            }
         } else if (!this.hasOrders && this.isBacktested) {
           this.isBacktested = false;
         }
@@ -326,7 +337,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     if (lastProfitLoss && lastProfitLoss.profit) {
       if (lastProfitLoss.profit * 1 < 0) {
         const stockHolding = {
-          name: 'SH',
+          name: 'SQQQ',
           pl: 0,
           netLiq: 0,
           shares: 0,
@@ -347,6 +358,20 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         }
 
       } else if (lastProfitLoss.profit * 1 > 0) {
+        const stockHolding = {
+          name: 'TQQQ',
+          pl: 0,
+          netLiq: 0,
+          shares: 0,
+          alloc: 0,
+          recommendation: 'None',
+          buyReasons: '',
+          sellReasons: '',
+          buyConfidence: 0,
+          sellConfidence: 0,
+          prediction: null
+        };
+        await this.addBuy(stockHolding);
         if (lastProfitLoss.lastStrategy === Strategy.Daytrade) {
           this.decreaseDayTradeRiskTolerance();
         } else {
@@ -390,8 +415,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
             }
           }
         }
-
-        await this.addDaytrade('QQQ');
         break;
       }
       case Strategy.Swingtrade: {
@@ -510,7 +533,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       console.log('training daytrade results ', trainingResults);
       if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 50) {
         await this.addDaytrade(stock);
-        this.portfolioDaytrade(stock, this.dayTradingRiskToleranceList[this.dayTradeRiskCounter]);
         if (this.cartService.otherOrders.length > this.maxTradeCount) {
           break;
         }
