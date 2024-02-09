@@ -28,7 +28,7 @@
         <div class="table-settings">
           <div class="global-filter">
             <i class="fa fa-search" style="margin:4px 4px 0 0"></i>
-            <input type="text" pInputText size="50" placeholder="Global Filter"
+            <input type="text" pInputText size="50" placeholder="Global Filter" [(ngModel)]="searchText"
               (input)="dt.filterGlobal($event.target.value, 'contains')" style="width:auto">
           </div>
           <div class="date-picker">
@@ -63,14 +63,8 @@
             defaultLabel="All Recommendations" (onChange)="filter()" selectedItemsLabel="{0} recommendations selected"
             *ngIf="additionalOptions">
           </p-multiSelect>
-          <p-multiSelect class="filter" [options]="indicatorsList" [(ngModel)]="selectedColumns" optionLabel="header"
-            selectedItemsLabel="{0} columns selected" [style]="{minWidth: '200px'}" defaultLabel="Choose Columns"
-            *ngIf="additionalOptions">
-          </p-multiSelect>
-          <p-multiSelect class="filter" [options]="indicators" [(ngModel)]="selectedIndicators" optionLabel="header"
-            selectedItemsLabel="{0} columns selected" [style]="{minWidth: '200px'}" defaultLabel="Choose Columns"
-            *ngIf="additionalOptions">
-          </p-multiSelect>
+          <p-multiSelect *ngIf="additionalOptions" [options]="indicatorsList" [(ngModel)]="selectedIndicators" defaultLabel="Select an Indicator" optionLabel="label" selectedItemsLabel="{0} items selected"></p-multiSelect>
+          
           <mat-checkbox class="filter" [(ngModel)]="twoOrMoreSignalsOnly" (change)="filter()" *ngIf="additionalOptions">
             Only show if two or more signals
           </mat-checkbox>

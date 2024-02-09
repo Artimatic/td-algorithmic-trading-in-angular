@@ -104,6 +104,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   tickerBlacklist = {};
   signalScoreTable = [];
   messages = [];
+  searchText: string;
 
   private callChainSub: Subscription;
   private backtestBuffer: { stock: string; sub: Observable<any>; timeout: number; modifier: number }[];
@@ -133,6 +134,13 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       { value: 'strongsell', label: 'Strong Sell' }
     ];
     this.endDate = moment(this.globalSettingsService.backtestDate).format('YYYY-MM-DD');
+
+    this.indicatorsList = [
+      { value: 'mfiTrade', label: 'Mfi Trade' },
+      { value: 'mfi', label: 'Mfi' },
+      { value: 'mfiDivergence', label: 'Mfi Divergence' },
+      { value: 'bband', label: 'BBand' }
+    ];
 
     this.cols = [
       { field: 'stock', header: 'Stock' },
@@ -193,12 +201,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       { field: 'demark9BullishShortTerm', header: 'BBand Bullish Short Term' },
       { field: 'demark9BullishMidTerm', header: 'BBand Bullish Mid Term' },
       { field: 'demark9Bullish', header: 'BBand Bullish' }
-    ];
-
-    this.indicatorsList = [
-      { value: 'mfiTrade', label: 'Mfi Trade' },
-      { value: 'mfi', label: 'Mfi' },
-      { value: 'mfiDivergence', label: 'Mfi Divergence' }
     ];
     
     this.selectedColumns = [
@@ -558,7 +560,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
   filter() {
     this.filterRecommendation();
-    if (this.twoOrMoreSignalsOnly || this.currentList.length > 100) {
+    if (this.twoOrMoreSignalsOnly || this.currentList.length > 500) {
       this.filterTwoOrMoreSignalsOnly();
     }
     if (this.stockList.length > 100) {

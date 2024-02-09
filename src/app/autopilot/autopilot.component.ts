@@ -841,10 +841,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   async analyseRecommendations(holding: PortfolioInfoHolding) {
     if (holding.recommendation.toLowerCase() === 'buy') {
-      console.log('Will buy ', holding.name);
       await this.addBuy(holding);
     } else if (holding.recommendation.toLowerCase() === 'sell') {
-      console.log('Will sell ', holding.name);
       this.portfolioSell(holding);
     }
   }
