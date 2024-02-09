@@ -629,25 +629,25 @@ class BacktestService {
               indicator.recommendation.recommendation = indicator.recommendation.mfiTrade === DaytradeRecommendation.Bearish ? OrderType.Sell : OrderType.None;
             }
 
-            // 2020-07-02T05:00:00.000+0000
-            if (indicator.mfiLeft > indicators[idx - 1].mfiLeft &&
-              indicators[idx - 1].mfiLeft > indicators[idx - 2].mfiLeft &&
-              indicators[idx - 2].mfiLeft > indicators[idx - 3].mfiLeft &&
-              indicators[idx - 3].mfiLeft > indicators[idx - 4].mfiLeft &&
-              indicators[idx - 4].mfiLeft > indicators[idx - 5].mfiLeft &&
-              indicator.close < indicators[idx - 5].close &&
-              indicators[idx - 4].close < indicators[idx - 2].close) {
-              indicator.recommendation.mfiDivergence = DaytradeRecommendation.Bearish;
-              indicator.recommendation.recommendation = OrderType.Sell;
-            } else if (indicator.mfiLeft < indicators[idx - 1].mfiLeft &&
-              indicators[idx - 1].mfiLeft < indicators[idx - 2].mfiLeft &&
-              indicators[idx - 2].mfiLeft < indicators[idx - 3].mfiLeft &&
-              indicators[idx - 3].mfiLeft < indicators[idx - 4].mfiLeft &&
-              indicators[idx - 4].mfiLeft < indicators[idx - 5].mfiLeft &&
-              indicator.close > indicators[idx - 5].close &&
-              indicators[idx - 4].close > indicators[idx - 2].close) {
+            // 2020-07-02T05:00:00.000+0000b
+            if (indicators[idx - 4].mfiLeft < 15 &&
+              indicators[idx - 4].recommendation.bband === DaytradeRecommendation.Bullish &&
+              indicators[idx - 3].mfiLeft < 15 &&
+              indicators[idx - 3].recommendation.bband === DaytradeRecommendation.Bullish &&
+              indicators[idx - 2].mfiLeft < 15 &&
+              indicators[idx - 2].recommendation.bband === DaytradeRecommendation.Bullish &&
+              indicators[idx - 1].recommendation.bband === DaytradeRecommendation.Neutral) {
               indicator.recommendation.mfiDivergence = DaytradeRecommendation.Bullish;
               indicator.recommendation.recommendation = OrderType.Buy;
+            } else if (indicators[idx - 4].mfiLeft > 80 &&
+              indicators[idx - 4].recommendation.bband === DaytradeRecommendation.Bearish &&
+              indicators[idx - 3].mfiLeft > 80 &&
+              indicators[idx - 3].recommendation.bband === DaytradeRecommendation.Bearish &&
+              indicators[idx - 2].mfiLeft > 80 &&
+              indicators[idx - 2].recommendation.bband === DaytradeRecommendation.Bearish &&
+              indicators[idx - 1].recommendation.bband === DaytradeRecommendation.Neutral) {
+              indicator.recommendation.mfiDivergence = DaytradeRecommendation.Bearish;
+              indicator.recommendation.recommendation = OrderType.Sell;
             }
             if (indicator.recommendation.mfiTrade === DaytradeRecommendation.Bullish) {
               mfiDivergenceArr = [];
