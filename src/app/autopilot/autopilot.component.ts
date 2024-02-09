@@ -473,7 +473,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       })
     ).subscribe(async (latestMlResult) => {
       if (latestMlResult) {
-        console.log(`Received neutral results for ${latestMlResult.label} ${JSON.stringify(latestMlResult.value[0])}`);
         if (this.isBuyPrediction(latestMlResult)) {
           const stockHolding: PortfolioInfoHolding = {
             name: latestMlResult.label,
@@ -556,7 +555,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         this.setLoading(false);
       })
     ).subscribe(async (latestMlResult) => {
-      console.log(`Received neutral results for ${latestMlResult.label} ${JSON.stringify(latestMlResult.value[0])}`);
       if (this.isBuyPrediction(latestMlResult)) {
         const stockHolding = {
           name: latestMlResult.label,

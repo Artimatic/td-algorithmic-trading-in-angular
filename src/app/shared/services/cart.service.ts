@@ -19,6 +19,7 @@ export class CartService {
     public snackBar: MatSnackBar) { }
 
   addToCart(order: SmartOrder) {
+    console.log('Added order ', order);
     const indices = this.searchAllLists(order);
     let noDup = true;
     for (const idx of indices) {
