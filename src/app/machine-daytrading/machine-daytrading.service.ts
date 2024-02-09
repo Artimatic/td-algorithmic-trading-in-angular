@@ -52,7 +52,7 @@ export class MachineDaytradingService {
                 this.globalSettingsService.daytradeAlgo
               )
               .subscribe((data: any[]) => {
-s                if (data[0].correct / data[0].guesses > 0.6 && data[0].guesses > 50) {
+                if (data[0].correct / data[0].guesses > 0.6 && data[0].guesses > 50) {
                   const cb = (quantity, price) => {
                     this.selectedStock = stockSymbol;
                     this.quantity = quantity;
