@@ -907,7 +907,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     const orderSizePct = 0.5;
     const order = this.buildOrder(holding.name, holding.shares, price, 'Sell',
       orderSizePct, null, null, null);
-    this.cartService.addToCart(order);
+    this.cartService.addToCart(order, true);
   }
 
   async portfolioBuy(holding: PortfolioInfoHolding,
@@ -921,7 +921,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     const order = this.buildOrder(holding.name, quantity, price, 'Buy',
       orderSizePct, stopLossThreshold, profitThreshold,
       stopLossThreshold, allocation);
-    this.cartService.addToCart(order);
+    this.cartService.addToCart(order, true);
   }
 
   async portfolioDaytrade(symbol: string,
@@ -942,7 +942,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       stopLossThreshold,
       allocation);
     console.log('add day trade: ', order);
-    this.cartService.addToCart(order);
+    this.cartService.addToCart(order, true);
   }
 
   private getQuantity(stockPrice: number, allocationPct: number, total: number) {

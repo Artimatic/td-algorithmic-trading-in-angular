@@ -18,7 +18,12 @@ export class CartService {
     private tradeService: TradeService,
     public snackBar: MatSnackBar) { }
 
-  addToCart(order: SmartOrder) {
+  addToCart(order: SmartOrder, replaceAnyExistingOrders = false) {
+    if (replaceAnyExistingOrders) {
+      this.deleteBuy(this.buildOrder(order.holding.symbol, null, null, 'buy'));
+      this.deleteSell(this.buildOrder(order.holding.symbol, null, null, 'sell'));
+      this.deleteDaytrade(this.buildOrder(order.holding.symbol, null, null, 'daytrade'));
+    }
     console.log('Added order ', order);
     const indices = this.searchAllLists(order);
     let noDup = true;
@@ -94,9 +99,7 @@ export class CartService {
 
   deleteDaytrade(deleteOrder: SmartOrder) {
     const index = this.otherOrders.findIndex((order) => {
-      if (deleteOrder.price === order.price
-        && deleteOrder.holding.symbol === order.holding.symbol
-        && deleteOrder.quantity === order.quantity) {
+      if (deleteOrder.holding.symbol === order.holding.symbol) {
         return true;
       }
       return false;
