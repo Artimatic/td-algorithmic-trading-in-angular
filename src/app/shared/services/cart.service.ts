@@ -24,7 +24,7 @@ export class CartService {
       this.deleteSell(this.buildOrder(order.holding.symbol, null, null, 'sell'));
       this.deleteDaytrade(this.buildOrder(order.holding.symbol, null, null, 'daytrade'));
     }
-    console.log('Added order ', order.holding.symbol, order);
+    console.log(`Added ${order.side} ${order.holding.symbol}`, order);
     const indices = this.searchAllLists(order);
     let noDup = true;
     for (const idx of indices) {
