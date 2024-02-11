@@ -142,6 +142,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   lastMarketHourCheck = null;
   isLive = false;
 
+  unsubscribe$ = new Subject();
+
   constructor(
     private authenticationService: AuthenticationService,
     private portfolioService: PortfolioService,
@@ -206,27 +208,27 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           this.isBacktested = true;
         } else if (moment().isAfter(moment(startStopTime.startDateTime)) &&
           moment().isBefore(moment(startStopTime.endDateTime))) {
-            if (this.isLive) {
-              if (this.isTradingStarted && this.hasOrders()) {
-                this.executeOrderList();
-                this.setProfitLoss();
-              } else {
-                setTimeout(() => {
-                  this.initializeOrders();
-                  this.isTradingStarted = true;
-                }, this.defaultInterval);
-              }
-            } else if (!this.lastMarketHourCheck || this.lastMarketHourCheck.diff(moment(), 'hours') > 1) {
-              this.portfolioService.getEquityMarketHours(moment().format('YYYY-MM-DD'))
+          if (this.isLive) {
+            if (this.isTradingStarted && this.hasOrders()) {
+              this.executeOrderList();
+              this.setProfitLoss();
+            } else {
+              setTimeout(() => {
+                this.initializeOrders();
+                this.isTradingStarted = true;
+              }, this.defaultInterval);
+            }
+          } else if (!this.lastMarketHourCheck || this.lastMarketHourCheck.diff(moment(), 'hours') > 1) {
+            this.portfolioService.getEquityMarketHours(moment().format('YYYY-MM-DD'))
               .subscribe((marketHour: any) => {
                 if (marketHour.equity.EQ.isOpen) {
                   this.isLive = true;
-                } else{
+                } else {
                   this.lastMarketHourCheck = moment();
                   this.isLive = false;
                 }
-              });  
-            }
+              });
+          }
         } else if (!this.hasOrders && this.isBacktested) {
           this.isBacktested = false;
         }
@@ -462,12 +464,13 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   findSwingtrades(cb = async (stock: PortfolioInfoHolding) => { }) {
+    this.unsubscribeStockFinder();
+    this.unsubscribe$ = new Subject();
     this.machineDaytradingService.resetStockCounter();
     this.backtestBuffer$.unsubscribe();
     this.backtestBuffer$ = new Subject();
-    const noOpportunityCounter = PrimaryList.length + 10;
     this.aiPicksService.mlNeutralResults.pipe(
-      take(noOpportunityCounter),
+      takeUntil(this.unsubscribe$),
       finalize(() => {
         this.setLoading(false);
       })
@@ -504,7 +507,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.setLoading(true);
 
     this.backtestBuffer$
-      .pipe(takeUntil(this.destroy$),
+      .pipe(takeUntil(this.unsubscribe$),
         finalize(() => this.setLoading(false))
       )
       .subscribe(() => {
@@ -615,6 +618,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           null,
           null);
       }
+    } else {
+      this.unsubscribeStockFinder();
     }
   }
 
@@ -636,6 +641,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           null,
           null);
       }
+    } else {
+      this.unsubscribeStockFinder();
     }
   }
 
@@ -991,6 +998,11 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       profitTakingThreshold,
       stopLoss
     }
+  }
+
+  unsubscribeStockFinder() {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
   }
 
   cleanUp() {

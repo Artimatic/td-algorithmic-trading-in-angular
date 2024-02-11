@@ -892,6 +892,18 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
   addToBlackList(ticker: string) {
     this.tickerBlacklist[ticker] = true;
+    const backtestBlacklist = JSON.parse(localStorage.getItem('blacklist'));
+    if (backtestBlacklist) {
+      backtestBlacklist
+      if (!backtestBlacklist[ticker]) {
+        backtestBlacklist[ticker] = true;
+        localStorage.setItem('blacklist', JSON.stringify(backtestBlacklist));
+      }
+    } else {
+      const newStorageObj = {};
+      newStorageObj[ticker] = true;
+      localStorage.setItem('blacklist', JSON.stringify(newStorageObj));
+    }
   }
 
   autoActivate() {
