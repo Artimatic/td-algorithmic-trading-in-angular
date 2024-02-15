@@ -7,19 +7,17 @@
     <div class="ui-g">
       <div class="ui-g-4">
         <div class="table-commands">
-          <button mat-button color="primary" (click)="buy(selectedStock)" [disabled]="!selectedStock">Buy</button>
-          <button mat-button color="warn" (click)="sell(selectedStock)" [disabled]="!selectedStock">Sell</button>
-          <button mat-button (click)="openChartDialog(selectedStock, endDate)" [disabled]="!selectedStock">
+          <button pButton (click)="openChartDialog(selectedStock, endDate)" [disabled]="!selectedStock">
             <mat-icon>assessment</mat-icon>
             Chart
           </button>
-          <button mat-button (click)="runAi(selectedStock, true)" [disabled]="!selectedStock">
+          <button pButton (click)="runAi(selectedStock, true)" [disabled]="!selectedStock">
             Machine Learning
           </button>
-          <button mat-button color="primary" (click)="runDefaultBacktest()">
+          <button pButton color="primary" (click)="runDefaultBacktest()">
             Backtest full list
           </button>
-          <button mat-button color="primary" (click)="exportResults()">Export Results</button>
+          <button pButton color="primary" (click)="exportResults()">Export Results</button>
           <app-watch-list>
           </app-watch-list>
         </div>
@@ -106,7 +104,7 @@
           {{element?.previousImpliedMovement | percent}}
         </span>
         <span *ngSwitchCase="'kellyCriterion'">
-          <button mat-button color="primary" *ngIf=!element.kellyCriterion (click)="getKellyCriterion(element)">Get
+          <button pButton color="primary" *ngIf=!element.kellyCriterion (click)="getKellyCriterion(element)">Get
             Allocation</button>
           <span *ngIf=element.kellyCriterion>{{element.kellyCriterion}}</span>
         </span>

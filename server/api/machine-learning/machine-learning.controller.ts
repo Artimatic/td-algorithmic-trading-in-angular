@@ -133,6 +133,20 @@ class MachineLearningController extends BaseController {
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
+  getTrainingDataDailyV4(request, response) {
+    const features = request.query.features && request.query.features !== 'null' ? request.query.features.split(',') : null;
+
+    VariableDailyPredicationService.setOutputLimit(Number(request.query.limit));
+    VariableDailyPredicationService.setOutputRange(Number(request.query.range));
+    VariableDailyPredicationService.getDataSet(request.query.symbol,
+      request.query.startDate,
+      request.query.endDate,
+      request.query.trainingSize,
+      features)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
   scoreDailyV4(request, response) {
     const features = request.query.features && request.query.features !== 'null' ? request.query.features.split(',') : null;
 

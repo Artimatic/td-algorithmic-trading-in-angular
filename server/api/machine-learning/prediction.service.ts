@@ -96,7 +96,6 @@ export default class PredictionService {
     }
 
     return 0;
-    // return _.round(futureClose, 2);
   }
 
   convertRecommendations(signal: Indicators) {

@@ -32,13 +32,13 @@ export class ScoreKeeperService {
     this.total += sum;
 
     if (this.profitLossHash[stock]) {
-      this.profitLossHash[stock] += sum;
+      this.profitLossHash[stock] = _.round(Number(this.profitLossHash[stock]) + sum, 2);
     } else {
       this.profitLossHash[stock] = sum;
     }
 
     this.addSell(stock, sum);
-    const log = `${this.profitLossHash[stock]}`;
+    const log = `${Number(this.profitLossHash[stock])}`;
     console.log(stock, ': ', log);
     this.reportingService.addAuditLog(stock, log);
   }

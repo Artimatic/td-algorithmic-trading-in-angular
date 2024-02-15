@@ -97,7 +97,7 @@ export class AskModelComponent implements OnInit, OnDestroy {
     this.intradayMlResults = [];
     this.isLoading = false;
     this.setStartDate();
-    this.selectedModel = this.models[0];
+    this.selectedModel = this.models[1];
   }
 
   setStartDate() {

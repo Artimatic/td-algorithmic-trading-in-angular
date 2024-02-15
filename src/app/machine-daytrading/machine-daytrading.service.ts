@@ -19,6 +19,7 @@ export class MachineDaytradingService {
   public allocationTotal = null;
   public lastBalance = null;
   private counter = 0;
+  private currentStockList = null;
 
   constructor(private schedulerService: SchedulerService,
     private backtestService: BacktestService,
@@ -127,26 +128,21 @@ export class MachineDaytradingService {
     }
   }
 
+  setCurrentStockList(stockList) {
+    this.currentStockList = stockList;
+    this.resetStockCounter();
+  }
+
   getNextStock() {
     this.counter++;
-    if (this.counter > PrimaryList.length - 1) {
-      return this.getRandomStock();
+    if (this.counter > this.currentStockList.length - 1) {
+      this.counter = 0;
     }
-    return this.getRandomPrimaryStock();
+    return this.currentStockList[this.counter].ticker ? this.currentStockList[this.counter].ticker : this.currentStockList[this.counter].name;
   }
 
   resetStockCounter() {
     this.counter = 0;
-  }
-
-  getRandomStock(): string {
-    const randomIdx = Math.floor(Math.random() * Stocks.length);
-    return Stocks[randomIdx].ticker;
-  }
-
-  getRandomPrimaryStock(): string {
-    const randomIdx = Math.floor(Math.random() * PrimaryList.length);
-    return PrimaryList[randomIdx].ticker;
   }
 
   resetStock() {

@@ -4,6 +4,7 @@ import { AiPicksService } from '@shared/services';
 import { AiPicksData, AiPicksPredictionData } from '@shared/services/ai-picks.service';
 import * as moment from 'moment';
 import * as _ from 'lodash';
+
 import { SchedulerService } from '@shared/service/scheduler.service';
 
 @Component({

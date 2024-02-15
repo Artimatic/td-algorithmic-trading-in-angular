@@ -688,36 +688,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     return current;
   }
 
-  sell(row: Stock): void {
-    this.order(row, 'Sell');
-  }
-
-  buy(row: Stock): void {
-    this.order(row, 'Buy');
-  }
-
-  order(row: Stock, side: string): void {
-    this.portfolioService.getInstruments(row.stock).subscribe((response) => {
-      const instruments = response.results[0];
-      const newHolding: Holding = {
-        instrument: instruments.url,
-        symbol: instruments.symbol,
-        name: instruments.name,
-        realtime_price: row.lastPrice
-      };
-
-      const dialogRef = this.dialog.open(OrderDialogComponent, {
-        width: '500px',
-        height: '500px',
-        data: { holding: newHolding, side: side }
-      });
-
-      dialogRef.afterClosed().subscribe(result => {
-        console.log('Closed dialog', result);
-      });
-    });
-  }
-
   runDefaultBacktest() {
     this.interval = 0;
     this.getData(Stocks, 'daily-indicators');
@@ -894,7 +864,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     this.tickerBlacklist[ticker] = true;
     const backtestBlacklist = JSON.parse(localStorage.getItem('blacklist'));
     if (backtestBlacklist) {
-      backtestBlacklist
       if (!backtestBlacklist[ticker]) {
         backtestBlacklist[ticker] = true;
         localStorage.setItem('blacklist', JSON.stringify(backtestBlacklist));

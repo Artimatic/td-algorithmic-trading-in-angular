@@ -14,7 +14,7 @@ class VariableDailyPredicationService extends PredictionService {
   modelName = 'model2021-04-01';
 
   constructor() {
-    super(2, 0.003);
+    super(2, 0.01);
   }
 
   setOutputRange(range: number) {
@@ -81,6 +81,13 @@ class VariableDailyPredicationService extends PredictionService {
     });
 
     return dataSetObj;
+  }
+
+  getDataSet(symbol, startDate, endDate, trainingSize, featureUse) {
+    return BacktestService.initDailyStrategy(symbol, moment(endDate).valueOf(), moment(startDate).valueOf(), { minQuotes: 80 })
+      .then((results: BacktestResults) => {
+        return this.processBacktestResults(results, featureUse);
+      });
   }
 
   train(symbol, startDate, endDate, trainingSize, featureUse) {
