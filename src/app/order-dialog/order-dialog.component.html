@@ -8,9 +8,6 @@
     <mat-card-subtitle>{{data.holding.symbol}}</mat-card-subtitle>
   </mat-card-header>
   <mat-card-content>
-    <p>
-      {{data.holding.name}}
-    </p>
     <form class="example-container" [formGroup]="options" (ngSubmit)="order()">
       <mat-form-field>
         <input matInput type="number" placeholder="Quantity" formControlName="quantity" min="0">

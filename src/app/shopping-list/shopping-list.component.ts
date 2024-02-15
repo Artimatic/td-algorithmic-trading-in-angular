@@ -368,8 +368,7 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
         const instruments = response.results[0];
         const newHolding: Holding = {
           instrument: instruments.url,
-          symbol: instruments.symbol,
-          name: instruments.name
+          symbol: instruments.symbol
         };
 
         const order: SmartOrder = {

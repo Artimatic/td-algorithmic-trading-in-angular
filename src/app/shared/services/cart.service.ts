@@ -1,73 +1,92 @@
 import { Injectable } from '@angular/core';
 import { PortfolioService } from './portfolio.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { SmartOrder } from '../models/smart-order';
 import { TradeService, AlgoQueueItem } from './trade.service';
 import * as _ from 'lodash';
+import { MessageService } from 'primeng/api';
 
 @Injectable()
 export class CartService {
   sellOrders: SmartOrder[] = [];
   buyOrders: SmartOrder[] = [];
   otherOrders: SmartOrder[] = [];
-  sellTotal = 0;
-  buyTotal = 0;
 
   constructor(
     private portfolioService: PortfolioService,
     private tradeService: TradeService,
-    public snackBar: MatSnackBar) { }
+    private messageService: MessageService) { }
 
   addToCart(order: SmartOrder, replaceAnyExistingOrders = false) {
-    if (replaceAnyExistingOrders) {
-      this.deleteBuy(this.buildOrder(order.holding.symbol, null, null, 'buy'));
-      this.deleteSell(this.buildOrder(order.holding.symbol, null, null, 'sell'));
-      this.deleteDaytrade(this.buildOrder(order.holding.symbol, null, null, 'daytrade'));
-    }
-    console.log(`Added ${order.side} ${order.holding.symbol}`, order);
     const indices = this.searchAllLists(order);
     let noDup = true;
     for (const idx of indices) {
       if (idx > -1) {
-        this.snackBar.open(`Order for ${order.holding.symbol} already exists`, 'Dismiss', {
-          duration: 2000,
+        const msg = `Order for ${order.holding.symbol} already exists`;
+        console.log(msg);
+
+        this.messageService.add({
+          key: 'cart_dup',
+          severity: 'danger',
+          summary: msg
         });
         noDup = false;
         break;
       }
     }
 
+    if (!noDup && replaceAnyExistingOrders) {
+      if (indices[0] > -1) {
+        this.deleteBuy(this.buildOrder(order.holding.symbol, null, null, 'buy'), indices[0]);
+      } else if (indices[1] > -1) {
+        this.deleteSell(this.buildOrder(order.holding.symbol, null, null, 'sell'), indices[1]);
+      } else if (indices[2] > -1) {
+        this.deleteDaytrade(this.buildOrder(order.holding.symbol, null, null, 'daytrade'), indices[2]);
+      }
+    }
+
     if (noDup && order.quantity > 0) {
       if (order.side.toLowerCase() === 'sell') {
         this.sellOrders.push(order);
-        this.snackBar.open('Sell order added to cart', 'Dismiss', {
-          duration: 2000,
+        console.log(`Added ${order.side} ${order.holding.symbol}`, order);
+
+        this.messageService.add({
+          key: 'cart_sell_add',
+          severity: 'success',
+          summary: 'Sell order added to cart'
         });
       } else if (order.side.toLowerCase() === 'buy') {
         this.buyOrders.push(order);
-        this.snackBar.open('Buy order added to cart', 'Dismiss', {
-          duration: 2000,
+        console.log(`Added ${order.side} ${order.holding.symbol}`, order);
+        this.messageService.add({
+          key: 'cart_buy_add',
+          severity: 'success',
+          summary: 'Buy order added to cart'
         });
       } else {
         this.otherOrders.push(order);
-        this.snackBar.open(`${order.side} order added to cart`, 'Dismiss', {
-          duration: 2000,
+        console.log(`Added ${order.side} ${order.holding.symbol}`, order);
+
+        this.messageService.add({
+          key: 'cart_daytrade_add',
+          severity: 'success',
+          summary: `Added ${order.side} ${order.holding.symbol}`
         });
       }
-      this.calculateTotals();
     }
   }
 
-  deleteSell(deleteOrder: SmartOrder) {
-    const index = this.getOrderIndex(this.sellOrders, deleteOrder);
+  deleteSell(deleteOrder: SmartOrder, index = null) {
+    if (index === null) {
+      this.getOrderIndex(this.sellOrders, deleteOrder);
+    }
     this.sellOrders.splice(index, 1);
-    this.calculateTotals();
   }
 
-  deleteBuy(deleteOrder: SmartOrder) {
-    const index = this.getOrderIndex(this.buyOrders, deleteOrder);
+  deleteBuy(deleteOrder: SmartOrder, index = null) {
+    if (index === null) {
+      index = this.getOrderIndex(this.buyOrders, deleteOrder);
+    }
     this.buyOrders.splice(index, 1);
-    this.calculateTotals();
   }
 
   updateOrder(updatedOrder: SmartOrder) {
@@ -86,8 +105,6 @@ export class CartService {
         this.tradeService.algoQueue.next(queueItem);
       }
     });
-
-    this.calculateTotals();
   }
 
   searchAllLists(targetOrder: SmartOrder) {
@@ -97,15 +114,11 @@ export class CartService {
     return [buyIndex, sellIndex, otherIndex];
   }
 
-  deleteDaytrade(deleteOrder: SmartOrder) {
-    const index = this.otherOrders.findIndex((order) => {
-      if (deleteOrder.holding.symbol === order.holding.symbol) {
-        return true;
-      }
-      return false;
-    });
+  deleteDaytrade(deleteOrder: SmartOrder, index = null) {
+    if (index === null) {
+      index = this.getOrderIndex(this.otherOrders, deleteOrder);
+    }
     this.otherOrders.splice(index, 1);
-    this.calculateTotals();
   }
 
   deleteOrder(order: SmartOrder) {
@@ -132,33 +145,28 @@ export class CartService {
     this.otherOrders = [];
   }
 
-
-  calculateTotals() {
-    this.buyTotal = this.buyOrders.reduce((acc, buy) => {
-      return acc + (buy.quantity * buy.price);
-    }, 0);
-
-    this.sellTotal = this.sellOrders.reduce((acc, sell) => {
-      return acc + (sell.quantity * sell.price);
-    }, 0);
-  }
-
   submitOrders() {
     this.sellOrders.forEach((sell) => {
       sell.pending = true;
       if (!sell.submitted && sell.quantity > 0) {
         this.portfolioService.sell(sell.holding, sell.quantity, sell.price, 'limit').subscribe(
           response => {
-            this.snackBar.open('Sell order sent', 'Dismiss', {
-              duration: 2000,
+            this.messageService.add({
+              key: 'sell_sent',
+              severity: 'success',
+              summary: 'Sell order sent'
             });
             sell.pending = false;
             sell.submitted = true;
           },
           error => {
-            this.snackBar.open('Unknown error', 'Dismiss', {
-              duration: 2000,
+            console.log(error);
+            this.messageService.add({
+              key: 'sell_error',
+              severity: 'danger',
+              summary: `Sell error for ${sell.holding.symbol}`
             });
+            
             sell.pending = false;
             sell.submitted = false;
           });
@@ -170,16 +178,23 @@ export class CartService {
       if (!buy.submitted && buy.quantity > 0) {
         this.portfolioService.buy(buy.holding, buy.quantity, buy.price, 'limit').subscribe(
           response => {
-            this.snackBar.open('Buy order sent', 'Dismiss', {
-              duration: 2000,
+
+            this.messageService.add({
+              key: 'buy_sent',
+              severity: 'success',
+              summary: 'Buy order sent'
             });
             buy.pending = false;
             buy.submitted = true;
           },
           error => {
-            this.snackBar.open('Unknown error', 'Dismiss', {
-              duration: 2000,
+            console.log(error);
+            this.messageService.add({
+              key: 'buy_error',
+              severity: 'danger',
+              summary: `Buy error for ${buy.holding.symbol}`
             });
+            
             buy.pending = false;
             buy.submitted = false;
           });

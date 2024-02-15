@@ -4,48 +4,83 @@ import * as moment from 'moment-timezone';
 import crc from 'crc';
 import { PrimaryList } from '../rh-table/backtest-stocks.constant';
 import { MachineDaytradingService } from '../machine-daytrading/machine-daytrading.service';
-import { AiPicksService } from '@shared/services';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { SchedulerService } from '@shared/service/scheduler.service';
 
 interface FeatureData {
   date: string;
   input: number[];
   output: number[];
 }
+
+interface TargetData {
+  symbol: string;
+  dates: string[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class FindPatternService {
   backtestBuffer$ = new Subject();
   findPatternServiceDestroy$ = new Subject();
-  targetPattern = null;
+  startPatternSearch$ = new Subject();
+  targetPatterns = null;
   seenPatterns = {};
+  targetList: TargetData[] = [
+    { symbol: 'TSLA', dates: ['2023-10-30', '2023-10-31', '2023-11-01'] },
+    { symbol: 'META', dates: ['2022-11-04', '2023-10-27'] }
+  ];
+  foundPatternCounter = 0;
   constructor(private machineLearningService: MachineLearningService,
-    private machineDaytradingService: MachineDaytradingService) { }
+    private machineDaytradingService: MachineDaytradingService,
+    private schedulerService: SchedulerService
+  ) { }
 
   async developStrategy() {
-    const range = 5;
-    const limit = 0.01;
-    const tgtStock = 'TSLA';
-    const endDate = moment().format('YYYY-MM-DD');
-    const startDate = moment().subtract({ day: 365 }).format('YYYY-MM-DD');
-    this.machineLearningService.getPredictDailyDataV4(tgtStock,
-      endDate,
-      startDate,
-      0.7,
-      null,
-      range,
-      limit)
-      .subscribe(data => {
-        const endIdx = 267;
-        this.targetPattern = this.getPattern(tgtStock, data, endIdx);
-        console.log(this.targetPattern);
+    this.startPatternSearch$.complete();
+    this.startPatternSearch$ = new Subject();
+    this.startPatternSearch$.subscribe(start => {
+      if (start) {
         this.find();
-      });
+      }
+    });
+    this.buildTargetPatterns();
   }
+
+  buildTargetPatterns() {
+    if (!this.targetPatterns) {
+      this.targetPatterns = {};
+      this.targetList.forEach((target: TargetData, index: number) => {
+        const range = 5;
+        const limit = 0.01;
+        const endDate = moment().format('YYYY-MM-DD');
+        const startDate = moment().subtract({ day: 365 }).format('YYYY-MM-DD');
+        this.machineLearningService.getPredictDailyDataV4(target.symbol,
+          endDate,
+          startDate,
+          0.7,
+          null,
+          range,
+          limit)
+          .subscribe(data => {
+            target.dates.forEach(d => {
+              const endIdx = data.findIndex(val => d === moment(val.date).format('YYYY-MM-DD'));
+              const targetPattern = this.getPattern(target.symbol, data, endIdx);
+              this.targetPatterns[targetPattern.key] = targetPattern.data;
+            });
+            console.log(this.targetPatterns);
+            if (index === this.targetList.length - 1) {
+              this.startPatternSearch$.next(true);
+            }
+          });
+      });
+    }
+  }
+
   getPattern(stock: string, data: FeatureData[], idx: number) {
-    let counter = 3;
+    let counter = 5;
 
     if (data.length < counter || idx < counter) {
       return null;
@@ -73,16 +108,10 @@ export class FindPatternService {
     this.machineDaytradingService.setCurrentStockList(PrimaryList);
 
     this.backtestBuffer$
-      .pipe(takeUntil(this.findPatternServiceDestroy$)
-      )
+      .pipe(takeUntil(this.findPatternServiceDestroy$))
       .subscribe(() => {
         let stock = this.machineDaytradingService.getNextStock();
-
-        if (stock !== this.targetPattern.data.label) {
-          this.getData(stock);
-        } else {
-          this.triggerBacktestNext();
-        }
+        this.getData(stock);
       });
     this.triggerBacktestNext();
   }
@@ -101,16 +130,19 @@ export class FindPatternService {
       limit)
       .subscribe(data => {
         let counter = 0;
-        while(counter < data.length) {
+        while (counter < data.length) {
           const currentPattern = this.getPattern(stock, data, counter);
-          if (currentPattern && currentPattern.key === this.targetPattern.key) {
-            console.log('found matching pattern', currentPattern);
+          if (currentPattern && this.targetPatterns[currentPattern.key]) {
+            console.log('found matching pattern', currentPattern.key, currentPattern.data.label, currentPattern.data.original[1]);
             this.findPatternServiceDestroy$.complete();
+            this.foundPatternCounter++;
           }
           counter++;
         }
 
-        this.triggerBacktestNext();
+        if (this.foundPatternCounter < 25) {
+          this.triggerBacktestNext();
+        }
       });
   }
 
