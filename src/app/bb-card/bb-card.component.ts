@@ -573,6 +573,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
             const resolve = (response) => {
               if (this.order.side.toLowerCase() !== 'sell') {
                 const pl = this.daytradeService.estimateSellProfitLoss(this.orders);
+                console.log('Estimated sell pl', pl);
                 this.scoringService.addProfitLoss(this.order.holding.symbol, pl);
               }
 
@@ -612,12 +613,12 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     if (order) {
       const log = `MARKET ORDER SENT ${order.side} ${order.quantity} ${order.holding.symbol}@${order.price}`;
       if (this.live && this.smsOption.value !== 'only_sms') {
+        this.incrementSell(order);
 
         const resolve = (response) => {
-          this.incrementSell(order);
-
           if (this.order.side.toLowerCase() !== 'sell') {
             const pl = this.daytradeService.estimateSellProfitLoss(this.orders);
+            console.log('Estimated sell pl on stop loss', pl);
             this.scoringService.addProfitLoss(this.order.holding.symbol, pl);
           }
 

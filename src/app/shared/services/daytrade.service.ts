@@ -366,12 +366,12 @@ export class DaytradeService {
   * Estimate the profit/loss of the last sell order
   */
   estimateSellProfitLoss(orders: SmartOrder[]) {
-    const len = orders.length;
-    if (len < 2) {
+    const ordersLength = orders.length;
+    if (ordersLength < 2) {
       return 0;
     }
 
-    const lastOrder = orders[len - 1];
+    const lastOrder = orders[ordersLength - 1];
 
     if (lastOrder.side.toLowerCase() !== 'sell') {
       throw new Error(`Estimating sell p/l: ${orders[orders.length - 1]} is not a sell order.`);
@@ -379,7 +379,7 @@ export class DaytradeService {
 
     const finalPositions: SmartOrder[] = [];
 
-    for (let j = 0, c = len - 1; j < c; j++) {
+    for (let j = 0; j < ordersLength - 1; j++) {
       const currentOrder: SmartOrder = orders[j];
       if (currentOrder.side.toLowerCase() === 'sell') {
         let sellSize: number = currentOrder.quantity;
@@ -390,9 +390,8 @@ export class DaytradeService {
               finalPositions[i].quantity -= sellSize;
               sellSize = 0;
             } else {
-              const removed = finalPositions.shift();
-              sellSize -= removed.quantity;
-              i--;
+              sellSize -= finalPositions[i].quantity;
+              finalPositions[i].quantity = 0;
             }
           }
           i++;
@@ -402,26 +401,28 @@ export class DaytradeService {
       }
     }
 
-    let size = lastOrder.quantity;
+    let sellSize = lastOrder.quantity;
     let cost = 0;
-
-    _.forEach(finalPositions, (pos: SmartOrder) => {
-      if (pos.quantity > size) {
-        cost += _.multiply(size, pos.price);
-        size = 0;
+    let k = 0;
+    while (k < finalPositions.length - 1) {
+      const pos = finalPositions[k];
+      if (pos.quantity && sellSize > 0) {
+        if (pos.quantity > sellSize) {
+          cost += Number(sellSize) * Number(pos.price);
+          sellSize = 0;
+        } else {
+          cost += Number(pos.quantity) * Number(pos.price);
+          sellSize -= pos.quantity;
+        }  
       } else {
-        cost += _.multiply(pos.quantity, pos.price);
-        size -= pos.quantity;
+        break;
       }
+      k++;
+    }
 
-      if (size <= 0) {
-        return false;
-      }
-    });
+    const lastOrderTotal = Number(lastOrder.quantity) * Number(lastOrder.price);
 
-    const lastOrderCost = _.multiply(lastOrder.quantity, lastOrder.price);
-
-    return _.round(_.subtract(lastOrderCost, cost), 2);
+    return _.round(lastOrderTotal - cost, 2);
   }
 
   findMostCurrentQuoteIndex(quotes, firstIndex, lastIndex) {

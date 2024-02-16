@@ -1783,7 +1783,6 @@ const list1 = [
   'GBX',
   'LADR',
   'KALU',
-  'LGF-B',
   'MGNI',
   'PATK',
   'CHEF',

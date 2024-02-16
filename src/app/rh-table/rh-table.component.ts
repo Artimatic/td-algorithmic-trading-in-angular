@@ -6,9 +6,7 @@ import { MatDialog } from '@angular/material/dialog';
 import * as moment from 'moment';
 import * as _ from 'lodash';
 
-import { BacktestService, Stock, AlgoParam, PortfolioService } from '../shared';
-import { OrderDialogComponent } from '../order-dialog/order-dialog.component';
-import { Holding } from '../shared/models';
+import { BacktestService, Stock, AlgoParam, MachineLearningService } from '../shared';
 import { FormControl } from '@angular/forms';
 import { PrimaryList } from './backtest-stocks.constant';
 import Stocks from './backtest-stocks.constant';
@@ -113,7 +111,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   constructor(
     private algo: BacktestService,
     public dialog: MatDialog,
-    private portfolioService: PortfolioService,
     private globalSettingsService: GlobalSettingsService,
     private optionsDataService: OptionsDataService,
     private dailyBacktestService: DailyBacktestService,
@@ -121,7 +118,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     private reportingService: ReportingService,
     private clientSmsService: ClientSmsService,
     private schedulerService: SchedulerService,
-    private watchListService: WatchListService) { }
+    private watchListService: WatchListService,
+    private machineLearningService: MachineLearningService) { }
 
   ngOnInit() {
     this.bufferSubject = new Subject();
@@ -888,6 +886,11 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       this.reportingService.addBacktestResults(results);
     });
     this.reportingService.exportBacktestResults();
+  }
+
+  getFoundPatterns() {
+    this.machineLearningService.getFoundPatterns()
+      .subscribe(patternsResponse => console.log('found patterns ', patternsResponse));
   }
 
   ngOnDestroy() {

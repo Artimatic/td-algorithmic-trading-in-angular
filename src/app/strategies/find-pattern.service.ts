@@ -80,6 +80,8 @@ export class FindPatternService {
             }
           });
       });
+    } else {
+      this.startPatternSearch$.next(true);
     }
   }
 

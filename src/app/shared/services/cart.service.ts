@@ -76,6 +76,8 @@ export class CartService {
   }
 
   deleteSell(deleteOrder: SmartOrder, index = null) {
+    console.log('Deleting sell order', deleteOrder.holding.symbol);
+
     if (index === null) {
       this.getOrderIndex(this.sellOrders, deleteOrder);
     }
@@ -83,6 +85,8 @@ export class CartService {
   }
 
   deleteBuy(deleteOrder: SmartOrder, index = null) {
+    console.log('Deleting buy order', deleteOrder.holding.symbol);
+
     if (index === null) {
       index = this.getOrderIndex(this.buyOrders, deleteOrder);
     }
@@ -115,6 +119,7 @@ export class CartService {
   }
 
   deleteDaytrade(deleteOrder: SmartOrder, index = null) {
+    console.log('Deleting day trade', deleteOrder.holding.symbol);
     if (index === null) {
       index = this.getOrderIndex(this.otherOrders, deleteOrder);
     }

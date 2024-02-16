@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Winloss } from '../models/winloss';
 
-import * as _ from 'lodash';
+import { round } from 'lodash';
+
 import { ReportingService } from './reporting.service';
 
 export interface ScoringIndex<TValue> {
@@ -28,11 +29,11 @@ export class ScoreKeeperService {
   }
 
   addProfitLoss(stock: string, sum: number) {
-    sum = _.round(Number(sum), 2);
+    sum = round(Number(sum), 2);
     this.total += sum;
 
     if (this.profitLossHash[stock]) {
-      this.profitLossHash[stock] = _.round(Number(this.profitLossHash[stock]) + sum, 2);
+      this.profitLossHash[stock] = round(Number(this.profitLossHash[stock]) + sum, 2);
     } else {
       this.profitLossHash[stock] = sum;
     }
