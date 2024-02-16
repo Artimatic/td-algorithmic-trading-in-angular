@@ -172,6 +172,11 @@ class MachineLearningController extends BaseController {
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
+
+  getFoundPatterns(request, response) {
+    BaseController.requestGetSuccessHandler(response, VariableDailyPredicationService.getFoundPatterns());
+  }
+
 }
 
 export default new MachineLearningController();

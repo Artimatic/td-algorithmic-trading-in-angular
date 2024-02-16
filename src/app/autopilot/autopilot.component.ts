@@ -3,7 +3,7 @@ import { Subject } from 'rxjs';
 import { TimerObservable } from 'rxjs-compat/observable/TimerObservable';
 import { finalize, takeUntil, take } from 'rxjs/operators';
 import * as moment from 'moment-timezone';
-import { AiPicksService, AuthenticationService, BacktestService, CartService, PortfolioInfoHolding, PortfolioService, ReportingService, ScoreKeeperService, TradeService } from '@shared/services';
+import { AiPicksService, AuthenticationService, BacktestService, CartService, MachineLearningService, PortfolioInfoHolding, PortfolioService, ReportingService, ScoreKeeperService, TradeService } from '@shared/services';
 import { SchedulerService } from '@shared/service/scheduler.service';
 import { BacktestResponse } from '../rh-table';
 import { SmartOrder } from '@shared/index';
@@ -109,7 +109,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   strategyCounter = null;
   maxTradeCount = 3;
   strategyList = [
-    //Strategy.StateMachine,
+    // Strategy.StateMachine,
     Strategy.Swingtrade,
     Strategy.Daytrade,
     // Strategy.InverseSwingtrade,
@@ -165,7 +165,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     private reportingService: ReportingService,
     private tradeService: TradeService,
     private machineDaytradingService: MachineDaytradingService,
-    private findPatternService: FindPatternService
+    private findPatternService: FindPatternService,
+    private machineLearningService: MachineLearningService
   ) { }
 
   ngOnInit(): void {
@@ -344,6 +345,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   async developStrategy() {
+    this.machineLearningService.getFoundPatterns()
+    .subscribe(patternsResponse => console.log('found patterns ', patternsResponse));
     const lastProfitLoss = JSON.parse(localStorage.getItem('profitLoss'));
     if (lastProfitLoss && lastProfitLoss.profit) {
       if (lastProfitLoss.profit * 1 < 0) {
@@ -397,6 +400,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   async getNewTrades(strategy = this.strategyList[this.strategyCounter]) {
+    this.findPatternService.buildTargetPatterns();
     switch (strategy) {
       case Strategy.Daytrade: {
         const callback = async (mlResult: { label: string, value: AiPicksPredictionData[] }) => {
@@ -1072,6 +1076,10 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   scroll() {
     document.getElementById('#autopilot-toolbar').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  runFindPattern() {
+    this.findPatternService.developStrategy();
   }
 
   private getStopLoss(low: number, high: number) {

@@ -2,11 +2,10 @@ import { Injectable } from '@angular/core';
 import { MachineLearningService } from '@shared/services/machine-learning/machine-learning.service';
 import * as moment from 'moment-timezone';
 import crc from 'crc';
-import { PrimaryList } from '../rh-table/backtest-stocks.constant';
+import Stocks from '../rh-table/backtest-stocks.constant';
 import { MachineDaytradingService } from '../machine-daytrading/machine-daytrading.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { SchedulerService } from '@shared/service/scheduler.service';
 
 interface FeatureData {
   date: string;
@@ -27,20 +26,25 @@ export class FindPatternService {
   findPatternServiceDestroy$ = new Subject();
   startPatternSearch$ = new Subject();
   targetPatterns = null;
-  seenPatterns = {};
+  foundPatterns = [];
   targetList: TargetData[] = [
     { symbol: 'TSLA', dates: ['2023-10-30', '2023-10-31', '2023-11-01'] },
     { symbol: 'META', dates: ['2022-11-04', '2023-10-27'] }
   ];
   foundPatternCounter = 0;
+  counterLength = 5;
+
+  maxSearch = Stocks.length;
+  searchCount = 0;
   constructor(private machineLearningService: MachineLearningService,
-    private machineDaytradingService: MachineDaytradingService,
-    private schedulerService: SchedulerService
+    private machineDaytradingService: MachineDaytradingService
   ) { }
 
   async developStrategy() {
+    this.searchCount = 0;
     this.startPatternSearch$.complete();
     this.startPatternSearch$ = new Subject();
+    this.findPatternServiceDestroy$ = new Subject();
     this.startPatternSearch$.subscribe(start => {
       if (start) {
         this.find();
@@ -80,9 +84,9 @@ export class FindPatternService {
   }
 
   getPattern(stock: string, data: FeatureData[], idx: number) {
-    let counter = 5;
+    let counter = this.counterLength;
 
-    if (data.length < counter || idx < counter) {
+    if (data.length < counter || idx <= counter) {
       return null;
     }
     const patternObj = {
@@ -105,7 +109,7 @@ export class FindPatternService {
     this.backtestBuffer$.unsubscribe();
     this.backtestBuffer$ = new Subject();
 
-    this.machineDaytradingService.setCurrentStockList(PrimaryList);
+    this.machineDaytradingService.setCurrentStockList(Stocks);
 
     this.backtestBuffer$
       .pipe(takeUntil(this.findPatternServiceDestroy$))
@@ -129,10 +133,12 @@ export class FindPatternService {
       range,
       limit)
       .subscribe(data => {
-        let counter = 0;
-        while (counter < data.length) {
-          const currentPattern = this.getPattern(stock, data, counter);
+        let counter = this.counterLength;
+        const recentData = data.slice(data.length - 30, data.length);
+        while (counter < recentData.length) {
+          const currentPattern = this.getPattern(stock, recentData, counter);
           if (currentPattern && this.targetPatterns[currentPattern.key]) {
+            this.foundPatterns.push(currentPattern);
             console.log('found matching pattern', currentPattern.key, currentPattern.data.label, currentPattern.data.original[1]);
             this.findPatternServiceDestroy$.complete();
             this.foundPatternCounter++;
@@ -140,14 +146,25 @@ export class FindPatternService {
           counter++;
         }
 
-        if (this.foundPatternCounter < 25) {
+        if (this.foundPatternCounter < 25 && this.searchCount < this.maxSearch) {
           this.triggerBacktestNext();
+          this.searchCount++;
+        } else {
+          this.stop();
         }
+      }, err => {
+        this.triggerBacktestNext();
       });
   }
 
   triggerBacktestNext() {
     this.backtestBuffer$.next();
+  }
+
+  stop() {
+    this.backtestBuffer$.unsubscribe();
+    this.findPatternServiceDestroy$.unsubscribe();
+    this.startPatternSearch$.unsubscribe();
   }
 
   getHashValue(arr: number[]) {

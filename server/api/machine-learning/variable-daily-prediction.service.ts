@@ -9,9 +9,13 @@ import PredictionService from './prediction.service';
 import TrainingService from './training.service';
 import * as configurations from '../../config/environment';
 
+import { patternFinderService } from './pattern-finder.service';
+
 const mlServiceUrl = configurations.apps.armadillo;
+
 class VariableDailyPredicationService extends PredictionService {
   modelName = 'model2021-04-01';
+  foundPatterns = [];
 
   constructor() {
     super(2, 0.01);
@@ -94,6 +98,13 @@ class VariableDailyPredicationService extends PredictionService {
     return BacktestService.initDailyStrategy(symbol, moment(endDate).valueOf(), moment(startDate).valueOf(), { minQuotes: 80 })
       .then((results: BacktestResults) => {
         const finalDataSet = this.processBacktestResults(results, featureUse);
+        const foundPatterns = patternFinderService.findPatternsInFeatureSet(symbol, finalDataSet.slice(finalDataSet.length - 30, finalDataSet.length));
+        if (foundPatterns.length > 0) {
+          this.foundPatterns.push(foundPatterns);
+          if(this.foundPatterns.length > 25) {
+            this.foundPatterns.shift();
+          }
+        }
         return BacktestService.trainCustomModel(symbol, this.getModelName(), finalDataSet, trainingSize, moment().format('YYYY-MM-DD'));
       });
   }
@@ -148,6 +159,10 @@ class VariableDailyPredicationService extends PredictionService {
           });
       });
 
+  }
+
+  getFoundPatterns() {
+    return this.foundPatterns;
   }
 }
 
