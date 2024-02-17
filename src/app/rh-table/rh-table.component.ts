@@ -16,7 +16,6 @@ import { GlobalSettingsService } from '../settings/global-settings.service';
 import { OptionsDataService } from '../shared/options-data.service';
 import { Subscription, Observable, Subject } from 'rxjs';
 import { DailyBacktestService } from '@shared/daily-backtest.service';
-import { take } from 'rxjs/operators';
 import { AiPicksService } from '@shared/services/ai-picks.service';
 import { ReportingService } from '@shared/services/reporting.service';
 import { WatchListService } from '../watch-list/watch-list.service';
@@ -283,7 +282,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       case 'daily-indicators':
         const indicatorsCb = (param) => {
           return this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, 'daily-indicators')
-            .pipe(take(1))
             .map(
               (testResults: BacktestResponse) => {
                 if (testResults) {
@@ -360,7 +358,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                             });
                             if (foundInWatchList) {
                               this.clientSmsService.sendSellSms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
-                                .pipe(take(1))
                                 .subscribe();
                             }
                             this.aiPicksService.tickerSellRecommendationQueue.next(symbol);
@@ -370,7 +367,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                             });
                             if (foundInWatchList) {
                               this.clientSmsService.sendBuySms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
-                                .pipe(take(1))
                                 .subscribe();
                             }
                             this.aiPicksService.tickerBuyRecommendationQueue.next(symbol);
@@ -558,7 +554,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
   filter() {
     this.filterRecommendation();
-    if (this.currentList.length > 500) {
+    if (this.selectedIndicators.length > 0) {
       this.currentList = _.filter(this.currentList, (stock: Stock) => {
         const foundIdx = stock.buySignals.findIndex(algo => {
           return this.selectedIndicators.findIndex(selected => selected.value.toLowerCase() === algo.toLowerCase()) > -1;
@@ -737,7 +733,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
         });
         if (foundInWatchList) {
           this.clientSmsService.sendSellSms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
-            .pipe(take(1))
             .subscribe();
         }
         this.aiPicksService.tickerSellRecommendationQueue.next(element.stock);
@@ -747,7 +742,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
         });
         if (foundInWatchList) {
           this.clientSmsService.sendBuySms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
-            .pipe(take(1))
             .subscribe();
         }
         this.aiPicksService.tickerBuyRecommendationQueue.next(element.stock);
@@ -802,7 +796,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       .subscribe(() => {
         const backtest = this.backtestBuffer[0];
         this.callChainSub.add(backtest.sub
-          .pipe(take(1))
           .subscribe(() => {
             this.backtestBuffer.shift();
             setTimeout(() => {
@@ -813,7 +806,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
           }, error => {
             this.messages.push({ severity: 'error', summary: 'Backtest Failed', detail: `Backtest failed on ${backtest.stock}` });
-            console.log(`Error on ${backtest.stock}`, error.error.error, '@', moment().format());
+            console.log(`Error on ${backtest.stock}`, error, '@', moment().format());
             this.incrementProgress();
             this.backtestBuffer.shift();
             setTimeout(() => {
@@ -825,7 +818,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
             setTimeout(() => {
               this.schedulerService.schedule(() => {
                 backtest.sub
-                  .pipe(take(1))
                   .subscribe(() => { }, () => {
                     this.messages.push({ severity: 'error', summary: 'Backtest Failed', detail: `Backtest failed on ${backtest.stock}` });
                     this.addToBlackList(backtest.stock);
