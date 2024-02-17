@@ -337,16 +337,14 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                     }
                   }
                   if (hasRecommendations) {
+                    this.runAi({ ...testResults, buySignals: bullishSignals, sellSignals: bearishSignals });
+
                     this.getProbability(bullishSignals, bearishSignals, testResults.signals)
                       .subscribe((data) => {
                         this.findAndUpdateIndicatorScore(param.ticker, {
                           bullishProbability: data.bullishProbability,
                           bearishProbability: data.bearishProbability
                         }, this.stockList);
-
-                        if (data.bullishProbability > 0.3 || data.bearishProbability > 0.3) {
-                          this.runAi({ ...testResults, buySignals: bullishSignals, sellSignals: bearishSignals });
-                        }
                       });
 
                     setTimeout(() => {
@@ -360,7 +358,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                               this.clientSmsService.sendSellSms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
                                 .subscribe();
                             }
-                            this.aiPicksService.tickerSellRecommendationQueue.next(symbol);
                           } else if (bearishSignals.length < bullishSignals.length) {
                             const foundInWatchList = this.watchListService.watchList.find(item => {
                               return item.stock === symbol;
@@ -369,7 +366,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                               this.clientSmsService.sendBuySms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
                                 .subscribe();
                             }
-                            this.aiPicksService.tickerBuyRecommendationQueue.next(symbol);
                           }
                         }
                         // this.getImpliedMovement(testResults);
@@ -745,6 +741,9 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
             .subscribe();
         }
         this.aiPicksService.tickerBuyRecommendationQueue.next(element.stock);
+      } else {
+        this.aiPicksService.tickerBuyRecommendationQueue.next(element.stock);
+        this.aiPicksService.tickerSellRecommendationQueue.next(element.stock);
       }
     }
   }
