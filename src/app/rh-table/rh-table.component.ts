@@ -807,6 +807,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
           }, error => {
             this.messages.push({ severity: 'error', summary: 'Backtest Failed', detail: `Backtest failed on ${backtest.stock}` });
             console.log(`Error on ${backtest.stock}`, error, '@', moment().format());
+            this.messages.push({ severity: 'error', summary: 'Backtest Failed', detail: `Backtest failed on ${backtest.stock}` });
+            this.addToBlackList(backtest.stock);
             this.incrementProgress();
             this.backtestBuffer.shift();
             setTimeout(() => {
@@ -814,16 +816,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                 this.triggerNextBacktest();
               }, 'rhtable_backtest' + backtest.stock);
             }, 100 * (1000 - this.backtestBuffer.length));
-
-            setTimeout(() => {
-              this.schedulerService.schedule(() => {
-                backtest.sub
-                  .subscribe(() => { }, () => {
-                    this.messages.push({ severity: 'error', summary: 'Backtest Failed', detail: `Backtest failed on ${backtest.stock}` });
-                    this.addToBlackList(backtest.stock);
-                  });
-              }, 'rhtable_backtest' + backtest.stock);
-            }, 10000 * (1000 - this.backtestBuffer.length));
           }));
       });
 
