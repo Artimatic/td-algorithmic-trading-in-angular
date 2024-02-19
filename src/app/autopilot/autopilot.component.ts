@@ -17,6 +17,7 @@ import { BearList, PrimaryList } from '../rh-table/backtest-stocks.constant';
 import { AiPicksPredictionData } from '@shared/services/ai-picks.service';
 import Stocks from '../rh-table/backtest-stocks.constant';
 import { FindPatternService } from '../strategies/find-pattern.service';
+import { GlobalSettingsService } from '../settings/global-settings.service';
 
 export interface PositionHoldings {
   name: string;
@@ -166,7 +167,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     private tradeService: TradeService,
     private machineDaytradingService: MachineDaytradingService,
     private findPatternService: FindPatternService,
-    private machineLearningService: MachineLearningService
+    private machineLearningService: MachineLearningService,
+    private globalSettingsService: GlobalSettingsService
   ) { }
 
   ngOnInit(): void {
@@ -803,23 +805,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   getLastTradeDate() {
-    const currentMoment = moment().tz('America/New_York').set({ hour: 9, minute: 50 });
-    const currentDay = currentMoment.day();
-    let lastTradeDate;
-
-    if (currentDay === 6) {
-      lastTradeDate = currentMoment.subtract({ day: 1 });
-    } else if (currentDay === 7) {
-      lastTradeDate = currentMoment.subtract({ day: 2 });
-    } else if (currentDay === 0) {
-      lastTradeDate = currentMoment.subtract({ day: 2 });
-    } else if (currentDay === 1) {
-      lastTradeDate = currentMoment.subtract({ day: 3 });
-    } else {
-      lastTradeDate = currentMoment.add({ day: 1 });
-    }
-
-    return moment.tz(lastTradeDate.format(), 'America/New_York');
+    return this.globalSettingsService.getLastTradeDate();
   }
 
   setLoading(value: boolean) {

@@ -48,19 +48,19 @@ export class AiPicksComponent implements OnInit, OnDestroy {
   }
 
   getPredictions(stock, isBuy) {
-    const ThirtyDayPrediction = () => {
+    const TenDayPrediction = () => {
       this.schedulerService.schedule(() => {
-        this.activate(stock, 30, 0.01, isBuy, null, () => { });
+        this.activate(stock, 10, 0.01, isBuy, null, () => { });
       }, 'aipicks', 300000);
     };
 
-    const FifteenDayPrediction = () => {
+    const FiveDayPrediction = () => {
       this.schedulerService.schedule(() => {
-        this.activate(stock, 15, 0.01, isBuy, null, ThirtyDayPrediction);
+        this.activate(stock, 5, 0.01, isBuy, null, TenDayPrediction);
       }, 'aipicks', 300000);
     };
 
-    FifteenDayPrediction();
+    FiveDayPrediction();
   }
 
   activate(symbol: string, range, limit, isBuy: boolean, accuracy: number = null, cb: () => void) {
@@ -203,10 +203,10 @@ export class AiPicksComponent implements OnInit, OnDestroy {
   trainStock() {
     this.historicalStock = this.historicalStock.toUpperCase();
     const date = moment(this.endDate).format('YYYY-MM-DD');
-    const ThirtyDayPrediction = () => this.trainAndActivate(this.historicalStock, 30, 0.01, false, date, () => { }, false);
-    const FifteenDayPrediction = () => this.trainAndActivate(this.historicalStock, 15, 0.01, false, date, ThirtyDayPrediction, false);
+    const TenDayPrediction = () => this.trainAndActivate(this.historicalStock, 10, 0.01, false, date, () => { }, false);
+    const FivePrediction = () => this.trainAndActivate(this.historicalStock, 5, 0.01, false, date, TenDayPrediction, false);
 
-    FifteenDayPrediction();
+    FivePrediction();
   }
 
   createListObject(symbol: string, predictionData: AiPicksPredictionData): AiPicksData {

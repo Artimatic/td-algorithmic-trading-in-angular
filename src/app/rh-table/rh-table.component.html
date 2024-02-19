@@ -1,5 +1,6 @@
 <p-messages [(value)]="messages"></p-messages>
 <app-product-view #product></app-product-view>
+<app-ai-picks></app-ai-picks>
 <p-table #dt [columns]="selectedColumns" [value]="currentList" [paginator]="true" [rows]="10" selectionMode="single"
   [(selection)]="selectedStock" dataKey="stock">
   <ng-template pTemplate="caption">
@@ -18,6 +19,9 @@
           </button>
           <button pButton color="primary" (click)="autoActivate()">
             Primary list
+          </button>
+          <button pButton color="primary" (click)="getFoundPatterns()">
+            Find patterns
           </button>
           <button pButton color="primary" (click)="getFoundPatterns()">
             Find patterns
@@ -112,6 +116,12 @@
           <button pButton color="primary" *ngIf=!element.kellyCriterion (click)="getKellyCriterion(element)">Get
             Allocation</button>
           <span *ngIf=element.kellyCriterion>{{element.kellyCriterion}}</span>
+        </span>
+        <span *ngSwitchCase="'ml'">
+          <div *ngFor="let prediction of element.ml.value">
+            Day {{prediction.algorithm}}: {{prediction.prediction}}
+            <span>(accuracy: {{prediction.accuracy}})</span>
+          </div>
         </span>
         <span *ngSwitchDefault>
           {{element[col.field]}}
