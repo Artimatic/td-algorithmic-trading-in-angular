@@ -1084,9 +1084,13 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   cleanUp() {
     this.resetCart();
-    this.destroy$.next();
-    this.destroy$.complete();
-    this.backtestBuffer$.unsubscribe();
+    if (this.destroy$) {
+      this.destroy$.next();
+      this.destroy$.complete();
+    }
+    if (this.backtestBuffer$) {
+      this.backtestBuffer$.unsubscribe();
+    }
   }
 
   ngOnDestroy() {
