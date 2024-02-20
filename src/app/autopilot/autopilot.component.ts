@@ -638,7 +638,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   findShort() {
-    let idx = -1;
+    let idx = 0;
     console.log('finding short');
     this.backtestBuffer$.unsubscribe();
     this.backtestBuffer$ = new Subject();

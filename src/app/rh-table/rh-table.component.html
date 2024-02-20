@@ -115,8 +115,8 @@
           <span *ngIf=element.kellyCriterion>{{element.kellyCriterion}}</span>
         </span>
         <span *ngSwitchCase="'ml'">
-          <div *ngIf="element.ml && element.ml.value">
-            <div *ngFor="let prediction of element.ml.value">
+          <div *ngIf="element.ml">
+            <div *ngFor="let prediction of element.ml">
               Day {{prediction.algorithm}}: {{prediction.prediction}}
               <span>(accuracy: {{prediction.accuracy}})</span>
             </div>
