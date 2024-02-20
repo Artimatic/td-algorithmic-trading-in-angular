@@ -23,9 +23,6 @@
           <button pButton color="primary" (click)="getFoundPatterns()">
             Find patterns
           </button>
-          <button pButton color="primary" (click)="getFoundPatterns()">
-            Find patterns
-          </button>
           <button pButton color="primary" (click)="exportResults()">Export Results</button>
           <app-watch-list>
           </app-watch-list>
@@ -118,6 +115,7 @@
           <span *ngIf=element.kellyCriterion>{{element.kellyCriterion}}</span>
         </span>
         <span *ngSwitchCase="'ml'">
+          <div *ngIf="element.ml && element.ml.value"></div>
           <div *ngFor="let prediction of element.ml.value">
             Day {{prediction.algorithm}}: {{prediction.prediction}}
             <span>(accuracy: {{prediction.accuracy}})</span>
