@@ -123,6 +123,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     private machineLearningService: MachineLearningService) { }
 
   ngOnInit() {
+    this.unsubscribe$ = new Subject();
     this.bufferSubject = new Subject();
     this.backtestBuffer = [];
     this.callChainSub = new Subscription();
@@ -202,7 +203,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       { field: 'demark9BullishMidTerm', header: 'BBand Bullish Mid Term' },
       { field: 'demark9Bullish', header: 'BBand Bullish' }
     ];
-    
+
     this.selectedColumns = [
       { field: 'stock', header: 'Stock' },
       { field: 'buySignals', header: 'Buy' },
@@ -285,16 +286,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
         });
         break;
       case 'daily-indicators':
-        this.aiPicksService.mlNeutralResults.pipe(
-          takeUntil(this.unsubscribe$)
-        ).subscribe(async (latestMlResult: { label: string, value: AiPicksPredictionData[] }) => {
-          if (latestMlResult) {
-            const idx = _.findIndex(this.stockList, (s) => s.stock === latestMlResult.label);
-            if (idx > -1) {
-              this.stockList[idx].ml = latestMlResult.value;
-            }
-          }
-        });
         const indicatorsCb = (param) => {
           return this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, 'daily-indicators')
             .map(
@@ -352,16 +343,13 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                     }
                   }
                   if (hasRecommendations) {
+                    this.runAi({ ...testResults, buySignals: bullishSignals, sellSignals: bearishSignals });
                     this.getProbability(bullishSignals, bearishSignals, testResults.signals)
-                      .subscribe((data) => {
+                      .subscribe(async (data) => {
                         this.findAndUpdateIndicatorScore(param.ticker, {
                           bullishProbability: data.bullishProbability,
                           bearishProbability: data.bearishProbability
                         }, this.stockList);
-
-                        if (data.bullishProbability > 0.3 || data.bearishProbability > 0.3) {
-                          this.runAi({ ...testResults, buySignals: bullishSignals, sellSignals: bearishSignals });
-                        }
                       });
 
                     setTimeout(() => {
@@ -375,7 +363,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                               this.clientSmsService.sendSellSms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
                                 .subscribe();
                             }
-                            this.aiPicksService.tickerSellRecommendationQueue.next(symbol);
                           } else if (bearishSignals.length < bullishSignals.length) {
                             const foundInWatchList = this.watchListService.watchList.find(item => {
                               return item.stock === symbol;
@@ -384,7 +371,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                               this.clientSmsService.sendBuySms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
                                 .subscribe();
                             }
-                            this.aiPicksService.tickerBuyRecommendationQueue.next(symbol);
                           }
                         }
                         // this.getImpliedMovement(testResults);
@@ -745,7 +731,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
-  runAi(element: Stock) {
+  async runAi(element: Stock) {
     if (element.sellSignals && element.buySignals) {
       if (element.sellSignals.length > element.buySignals.length) {
         const foundInWatchList = this.watchListService.watchList.find(item => {
@@ -755,7 +741,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
           this.clientSmsService.sendSellSms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
             .subscribe();
         }
-        this.aiPicksService.tickerSellRecommendationQueue.next(element.stock);
       } else if (element.sellSignals.length < element.buySignals.length) {
         const foundInWatchList = this.watchListService.watchList.find(item => {
           return item.stock === element.stock;
@@ -764,7 +749,17 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
           this.clientSmsService.sendBuySms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
             .subscribe();
         }
-        this.aiPicksService.tickerBuyRecommendationQueue.next(element.stock);
+      }
+      try {
+        const latestMlResult = await this.aiPicksService.trainAndActivate(element.stock);
+        if (latestMlResult) {
+          const idx = _.findIndex(this.stockList, (s) => s.stock === latestMlResult.label);
+          if (idx > -1) {
+            this.stockList[idx].ml = latestMlResult.value;
+          }
+        }
+      } catch (error) {
+        console.log(error);
       }
     }
   }

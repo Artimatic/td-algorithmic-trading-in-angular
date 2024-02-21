@@ -36,11 +36,11 @@ export class CartService {
 
     if (!noDup && replaceAnyExistingOrders) {
       if (indices[0] > -1) {
-        this.deleteBuy(this.buildOrder(order.holding.symbol, null, null, 'buy'), indices[0]);
+        this.deleteBuy(this.buildOrder(order.holding.symbol, null, null, 'buy'));
       } else if (indices[1] > -1) {
-        this.deleteSell(this.buildOrder(order.holding.symbol, null, null, 'sell'), indices[1]);
+        this.deleteSell(this.buildOrder(order.holding.symbol, null, null, 'sell'));
       } else if (indices[2] > -1) {
-        this.deleteDaytrade(this.buildOrder(order.holding.symbol, null, null, 'daytrade'), indices[2]);
+        this.deleteDaytrade(this.buildOrder(order.holding.symbol, null, null, 'daytrade'));
       }
     }
 
@@ -75,22 +75,23 @@ export class CartService {
     }
   }
 
-  deleteSell(deleteOrder: SmartOrder, index = null) {
-    console.log('Deleting sell order', deleteOrder.holding.symbol);
-
-    if (index === null) {
-      this.getOrderIndex(this.sellOrders, deleteOrder);
-    }
-    this.sellOrders.splice(index, 1);
+  delete(fullList, deleteOrder) {
+    fullList = fullList.filter(fullOrder => fullOrder.holding.symbol !== deleteOrder.holding.symbol );
   }
 
-  deleteBuy(deleteOrder: SmartOrder, index = null) {
-    console.log('Deleting buy order', deleteOrder.holding.symbol);
+  deleteSell(deleteOrder: SmartOrder) {
+    console.log('Deleting sell order', deleteOrder.holding.symbol);
+    this.delete(this.sellOrders, deleteOrder)
+  }
 
-    if (index === null) {
-      index = this.getOrderIndex(this.buyOrders, deleteOrder);
-    }
-    this.buyOrders.splice(index, 1);
+  deleteBuy(deleteOrder: SmartOrder) {
+    console.log('Deleting buy order', deleteOrder.holding.symbol);
+    this.delete(this.buyOrders, deleteOrder)
+  }
+
+  deleteDaytrade(deleteOrder: SmartOrder) {
+    console.log('Deleting day trade', deleteOrder.holding.symbol);
+    this.delete(this.otherOrders, deleteOrder)
   }
 
   updateOrder(updatedOrder: SmartOrder) {
@@ -118,14 +119,6 @@ export class CartService {
     return [buyIndex, sellIndex, otherIndex];
   }
 
-  deleteDaytrade(deleteOrder: SmartOrder, index = null) {
-    console.log('Deleting day trade', deleteOrder.holding.symbol);
-    if (index === null) {
-      index = this.getOrderIndex(this.otherOrders, deleteOrder);
-    }
-    this.otherOrders.splice(index, 1);
-  }
-
   deleteOrder(order: SmartOrder) {
     switch (order.side.toLowerCase()) {
       case 'sell':
@@ -145,6 +138,7 @@ export class CartService {
   }
 
   deleteCart() {
+    console.log('Delete cart');
     this.sellOrders = [];
     this.buyOrders = [];
     this.otherOrders = [];

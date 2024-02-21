@@ -929,7 +929,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   async checkStopLoss(holding: PositionHoldings) {
     const percentLoss = divide(holding.pl, holding.netLiq);
-    if (percentLoss < -0.05) {
+    if (percentLoss < -0.04) {
       this.portfolioSell(holding);
     } else if (percentLoss > 0) {
       await this.addBuy(holding);
