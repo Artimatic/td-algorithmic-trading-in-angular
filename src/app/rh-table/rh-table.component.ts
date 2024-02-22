@@ -289,7 +289,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
         const indicatorsCb = (param) => {
           return this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, 'daily-indicators')
             .map(
-              (testResults: BacktestResponse) => {
+              async (testResults: BacktestResponse) => {
                 if (testResults) {
                   let hasRecommendations = false;
                   const symbol = param.ticker;
@@ -343,7 +343,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                     }
                   }
                   if (hasRecommendations) {
-                    this.runAi({ ...testResults, buySignals: bullishSignals, sellSignals: bearishSignals });
+                    await this.runAi({ ...testResults, buySignals: bullishSignals, sellSignals: bearishSignals });
                     this.getProbability(bullishSignals, bearishSignals, testResults.signals)
                       .subscribe(async (data) => {
                         this.findAndUpdateIndicatorScore(param.ticker, {
@@ -732,6 +732,17 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   async runAi(element: Stock) {
+    try {
+      const latestMlResult = await this.aiPicksService.trainAndActivate(element.stock);
+      if (latestMlResult) {
+        const idx = _.findIndex(this.stockList, (s) => s.stock === latestMlResult.label);
+        if (idx > -1) {
+          this.stockList[idx].ml = latestMlResult.value;
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
     if (element.sellSignals && element.buySignals) {
       if (element.sellSignals.length > element.buySignals.length) {
         const foundInWatchList = this.watchListService.watchList.find(item => {
@@ -749,17 +760,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
           this.clientSmsService.sendBuySms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
             .subscribe();
         }
-      }
-      try {
-        const latestMlResult = await this.aiPicksService.trainAndActivate(element.stock);
-        if (latestMlResult) {
-          const idx = _.findIndex(this.stockList, (s) => s.stock === latestMlResult.label);
-          if (idx > -1) {
-            this.stockList[idx].ml = latestMlResult.value;
-          }
-        }
-      } catch (error) {
-        console.log(error);
       }
     }
   }

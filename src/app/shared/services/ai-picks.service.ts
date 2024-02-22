@@ -41,7 +41,7 @@ export class AiPicksService {
 
   async trainAndActivate(symbol, range = 10, limit = 0.01) {
     const endDate = this.globalSettingsService.getLastTradeDate().format('YYYY-MM-DD');
-    const startDate = moment(endDate).subtract({ day: 365 }).format('YYYY-MM-DD');
+    const startDate = moment(endDate).subtract({ day: 150 }).format('YYYY-MM-DD');
     try {
       await this.machineLearningService.trainPredictDailyV4(symbol,
         endDate,
@@ -50,15 +50,21 @@ export class AiPicksService {
         null,
         range,
         limit
-      );
+      ).toPromise();
+      try {
+
       const activation = await this.machineLearningService.activateDailyV4(symbol,
         null,
         range,
-        limit);
-      const prediction = { algorithm: range, prediction: (activation as any).nextOutput };
-      return { label: symbol, value: [prediction] };
+        limit).toPromise();
+        const prediction = { algorithm: range, prediction: (activation as any).nextOutput };
+        return { label: symbol, value: [prediction] };
+      } catch(error) {
+        console.log(error);
+      }
     } catch(error) {
       console.log('error: ', error);
     }
+    return null;
   }
 }
