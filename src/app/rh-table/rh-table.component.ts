@@ -210,7 +210,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       { field: 'sellSignals', header: 'Sell' },
       { field: 'returns', header: 'Returns' },
       { field: 'ml', header: 'AI Prediction' },
-      { field: 'kellyCriterion', header: 'Trade Size' }
+      { field: 'kellyCriterion', header: 'Trade Size' },
+      { field: 'impliedMovement', header: 'Implied Movement' }
     ];
 
     this.selectedRecommendation = ['strongbuy', 'buy', 'sell', 'strongsell'];
@@ -882,9 +883,10 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
   exportResults() {
     this.currentList.forEach(results => {
-      this.reportingService.addBacktestResults(results);
+      this.reportingService.addBacktestResults(results, this.selectedColumns);
     });
     this.reportingService.exportBacktestResults();
+    console.log('blacklist', JSON.stringify(this.tickerBlacklist));
   }
 
   getFoundPatterns() {

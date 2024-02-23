@@ -295,7 +295,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
           lossThreshold: this.order.lossThreshold,
           profitThreshold: this.order.profitTarget,
           minQuotes: 81
-        }).pipe(take(1)).subscribe(results => {
+        }).subscribe(results => {
           if (results.returns) {
             this.scoringService.resetProfitLoss(this.order.holding.symbol);
             this.scoringService.addProfitLoss(this.order.holding.symbol, results.returns * 100);
@@ -394,7 +394,6 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
 
         console.log('Scheduling machine order ', this.firstFormGroup.value);
         this.backtestService.getLastPriceTiingo({ symbol: this.order.holding.symbol })
-          .pipe(take(1))
           .subscribe(tiingoQuote => {
             const lastPrice = tiingoQuote[0].last;
             this.runStrategy(1 * lastPrice);
@@ -987,7 +986,6 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
       const daytradeType = this.firstFormGroup.value.orderType.toLowerCase();
       const estimatedPrice = this.daytradeService.estimateAverageBuyOrderPrice(this.orders);
       this.backtestService.getDaytradeRecommendation(this.order.holding.symbol, lastPrice, estimatedPrice, { minQuotes: 81 })
-        .pipe(take(1))
         .subscribe(
           analysis => {
             this.processAnalysis(daytradeType, analysis, lastPrice, moment().valueOf());
@@ -1095,7 +1093,6 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
           0.7,
           this.globalSettingsService.daytradeAlgo
         )
-        .pipe(take(1))
         .subscribe();
     }, `calibrateOne${this.order.holding.symbol}`, null, false, 180000);
   }

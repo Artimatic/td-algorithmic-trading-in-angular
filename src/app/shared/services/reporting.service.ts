@@ -28,7 +28,7 @@ export class ReportingService {
     this.logs = [];
   }
 
-  addBacktestResults(results: Stock) {
+  addBacktestResults(results: Stock, selectedColumns = []) {
     const buySignals = results.buySignals.reduce((previousValue, currentValue, currentIndex) => {
       return previousValue + currentValue + (currentIndex < results.buySignals.length - 1 ? ',' : '');
     }, '');
@@ -37,19 +37,27 @@ export class ReportingService {
       return previousValue + currentValue + (currentIndex < results.sellSignals.length - 1 ? ',' : '');
     }, '');
 
-    const log = {
-      'Symbol': results.stock,
-      'Buy Signals': buySignals,
-      'Sell Signals': sellSignals,
+    let log = {
+      'Stock': results.stock,
+      'Buy': buySignals,
+      'Sell': sellSignals,
       'Profitable Trades': results.profitableTrades,
       'Trades': results.totalTrades,
       'Returns': Math.round(results.returns * 100) + '%',
-      'Implied Move': Math.round(results.impliedMovement * 100) + '%',
+      'Implied Movement': Math.round(results.impliedMovement * 100) + '%',
       'Previous Implied Move': Math.round(results.previousImpliedMovement * 100) + '%',
-      'Bearish Probability': Math.round(results.bearishProbability * 100) + '%',
-      'Bullish Probability': Math.round(results.bullishProbability * 100) + '%',
+      'Probability of Bear Profit': Math.round(results.bearishProbability * 100) + '%',
+      'Probability of Bull Profit': Math.round(results.bullishProbability * 100) + '%',
       'Trade Size': Math.round(results.kellyCriterion * 100) + '%'
     };
+    if (selectedColumns.length > 0) {
+      selectedColumns.forEach((column: {field: string, header: string}) => {
+        if (!log[column.header]) {
+          log[column.header] = results[column.field];
+        }
+      });
+    }
+
     this.backtestResults.push(log);
     return log;
   }
