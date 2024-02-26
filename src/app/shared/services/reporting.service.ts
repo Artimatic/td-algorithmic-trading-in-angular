@@ -48,7 +48,8 @@ export class ReportingService {
       'Previous Implied Move': Math.round(results.previousImpliedMovement * 100) + '%',
       'Probability of Bear Profit': Math.round(results.bearishProbability * 100) + '%',
       'Probability of Bull Profit': Math.round(results.bullishProbability * 100) + '%',
-      'Trade Size': Math.round(results.kellyCriterion * 100) + '%'
+      'Trade Size': Math.round(results.kellyCriterion * 100) + '%',
+      'AI Prediction': JSON.stringify(results.ml)
     };
     if (selectedColumns.length > 0) {
       selectedColumns.forEach((column: {field: string, header: string}) => {
