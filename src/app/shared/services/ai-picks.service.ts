@@ -58,7 +58,7 @@ export class AiPicksService {
         range,
         limit).toPromise();
         const prediction = { algorithm: range, prediction: (activation as any).nextOutput };
-        return { label: symbol, value: [prediction] };
+        return { label: symbol, value: prediction };
       } catch(error) {
         console.log(error);
       }
