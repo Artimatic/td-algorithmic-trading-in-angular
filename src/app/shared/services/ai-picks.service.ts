@@ -46,7 +46,7 @@ export class AiPicksService {
       await this.machineLearningService.trainPredictDailyV4(symbol,
         endDate,
         startDate,
-        0.9,
+        0.8,
         null,
         range,
         limit
@@ -57,8 +57,18 @@ export class AiPicksService {
         null,
         range,
         limit).toPromise();
-        const prediction = { algorithm: range, prediction: (activation as any).nextOutput };
-        return { label: symbol, value: prediction };
+        if (activation) {
+          const prediction = { algorithm: range, prediction: (activation as any).nextOutput };
+          return { label: symbol, value: prediction };
+        } else {
+          console.log('no activation data', activation, symbol,
+          endDate,
+          startDate,
+          0.8,
+          null,
+          range,
+          limit);
+        }
       } catch(error) {
         console.log(error);
       }

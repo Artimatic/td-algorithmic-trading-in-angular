@@ -558,10 +558,13 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     this.filterRecommendation();
     if (this.selectedIndicators && this.selectedIndicators.length > 0) {
       this.currentList = _.filter(this.currentList, (stock: Stock) => {
-        const foundIdx = stock.buySignals.findIndex(algo => {
+        const foundBuyIdx = stock.buySignals.findIndex(algo => {
           return this.selectedIndicators.findIndex(selected => selected.value.toLowerCase() === algo.toLowerCase()) > -1;
         });
-        return foundIdx > -1;
+        const foundSellIdx = stock.sellSignals.findIndex(algo => {
+          return this.selectedIndicators.findIndex(selected => selected.value.toLowerCase() === algo.toLowerCase()) > -1;
+        });
+        return foundBuyIdx > -1 || foundSellIdx > -1;
       });
     }
     if (this.twoOrMoreSignalsOnly) {

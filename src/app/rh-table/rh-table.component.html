@@ -66,7 +66,7 @@
             defaultLabel="All Recommendations" (onChange)="filter()" selectedItemsLabel="{0} recommendations selected"
             *ngIf="additionalOptions">
           </p-multiSelect>
-          <p-multiSelect *ngIf="additionalOptions" [options]="indicatorsList" [(ngModel)]="selectedIndicators" defaultLabel="Select an Indicator" optionLabel="label" selectedItemsLabel="{0} indicators selected"></p-multiSelect>
+          <p-multiSelect *ngIf="additionalOptions" (onChange)="filter()" [options]="indicatorsList" [(ngModel)]="selectedIndicators" defaultLabel="Select an Indicator" optionLabel="label" selectedItemsLabel="{0} indicators selected"></p-multiSelect>
           
           <mat-checkbox class="filter" [(ngModel)]="twoOrMoreSignalsOnly" (change)="filter()" *ngIf="additionalOptions">
             Only show if two or more signals
@@ -115,9 +115,7 @@
         </span>
         <span *ngSwitchCase="'ml'">
           <div *ngIf="element.ml">
-            <div *ngFor="let prediction of element.ml">
-              Day {{prediction.algorithm}}: {{prediction.prediction}}
-            </div>
+             {{element.ml}}
           </div>
         </span>
         <span *ngSwitchDefault>
