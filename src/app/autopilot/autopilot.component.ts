@@ -108,7 +108,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   destroy$ = new Subject();
   currentHoldings = [];
   strategyCounter = null;
-  maxTradeCount = 3;
+  maxTradeCount = 4;
   strategyList = [
     // Strategy.StateMachine,
     Strategy.Swingtrade,
@@ -348,7 +348,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   async developStrategy() {
     this.machineLearningService.getFoundPatterns()
-    .subscribe(patternsResponse => console.log('found patterns ', patternsResponse));
+      .subscribe(patternsResponse => console.log('found patterns ', patternsResponse));
     const lastProfitLoss = JSON.parse(localStorage.getItem('profitLoss'));
     if (lastProfitLoss && lastProfitLoss.profit) {
       if (lastProfitLoss.profit * 1 < 0) {
@@ -662,7 +662,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           sellConfidence: 0,
           prediction: null
         };
-        console.log('Adding buy ', stockHolding);
         sessionStorage.setItem('lastMlResult', JSON.stringify(latestMlResult));
         await this.addBuy(stockHolding);
         const log = `Adding swing trade short ${stockHolding.name}`;
@@ -679,9 +678,11 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         finalize(() => this.setLoading(false))
       )
       .subscribe(() => {
-        const stock = BearList[idx++].ticker;
+        const stock = BearList[idx++]?.ticker || null;
         console.log('run ai on ', stock);
-        this.runAi(stock);
+        if (stock) {
+          this.runAi(stock);
+        }
       });
     this.triggerBacktestNext();
   }
@@ -692,6 +693,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   async addBuy(holding: PortfolioInfoHolding, allocation = round(this.riskToleranceList[this.riskCounter], 2)) {
     if (this.cartService.buyOrders.length < this.maxTradeCount) {
+      console.log('Adding buy ', holding);
+
       const currentDate = moment().format('YYYY-MM-DD');
       const startDate = moment().subtract(100, 'days').format('YYYY-MM-DD');
       try {
@@ -709,6 +712,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           null);
       }
     } else {
+      console.log('Tried to add buy order but too many orders', holding);
+
       this.unsubscribeStockFinder();
     }
   }

@@ -749,6 +749,8 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
                   if (data[0].nextOutput > 0.6) {
                     if (!this.priceLowerBound || Number(quote) <= Number(this.priceLowerBound)) {
                       this.daytradeBuy(quote, orderQuantity, timestamp, analysis);
+                    } else {
+                      console.log('Price too high ', Number(quote), ' vs ', Number(this.priceLowerBound));
                     }
                   } else {
                     this.priceLowerBound = quote;
@@ -775,7 +777,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
             }
           }
         } else {
-          orderQuantity = this.positionCount;
+          orderQuantity = this.positionCount ? this.positionCount : this.firstFormGroup.value.orderSize;
         }
 
         if (orderQuantity > 0) {
