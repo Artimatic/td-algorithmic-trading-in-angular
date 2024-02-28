@@ -58,8 +58,7 @@ export class AiPicksService {
         range,
         limit).toPromise();
         if (activation) {
-          const prediction = { algorithm: range, prediction: (activation as any).nextOutput };
-          return { label: symbol, value: prediction };
+          return { label: symbol, value: (activation as any).nextOutput };
         } else {
           console.log('no activation data', activation, symbol,
           endDate,
