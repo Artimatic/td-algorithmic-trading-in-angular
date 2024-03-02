@@ -73,7 +73,9 @@ export enum Strategy {
   Short = 'Short',
   TrimHoldings = 'TrimHoldings',
   DaytradeFullList = 'DaytradeFullList',
-  StateMachine = 'StateMachine'
+  StateMachine = 'StateMachine',
+  SingleStockPick = 'SingleStockPick',
+  MLSpy = 'MLSpy'
 }
 
 export enum RiskTolerance {
@@ -110,13 +112,15 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   strategyCounter = null;
   maxTradeCount = 8;
   strategyList = [
+    Strategy.MLSpy,
+    // Strategy.SingleStockPick,
     // Strategy.StateMachine,
     Strategy.Swingtrade,
     Strategy.Daytrade,
+    Strategy.TrimHoldings,
     // Strategy.InverseSwingtrade,
     Strategy.DaytradeShort,
     Strategy.Short,
-    Strategy.TrimHoldings,
     Strategy.DaytradeFullList
   ];
 
@@ -351,50 +355,30 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       .subscribe(patternsResponse => console.log('found patterns ', patternsResponse));
     const lastProfitLoss = JSON.parse(localStorage.getItem('profitLoss'));
     if (lastProfitLoss && lastProfitLoss.profit) {
-      if (lastProfitLoss.profit * 1 < 0) {
-        const stockHolding = {
-          name: 'SQQQ',
-          pl: 0,
-          netLiq: 0,
-          shares: 0,
-          alloc: 0,
-          recommendation: 'None',
-          buyReasons: '',
-          sellReasons: '',
-          buyConfidence: 0,
-          sellConfidence: 0,
-          prediction: null
-        };
-        await this.addBuy(stockHolding);
-
+      if (Number(lastProfitLoss.profit) < 0) {
         if (lastProfitLoss.lastStrategy === Strategy.Daytrade) {
           this.increaseDayTradeRiskTolerance();
         } else {
           this.decreaseRiskTolerance();
         }
 
-      } else if (lastProfitLoss.profit * 1 > 0) {
-        const stockHolding = {
-          name: 'TQQQ',
-          pl: 0,
-          netLiq: 0,
-          shares: 0,
-          alloc: 0,
-          recommendation: 'None',
-          buyReasons: '',
-          sellReasons: '',
-          buyConfidence: 0,
-          sellConfidence: 0,
-          prediction: null
-        };
-        await this.addBuy(stockHolding);
+      } else if (Number(lastProfitLoss.profit) > 0) {
         if (lastProfitLoss.lastStrategy === Strategy.Daytrade) {
           this.decreaseDayTradeRiskTolerance();
         } else {
           this.increaseRiskTolerance();
         }
       } else {
-        this.decreaseRiskTolerance();
+        try {
+          const predictionNum = await this.aiPicksService.trainAndActivate('SPY');
+          if (Number(predictionNum) >= 0.5) {
+            this.increaseRiskTolerance();
+          } else {
+            this.decreaseRiskTolerance();
+          }
+        } catch (error) {
+          console.log(error);
+        }
       }
     }
     await this.checkCurrentPositions();
@@ -404,7 +388,93 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   async getNewTrades(strategy = this.strategyList[this.strategyCounter]) {
     this.findPatternService.buildTargetPatterns();
     switch (strategy) {
-      case Strategy.Daytrade: {
+      case Strategy.Swingtrade: {
+        const callback = async (mlResult: { label: string, value: AiPicksPredictionData[] }) => {
+          if (this.isBuyPrediction(mlResult)) {
+            const stock: PortfolioInfoHolding = {
+              name: mlResult.label,
+              pl: 0,
+              netLiq: 0,
+              shares: 0,
+              alloc: 0,
+              recommendation: 'None',
+              buyReasons: '',
+              sellReasons: '',
+              buyConfidence: 0,
+              sellConfidence: 0,
+              prediction: null
+            };
+            await this.addBuy(stock);
+            const log = `Adding swing trade ${stock.name}`;
+            this.reportingService.addAuditLog(null, log);
+          }
+        };
+
+        this.findSwingtrades(callback);
+        break;
+      }
+      case Strategy.InverseSwingtrade: {
+        // TODO
+        break;
+      }
+      case Strategy.Short: {
+        this.findShort();
+        break;
+      }
+      case Strategy.DaytradeShort: {
+        await this.findDaytradeShort();
+        break;
+      }
+      case Strategy.TrimHoldings: {
+        this.trimHoldings();
+        break;
+      }
+      case Strategy.DaytradeFullList: {
+        const callback = async (mlResult: { label: string, value: AiPicksPredictionData[] }) => {
+          const stock: PortfolioInfoHolding = {
+            name: mlResult.label,
+            pl: 0,
+            netLiq: 0,
+            shares: 0,
+            alloc: 0,
+            recommendation: 'None',
+            buyReasons: '',
+            sellReasons: '',
+            buyConfidence: 0,
+            sellConfidence: 0,
+            prediction: null
+          };
+          const prediction = this.isBuyPrediction(mlResult);
+          if (prediction) {
+            await this.addBuy(stock);
+            const log = `Adding swing trade ${stock.name}`;
+            this.reportingService.addAuditLog(null, log);
+          } else if (prediction === false) {
+            this.portfolioSell(stock);
+          }
+        };
+
+        this.findSwingtrades(callback, Stocks);
+        break;
+      }
+      case Strategy.StateMachine:
+        this.findPatternService.developStrategy();
+        break;
+      case Strategy.MLSpy:
+        try {
+          const predictionNum = await this.aiPicksService.trainAndActivate('SPY');
+          if (Number(predictionNum) >= 0.45) {
+            await this.addBuy(this.createHoldingObj('TQQQ'));
+            this.portfolioSell(this.createHoldingObj('SH'));
+          } else if (Number(predictionNum) < 0.45) {
+            await this.addBuy(this.createHoldingObj('SH'));
+            this.portfolioSell(this.createHoldingObj('TQQQ'));
+          }
+        } catch (error) {
+          console.log(error);
+        }
+        break;
+      default: {
         const callback = async (mlResult: { label: string, value: AiPicksPredictionData[] }) => {
           if (this.isBuyPrediction(mlResult)) {
             const stock: PortfolioInfoHolding = {
@@ -452,106 +522,23 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         }
         break;
       }
-      case Strategy.Swingtrade: {
-        const callback = async (mlResult: { label: string, value: AiPicksPredictionData[] }) => {
-          if (this.isBuyPrediction(mlResult)) {
-            const stock: PortfolioInfoHolding = {
-              name: mlResult.label,
-              pl: 0,
-              netLiq: 0,
-              shares: 0,
-              alloc: 0,
-              recommendation: 'None',
-              buyReasons: '',
-              sellReasons: '',
-              buyConfidence: 0,
-              sellConfidence: 0,
-              prediction: null
-            };
-            await this.addBuy(stock);
-            const log = `Adding swing trade ${stock.name}`;
-            this.reportingService.addAuditLog(null, log);
-          }
-        };
-
-        this.findSwingtrades(callback);
-        break;
-      }
-      case Strategy.InverseSwingtrade: {
-        // TODO
-        break;
-      }
-      case Strategy.Short: {
-        this.findShort();
-        break;
-      }
-      case Strategy.DaytradeShort: {
-        await this.findDaytradeShort();
-        break;
-      }
-      case Strategy.TrimHoldings: {
-        const callback = async (mlResult: { label: string, value: AiPicksPredictionData[] }) => {
-          const stock: PortfolioInfoHolding = {
-            name: mlResult.label,
-            pl: 0,
-            netLiq: 0,
-            shares: 0,
-            alloc: 0,
-            recommendation: 'None',
-            buyReasons: '',
-            sellReasons: '',
-            buyConfidence: 0,
-            sellConfidence: 0,
-            prediction: null
-          };
-          const prediction = this.isBuyPrediction(mlResult);
-          if (prediction) {
-            await this.addBuy(stock);
-            const log = `Adding swing trade ${stock.name}`;
-            this.reportingService.addAuditLog(null, log);
-          } else if (prediction === false) {
-            this.portfolioSell(stock);
-          }
-        };
-
-        this.findSwingtrades(callback, this.currentHoldings);
-        break;
-      }
-      case Strategy.DaytradeFullList: {
-        const callback = async (mlResult: { label: string, value: AiPicksPredictionData[] }) => {
-          const stock: PortfolioInfoHolding = {
-            name: mlResult.label,
-            pl: 0,
-            netLiq: 0,
-            shares: 0,
-            alloc: 0,
-            recommendation: 'None',
-            buyReasons: '',
-            sellReasons: '',
-            buyConfidence: 0,
-            sellConfidence: 0,
-            prediction: null
-          };
-          const prediction = this.isBuyPrediction(mlResult);
-          if (prediction) {
-            await this.addBuy(stock);
-            const log = `Adding swing trade ${stock.name}`;
-            this.reportingService.addAuditLog(null, log);
-          } else if (prediction === false) {
-            this.portfolioSell(stock);
-          }
-        };
-
-        this.findSwingtrades(callback, Stocks);
-        break;
-      }
-      case Strategy.StateMachine:
-        this.findPatternService.developStrategy();
-        break;
-      default: {
-        break;
-      }
     }
+  }
+
+  createHoldingObj(name: string) {
+    return {
+      name,
+      pl: 0,
+      netLiq: 0,
+      shares: 0,
+      alloc: 0,
+      recommendation: 'None',
+      buyReasons: '',
+      sellReasons: '',
+      buyConfidence: 0,
+      sellConfidence: 0,
+      prediction: null
+    };
   }
 
   isBuyPrediction(prediction: { label: string, value: AiPicksPredictionData[] }) {
@@ -870,14 +857,20 @@ export class AutopilotComponent implements OnInit, OnDestroy {
             const reasons = this.getRecommendationReason(indicators.recommendation);
             this.currentHoldings[foundIdx].buyReasons = reasons.buyReasons;
             this.currentHoldings[foundIdx].sellReasons = reasons.sellReasons;
-            if (reasons.buyReasons.length > reasons.sellReasons.length) {
-              this.aiPicksService.tickerBuyRecommendationQueue.next(stock);
-            } else {
-              this.aiPicksService.tickerSellRecommendationQueue.next(stock);
+            try {
+              const predictionNum = await this.aiPicksService.trainAndActivate(stock);
+              if (Number(predictionNum) > 0.7) {
+                await this.addBuy(this.createHoldingObj(stock));
+              } else if (Number(predictionNum) < 0.3) {
+                this.portfolioSell(this.createHoldingObj(stock));
+              }
+            } catch (error) {
+              console.log(error);
             }
           }
         }
         this.checkIfTooManyHoldings(this.currentHoldings);
+        console.log('current holdings', this.currentHoldings);
       }
     }
   }
@@ -922,6 +915,34 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         }
       }
     });
+  }
+
+  trimHoldings() {
+    const callback = async (mlResult: { label: string, value: AiPicksPredictionData[] }) => {
+      const stock: PortfolioInfoHolding = {
+        name: mlResult.label,
+        pl: 0,
+        netLiq: 0,
+        shares: 0,
+        alloc: 0,
+        recommendation: 'None',
+        buyReasons: '',
+        sellReasons: '',
+        buyConfidence: 0,
+        sellConfidence: 0,
+        prediction: null
+      };
+      const prediction = this.isBuyPrediction(mlResult);
+      if (prediction) {
+        await this.addBuy(stock);
+        const log = `Adding swing trade ${stock.name}`;
+        this.reportingService.addAuditLog(null, log);
+      } else if (prediction === false) {
+        this.portfolioSell(stock);
+      }
+    };
+
+    this.findSwingtrades(callback, this.currentHoldings);
   }
 
   async analyseRecommendations(holding: PortfolioInfoHolding) {

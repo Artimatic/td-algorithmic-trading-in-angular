@@ -411,9 +411,11 @@ class BacktestService {
 
   getCurrentDaytrade(symbol: string, price: number, paidPrice: number, parameters, dataSource = 'td', response) {
     console.log('getCurrentDaytrade', moment().format());
-    if (moment().diff(moment(this.lastDaytradeRequest), 'milliseconds') < 100) {
+    if (this.lastDaytradeRequest && moment().diff(this.lastDaytradeRequest, 'milliseconds') < 500) {
       response.status(429).send({ message: 'Last request was to soon.' });
       return Promise.reject();
+    } else {
+      this.lastDaytradeRequest = moment();
     }
     return this.getCurrentDaytradeIndicators(symbol, parameters.minQuotes || 80, dataSource)
       .then((currentIndicators: Indicators) => {
