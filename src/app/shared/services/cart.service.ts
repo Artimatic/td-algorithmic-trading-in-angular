@@ -42,6 +42,7 @@ export class CartService {
       } else if (indices[2] > -1) {
         this.deleteDaytrade(this.buildOrder(order.holding.symbol, null, null, 'daytrade'));
       }
+      this.addOrder(order);
     }
 
     if (noDup && order.quantity > 0) {
@@ -75,23 +76,19 @@ export class CartService {
     }
   }
 
-  delete(fullList, deleteOrder) {
-    fullList = fullList.filter(fullOrder => fullOrder.holding.symbol !== deleteOrder.holding.symbol );
-  }
-
   deleteSell(deleteOrder: SmartOrder) {
     console.log('Deleting sell order', deleteOrder.holding.symbol);
-    this.delete(this.sellOrders, deleteOrder)
+    this.sellOrders = this.sellOrders.filter(fullOrder => fullOrder.holding.symbol !== deleteOrder.holding.symbol );
   }
 
   deleteBuy(deleteOrder: SmartOrder) {
     console.log('Deleting buy order', deleteOrder.holding.symbol);
-    this.delete(this.buyOrders, deleteOrder)
+    this.buyOrders = this.buyOrders.filter(fullOrder => fullOrder.holding.symbol !== deleteOrder.holding.symbol );
   }
 
   deleteDaytrade(deleteOrder: SmartOrder) {
     console.log('Deleting day trade', deleteOrder.holding.symbol);
-    this.delete(this.otherOrders, deleteOrder)
+    this.otherOrders = this.otherOrders.filter(fullOrder => fullOrder.holding.symbol !== deleteOrder.holding.symbol );
   }
 
   updateOrder(updatedOrder: SmartOrder) {
@@ -129,6 +126,20 @@ export class CartService {
         break;
       case 'daytrade':
         this.deleteDaytrade(order);
+        break;
+    }
+  }
+
+  addOrder(order: SmartOrder) {
+    switch (order.side.toLowerCase()) {
+      case 'sell':
+        this.sellOrders.push(order);
+        break;
+      case 'buy':
+        this.buyOrders.push(order);
+        break;
+      case 'daytrade':
+        this.otherOrders.push(order);
         break;
     }
   }

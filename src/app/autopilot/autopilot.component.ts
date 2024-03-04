@@ -108,7 +108,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   timer;
   alive = false;
   destroy$ = new Subject();
-  currentHoldings = [];
+  currentHoldings: PortfolioInfoHolding[] = [];
   strategyCounter = null;
   maxTradeCount = 8;
   strategyList = [
@@ -371,7 +371,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       } else {
         try {
           const predictionNum = await this.aiPicksService.trainAndActivate('SPY');
-          if (Number(predictionNum) >= 0.5) {
+          if (Number(predictionNum.value) >= 0.5) {
             this.increaseRiskTolerance();
           } else {
             this.decreaseRiskTolerance();
@@ -450,7 +450,12 @@ export class AutopilotComponent implements OnInit, OnDestroy {
             const log = `Adding swing trade ${stock.name}`;
             this.reportingService.addAuditLog(null, log);
           } else if (prediction === false) {
-            this.portfolioSell(stock);
+            const sellHolding = this.currentHoldings.find(holdingInfo => {
+              return holdingInfo.name === stock.name;
+            });
+            if (sellHolding) {
+              this.portfolioSell(sellHolding);
+            }
           }
         };
 
@@ -463,12 +468,22 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       case Strategy.MLSpy:
         try {
           const predictionNum = await this.aiPicksService.trainAndActivate('SPY');
-          if (Number(predictionNum) >= 0.45) {
+          if (Number(predictionNum.value) >= 0.45) {
             await this.addBuy(this.createHoldingObj('TQQQ'));
-            this.portfolioSell(this.createHoldingObj('SH'));
-          } else if (Number(predictionNum) < 0.45) {
+            const sellHolding = this.currentHoldings.find(holdingInfo => {
+              return holdingInfo.name === 'SH';
+            });
+            if (sellHolding) {
+              this.portfolioSell(sellHolding);
+            }
+          } else if (Number(predictionNum.value) < 0.45) {
             await this.addBuy(this.createHoldingObj('SH'));
-            this.portfolioSell(this.createHoldingObj('TQQQ'));
+            const sellHolding = this.currentHoldings.find(holdingInfo => {
+              return holdingInfo.name === 'TQQQ';
+            });
+            if (sellHolding) {
+              this.portfolioSell(sellHolding);
+            }
           }
         } catch (error) {
           console.log(error);
@@ -557,7 +572,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     return null;
   }
 
-  findSwingtrades(cb = async (mlResult: { label: string, value: AiPicksPredictionData[] }) => { }, stockList = PrimaryList) {
+  findSwingtrades(cb = async (mlResult: { label: string, value: AiPicksPredictionData[] }) => { }, stockList: (PortfolioInfoHolding[] | any[]) = PrimaryList) {
     this.unsubscribeStockFinder();
     this.unsubscribe$ = new Subject();
     this.backtestBuffer$.unsubscribe();
@@ -859,10 +874,15 @@ export class AutopilotComponent implements OnInit, OnDestroy {
             this.currentHoldings[foundIdx].sellReasons = reasons.sellReasons;
             try {
               const predictionNum = await this.aiPicksService.trainAndActivate(stock);
-              if (Number(predictionNum) > 0.7) {
+              if (Number(predictionNum.value) > 0.7) {
                 await this.addBuy(this.createHoldingObj(stock));
-              } else if (Number(predictionNum) < 0.3) {
-                this.portfolioSell(this.createHoldingObj(stock));
+              } else if (Number(predictionNum.value) < 0.3) {
+                const sellHolding = this.currentHoldings.find(holdingInfo => {
+                  return holdingInfo.name === stock;
+                });
+                if (sellHolding) {
+                  this.portfolioSell(sellHolding);
+                }
               }
             } catch (error) {
               console.log(error);
@@ -938,7 +958,12 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         const log = `Adding swing trade ${stock.name}`;
         this.reportingService.addAuditLog(null, log);
       } else if (prediction === false) {
-        this.portfolioSell(stock);
+        const sellHolding = this.currentHoldings.find(holdingInfo => {
+          return holdingInfo.name === stock.name;
+        });
+        if (sellHolding) {
+          this.portfolioSell(sellHolding);
+        }
       }
     };
 
