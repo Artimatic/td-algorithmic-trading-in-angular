@@ -955,12 +955,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   async checkStopLoss(holding: PositionHoldings) {
     const percentLoss = divide(holding.pl, holding.netLiq);
-    if (percentLoss < -0.04) {
+    if (percentLoss < -0.045) {
       this.portfolioSell(holding);
-    } else if (percentLoss > 0) {
-      await this.addBuy(holding);
-    } else if (percentLoss < -0.02) {
-      await this.addBuy(holding);
     }
   }
 
@@ -996,8 +992,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       useStopLoss: true,
       useTrailingStopLoss: true,
       useTakeProfit: true,
-      // sellAtClose: side.toUpperCase() === 'DAYTRADE' ? true : false,
-      sellAtClose: false,
+      sellAtClose: side.toUpperCase() === 'SELL'? true : false,
+      // sellAtClose: false,
       allocation
     };
   }

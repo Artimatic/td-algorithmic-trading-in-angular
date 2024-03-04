@@ -1887,7 +1887,8 @@ const list2 = [
   'BMY',
   'MRNA',
   'VEEV',
-  'KBH'
+  'KBH',
+  'AVGO'
 ];
 
 export const stockList = shuffle(list1);
