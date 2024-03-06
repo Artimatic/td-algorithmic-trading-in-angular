@@ -1813,6 +1813,7 @@ const list1 = ['RKLB',
   'HIBB',
   'SCVL',
   'CRMT',
+  'COIN',
   'HWKN'];
 
 const list2 = [
@@ -1888,7 +1889,8 @@ const list2 = [
   'MRNA',
   'VEEV',
   'KBH',
-  'AVGO'
+  'AVGO',
+  'COIN'
 ];
 
 export const stockList = shuffle(list1);
