@@ -38,11 +38,6 @@ class BacktestController extends BaseController {
               .then((data) => BaseController.requestGetSuccessHandler(response, data))
               .catch((err) => BaseController.requestErrorHandler(response, err));
             break;
-          case 'daily-roc':
-            BacktestService.evaluateDailyRocMfiTrend(request.body.ticker, request.body.end, request.body.start)
-              .then((data) => BaseController.requestGetSuccessHandler(response, data))
-              .catch((err) => BaseController.requestErrorHandler(response, err));
-            break;
           case 'daily-indicators':
             BacktestService.initDailyStrategy(request.body.ticker, request.body.end, request.body.start, request.body.parameters)
               .then((data) => BaseController.requestGetSuccessHandler(response, data))

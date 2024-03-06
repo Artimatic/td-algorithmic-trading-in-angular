@@ -551,8 +551,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
         this.incrementBuy(buyOrder);
         console.log(`${moment(buyOrder.signalTime).format('hh:mm')} ${log}`);
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
-        const buySmsSub = this.clientSmsService.sendBuySms(buyOrder.holding.symbol, this.firstFormGroup.value.phoneNumber, buyOrder.price, buyOrder.quantity).subscribe();
-        this.subscriptions.push(buySmsSub);
+        this.clientSmsService.sendBuySms(buyOrder.holding.symbol, this.firstFormGroup.value.phoneNumber, buyOrder.price, buyOrder.quantity).subscribe();
       }
     }
     return buyOrder;
@@ -600,8 +599,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
 
             console.log(`${moment(sellOrder.signalTime).format('hh:mm')} ${log}`);
             this.reportingService.addAuditLog(this.order.holding.symbol, log);
-            const sellSmsSub = this.clientSmsService.sendSellSms(sellOrder.holding.symbol, this.firstFormGroup.value.phoneNumber, sellOrder.price, sellOrder.quantity).subscribe();
-            this.subscriptions.push(sellSmsSub);
+            this.clientSmsService.sendSellSms(sellOrder.holding.symbol, this.firstFormGroup.value.phoneNumber, sellOrder.price, sellOrder.quantity).subscribe();
           }
         });
     }
@@ -647,8 +645,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
         console.log(`${moment(order.signalTime).format('hh:mm')} ${log}`);
         this.reportingService.addAuditLog(this.order.holding.symbol, log);
 
-        const sellSmsSub = this.clientSmsService.sendSellSms(order.holding.symbol, this.firstFormGroup.value.phoneNumber, order.price, order.quantity).subscribe();
-        this.subscriptions.push(sellSmsSub);
+        this.clientSmsService.sendSellSms(order.holding.symbol, this.firstFormGroup.value.phoneNumber, order.price, order.quantity).subscribe();
       }
     }
     return order;
@@ -658,25 +655,24 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     return moment.unix(time).format('DD.MM.YYYY hh:mm');
   }
 
+  createLog(
+    signalTime,
+    analysis) {
+      let log = '';
+    for (const indicator of analysis) {
+      if (analysis[indicator] && (analysis[indicator] === 'bullish' || analysis[indicator] === 'bearish')) {
+        log += `[${indicator} ${analysis[indicator]} Event - time: ${this.getDisplaySignalTime(signalTime)}]`;
+      }
+    }
+    return log;
+  }
+
   buildBuyOrder(orderQuantity: number,
     price,
     signalTime,
     analysis) {
 
-    let log = '';
-    if (analysis.mfi.toLowerCase() === 'bullish') {
-      log += `[mfi oversold Event - time: ${this.getDisplaySignalTime(signalTime)}]`;
-    }
-
-    if (analysis.bband.toLowerCase() === 'bullish') {
-      log += `[Bollinger band bullish Event -` +
-        `time: ${this.getDisplaySignalTime(signalTime)}]`;
-    }
-
-    if (analysis.roc.toLowerCase() === 'bullish') {
-      log += `[Rate of Change Crossover bullish Event -` +
-        `time: ${this.getDisplaySignalTime(signalTime)}]`;
-    }
+    let log = this.createLog(signalTime, analysis);
 
     console.log(log);
     this.reportingService.addAuditLog(this.order.holding.symbol, log);
@@ -684,20 +680,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   buildSellOrder(orderQuantity: number, price, signalTime, analysis) {
-    let log = '';
-    if (analysis.mfi.toLowerCase() === 'bearish') {
-      log += `[mfi overbought Event - time: ${this.getDisplaySignalTime(signalTime)}]`;
-    }
-
-    if (analysis.bband.toLowerCase() === 'bearish') {
-      log += `[Bollinger band bearish Event -` +
-        `time: ${this.getDisplaySignalTime(signalTime)}]`;
-    }
-
-    if (analysis.roc.toLowerCase() === 'bearish') {
-      log += `[Rate of Change Crossover bearish Event -` +
-        `time: ${this.getDisplaySignalTime(signalTime)}}]`;
-    }
+    let log = this.createLog(signalTime, analysis);
 
     console.log(log);
     this.reportingService.addAuditLog(this.order.holding.symbol, log);
@@ -1097,6 +1080,11 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
         )
         .subscribe();
     }, `calibrateOne${this.order.holding.symbol}`, null, false, 180000);
+  }
+
+  test() {
+    this.play();
+    this.clientSmsService.sendBuySms(this.order.holding.symbol, this.firstFormGroup.value.phoneNumber, 0, 0).subscribe();
   }
 
   ngOnDestroy() {

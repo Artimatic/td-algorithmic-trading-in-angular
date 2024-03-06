@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { DaytradeRecommendation, Indicators } from './backtest.service';
+import { Indicators, DaytradeRecommendation } from './backtest.constants';
 import DecisionService from '../mean-reversion/reversion-decision.service';
 
 class AlgoService {

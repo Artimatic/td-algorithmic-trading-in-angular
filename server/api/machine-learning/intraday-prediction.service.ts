@@ -66,7 +66,7 @@ class IntradayPredicationService extends PredictionService {
     return BacktestService.initStrategy(subQuotes)
       .then((indicators) => {
         indicator = indicators;
-        return BacktestService.getDaytradeRecommendation(price, indicator);
+        return BacktestService.createDaytradeRecommendation(price, indicator);
       })
       .then((recommendation) => {
         indicator.recommendation = recommendation;

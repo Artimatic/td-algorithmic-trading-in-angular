@@ -41,7 +41,7 @@ class DailyPredicationService extends PredictionService {
       .then((indicators) => {
         indicator = indicators;
 
-        return BacktestService.getDaytradeRecommendation(price, indicator);
+        return BacktestService.createDaytradeRecommendation(price, indicator);
       })
       .then((recommendation) => {
         indicator.recommendation = recommendation;

@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { Indicators } from './backtest.service';
+import { Indicators } from './backtest.constants';
 import DecisionService from '../mean-reversion/reversion-decision.service';
 
 class BacktestAggregationService {
