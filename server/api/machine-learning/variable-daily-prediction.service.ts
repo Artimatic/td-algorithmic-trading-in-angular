@@ -14,7 +14,7 @@ import { patternFinderService } from './pattern-finder.service';
 const mlServiceUrl = configurations.apps.armadillo;
 
 class VariableDailyPredicationService extends PredictionService {
-  modelName = 'model2024-03-01';
+  modelName = 'dailymodel2024-03-06';
   foundPatterns = [];
 
   constructor() {
@@ -114,15 +114,13 @@ class VariableDailyPredicationService extends PredictionService {
     let indicator = null;
     return TrainingService.buildDailyQuotes(symbol, moment().subtract({ days: 120 }).valueOf(), moment().valueOf())
       .then((quotes) => {
-        console.log('len ; ', quotes.length);
         const subQuotes = quotes.slice(quotes.length - 80, quotes.length);
         price = quotes[quotes.length - 1].close;
         openingPrice = quotes[0].close;
         return BacktestService.initStrategy(subQuotes);
       })
-      .then((indicators) => {
-        indicator = indicators;
-
+      .then((lastDayIndicator) => {
+        indicator = lastDayIndicator;
         return BacktestService.createDaytradeRecommendation(price, indicator);
       })
       .then((recommendation) => {

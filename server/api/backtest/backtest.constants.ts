@@ -15,6 +15,7 @@ export interface Recommendation {
     mfiDivergence2?: DaytradeRecommendation;
     overboughtMomentum?: DaytradeRecommendation;
     data?: any;
+    bbandBreakout?: DaytradeRecommendation;
 }
 
 export enum DaytradeRecommendation {
@@ -49,4 +50,6 @@ export interface Indicators {
     low?: number;
     mfiTrend?: boolean;
     macdPrevious?: any;
+    bbandBreakout?: boolean;
+    rsi?: number;
 }

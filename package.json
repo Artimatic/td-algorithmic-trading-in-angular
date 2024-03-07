@@ -8,6 +8,7 @@
     "serve": "pm2 start ecosystem.config.js",
     "build:all": "ng build --aot && npm run build-ts",
     "build": "npm run build-ts",
+    "build:server": "npm run build-ts",
     "build:ui": "ng build --aot",
     "start": "node dist/app.js",
     "test-server": "npm run build-ts && node server-tests.js",

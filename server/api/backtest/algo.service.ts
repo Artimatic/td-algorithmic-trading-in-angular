@@ -159,6 +159,9 @@ class AlgoService {
     return DaytradeRecommendation.Neutral;
   }
 
+  checkBBandBreakout(isBreakout) {
+    return isBreakout ? DaytradeRecommendation.Bullish : DaytradeRecommendation.Neutral;
+  }
 }
 
 export default new AlgoService();

@@ -9,6 +9,7 @@ import BaseErrors from '../../components/errors/baseErrors';
 import * as tulind from 'tulind';
 import * as configurations from '../../config/environment';
 import AlgoService from './algo.service';
+import BBandBreakoutService from './bband-breakout.service';
 import MfiService from './mfi.service';
 import DaytradeRecommendations from './daytrade-recommendations';
 import { Recommendation, DaytradeRecommendation, OrderType, Indicators } from './backtest.constants';
@@ -189,8 +190,6 @@ class BacktestService {
           ((idx - isMfiLowIdx) < 6) && ((idx - bbandBuyIdx) < 6) && ((idx - macdBuyIdx) < 6)) {
           indicators[idx].mfiTrend = true;
         }
-
-        indicators[idx] = DaytradeRecommendations.createMfiDivRecommendation(indicators[idx], idx, indicators);
       }
     });
     return indicators;
@@ -394,9 +393,8 @@ class BacktestService {
       vwma: DaytradeRecommendation.Neutral,
       macd: DaytradeRecommendation.Neutral,
       demark9: DaytradeRecommendation.Neutral,
-      mfiDivergence: DaytradeRecommendation.Neutral,
-      data: { price, indicator },
-      ...indicator.recommendation
+      bbandBreakout: DaytradeRecommendation.Neutral,
+      data: { price, indicator }
     };
 
     const mfiRecommendation = AlgoService.checkMfi(indicator.mfiLeft);
@@ -413,6 +411,8 @@ class BacktestService {
     const macdRecommendation = AlgoService.checkMacdDaytrade(indicator.macd, indicator.macdPrevious);
 
     const demark9Recommendation = AlgoService.checkDemark9(indicator.demark9);
+    const bbandBreakoutRecommendation = AlgoService.checkBBandBreakout(indicator.bbandBreakout);
+
     let mfiTradeRec = DaytradeRecommendation.Neutral;
     if (indicator.mfiTrend === true) {
       mfiTradeRec = DaytradeRecommendation.Bullish;
@@ -426,7 +426,7 @@ class BacktestService {
     counter = AlgoService.countRecommendation(macdRecommendation, counter);
     counter = AlgoService.countRecommendation(demark9Recommendation, counter);
     counter = AlgoService.countRecommendation(mfiTradeRec, counter);
-    counter = AlgoService.countRecommendation(indicator.recommendation.mfiDivergence, counter);
+    counter = AlgoService.countRecommendation(bbandBreakoutRecommendation, counter);
 
     if (counter.bullishCounter > 1 && counter.bearishCounter < 2) {
       recommendations.recommendation = OrderType.Buy;
@@ -441,7 +441,8 @@ class BacktestService {
     recommendations.macd = macdRecommendation;
     recommendations.mfiTrade = mfiTradeRec;
     recommendations.vwma = vwmaRecommendation;
-
+    recommendations.bbandBreakout = bbandBreakoutRecommendation;
+    
     return recommendations;
   }
 
@@ -1209,7 +1210,7 @@ class BacktestService {
   }
 
   getIndicators(indicators, bbandPeriod, returnObject) {
-    const currentQuote = returnObject;
+    const currentQuote: Indicators = returnObject;
     return this.getBBands(indicators.reals, bbandPeriod, 2)
       .then((bband80) => {
         currentQuote.bband80 = bband80;
@@ -1288,6 +1289,11 @@ class BacktestService {
       .then((mfiPrevious) => {
         const len = mfiPrevious[0].length - 1;
         currentQuote.mfiPrevious = _.round(mfiPrevious[0][len], 3);
+        return BBandBreakoutService.isBreakout(indicators.reals, currentQuote.mfiPrevious, 
+          currentQuote.mfiLeft, currentQuote.bband80, bbandPeriod);
+      })
+      .then((bbandBreakout) => {
+        currentQuote.bbandBreakout = bbandBreakout;
         return currentQuote;
       })
       .catch(error => {
