@@ -41,6 +41,14 @@ export class AiPicksComponent implements OnInit, OnDestroy {
       this.getPredictions(stock, false);
     });
 
+    this.aiPicksService.addResults.subscribe((rec: AiPicksData) => {
+      if (rec.value[0].prediction > 0.5) {
+        this.addBuyPick(rec.label, rec.value[0]);
+      } else {
+        this.addSellPick(rec.label, rec.value[0]);
+      }
+    });
+
     this.aiPicksService.clearLists.subscribe(() => {
       this.buys = [];
       this.sells = [];

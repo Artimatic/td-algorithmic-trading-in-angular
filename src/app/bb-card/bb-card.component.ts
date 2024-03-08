@@ -658,7 +658,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   createLog(
     signalTime,
     analysis) {
-      let log = '';
+    let log = '';
     for (const indicator of analysis) {
       if (analysis[indicator] && (analysis[indicator] === 'bullish' || analysis[indicator] === 'bearish')) {
         log += `[${indicator} ${analysis[indicator]} Event - time: ${this.getDisplaySignalTime(signalTime)}]`;
@@ -970,16 +970,19 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     if (!orderProcessed) {
       const daytradeType = this.firstFormGroup.value.orderType.toLowerCase();
       const estimatedPrice = this.daytradeService.estimateAverageBuyOrderPrice(this.orders);
-      this.backtestService.getDaytradeRecommendation(this.order.holding.symbol, lastPrice, estimatedPrice, { minQuotes: 81 })
-        .subscribe(
-          analysis => {
-            this.processAnalysis(daytradeType, analysis, lastPrice, moment().valueOf());
-            return null;
-          },
-          error => {
-            this.error = 'Issue getting analysis.';
-          }
-        );
+      this.schedulerService.schedule(() => {
+        this.backtestService.getDaytradeRecommendation(this.order.holding.symbol, lastPrice, estimatedPrice, { minQuotes: 81 })
+          .subscribe(
+            analysis => {
+              this.processAnalysis(daytradeType, analysis, lastPrice, moment().valueOf());
+              return null;
+            },
+            error => {
+              this.error = 'Issue getting analysis.';
+            }
+          );
+      }, `${this.order.holding.symbol}_getDaytradeRecommendation`, this.globalSettingsService.stopTime);
+
     }
   }
 

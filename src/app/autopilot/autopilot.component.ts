@@ -13,7 +13,7 @@ import { MessageService } from 'primeng/api';
 import { AlgoQueueItem } from '@shared/services/trade.service';
 import { ScoringIndex } from '@shared/services/score-keeper.service';
 import { MachineDaytradingService } from '../machine-daytrading/machine-daytrading.service';
-import { BearList, PrimaryList } from '../rh-table/backtest-stocks.constant';
+import { BearList, PrimaryList, PersonalBullishPicks, PersonalBearishPicks } from '../rh-table/backtest-stocks.constant';
 import { AiPicksPredictionData } from '@shared/services/ai-picks.service';
 import Stocks from '../rh-table/backtest-stocks.constant';
 import { FindPatternService } from '../strategies/find-pattern.service';
@@ -387,6 +387,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   async getNewTrades(strategy = this.strategyList[this.strategyCounter]) {
     this.findPatternService.buildTargetPatterns();
+    this.checkPersonalLists();
     switch (strategy) {
       case Strategy.Swingtrade: {
         const callback = async (mlResult: { label: string, value: AiPicksPredictionData[] }) => {
@@ -1122,6 +1123,37 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       profitTakingThreshold,
       stopLoss
     }
+  }
+
+  checkPersonalLists() {
+    PersonalBullishPicks.forEach(async (stock) => {
+      const name = stock.ticker;
+      try {
+        const predictionNum = await this.aiPicksService.trainAndActivate(name);
+        if (Number(predictionNum.value) >= 0.5) {
+          await this.addBuy(this.createHoldingObj(name));
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    });
+
+    PersonalBearishPicks.forEach(async (stock) => {
+      const name = stock.ticker;
+      try {
+        const predictionNum = await this.aiPicksService.trainAndActivate(name);
+        if (Number(predictionNum.value) < 0.4) {
+          const sellHolding = this.currentHoldings.find(holdingInfo => {
+            return holdingInfo.name === name;
+          });
+          if (sellHolding) {
+            this.portfolioSell(sellHolding);
+          }
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    });
   }
 
   unsubscribeStockFinder() {

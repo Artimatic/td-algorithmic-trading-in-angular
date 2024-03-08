@@ -30,6 +30,7 @@ export interface AiPicksData {
 export class AiPicksService {
   tickerBuyRecommendationQueue: Subject<string> = new Subject();
   tickerSellRecommendationQueue: Subject<string> = new Subject();
+  addResults: Subject<AiPicksData> = new Subject();
   mlBuyResults: Subject<AiPicksData> = new Subject();
   mlSellResults: Subject<AiPicksData> = new Subject();
   mlNeutralResults: Subject<AiPicksData> = new Subject();
@@ -43,7 +44,7 @@ export class AiPicksService {
     const endDate = this.globalSettingsService.getLastTradeDate().format('YYYY-MM-DD');
     const startDate = moment(endDate).subtract({ day: 150 }).format('YYYY-MM-DD');
     try {
-      await this.machineLearningService.trainPredictDailyV4(symbol,
+      const trainingResult = await this.machineLearningService.trainPredictDailyV4(symbol,
         endDate,
         startDate,
         0.8,
@@ -51,27 +52,36 @@ export class AiPicksService {
         range,
         limit
       ).toPromise();
+      console.log('training result', trainingResult);
       try {
-
-      const activation = await this.machineLearningService.activateDailyV4(symbol,
-        null,
-        range,
-        limit).toPromise();
+        const activation = await this.machineLearningService.activateDailyV4(symbol,
+          null,
+          range,
+          limit).toPromise();
         if (activation) {
+          this.addResults.next({
+            label: symbol, value: [
+              {
+                algorithm: range,
+                prediction: (activation as any).nextOutput,
+                accuracy: trainingResult && trainingResult.length > 0 ? trainingResult[0].score : 0
+              }
+            ]
+          })
           return { label: symbol, value: (activation as any).nextOutput };
         } else {
           console.log('no activation data', activation, symbol,
-          endDate,
-          startDate,
-          0.8,
-          null,
-          range,
-          limit);
+            endDate,
+            startDate,
+            0.8,
+            null,
+            range,
+            limit);
         }
-      } catch(error) {
+      } catch (error) {
         console.log(error);
       }
-    } catch(error) {
+    } catch (error) {
       console.log('error: ', error);
     }
     return null;

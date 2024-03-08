@@ -1927,7 +1927,7 @@ for (const b of bearList) {
   BearList.push(createParam(b));
 }
 
-export const PersonalBullishPicks = ['GOOG'].map(b => createParam(b));
+export const PersonalBullishPicks = ['GOOG', 'INTC'].map(b => createParam(b));
 export const PersonalBearishPicks = ['TWLO', 'MDB'].map(b => createParam(b));
 
 export default Stocks;

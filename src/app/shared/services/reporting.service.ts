@@ -41,14 +41,9 @@ export class ReportingService {
       'Stock': results.stock,
       'Buy': buySignals,
       'Sell': sellSignals,
-      'Profitable Trades': results.profitableTrades,
-      'Trades': results.totalTrades,
       'Returns': Math.round(results.returns * 100) + '%',
       'Implied Movement': Math.round(results.impliedMovement * 100) + '%',
       'Previous Implied Move': Math.round(results.previousImpliedMovement * 100) + '%',
-      'Probability of Bear Profit': Math.round(results.bearishProbability * 100) + '%',
-      'Probability of Bull Profit': Math.round(results.bullishProbability * 100) + '%',
-      'Trade Size': Math.round(results.kellyCriterion * 100) + '%',
       'AI Prediction': JSON.stringify(results.ml)
     };
     if (selectedColumns.length > 0) {
