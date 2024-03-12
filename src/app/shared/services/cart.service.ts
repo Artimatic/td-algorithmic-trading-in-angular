@@ -234,4 +234,10 @@ export class CartService {
       id
     };
   }
+
+  removeCompletedOrders() {
+    this.buyOrders = this.buyOrders.filter(order => order.orderSize < order.quantity);
+    this.sellOrders = this.sellOrders.filter(order => order.orderSize < order.quantity);
+    this.otherOrders = this.otherOrders.filter(order => order.orderSize < order.quantity);
+  }
 }

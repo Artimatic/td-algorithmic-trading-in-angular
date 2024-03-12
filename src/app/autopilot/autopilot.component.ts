@@ -319,7 +319,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.executedIndex = 0;
     this.lastOrderListIndex = 0;
     this.isTradingStarted = false;
-    this.cartService.removeComplatedOrders();
+    this.cartService.removeCompletedOrders();
   }
 
   decreaseRiskTolerance() {
