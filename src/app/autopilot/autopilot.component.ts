@@ -261,7 +261,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
               console.log(`Intraday training results for ${randomDaytradeStock} Correct: ${trainingResults[0].correct} Guesses: ${trainingResults[0].guesses}`);
               if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 23) {
                 const lastProfitLoss = JSON.parse(localStorage.getItem('profitLoss'));
-                if (!(lastProfitLoss && lastProfitLoss.profitRecord && lastProfitLoss.profitRecord[randomDaytradeStock] && lastProfitLoss.profitRecord[randomDaytradeStock] < 10)) {
+                if (!(lastProfitLoss && lastProfitLoss.profitRecord !== undefined && lastProfitLoss.profitRecord[randomDaytradeStock] && lastProfitLoss.profitRecord[randomDaytradeStock] < 10)) {
                   const trainingMsg = `Day trade training results correct: ${trainingResults[0].correct}, guesses: ${trainingResults[0].guesses}`;
                   this.reportingService.addAuditLog(randomDaytradeStock, trainingMsg);
                   await this.addDaytrade(randomDaytradeStock);
@@ -368,7 +368,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.machineLearningService.getFoundPatterns()
       .subscribe(patternsResponse => console.log('found patterns ', patternsResponse));
     const lastProfitLoss = JSON.parse(localStorage.getItem('profitLoss'));
-    if (lastProfitLoss && lastProfitLoss.profit) {
+    if (lastProfitLoss && lastProfitLoss.profit !== undefined) {
       if (Number(lastProfitLoss.profit) < 0) {
         if (lastProfitLoss.lastStrategy === Strategy.Daytrade) {
           this.increaseDayTradeRiskTolerance();
