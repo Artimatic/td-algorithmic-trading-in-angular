@@ -374,7 +374,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                             }
                           }
                         }
-                        // this.getImpliedMovement(testResults);
+                        this.getImpliedMovement(testResults);
                       }, 'rhtable_process' + symbol);
                     }, 1000 - this.backtestBuffer.length * 10000);
                   }

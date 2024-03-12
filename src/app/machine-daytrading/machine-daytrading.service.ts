@@ -134,6 +134,9 @@ export class MachineDaytradingService {
   }
 
   getNextStock() {
+    if (!this.currentStockList) {
+      this.currentStockList = PrimaryList;
+    }
     this.counter++;
     if (this.counter > this.currentStockList.length - 1) {
       this.counter = 0;
