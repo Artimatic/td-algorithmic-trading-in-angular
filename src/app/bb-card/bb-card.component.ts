@@ -897,23 +897,26 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
       }
     }
 
-    const score = this.scoringService.getScore(this.order.holding.symbol);
-    if (score && score.total > 3) {
-      const scorePct = _.round(_.divide(score.wins, score.total), 2);
-      if (scorePct < 0.10) {
-        if (this.isBacktest) {
-          console.log('Trading not halted in backtest mode.');
-        } else {
-          this.stop();
-          const msg = 'Too many losses. Halting trading in Wins:' +
-            `${this.order.holding.symbol} ${score.wins} Loss: ${score.losses}`;
-
-          this.reportingService.addAuditLog(this.order.holding.symbol, msg);
-          console.log(msg);
-          return true;
+    if (this.order) {
+      const score = this.scoringService.getScore(this.order.holding.symbol);
+      if (score && score.total > 3) {
+        const scorePct = _.round(_.divide(score.wins, score.total), 2);
+        if (scorePct < 0.10) {
+          if (this.isBacktest) {
+            console.log('Trading not halted in backtest mode.');
+          } else {
+            this.stop();
+            const msg = 'Too many losses. Halting trading in Wins:' +
+              `${this.order.holding.symbol} ${score.wins} Loss: ${score.losses}`;
+  
+            this.reportingService.addAuditLog(this.order.holding.symbol, msg);
+            console.log(msg);
+            return true;
+          }
         }
       }
     }
+
     return false;
   }
 
