@@ -25,7 +25,6 @@ export class CartService {
         console.log(msg);
 
         this.messageService.add({
-          key: 'cart_dup',
           severity: 'danger',
           summary: msg
         });
@@ -51,7 +50,6 @@ export class CartService {
         console.log(`Added ${order.side} ${order.holding.symbol}`, order);
 
         this.messageService.add({
-          key: 'cart_sell_add',
           severity: 'success',
           summary: 'Sell order added to cart'
         });
@@ -59,7 +57,6 @@ export class CartService {
         this.buyOrders.push(order);
         console.log(`Added ${order.side} ${order.holding.symbol}`, order);
         this.messageService.add({
-          key: 'cart_buy_add',
           severity: 'success',
           summary: 'Buy order added to cart'
         });
@@ -68,7 +65,6 @@ export class CartService {
         console.log(`Added ${order.side} ${order.holding.symbol}`, order);
 
         this.messageService.add({
-          key: 'cart_daytrade_add',
           severity: 'success',
           summary: `Added ${order.side} ${order.holding.symbol}`
         });
@@ -162,7 +158,6 @@ export class CartService {
         this.portfolioService.sell(sell.holding, sell.quantity, sell.price, 'limit').subscribe(
           response => {
             this.messageService.add({
-              key: 'sell_sent',
               severity: 'success',
               summary: 'Sell order sent'
             });
@@ -172,7 +167,6 @@ export class CartService {
           error => {
             console.log(error);
             this.messageService.add({
-              key: 'sell_error',
               severity: 'danger',
               summary: `Sell error for ${sell.holding.symbol}`
             });
@@ -188,9 +182,7 @@ export class CartService {
       if (!buy.submitted && buy.quantity > 0) {
         this.portfolioService.buy(buy.holding, buy.quantity, buy.price, 'limit').subscribe(
           response => {
-
             this.messageService.add({
-              key: 'buy_sent',
               severity: 'success',
               summary: 'Buy order sent'
             });
@@ -200,7 +192,6 @@ export class CartService {
           error => {
             console.log(error);
             this.messageService.add({
-              key: 'buy_error',
               severity: 'danger',
               summary: `Buy error for ${buy.holding.symbol}`
             });

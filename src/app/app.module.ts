@@ -86,6 +86,7 @@ import { PickListModule } from 'primeng/picklist';
 import { TimelineModule } from 'primeng/timeline';
 import { DataViewModule } from 'primeng/dataview';
 import { AutopilotComponent } from './autopilot/autopilot.component';
+import { RippleModule } from 'primeng/ripple';
 
 @NgModule({
   declarations: [
@@ -166,6 +167,7 @@ import { AutopilotComponent } from './autopilot/autopilot.component';
     DataViewModule,
     ToolbarModule,
     TooltipModule,
+    RippleModule,
   ],
   providers: [
     BacktestService,

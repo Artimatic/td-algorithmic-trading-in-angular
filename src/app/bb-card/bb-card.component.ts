@@ -737,6 +737,12 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
                     }
                   } else {
                     this.priceLowerBound = quote;
+                    this.messageService.add({
+                      severity: 'success',
+                      summary: this.order.holding.symbol,
+                      detail: `Buy recommendation at ${moment().format('hh:mm')}`,
+                      sticky: true
+                    });
                   }
                 }, error => {
                   console.log('daytrade ml error: ', error);
@@ -1090,7 +1096,6 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
 
   test() {
     this.play();
-    this.clientSmsService.sendBuySms(this.order.holding.symbol, this.firstFormGroup.value.phoneNumber, 0, 0).subscribe();
   }
 
   ngOnDestroy() {

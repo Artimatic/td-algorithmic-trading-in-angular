@@ -202,7 +202,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.startNewInterval();
     this.interval = Math.abs(moment(this.getStartStopTime().startDateTime).diff(moment(), 'milliseconds'));
     this.messageService.add({
-      key: 'autopilot_start',
       severity: 'success',
       summary: 'Autopilot started'
     });
@@ -309,7 +308,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.timer.unsubscribe();
     this.cleanUp();
     this.messageService.add({
-      key: 'autopilot_stop',
       severity: 'danger',
       summary: 'Autopilot stopped'
     });
@@ -357,7 +355,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     }
     const strat = this.strategyList[this.strategyCounter];
     this.messageService.add({
-      key: 'strategy_change',
       severity: 'info',
       summary: `Strategy changed to ${strat}`
     });
