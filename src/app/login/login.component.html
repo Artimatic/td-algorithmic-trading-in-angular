@@ -16,10 +16,13 @@
       <div class="p-inputgroup">
         <textarea pInputTextarea placeholder="Refresh Token" formControlName="refreshToken" name="refreshToken"
           required></textarea>
-
+      </div>
+      <div class="p-inputgroup">
+        <p-checkbox formControlName="saveToCookie" label="Save to Cookie" [binary]="true"></p-checkbox>
       </div>
     </div>
     <div>
+
       <div *ngIf="loading">
         <p-progressSpinner styleClass="w-4rem h-4rem" strokeWidth="8" fill="var(--surface-ground)"
           animationDuration="1s"></p-progressSpinner>

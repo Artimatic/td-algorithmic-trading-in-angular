@@ -27,9 +27,12 @@ export class LoginComponent implements OnInit {
 
   ngOnInit() {
     this.tdaForm = new FormGroup({
-      accountId: new FormControl('', Validators.required),
+      accountId: new FormControl(document.cookie
+        .split('; ')
+        .find((row) => row.startsWith('accountId')) || '', Validators.required),
       consumerKey: new FormControl('', Validators.required),
-      refreshToken: new FormControl('', Validators.required)
+      refreshToken: new FormControl('', Validators.required),
+      saveToCookie: new FormControl(false, Validators.required),
     });
 
     this.selectedLogin = 'tda';
@@ -71,6 +74,9 @@ export class LoginComponent implements OnInit {
         this.tdaForm.reset();
         this.credentialSet.emit(true);
         this.snackBar.open('Credentials saved.', 'Dismiss', { duration: 2000 });
+        if (this.tdaForm.value.saveToCookie) {
+          document.cookie = `accountId=${this.tdaForm.value.accountId}; consumerKey=${this.tdaForm.value.consumerKey}; refreshToken=${this.tdaForm.value.refreshToken}; SameSite=None; Secure`;
+        }
       },
         error => {
           console.log(error);

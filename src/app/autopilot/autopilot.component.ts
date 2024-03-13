@@ -1183,6 +1183,12 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     });
   }
 
+  test() {
+    this.portfolioService.getInstrument('NVDA').subscribe((response) => {
+      console.log('test123', response);
+    });
+  }
+
   unsubscribeStockFinder() {
     this.unsubscribe$.next();
     this.unsubscribe$.complete();
