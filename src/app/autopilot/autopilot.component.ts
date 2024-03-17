@@ -1181,7 +1181,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   test() {
-    this.portfolioService.getInstrument('NVDA').subscribe((response) => {
+    this.portfolioService.getInstrument('67066G104').subscribe((response) => {
       console.log('test123', response);
     });
   }
