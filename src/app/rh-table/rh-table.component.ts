@@ -6,9 +6,9 @@ import { MatDialog } from '@angular/material/dialog';
 import * as moment from 'moment';
 import * as _ from 'lodash';
 
-import { BacktestService, Stock, AlgoParam, MachineLearningService } from '../shared';
+import { BacktestService, Stock, AlgoParam, MachineLearningService, PortfolioService } from '../shared';
 import { FormControl } from '@angular/forms';
-import { PrimaryList } from './backtest-stocks.constant';
+import { PrimaryList, OldList } from './backtest-stocks.constant';
 import Stocks from './backtest-stocks.constant';
 import { ChartDialogComponent } from '../chart-dialog/chart-dialog.component';
 import { ChartParam } from '../shared/services/backtest.service';
@@ -16,12 +16,11 @@ import { GlobalSettingsService } from '../settings/global-settings.service';
 import { OptionsDataService } from '../shared/options-data.service';
 import { Subscription, Observable, Subject } from 'rxjs';
 import { DailyBacktestService } from '@shared/daily-backtest.service';
-import { AiPicksPredictionData, AiPicksService } from '@shared/services/ai-picks.service';
+import { AiPicksService } from '@shared/services/ai-picks.service';
 import { ReportingService } from '@shared/services/reporting.service';
 import { WatchListService } from '../watch-list/watch-list.service';
 import { ClientSmsService } from '@shared/services/client-sms.service';
 import { SchedulerService } from '@shared/service/scheduler.service';
-import { takeUntil } from 'rxjs/operators';
 
 export interface Algo {
   value: string;
@@ -120,7 +119,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     private clientSmsService: ClientSmsService,
     private schedulerService: SchedulerService,
     private watchListService: WatchListService,
-    private machineLearningService: MachineLearningService) { }
+    private machineLearningService: MachineLearningService,
+    private portfolioService: PortfolioService) { }
 
   ngOnInit() {
     this.unsubscribe$ = new Subject();
@@ -697,7 +697,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
   runDefaultBacktest() {
     this.interval = 0;
-    this.getData(Stocks, 'daily-indicators');
+    this.getData(OldList, 'daily-indicators');
 
     this.progress = 0;
   }
@@ -781,6 +781,18 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
           foundStock.kellyCriterion = 0;
 
           this.addToList(foundStock);
+          this.schedulerService.schedule(async () => {
+            try {
+              const results = await this.portfolioService.getInstrument(symbol).toPromise();
+              if (results[symbol]) {
+                if (results[symbol].fundamental.marketCap > 1900) {
+                  this.addToNewList(symbol);
+                }
+              }
+            } catch (err) {
+              console.log(err);
+            }
+          }, 'getInstrument', null, false, 30000);
         }
       });
   }
@@ -873,6 +885,20 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       const newStorageObj = {};
       newStorageObj[ticker] = true;
       localStorage.setItem('blacklist', JSON.stringify(newStorageObj));
+    }
+  }
+
+  addToNewList(ticker: string) {
+    const backtestList = JSON.parse(localStorage.getItem('newList'));
+    if (backtestList) {
+      if (!backtestList[ticker]) {
+        backtestList[ticker] = true;
+        localStorage.setItem('newList', JSON.stringify(backtestList));
+      }
+    } else {
+      const newStorageObj = {};
+      newStorageObj[ticker] = true;
+      localStorage.setItem('newList', JSON.stringify(newStorageObj));
     }
   }
 

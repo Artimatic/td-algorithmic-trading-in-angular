@@ -785,9 +785,11 @@ class PortfolioService {
   getInstrument(cusip: string) {
     const accountId = this.getAccountId();
 
-    const query = `${tdaUrl}instruments/${cusip}`;
+    //const query = `${tdaUrl}instruments/${cusip}`;
+    const url = `${tdaUrl}instruments?symbol=${cusip}&projection=fundamental`;
+
     const options = {
-      uri: query,
+      uri: url,
       qs: {
         apikey: this.tdaKey[accountId]
       },

@@ -13,7 +13,7 @@ import { MessageService } from 'primeng/api';
 import { AlgoQueueItem } from '@shared/services/trade.service';
 import { ScoringIndex } from '@shared/services/score-keeper.service';
 import { MachineDaytradingService } from '../machine-daytrading/machine-daytrading.service';
-import { BearList, PrimaryList, PersonalBullishPicks, PersonalBearishPicks } from '../rh-table/backtest-stocks.constant';
+import { BearList, PrimaryList, PersonalBullishPicks, PersonalBearishPicks, OldList } from '../rh-table/backtest-stocks.constant';
 import { AiPicksPredictionData } from '@shared/services/ai-picks.service';
 import Stocks from '../rh-table/backtest-stocks.constant';
 import { FindPatternService } from '../strategies/find-pattern.service';
@@ -1180,8 +1180,31 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     });
   }
 
-  test() {
-    this.portfolioService.getInstrument('67066G104').subscribe((response) => {
+  async test() {
+    let counter = 0;
+    const newList = [];
+    while (counter < OldList.length) {
+      const stock = OldList[counter].ticker;
+
+      if (stock) {
+        this.schedulerService.schedule(async () => {
+          try {
+            const results = await this.portfolioService.getInstrument(stock).toPromise();
+            if (results[stock]) {
+              if (results[stock].fundamental.marketCap > 1900) {
+                newList.push(stock);
+              }
+            }
+          } catch (err) {
+            console.log(err);
+          }
+        }, `findTrades`, null, false, 60000);
+      }
+
+      counter++;
+    }
+    console.log(JSON.stringify(newList));
+    this.portfolioService.getInstrument('W').subscribe((response) => {
       console.log('test123', response);
     });
   }
