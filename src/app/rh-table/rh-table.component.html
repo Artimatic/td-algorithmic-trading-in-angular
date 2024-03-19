@@ -32,7 +32,7 @@
           <div class="global-filter">
             <i class="fa fa-search" style="margin:4px 4px 0 0"></i>
             <input type="text" pInputText size="50" placeholder="Global Filter" [(ngModel)]="searchText"
-              (input)="dt.filterGlobal($event.target.value, 'contains')" style="width:auto">
+              (input)="filter()" style="width:auto">
           </div>
           <div class="date-picker">
             End Date

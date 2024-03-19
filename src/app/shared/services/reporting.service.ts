@@ -41,9 +41,9 @@ export class ReportingService {
       'Stock': results.stock,
       'Buy': buySignals,
       'Sell': sellSignals,
-      'Returns': Math.round(results.returns * 100) + '%',
-      'Implied Movement': Math.round(results.impliedMovement * 100) + '%',
-      'Previous Implied Move': Math.round(results.previousImpliedMovement * 100) + '%',
+      'Returns': results.returns,
+      'Implied Movement': results.impliedMovement,
+      'Previous Implied Move': results.previousImpliedMovement,
       'AI Prediction': JSON.stringify(results.ml)
     };
     if (selectedColumns.length > 0) {

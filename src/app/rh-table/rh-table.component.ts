@@ -555,23 +555,16 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   filter() {
-    this.filterRecommendation();
-    if (this.selectedIndicators && this.selectedIndicators.length > 0) {
-      this.currentList = _.filter(this.currentList, (stock: Stock) => {
-        const foundBuyIdx = stock.buySignals.findIndex(algo => {
-          return this.selectedIndicators.findIndex(selected => selected.value.toLowerCase() === algo.toLowerCase()) > -1;
-        });
-        const foundSellIdx = stock.sellSignals.findIndex(algo => {
-          return this.selectedIndicators.findIndex(selected => selected.value.toLowerCase() === algo.toLowerCase()) > -1;
-        });
-        return foundBuyIdx > -1 || foundSellIdx > -1;
-      });
+    if (this.stockList.length > 400) {
+      // Too many records;delete irrelevant records to increase performance
+      this.stockList = this.stockList.filter((stockItem: Stock) => ((stockItem.buySignals.length + stockItem.sellSignals.length) > 1));
     }
+
+    this.filterRecommendation();
+    this.filterIndicators();
+    this.filterQueryString();
     if (this.twoOrMoreSignalsOnly) {
       this.filterTwoOrMoreSignalsOnly();
-    }
-    if (this.stockList.length > 100) {
-      this.stockList = this.stockList.filter((stockItem: Stock) => (stockItem.buySignals.length > 0 || stockItem.sellSignals.length > 0));
     }
   }
 
@@ -923,6 +916,35 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       .subscribe(patternsResponse => console.log('found patterns ', patternsResponse));
   }
 
+  filterQueryString() {
+    if (this.searchText && this.searchText.length > 0) {
+      this.currentList = this.currentList.filter((stock: Stock) => {
+        const searchTextLowerCase = this.searchText.toLowerCase()
+        const foundBuy = stock.buySignals.find(algo => {
+          return algo.toLowerCase().includes(searchTextLowerCase);
+        });
+        const foundSell = stock.sellSignals.find(algo => {
+          return algo.toLowerCase().includes(searchTextLowerCase);
+        });
+
+        return foundBuy || foundSell || stock.stock.includes(searchTextLowerCase);
+      });
+    }
+  }
+
+  filterIndicators() {
+    if (this.selectedIndicators && this.selectedIndicators.length > 0) {
+      this.currentList = _.filter(this.currentList, (stock: Stock) => {
+        const foundBuyIdx = stock.buySignals.findIndex(algo => {
+          return this.selectedIndicators.findIndex(selected => selected.value.toLowerCase() === algo.toLowerCase()) > -1;
+        });
+        const foundSellIdx = stock.sellSignals.findIndex(algo => {
+          return this.selectedIndicators.findIndex(selected => selected.value.toLowerCase() === algo.toLowerCase()) > -1;
+        });
+        return foundBuyIdx > -1 || foundSellIdx > -1;
+      });
+    }
+  }
   ngOnDestroy() {
     this.callChainSub.unsubscribe();
     this.unsubscribe$.complete();
