@@ -15,13 +15,16 @@
 
   <p-steps [model]="items" [(activeIndex)]="activeIndex" [readonly]="false"></p-steps>
 
-  <div *ngIf="activeIndex === 0">
+  <div class="card-form-main" *ngIf="activeIndex === 0">
     <form [formGroup]="firstFormGroup" class="bb-form">
       <div class="p-field-radiobutton bb-form-field" *ngFor="let side of sides">
         <p-radioButton name="orderType" [value]="side" [label]="side" formControlName="orderType"></p-radioButton>
       </div>
       <div class="bb-form-field">
         <p-checkbox formControlName="useML" label="Enable machine learning" (onChange)="checkMLService()"></p-checkbox>
+      </div>
+      <div class="bb-form-field">
+        <p-dropdown [options]="algorithmList" [formControl]="selectedAlgorithm" optionLabel="Select an Algorithm"></p-dropdown>
       </div>
       <div class="bb-form-field">
         <p-multiSelect [formControl]="preferences" defaultLabel="Select additional options"
@@ -53,9 +56,8 @@
           <label for="float-input">Orders</label>
       </span>
       <span class="p-float-label bb-form-field">
-        <p-inputNumber id="float-input" type="number" pInputText formControlName="orderSize"
-          required></p-inputNumber>
-          <label for="float-input">Orders</label>
+        <input type="text" pInputText [(ngModel)]="value" formControlName="phoneNumber"/>
+        <label for="float-input">Phone Number</label>
       </span>
     </form>
 
@@ -166,18 +168,13 @@
         </div>
       </div>
       <p-footer>
-
         <div class="card-actions">
-          <button pButton class="p-button-danger" (click)="resetStepper()">Stop</button>
           <button pButton class="p-button-info" (click)="backtest()">Backtest</button>
-          <button pButton class="p-button-success" (click)="testBuy()">Buy</button>
-          <button pButton class="p-button-danger" (click)="testSell()">Sell</button>
-          <button pButton class="p-button-warning" (click)="testSms()">Test SMS</button>
-          <button pButton class="p-button-warning" (click)="goLive()">Test Live</button>
-          <button pButton class="p-button-warning" (click)="testRequests()">Test Requests</button>
+        </div>
+        <div class="card-actions">
+          <button pButton class="p-button-info" (click)="test()">Test</button>
         </div>
       </p-footer>
-
     </p-card>
   </div>
 </p-card>

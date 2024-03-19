@@ -6,11 +6,9 @@ import { MatDialog } from '@angular/material/dialog';
 import * as moment from 'moment';
 import * as _ from 'lodash';
 
-import { BacktestService, Stock, AlgoParam, PortfolioService } from '../shared';
-import { OrderDialogComponent } from '../order-dialog/order-dialog.component';
-import { Holding } from '../shared/models';
+import { BacktestService, Stock, AlgoParam, MachineLearningService, PortfolioService } from '../shared';
 import { FormControl } from '@angular/forms';
-import { PrimaryList } from './backtest-stocks.constant';
+import { PrimaryList, OldList } from './backtest-stocks.constant';
 import Stocks from './backtest-stocks.constant';
 import { ChartDialogComponent } from '../chart-dialog/chart-dialog.component';
 import { ChartParam } from '../shared/services/backtest.service';
@@ -18,7 +16,6 @@ import { GlobalSettingsService } from '../settings/global-settings.service';
 import { OptionsDataService } from '../shared/options-data.service';
 import { Subscription, Observable, Subject } from 'rxjs';
 import { DailyBacktestService } from '@shared/daily-backtest.service';
-import { take } from 'rxjs/operators';
 import { AiPicksService } from '@shared/services/ai-picks.service';
 import { ReportingService } from '@shared/services/reporting.service';
 import { WatchListService } from '../watch-list/watch-list.service';
@@ -94,23 +91,26 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       ]
     }
   ];
+  indicatorsList = [];
   recommendations: any[];
   cols: any[];
   selectedColumns: any[];
+  selectedIndicators: any[];
   selectedStock: any;
   twoOrMoreSignalsOnly: boolean;
   tickerBlacklist = {};
   signalScoreTable = [];
   messages = [];
+  searchText: string;
 
   private callChainSub: Subscription;
   private backtestBuffer: { stock: string; sub: Observable<any>; timeout: number; modifier: number }[];
   private bufferSubject: Subject<void>;
+  private unsubscribe$ = new Subject();
 
   constructor(
     private algo: BacktestService,
     public dialog: MatDialog,
-    private portfolioService: PortfolioService,
     private globalSettingsService: GlobalSettingsService,
     private optionsDataService: OptionsDataService,
     private dailyBacktestService: DailyBacktestService,
@@ -118,9 +118,12 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     private reportingService: ReportingService,
     private clientSmsService: ClientSmsService,
     private schedulerService: SchedulerService,
-    private watchListService: WatchListService) { }
+    private watchListService: WatchListService,
+    private machineLearningService: MachineLearningService,
+    private portfolioService: PortfolioService) { }
 
   ngOnInit() {
+    this.unsubscribe$ = new Subject();
     this.bufferSubject = new Subject();
     this.backtestBuffer = [];
     this.callChainSub = new Subscription();
@@ -132,6 +135,13 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     ];
     this.endDate = moment(this.globalSettingsService.backtestDate).format('YYYY-MM-DD');
 
+    this.indicatorsList = [
+      { value: 'mfiTrade', label: 'Mfi Trade' },
+      { value: 'mfi', label: 'Mfi' },
+      { value: 'mfiDivergence', label: 'Mfi Divergence' },
+      { value: 'bband', label: 'BBand' }
+    ];
+
     this.cols = [
       { field: 'stock', header: 'Stock' },
       { field: 'returns', header: 'Returns' },
@@ -139,6 +149,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       { field: 'lastPrice', header: 'Last Price' },
       { field: 'profitableTrades', header: 'Profitable Trades' },
       { field: 'totalTrades', header: 'Trades' },
+      { field: 'ml', header: 'AI Prediction' },
       { field: 'kellyCriterion', header: 'Trade Size' },
 
       { field: 'buySignals', header: 'Buy' },
@@ -197,7 +208,10 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       { field: 'stock', header: 'Stock' },
       { field: 'buySignals', header: 'Buy' },
       { field: 'sellSignals', header: 'Sell' },
-      { field: 'returns', header: 'Returns' }
+      { field: 'returns', header: 'Returns' },
+      { field: 'ml', header: 'AI Prediction' },
+      { field: 'kellyCriterion', header: 'Trade Size' },
+      { field: 'impliedMovement', header: 'Implied Movement' }
     ];
 
     this.selectedRecommendation = ['strongbuy', 'buy', 'sell', 'strongsell'];
@@ -275,9 +289,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       case 'daily-indicators':
         const indicatorsCb = (param) => {
           return this.algo.getBacktestEvaluation(param.ticker, startDate, currentDate, 'daily-indicators')
-            .pipe(take(1))
             .map(
-              (testResults: BacktestResponse) => {
+              async (testResults: BacktestResponse) => {
                 if (testResults) {
                   let hasRecommendations = false;
                   const symbol = param.ticker;
@@ -331,16 +344,13 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                     }
                   }
                   if (hasRecommendations) {
+                    await this.runAi({ ...testResults, buySignals: bullishSignals, sellSignals: bearishSignals });
                     this.getProbability(bullishSignals, bearishSignals, testResults.signals)
-                      .subscribe((data) => {
+                      .subscribe(async (data) => {
                         this.findAndUpdateIndicatorScore(param.ticker, {
                           bullishProbability: data.bullishProbability,
                           bearishProbability: data.bearishProbability
                         }, this.stockList);
-
-                        if (data.bullishProbability > 0.3 || data.bearishProbability > 0.3) {
-                          this.runAi({ ...testResults, buySignals: bullishSignals, sellSignals: bearishSignals });
-                        }
                       });
 
                     setTimeout(() => {
@@ -352,23 +362,19 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                             });
                             if (foundInWatchList) {
                               this.clientSmsService.sendSellSms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
-                                .pipe(take(1))
                                 .subscribe();
                             }
-                            this.aiPicksService.tickerSellRecommendationQueue.next(symbol);
                           } else if (bearishSignals.length < bullishSignals.length) {
                             const foundInWatchList = this.watchListService.watchList.find(item => {
                               return item.stock === symbol;
                             });
                             if (foundInWatchList) {
                               this.clientSmsService.sendBuySms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
-                                .pipe(take(1))
                                 .subscribe();
                             }
-                            this.aiPicksService.tickerBuyRecommendationQueue.next(symbol);
                           }
                         }
-                        // this.getImpliedMovement(testResults);
+                        this.getImpliedMovement(testResults);
                       }, 'rhtable_process' + symbol);
                     }, 1000 - this.backtestBuffer.length * 10000);
                   }
@@ -549,7 +555,14 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   filter() {
+    if (this.stockList.length > 400) {
+      // Too many records;delete irrelevant records to increase performance
+      this.stockList = this.stockList.filter((stockItem: Stock) => ((stockItem.buySignals.length + stockItem.sellSignals.length) > 1));
+    }
+
     this.filterRecommendation();
+    this.filterIndicators();
+    this.filterQueryString();
     if (this.twoOrMoreSignalsOnly) {
       this.filterTwoOrMoreSignalsOnly();
     }
@@ -647,59 +660,37 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
     switch (incomingStock.recommendation.toLowerCase()) {
       case 'strongbuy':
-        current.strongbuySignals.push(incomingStock.algo);
-        current.strongbuySignals = current.strongbuySignals.slice();
+        if (!current.strongbuySignals.find(sig => sig === incomingStock.algo)) {
+          current.strongbuySignals.push(incomingStock.algo);
+          current.strongbuySignals = current.strongbuySignals.slice();
+        }
         break;
       case 'buy':
-        current.buySignals.push(incomingStock.algo);
-        current.buySignals = current.buySignals.slice();
+        if (!current.buySignals.find(sig => sig === incomingStock.algo)) {
+          current.buySignals.push(incomingStock.algo);
+          current.buySignals = current.buySignals.slice();
+        }
         break;
       case 'strongsell':
-        current.strongsellSignals.push(incomingStock.algo);
-        current.strongsellSignals = current.strongsellSignals.slice();
+        if (!current.strongsellSignals.find(sig => sig === incomingStock.algo)) {
+          current.strongsellSignals.push(incomingStock.algo);
+          current.strongsellSignals = current.strongsellSignals.slice();
+        }
         break;
       case 'sell':
-        current.sellSignals.push(incomingStock.algo);
-        current.sellSignals = current.sellSignals.slice();
+        if (!current.sellSignals.find(sig => sig === incomingStock.algo)) {
+          current.sellSignals.push(incomingStock.algo);
+          current.sellSignals = current.sellSignals.slice();
+        }
         break;
     }
 
     return current;
   }
 
-  sell(row: Stock): void {
-    this.order(row, 'Sell');
-  }
-
-  buy(row: Stock): void {
-    this.order(row, 'Buy');
-  }
-
-  order(row: Stock, side: string): void {
-    this.portfolioService.getInstruments(row.stock).subscribe((response) => {
-      const instruments = response.results[0];
-      const newHolding: Holding = {
-        instrument: instruments.url,
-        symbol: instruments.symbol,
-        name: instruments.name,
-        realtime_price: row.lastPrice
-      };
-
-      const dialogRef = this.dialog.open(OrderDialogComponent, {
-        width: '500px',
-        height: '500px',
-        data: { holding: newHolding, side: side }
-      });
-
-      dialogRef.afterClosed().subscribe(result => {
-        console.log('Closed dialog', result);
-      });
-    });
-  }
-
   runDefaultBacktest() {
     this.interval = 0;
-    this.getData(Stocks, 'daily-indicators');
+    this.getData(OldList, 'daily-indicators');
 
     this.progress = 0;
   }
@@ -737,31 +728,35 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
-  runAi(element: Stock, runWithoutChecks = false) {
-    if (runWithoutChecks) {
-      this.aiPicksService.tickerBuyRecommendationQueue.next(element.stock);
-      this.aiPicksService.tickerSellRecommendationQueue.next(element.stock);
-    } else if (element.sellSignals && element.buySignals) {
+  async runAi(element: Stock) {
+    try {
+      const latestMlResult = await this.aiPicksService.trainAndActivate(element.stock);
+      if (latestMlResult) {
+        const idx = _.findIndex(this.stockList, (s) => s.stock === latestMlResult.label);
+        if (idx > -1) {
+          this.stockList[idx].ml = latestMlResult.value;
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
+    if (element.sellSignals && element.buySignals) {
       if (element.sellSignals.length > element.buySignals.length) {
         const foundInWatchList = this.watchListService.watchList.find(item => {
           return item.stock === element.stock;
         });
         if (foundInWatchList) {
           this.clientSmsService.sendSellSms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
-            .pipe(take(1))
             .subscribe();
         }
-        this.aiPicksService.tickerSellRecommendationQueue.next(element.stock);
       } else if (element.sellSignals.length < element.buySignals.length) {
         const foundInWatchList = this.watchListService.watchList.find(item => {
           return item.stock === element.stock;
         });
         if (foundInWatchList) {
           this.clientSmsService.sendBuySms(foundInWatchList.stock, foundInWatchList.phoneNumber, 0, 0)
-            .pipe(take(1))
             .subscribe();
         }
-        this.aiPicksService.tickerBuyRecommendationQueue.next(element.stock);
       }
     }
   }
@@ -779,6 +774,18 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
           foundStock.kellyCriterion = 0;
 
           this.addToList(foundStock);
+          this.schedulerService.schedule(async () => {
+            try {
+              const results = await this.portfolioService.getInstrument(symbol).toPromise();
+              if (results[symbol]) {
+                if (results[symbol].fundamental.marketCap > 1900) {
+                  this.addToNewList(symbol);
+                }
+              }
+            } catch (err) {
+              console.log(err);
+            }
+          }, 'getInstrument', null, false, 30000);
         }
       });
   }
@@ -813,7 +820,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       .subscribe(() => {
         const backtest = this.backtestBuffer[0];
         this.callChainSub.add(backtest.sub
-          .pipe(take(1))
           .subscribe(() => {
             this.backtestBuffer.shift();
             setTimeout(() => {
@@ -824,7 +830,9 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
           }, error => {
             this.messages.push({ severity: 'error', summary: 'Backtest Failed', detail: `Backtest failed on ${backtest.stock}` });
-            console.log(`Error on ${backtest.stock}`, error.error.error, '@', moment().format());
+            console.log(`Error on ${backtest.stock}`, error, '@', moment().format());
+            this.messages.push({ severity: 'error', summary: 'Backtest Failed', detail: `Backtest failed on ${backtest.stock}` });
+            this.addToBlackList(backtest.stock);
             this.incrementProgress();
             this.backtestBuffer.shift();
             setTimeout(() => {
@@ -832,17 +840,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
                 this.triggerNextBacktest();
               }, 'rhtable_backtest' + backtest.stock);
             }, 100 * (1000 - this.backtestBuffer.length));
-
-            setTimeout(() => {
-              this.schedulerService.schedule(() => {
-                backtest.sub
-                  .pipe(take(1))
-                  .subscribe(() => { }, () => {
-                    this.messages.push({ severity: 'error', summary: 'Backtest Failed', detail: `Backtest failed on ${backtest.stock}` });
-                    this.addToBlackList(backtest.stock);
-                  });
-              }, 'rhtable_backtest' + backtest.stock);
-            }, 10000 * (1000 - this.backtestBuffer.length));
           }));
       });
 
@@ -871,6 +868,31 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
   addToBlackList(ticker: string) {
     this.tickerBlacklist[ticker] = true;
+    const backtestBlacklist = JSON.parse(localStorage.getItem('blacklist'));
+    if (backtestBlacklist) {
+      if (!backtestBlacklist[ticker]) {
+        backtestBlacklist[ticker] = true;
+        localStorage.setItem('blacklist', JSON.stringify(backtestBlacklist));
+      }
+    } else {
+      const newStorageObj = {};
+      newStorageObj[ticker] = true;
+      localStorage.setItem('blacklist', JSON.stringify(newStorageObj));
+    }
+  }
+
+  addToNewList(ticker: string) {
+    const backtestList = JSON.parse(localStorage.getItem('newList'));
+    if (backtestList) {
+      if (!backtestList[ticker]) {
+        backtestList[ticker] = true;
+        localStorage.setItem('newList', JSON.stringify(backtestList));
+      }
+    } else {
+      const newStorageObj = {};
+      newStorageObj[ticker] = true;
+      localStorage.setItem('newList', JSON.stringify(newStorageObj));
+    }
   }
 
   autoActivate() {
@@ -883,13 +905,49 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
   exportResults() {
     this.currentList.forEach(results => {
-      this.reportingService.addBacktestResults(results);
+      this.reportingService.addBacktestResults(results, this.selectedColumns);
     });
     this.reportingService.exportBacktestResults();
+    console.log('blacklist', JSON.stringify(this.tickerBlacklist));
   }
 
+  getFoundPatterns() {
+    this.machineLearningService.getFoundPatterns()
+      .subscribe(patternsResponse => console.log('found patterns ', patternsResponse));
+  }
+
+  filterQueryString() {
+    if (this.searchText && this.searchText.length > 0) {
+      this.currentList = this.currentList.filter((stock: Stock) => {
+        const searchTextLowerCase = this.searchText.toLowerCase()
+        const foundBuy = stock.buySignals.find(algo => {
+          return algo.toLowerCase().includes(searchTextLowerCase);
+        });
+        const foundSell = stock.sellSignals.find(algo => {
+          return algo.toLowerCase().includes(searchTextLowerCase);
+        });
+
+        return foundBuy || foundSell || stock.stock.includes(searchTextLowerCase);
+      });
+    }
+  }
+
+  filterIndicators() {
+    if (this.selectedIndicators && this.selectedIndicators.length > 0) {
+      this.currentList = _.filter(this.currentList, (stock: Stock) => {
+        const foundBuyIdx = stock.buySignals.findIndex(algo => {
+          return this.selectedIndicators.findIndex(selected => selected.value.toLowerCase() === algo.toLowerCase()) > -1;
+        });
+        const foundSellIdx = stock.sellSignals.findIndex(algo => {
+          return this.selectedIndicators.findIndex(selected => selected.value.toLowerCase() === algo.toLowerCase()) > -1;
+        });
+        return foundBuyIdx > -1 || foundSellIdx > -1;
+      });
+    }
+  }
   ngOnDestroy() {
     this.callChainSub.unsubscribe();
+    this.unsubscribe$.complete();
     this.resetTable();
   }
 }

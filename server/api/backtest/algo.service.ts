@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { DaytradeRecommendation, Indicators } from './backtest.service';
+import { Indicators, DaytradeRecommendation } from './backtest.constants';
 import DecisionService from '../mean-reversion/reversion-decision.service';
 
 class AlgoService {
@@ -49,12 +49,12 @@ class AlgoService {
     return DaytradeRecommendation.Neutral;
   }
 
-  checkBBand(price: number, low: number, high: number, mfi: number): DaytradeRecommendation {
-    if (price <= low && mfi < 40) {
+  checkBBand(price: number, low: number, high: number): DaytradeRecommendation {
+    if (price <= low) {
       return DaytradeRecommendation.Bullish;
     }
 
-    if (price >= high && mfi > 60) {
+    if (price >= high) {
       return DaytradeRecommendation.Bearish;
     }
 
@@ -159,6 +159,9 @@ class AlgoService {
     return DaytradeRecommendation.Neutral;
   }
 
+  checkBBandBreakout(isBreakout) {
+    return isBreakout ? DaytradeRecommendation.Bullish : DaytradeRecommendation.Neutral;
+  }
 }
 
 export default new AlgoService();

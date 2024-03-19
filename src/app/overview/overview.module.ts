@@ -5,6 +5,7 @@ import { OverviewComponent } from './overview.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from '../shared/shared.module';
 import { LoginComponent } from '../login/login.component';
+import { CheckboxModule } from 'primeng/checkbox';
 
 @NgModule({
   declarations: [TodoListComponent, OverviewComponent, LoginComponent],
@@ -12,7 +13,8 @@ import { LoginComponent } from '../login/login.component';
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    SharedModule
+    SharedModule,
+    CheckboxModule
   ],
   exports: [TodoListComponent, LoginComponent]
 })

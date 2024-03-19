@@ -9,7 +9,7 @@ import PredictionService from './prediction.service';
 
 class IntradayPredicationService extends PredictionService {
 
-  modelName = 'model2020-04-02';
+  modelName = 'intradaymodel2024-03-06';
 
   constructor() {
     super(15, 0.001);
@@ -66,7 +66,7 @@ class IntradayPredicationService extends PredictionService {
     return BacktestService.initStrategy(subQuotes)
       .then((indicators) => {
         indicator = indicators;
-        return BacktestService.getDaytradeRecommendation(price, indicator);
+        return BacktestService.createDaytradeRecommendation(price, indicator);
       })
       .then((recommendation) => {
         indicator.recommendation = recommendation;
@@ -113,10 +113,6 @@ class IntradayPredicationService extends PredictionService {
   }
 
   buildInputSet(currentSignal, featureUse) {
-    if (!featureUse) {
-      featureUse = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
-    }
-
     const dataSetObj = {
       date: null,
       input: null,
@@ -128,9 +124,14 @@ class IntradayPredicationService extends PredictionService {
 
     const input = []
       .concat(this.comparePrices(currentSignal.vwma, close))
-      .concat(this.convertRecommendations(currentSignal));
+      .concat(this.convertRecommendations(currentSignal))
+      .concat(this.convertRecommendationsForBearish(currentSignal));
 
     dataSetObj.input = [];
+
+    if (!featureUse) {
+      featureUse = input.map(val => 1);
+    }
 
     featureUse.forEach((value, idx) => {
       if ((value === '1' || value === 1) && input[idx] !== undefined) {

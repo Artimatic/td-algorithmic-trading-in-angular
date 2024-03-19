@@ -16,8 +16,7 @@ export class PokerhandComponent implements OnInit {
   ngOnInit() {
     const newHolding: Holding = {
       instrument: '',
-      symbol: 'VTI',
-      name: ''
+      symbol: 'VTI'
     };
 
     const order: SmartOrder = {

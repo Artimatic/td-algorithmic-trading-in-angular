@@ -20,6 +20,8 @@ router.post('/v3/activate-model', MachineLearningController.activateModel);
 router.get('/v3/activate-daily', MachineLearningController.activateDailyV3);
 router.get('/v4/activate-daily', MachineLearningController.activateDailyV4);
 router.get('/v4/train-daily', MachineLearningController.trainDailyV4);
+router.get('/v4/get-data', MachineLearningController.getTrainingDataDailyV4);
 router.get('/v4/score-daily', MachineLearningController.scoreDailyV4);
+router.get('/v4/get-patterns', MachineLearningController.getFoundPatterns);
 
 module.exports = router;

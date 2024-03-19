@@ -19,6 +19,7 @@ export class MachineDaytradingService {
   public allocationTotal = null;
   public lastBalance = null;
   private counter = 0;
+  private currentStockList = null;
 
   constructor(private schedulerService: SchedulerService,
     private backtestService: BacktestService,
@@ -52,8 +53,6 @@ export class MachineDaytradingService {
                 this.globalSettingsService.daytradeAlgo
               )
               .subscribe((data: any[]) => {
-                // if (data[0].nextOutput > 0.5 && data[0].correct / data[0].guesses > 0.5) {
-                console.log('ml results for ', stockSymbol, data);
                 if (data[0].correct / data[0].guesses > 0.6 && data[0].guesses > 50) {
                   const cb = (quantity, price) => {
                     this.selectedStock = stockSymbol;
@@ -62,16 +61,11 @@ export class MachineDaytradingService {
                     console.log('Set trade: ', stockSymbol, this.quantity, this.orderSize);
                     mainCallback(stockSymbol, quantity, price);
                   };
-
-                  console.log('Found a trade: ', stockSymbol);
-
                   if (this.allocationTotal !== null && this.allocationPct !== null) {
-                    console.log('Adding trade 1: ', stockSymbol);
                     this.addOrder('daytrade', stockSymbol, this.allocationPct, this.allocationTotal, cb, analysis.data.price);
                   } else {
                     this.schedulerService.schedule(() => {
                       this.getPortfolioBalance().subscribe(balance => {
-                        console.log('Adding trade 2: ', stockSymbol);
                         this.addOrder('daytrade', stockSymbol, 1, balance.availableFunds, cb, analysis.data.price);
                       });
                     }, 'MachineDaytradingService_add_order', stopTime, true);
@@ -134,21 +128,24 @@ export class MachineDaytradingService {
     }
   }
 
+  setCurrentStockList(stockList) {
+    this.currentStockList = stockList;
+    this.resetStockCounter();
+  }
+
   getNextStock() {
-    this.counter++;
-    if (this.counter > PrimaryList.length - 1) {
-      return this.getRandomStock();
+    if (!this.currentStockList) {
+      this.currentStockList = PrimaryList;
     }
-    return PrimaryList[this.counter].ticker;
+    this.counter++;
+    if (this.counter > this.currentStockList.length - 1) {
+      this.counter = 0;
+    }
+    return this.currentStockList[this.counter].ticker ? this.currentStockList[this.counter].ticker : this.currentStockList[this.counter].name;
   }
 
   resetStockCounter() {
     this.counter = 0;
-  }
-
-  getRandomStock(): string {
-    const randomIdx = Math.floor(Math.random() * Stocks.length);
-    return Stocks[randomIdx].ticker;
   }
 
   resetStock() {

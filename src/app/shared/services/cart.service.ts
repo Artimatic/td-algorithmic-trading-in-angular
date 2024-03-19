@@ -1,67 +1,90 @@
 import { Injectable } from '@angular/core';
 import { PortfolioService } from './portfolio.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { SmartOrder } from '../models/smart-order';
 import { TradeService, AlgoQueueItem } from './trade.service';
 import * as _ from 'lodash';
+import { MessageService } from 'primeng/api';
 
 @Injectable()
 export class CartService {
   sellOrders: SmartOrder[] = [];
   buyOrders: SmartOrder[] = [];
   otherOrders: SmartOrder[] = [];
-  sellTotal = 0;
-  buyTotal = 0;
 
   constructor(
     private portfolioService: PortfolioService,
     private tradeService: TradeService,
-    public snackBar: MatSnackBar) { }
+    private messageService: MessageService) { }
 
-  addToCart(order: SmartOrder) {
+  addToCart(order: SmartOrder, replaceAnyExistingOrders = false) {
     const indices = this.searchAllLists(order);
     let noDup = true;
     for (const idx of indices) {
       if (idx > -1) {
-        this.snackBar.open(`Order for ${order.holding.symbol} already exists`, 'Dismiss', {
-          duration: 2000,
+        const msg = `Order for ${order.holding.symbol} already exists`;
+        console.log(msg);
+
+        this.messageService.add({
+          severity: 'danger',
+          summary: msg
         });
         noDup = false;
         break;
       }
     }
 
+    if (!noDup && replaceAnyExistingOrders) {
+      if (indices[0] > -1) {
+        this.deleteBuy(this.buildOrder(order.holding.symbol, null, null, 'buy'));
+      } else if (indices[1] > -1) {
+        this.deleteSell(this.buildOrder(order.holding.symbol, null, null, 'sell'));
+      } else if (indices[2] > -1) {
+        this.deleteDaytrade(this.buildOrder(order.holding.symbol, null, null, 'daytrade'));
+      }
+      this.addOrder(order);
+    }
+
     if (noDup && order.quantity > 0) {
       if (order.side.toLowerCase() === 'sell') {
         this.sellOrders.push(order);
-        this.snackBar.open('Sell order added to cart', 'Dismiss', {
-          duration: 2000,
+        console.log(`Added ${order.side} ${order.holding.symbol}`, order);
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Sell order added to cart'
         });
       } else if (order.side.toLowerCase() === 'buy') {
         this.buyOrders.push(order);
-        this.snackBar.open('Buy order added to cart', 'Dismiss', {
-          duration: 2000,
+        console.log(`Added ${order.side} ${order.holding.symbol}`, order);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Buy order added to cart'
         });
       } else {
         this.otherOrders.push(order);
-        this.snackBar.open(`${order.side} order added to cart`, 'Dismiss', {
-          duration: 2000,
+        console.log(`Added ${order.side} ${order.holding.symbol}`, order);
+
+        this.messageService.add({
+          severity: 'success',
+          summary: `Added ${order.side} ${order.holding.symbol}`
         });
       }
-      this.calculateTotals();
     }
   }
 
   deleteSell(deleteOrder: SmartOrder) {
-    const index = this.getOrderIndex(this.sellOrders, deleteOrder);
-    this.sellOrders.splice(index, 1);
-    this.calculateTotals();
+    console.log('Deleting sell order', deleteOrder.holding.symbol);
+    this.sellOrders = this.sellOrders.filter(fullOrder => fullOrder.holding.symbol !== deleteOrder.holding.symbol );
   }
 
   deleteBuy(deleteOrder: SmartOrder) {
-    const index = this.getOrderIndex(this.buyOrders, deleteOrder);
-    this.buyOrders.splice(index, 1);
-    this.calculateTotals();
+    console.log('Deleting buy order', deleteOrder.holding.symbol);
+    this.buyOrders = this.buyOrders.filter(fullOrder => fullOrder.holding.symbol !== deleteOrder.holding.symbol );
+  }
+
+  deleteDaytrade(deleteOrder: SmartOrder) {
+    console.log('Deleting day trade', deleteOrder.holding.symbol);
+    this.otherOrders = this.otherOrders.filter(fullOrder => fullOrder.holding.symbol !== deleteOrder.holding.symbol );
   }
 
   updateOrder(updatedOrder: SmartOrder) {
@@ -80,8 +103,6 @@ export class CartService {
         this.tradeService.algoQueue.next(queueItem);
       }
     });
-
-    this.calculateTotals();
   }
 
   searchAllLists(targetOrder: SmartOrder) {
@@ -89,19 +110,6 @@ export class CartService {
     const sellIndex = this.getOrderIndex(this.sellOrders, targetOrder);
     const otherIndex = this.getOrderIndex(this.otherOrders, targetOrder);
     return [buyIndex, sellIndex, otherIndex];
-  }
-
-  deleteDaytrade(deleteOrder: SmartOrder) {
-    const index = this.otherOrders.findIndex((order) => {
-      if (deleteOrder.price === order.price
-        && deleteOrder.holding.symbol === order.holding.symbol
-        && deleteOrder.quantity === order.quantity) {
-        return true;
-      }
-      return false;
-    });
-    this.otherOrders.splice(index, 1);
-    this.calculateTotals();
   }
 
   deleteOrder(order: SmartOrder) {
@@ -118,30 +126,29 @@ export class CartService {
     }
   }
 
+  addOrder(order: SmartOrder) {
+    switch (order.side.toLowerCase()) {
+      case 'sell':
+        this.sellOrders.push(order);
+        break;
+      case 'buy':
+        this.buyOrders.push(order);
+        break;
+      case 'daytrade':
+        this.otherOrders.push(order);
+        break;
+    }
+  }
+
   getOrderIndex(orderList: SmartOrder[], targetOrder: SmartOrder) {
-    return orderList.findIndex((order) => {
-      if (order.holding.symbol === targetOrder.holding.symbol) {
-        return true;
-      }
-      return false;
-    });
+    return orderList.findIndex((order) => order.holding.symbol === targetOrder.holding.symbol);
   }
 
   deleteCart() {
+    console.log('Delete cart');
     this.sellOrders = [];
     this.buyOrders = [];
     this.otherOrders = [];
-  }
-
-
-  calculateTotals() {
-    this.buyTotal = this.buyOrders.reduce((acc, buy) => {
-      return acc + (buy.quantity * buy.price);
-    }, 0);
-
-    this.sellTotal = this.sellOrders.reduce((acc, sell) => {
-      return acc + (sell.quantity * sell.price);
-    }, 0);
   }
 
   submitOrders() {
@@ -150,16 +157,20 @@ export class CartService {
       if (!sell.submitted && sell.quantity > 0) {
         this.portfolioService.sell(sell.holding, sell.quantity, sell.price, 'limit').subscribe(
           response => {
-            this.snackBar.open('Sell order sent', 'Dismiss', {
-              duration: 2000,
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Sell order sent'
             });
             sell.pending = false;
             sell.submitted = true;
           },
           error => {
-            this.snackBar.open('Unknown error', 'Dismiss', {
-              duration: 2000,
+            console.log(error);
+            this.messageService.add({
+              severity: 'danger',
+              summary: `Sell error for ${sell.holding.symbol}`
             });
+            
             sell.pending = false;
             sell.submitted = false;
           });
@@ -171,16 +182,20 @@ export class CartService {
       if (!buy.submitted && buy.quantity > 0) {
         this.portfolioService.buy(buy.holding, buy.quantity, buy.price, 'limit').subscribe(
           response => {
-            this.snackBar.open('Buy order sent', 'Dismiss', {
-              duration: 2000,
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Buy order sent'
             });
             buy.pending = false;
             buy.submitted = true;
           },
           error => {
-            this.snackBar.open('Unknown error', 'Dismiss', {
-              duration: 2000,
+            console.log(error);
+            this.messageService.add({
+              severity: 'danger',
+              summary: `Buy error for ${buy.holding.symbol}`
             });
+            
             buy.pending = false;
             buy.submitted = false;
           });
@@ -209,5 +224,11 @@ export class CartService {
       sellAtClose: (side === 'DayTrade' || side === 'Sell') ? true : false,
       id
     };
+  }
+
+  removeCompletedOrders() {
+    this.buyOrders = this.buyOrders.filter(order => order.orderSize < order.quantity);
+    this.sellOrders = this.sellOrders.filter(order => order.orderSize < order.quantity);
+    this.otherOrders = this.otherOrders.filter(order => order.orderSize < order.quantity);
   }
 }

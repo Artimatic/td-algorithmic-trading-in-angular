@@ -7,6 +7,8 @@ import { ChartModule } from 'angular-highcharts';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { InputTextModule } from 'primeng/inputtext';
+import { ToolbarModule } from 'primeng/toolbar';
+import {TooltipModule} from 'primeng/tooltip';
 
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import 'hammerjs';
@@ -84,6 +86,7 @@ import { PickListModule } from 'primeng/picklist';
 import { TimelineModule } from 'primeng/timeline';
 import { DataViewModule } from 'primeng/dataview';
 import { AutopilotComponent } from './autopilot/autopilot.component';
+import { RippleModule } from 'primeng/ripple';
 
 @NgModule({
   declarations: [
@@ -162,6 +165,9 @@ import { AutopilotComponent } from './autopilot/autopilot.component';
     PickListModule,
     TimelineModule,
     DataViewModule,
+    ToolbarModule,
+    TooltipModule,
+    RippleModule,
   ],
   providers: [
     BacktestService,

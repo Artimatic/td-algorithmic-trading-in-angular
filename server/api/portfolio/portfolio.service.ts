@@ -782,6 +782,25 @@ class PortfolioService {
         .then(this.processTDData);
   }
 
+  getInstrument(cusip: string) {
+    const accountId = this.getAccountId();
+
+    //const query = `${tdaUrl}instruments/${cusip}`;
+    const url = `${tdaUrl}instruments?symbol=${cusip}&projection=fundamental`;
+
+    const options = {
+      uri: url,
+      qs: {
+        apikey: this.tdaKey[accountId]
+      },
+      headers: {
+        Authorization: `Bearer ${this.access_token[accountId].token}`
+      }
+    };
+
+      return request.get(options)
+        .then(this.processTDData);
+  }
 }
 
 export default new PortfolioService();

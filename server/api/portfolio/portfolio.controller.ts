@@ -109,6 +109,13 @@ class PortfolioController extends BaseController {
     }
   }
 
+  getInstrument(request, response) {
+    console.log('query',request.query);
+    PortfolioService.getInstrument(request.query.cusip)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
   midPrice(ask, bid) {
     return _.round(_.multiply(_.add(_.divide(_.subtract(_.divide(ask, bid), 1), 2), 1), bid), 2);
   }
@@ -184,7 +191,7 @@ class PortfolioController extends BaseController {
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
-
+  
   setCredentials(request, response) {
     PortfolioService.setCredentials(request.body.accountId,
       request.body.key,

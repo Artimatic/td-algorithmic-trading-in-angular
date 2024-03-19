@@ -9,12 +9,16 @@ import PredictionService from './prediction.service';
 import TrainingService from './training.service';
 import * as configurations from '../../config/environment';
 
+import { patternFinderService } from './pattern-finder.service';
+
 const mlServiceUrl = configurations.apps.armadillo;
+
 class VariableDailyPredicationService extends PredictionService {
-  modelName = 'model2021-04-01';
+  modelName = 'dailymodel2024-03-06';
+  foundPatterns = [];
 
   constructor() {
-    super(2, 0.003);
+    super(2, 0.01);
   }
 
   setOutputRange(range: number) {
@@ -30,10 +34,6 @@ class VariableDailyPredicationService extends PredictionService {
   }
 
   buildInputSet(openingPrice, currentSignal, featureUse) {
-    if (!featureUse) {
-      featureUse = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
-    }
-
     const dataSetObj = {
       date: null,
       input: null,
@@ -74,6 +74,9 @@ class VariableDailyPredicationService extends PredictionService {
 
     dataSetObj.input = [];
 
+    if (!featureUse) {
+      featureUse = input.map(val => 1);
+    }
     featureUse.forEach((value, idx) => {
       if (value === '1' || value === 1) {
         dataSetObj.input.push(input[idx]);
@@ -83,10 +86,24 @@ class VariableDailyPredicationService extends PredictionService {
     return dataSetObj;
   }
 
+  getDataSet(symbol, startDate, endDate, trainingSize, featureUse) {
+    return BacktestService.initDailyStrategy(symbol, moment(endDate).valueOf(), moment(startDate).valueOf(), { minQuotes: 80 })
+      .then((results: BacktestResults) => {
+        return this.processBacktestResults(results, featureUse);
+      });
+  }
+
   train(symbol, startDate, endDate, trainingSize, featureUse) {
     return BacktestService.initDailyStrategy(symbol, moment(endDate).valueOf(), moment(startDate).valueOf(), { minQuotes: 80 })
       .then((results: BacktestResults) => {
         const finalDataSet = this.processBacktestResults(results, featureUse);
+        const foundPatterns = patternFinderService.findPatternsInFeatureSet(symbol, finalDataSet.slice(finalDataSet.length - 30, finalDataSet.length));
+        if (foundPatterns.length > 0) {
+          this.foundPatterns.push(foundPatterns);
+          if(this.foundPatterns.length > 25) {
+            this.foundPatterns.shift();
+          }
+        }
         return BacktestService.trainCustomModel(symbol, this.getModelName(), finalDataSet, trainingSize, moment().format('YYYY-MM-DD'));
       });
   }
@@ -97,16 +114,14 @@ class VariableDailyPredicationService extends PredictionService {
     let indicator = null;
     return TrainingService.buildDailyQuotes(symbol, moment().subtract({ days: 120 }).valueOf(), moment().valueOf())
       .then((quotes) => {
-        console.log('len ; ', quotes.length);
         const subQuotes = quotes.slice(quotes.length - 80, quotes.length);
         price = quotes[quotes.length - 1].close;
         openingPrice = quotes[0].close;
         return BacktestService.initStrategy(subQuotes);
       })
-      .then((indicators) => {
-        indicator = indicators;
-
-        return BacktestService.getDaytradeRecommendation(price, indicator);
+      .then((lastDayIndicator) => {
+        indicator = lastDayIndicator;
+        return BacktestService.createDaytradeRecommendation(price, indicator);
       })
       .then((recommendation) => {
         indicator.recommendation = recommendation;
@@ -141,6 +156,10 @@ class VariableDailyPredicationService extends PredictionService {
           });
       });
 
+  }
+
+  getFoundPatterns() {
+    return this.foundPatterns;
   }
 }
 

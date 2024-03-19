@@ -14,7 +14,7 @@ class ServerSmsService {
       to: '' + phoneNumber,  // Text this number
       from: twilioNumber // From a valid Twilio number
     }).then((msg) => console.log('sent sms: ', msg.body))
-    .catch((error) => console.log('error sending sms: ', error));
+      .catch((error) => console.log('error sending sms: ', error));
   }
 
   sendBuySms(phoneNumber: string, stock: string, price: number, quantity: number, message: string = '') {

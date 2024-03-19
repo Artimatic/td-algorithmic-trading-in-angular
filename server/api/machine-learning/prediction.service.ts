@@ -1,4 +1,6 @@
-import { BacktestResults, Indicators } from '../backtest/backtest.service';
+import { BacktestResults } from '../backtest/backtest.service';
+import { Indicators } from '../backtest/backtest.constants';
+
 import DecisionService from '../mean-reversion/reversion-decision.service';
 import * as _ from 'lodash';
 
@@ -96,7 +98,6 @@ export default class PredictionService {
     }
 
     return 0;
-    // return _.round(futureClose, 2);
   }
 
   convertRecommendations(signal: Indicators) {
@@ -124,53 +125,16 @@ export default class PredictionService {
   }
 
   recommendationToInput(signal: Indicators, input, targetRecommendation) {
-    if (signal.recommendation.mfi && signal.recommendation.mfi.toLowerCase() === targetRecommendation) {
-      input.push(1);
-    } else {
-      input.push(0);
-    }
-
-    if (signal.recommendation.mfiDivergence2 && signal.recommendation.mfiDivergence2.toLowerCase() === targetRecommendation) {
-      input.push(1);
-    } else {
-      input.push(0);
-    }
-
-
-    if (signal.recommendation.bband && signal.recommendation.bband.toLowerCase() === targetRecommendation) {
-      input.push(1);
-    } else {
-      input.push(0);
-    }
-
-    if (signal.recommendation.macd && signal.recommendation.macd.toLowerCase() === targetRecommendation) {
-      input.push(1);
-    } else {
-      input.push(0);
-    }
-
-    if (signal.recommendation.demark9 && signal.recommendation.demark9.toLowerCase() === targetRecommendation) {
-      input.push(1);
-    } else {
-      input.push(0);
-    }
-
-    if (signal.recommendation.vwma && signal.recommendation.vwma.toLowerCase() === targetRecommendation) {
-      input.push(1);
-    } else {
-      input.push(0);
-    }
-
-    if (signal.recommendation.mfiTrade && signal.recommendation.mfiTrade.toLowerCase() === targetRecommendation) {
-      input.push(1);
-    } else {
-      input.push(0);
-    }
-
-    if (signal.recommendation.mfiDivergence && signal.recommendation.mfiDivergence.toLowerCase() === targetRecommendation) {
-      input.push(1);
-    } else {
-      input.push(0);
+    for (const rec in signal.recommendation) {
+      if (signal.recommendation.hasOwnProperty(rec)) {
+        if (signal.recommendation[rec].toLowerCase) {
+          if (signal.recommendation[rec].toLowerCase() === targetRecommendation) {
+            input.push(1);
+          } else {
+            input.push(0);
+          }
+        }
+      }
     }
 
     return input;

@@ -83,3 +83,7 @@ export const deleteCredentials = (request, response) => {
 export const getEquityMarketHours = (request, response) => {
   PortfolioController.getEquityMarketHours(request, response);
 }
+
+export const getInstrument = (request, response) => {
+  PortfolioController.getInstrument(request, response);
+}

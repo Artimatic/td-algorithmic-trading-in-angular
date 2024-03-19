@@ -144,6 +144,15 @@ export class PortfolioService {
     return this.http.post('/api/portfolio/instruments', body);
   }
 
+  getInstrument(symbol: string): Observable<any> {
+    const options: any = {
+      params: {
+        cusip: symbol
+      }
+    };
+    return this.http.get('/api/portfolio/instrument', options);
+  }
+
   getQuote(symbol: string): Observable<any> {
     const options = {
       params: {

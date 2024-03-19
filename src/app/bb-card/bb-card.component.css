@@ -61,3 +61,12 @@
     background: var(--secondary-color);
     color: var(--secondary-color-text);
 }
+
+.card-form-main {
+    overflow: auto;
+}
+
+button {
+    margin-bottom: 0.5rem;
+    margin-right: 0.5rem;
+}

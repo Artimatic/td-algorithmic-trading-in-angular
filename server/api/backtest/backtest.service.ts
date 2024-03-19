@@ -9,8 +9,10 @@ import BaseErrors from '../../components/errors/baseErrors';
 import * as tulind from 'tulind';
 import * as configurations from '../../config/environment';
 import AlgoService from './algo.service';
+import BBandBreakoutService from './bband-breakout.service';
 import MfiService from './mfi.service';
-import PortfolioService from '../portfolio/portfolio.service';
+import DaytradeRecommendations from './daytrade-recommendations';
+import { Recommendation, DaytradeRecommendation, OrderType, Indicators } from './backtest.constants';
 
 const dataServiceUrl = configurations.apps.goliath;
 const mlServiceUrl = configurations.apps.armadillo;
@@ -28,60 +30,10 @@ export interface DaytradeParameters {
   minQuotes: number;
 }
 
-export interface Indicators {
-  vwma: number;
-  mfiLeft: number;
-  bband80: any[];
-  mfiPrevious?: number;
-  macd?: any;
-  roc10?: number;
-  roc10Previous?: number;
-  roc70?: number;
-  roc70Previous?: number;
-  close?: number;
-  recommendation?: Recommendation;
-  action?: string;
-  date?: string;
-  demark9?: any;
-  mfiLow?: number;
-  high?: number;
-  low?: number;
-  mfiTrend?: boolean;
-  macdPrevious?: any;
-}
-
 export interface DaytradeAlgos {
   mfi?: string;
   bband?: string;
   momentum?: string;
-}
-
-export interface Recommendation {
-  recommendation: OrderType;
-  mfi?: DaytradeRecommendation;
-  roc?: DaytradeRecommendation;
-  bband?: DaytradeRecommendation;
-  vwma?: DaytradeRecommendation;
-  mfiTrade?: DaytradeRecommendation;
-  macd?: DaytradeRecommendation;
-  demark9?: DaytradeRecommendation;
-  mfiLow?: DaytradeRecommendation;
-  mfiDivergence?: DaytradeRecommendation;
-  mfiDivergence2?: DaytradeRecommendation;
-  overboughtMomentum?: DaytradeRecommendation;
-  data?: any;
-}
-
-export enum DaytradeRecommendation {
-  Bullish = 'Bullish',
-  Bearish = 'Bearish',
-  Neutral = 'Neutral'
-}
-
-export enum OrderType {
-  Buy = 'Buy',
-  Sell = 'Sell',
-  None = 'None'
 }
 
 export interface BacktestResults {
@@ -110,6 +62,7 @@ class BacktestService {
   tiingoRequestCount = 0;
   tdThrottleExpiry = null;
   tiingoThrottleExpiry = null;
+  lastDaytradeRequest = null;
 
   getIndicator() {
     return tulind.indicators;
@@ -171,23 +124,9 @@ class BacktestService {
   getCurrentDaytradeIndicators(symbol, period, dataSource = 'td'): Promise<Indicators> {
     const getIndicatorQuotes = [];
 
-    return new Promise((resolve, reject) => {
-      if (dataSource === 'tiingo') {
-        QuoteService.getTiingoIntraday(symbol, moment().subtract({ day: 1 }).format('YYYY-MM-DD')).then(data => {
-          resolve(data);
-        })
-        .catch(err => reject(err));
-      } else {
-        PortfolioService.getIntradayV2(symbol, 1, null, null, null).then(data => {
-          resolve(data);
-        })
-        .catch(err => reject(err));
-      }
-    })
+    return DaytradeRecommendations.getIntradayQuotes(symbol, dataSource)
       .then(intradayObj => {
         const quotes = (intradayObj as any).candles;
-        console.log('daytrade indicator quotes: ', quotes.length, moment().format('hh:mm'));
-
         _.forEach(quotes, (value, key) => {
           const idx = Number(key);
           const minLength = idx - period > 0 ? idx - period : idx - 14;
@@ -203,7 +142,7 @@ class BacktestService {
           });
       })
       .catch(err => {
-        console.log('ERROR! getIntradayV2', JSON.parse(err).error);
+        console.log('ERROR! getIntradayV2', err);
         throw err;
       });
   }
@@ -213,6 +152,8 @@ class BacktestService {
     let isMfiHighIdx = -1;
     let macdBuyIdx = -1;
     let macdSellIdx = -1;
+    let bbandBuyIdx = -1;
+
     _.forEach(indicators, (indicator, idx) => {
       if (idx > 80) {
         const mfi = AlgoService.checkMfi(indicator.mfiLeft);
@@ -220,6 +161,9 @@ class BacktestService {
         if ((idx - isMfiHighIdx) > 5 || (idx - isMfiLowIdx) > 5) {
           indicators[idx].mfiTrend = null;
         }
+
+        const bbandRecommendation = AlgoService.checkBBand(indicator.close,
+          AlgoService.getLowerBBand(indicator.bband80), AlgoService.getUpperBBand(indicator.bband80));
 
         if (mfi === DaytradeRecommendation.Bullish) {
           isMfiLowIdx = idx;
@@ -235,14 +179,15 @@ class BacktestService {
           macdBuyIdx = idx;
         } else if (macd === DaytradeRecommendation.Bearish) {
           macdSellIdx = idx;
+        } else if (bbandRecommendation === DaytradeRecommendation.Bullish) {
+          bbandBuyIdx = idx;
         }
-
-        const bbandRecommendation = AlgoService.checkBBand(indicator.close,
-          AlgoService.getLowerBBand(indicator.bband80), AlgoService.getUpperBBand(indicator.bband80),
-          indicator.mfiLeft);
 
         if (isMfiLowIdx > -1 && (idx - isMfiLowIdx) < 33 && (idx - isMfiLowIdx) > 5 &&
           (bbandRecommendation === DaytradeRecommendation.Bullish || (idx - macdBuyIdx) < 3)) {
+          indicators[idx].mfiTrend = true;
+        } else if ((isMfiLowIdx > -1 && bbandBuyIdx > -1 && macdBuyIdx > -1) &&
+          ((idx - isMfiLowIdx) < 6) && ((idx - bbandBuyIdx) < 6) && ((idx - macdBuyIdx) < 6)) {
           indicators[idx].mfiTrend = true;
         }
       }
@@ -339,7 +284,7 @@ class BacktestService {
   runDaytradeBacktest(symbol, currentDate, startDate, parameters) {
     return this.initDaytradeStrategy(symbol, startDate, currentDate, parameters)
       .then(indicators => {
-        const testResults = this.backtestDaytradingIndicators(this.getDaytradeRecommendation,
+        const testResults = this.backtestDaytradingIndicators(this.createDaytradeRecommendation,
           indicators,
           parameters);
 
@@ -401,6 +346,12 @@ class BacktestService {
   }
 
   getCurrentDaytrade(symbol: string, price: number, paidPrice: number, parameters, dataSource = 'td', response) {
+    if (this.lastDaytradeRequest && moment().diff(this.lastDaytradeRequest, 'milliseconds') < 350) {
+      response.status(429).send({ message: 'Last request was to soon.' });
+      return Promise.reject();
+    } else {
+      this.lastDaytradeRequest = moment();
+    }
     return this.getCurrentDaytradeIndicators(symbol, parameters.minQuotes || 80, dataSource)
       .then((currentIndicators: Indicators) => {
         let recommendation = {
@@ -415,21 +366,17 @@ class BacktestService {
         if (isAtLimit) {
           recommendation.recommendation = OrderType.Sell;
         } else {
-
-          if (!currentIndicators) {
-            console.log('Missing indicator data: ', currentIndicators);
-          }
-          recommendation = this.getDaytradeRecommendation(currentIndicators.close, currentIndicators);
+          recommendation = this.createDaytradeRecommendation(currentIndicators.close, currentIndicators, symbol);
         }
         response.status(200).send(recommendation);
       })
       .catch(error => {
         console.log(error);
-        response.status(500).send({ error });
+        response.status(500).send({ message: error });
       });
   }
 
-  getDaytradeRecommendation(price: number, indicator: Indicators): Recommendation {
+  createDaytradeRecommendation(price: number, indicator: Indicators, name = ''): Recommendation {
     let counter = {
       bullishCounter: 0,
       bearishCounter: 0,
@@ -437,6 +384,8 @@ class BacktestService {
     };
 
     const recommendations: Recommendation = {
+      name: name,
+      time: moment().format(),
       recommendation: OrderType.None,
       mfi: DaytradeRecommendation.Neutral,
       roc: DaytradeRecommendation.Neutral,
@@ -444,6 +393,7 @@ class BacktestService {
       vwma: DaytradeRecommendation.Neutral,
       macd: DaytradeRecommendation.Neutral,
       demark9: DaytradeRecommendation.Neutral,
+      bbandBreakout: DaytradeRecommendation.Neutral,
       data: { price, indicator }
     };
 
@@ -454,14 +404,15 @@ class BacktestService {
       indicator.roc70, indicator.roc70Previous);
 
     const bbandRecommendation = AlgoService.checkBBand(price,
-      AlgoService.getLowerBBand(indicator.bband80), AlgoService.getUpperBBand(indicator.bband80),
-      indicator.mfiLeft);
+      AlgoService.getLowerBBand(indicator.bband80), AlgoService.getUpperBBand(indicator.bband80));
 
     const vwmaRecommendation = AlgoService.checkVwma(price, indicator.vwma);
 
     const macdRecommendation = AlgoService.checkMacdDaytrade(indicator.macd, indicator.macdPrevious);
 
     const demark9Recommendation = AlgoService.checkDemark9(indicator.demark9);
+    const bbandBreakoutRecommendation = AlgoService.checkBBandBreakout(indicator.bbandBreakout);
+
     let mfiTradeRec = DaytradeRecommendation.Neutral;
     if (indicator.mfiTrend === true) {
       mfiTradeRec = DaytradeRecommendation.Bullish;
@@ -475,10 +426,9 @@ class BacktestService {
     counter = AlgoService.countRecommendation(macdRecommendation, counter);
     counter = AlgoService.countRecommendation(demark9Recommendation, counter);
     counter = AlgoService.countRecommendation(mfiTradeRec, counter);
+    counter = AlgoService.countRecommendation(bbandBreakoutRecommendation, counter);
 
-    if (vwmaRecommendation === DaytradeRecommendation.Bullish && counter.bullishCounter > 1 && counter.bullishCounter > counter.bearishCounter) {
-      recommendations.recommendation = OrderType.Buy;
-    } else if (counter.bullishCounter > 2 && counter.bullishCounter > counter.bearishCounter) {
+    if (counter.bullishCounter > 1 && counter.bearishCounter < 2) {
       recommendations.recommendation = OrderType.Buy;
     } else if (counter.bearishCounter > 1 && counter.bearishCounter > counter.bullishCounter) {
       recommendations.recommendation = OrderType.Sell;
@@ -491,7 +441,8 @@ class BacktestService {
     recommendations.macd = macdRecommendation;
     recommendations.mfiTrade = mfiTradeRec;
     recommendations.vwma = vwmaRecommendation;
-
+    recommendations.bbandBreakout = bbandBreakoutRecommendation;
+    
     return recommendations;
   }
 
@@ -546,7 +497,7 @@ class BacktestService {
             if (indicator.recommendation.mfiLow === DaytradeRecommendation.Bullish ||
               indicator.recommendation.mfi === DaytradeRecommendation.Bullish) {
               isMfiLowIdx = idx;
-            } else if (isMfiLowIdx > -1 && (idx - isMfiLowIdx) < 15) {
+            } else if (isMfiLowIdx > -1 && (idx - isMfiLowIdx) < 45) {
               indicator.recommendation.mfiTrade = indicators.slice(idx - 20, idx).reduce((previous, current) => {
                 if (previous.lowestLow === -1) {
                   previous.lowestLow = current.close;
@@ -586,7 +537,7 @@ class BacktestService {
               indicator.recommendation.recommendation = indicator.recommendation.mfiTrade === DaytradeRecommendation.Bullish ? OrderType.Buy : OrderType.None;
             } else if (indicator.recommendation.mfi === DaytradeRecommendation.Bearish) {
               isMfiHighIdx = idx;
-            } else if (isMfiHighIdx > -1 && (idx - isMfiHighIdx) < 15) {
+            } else if (isMfiHighIdx > -1 && (idx - isMfiHighIdx) < 45) {
               indicator.recommendation.mfiTrade = indicators.slice(idx - 20, idx).reduce((previous, current) => {
                 if (previous.highestHigh === -1) {
                   previous.highestHigh = current.close;
@@ -626,25 +577,25 @@ class BacktestService {
               indicator.recommendation.recommendation = indicator.recommendation.mfiTrade === DaytradeRecommendation.Bearish ? OrderType.Sell : OrderType.None;
             }
 
-            // 2020-07-02T05:00:00.000+0000
-            if (indicator.mfiLeft > indicators[idx - 1].mfiLeft &&
-              indicators[idx - 1].mfiLeft > indicators[idx - 2].mfiLeft &&
-              indicators[idx - 2].mfiLeft > indicators[idx - 3].mfiLeft &&
-              indicators[idx - 3].mfiLeft > indicators[idx - 4].mfiLeft &&
-              indicators[idx - 4].mfiLeft > indicators[idx - 5].mfiLeft &&
-              indicator.close < indicators[idx - 5].close &&
-              indicators[idx - 4].close < indicators[idx - 2].close) {
-              indicator.recommendation.mfiDivergence = DaytradeRecommendation.Bearish;
-              indicator.recommendation.recommendation = OrderType.Sell;
-            } else if (indicator.mfiLeft < indicators[idx - 1].mfiLeft &&
-              indicators[idx - 1].mfiLeft < indicators[idx - 2].mfiLeft &&
-              indicators[idx - 2].mfiLeft < indicators[idx - 3].mfiLeft &&
-              indicators[idx - 3].mfiLeft < indicators[idx - 4].mfiLeft &&
-              indicators[idx - 4].mfiLeft < indicators[idx - 5].mfiLeft &&
-              indicator.close > indicators[idx - 5].close &&
-              indicators[idx - 4].close > indicators[idx - 2].close) {
+            // 2020-07-02T05:00:00.000+0000b
+            if (indicators[idx - 4].mfiLeft < 15 &&
+              indicators[idx - 4].recommendation.bband === DaytradeRecommendation.Bullish &&
+              indicators[idx - 3].mfiLeft < 15 &&
+              indicators[idx - 3].recommendation.bband === DaytradeRecommendation.Bullish &&
+              indicators[idx - 2].mfiLeft < 15 &&
+              indicators[idx - 2].recommendation.bband === DaytradeRecommendation.Bullish &&
+              indicators[idx - 1].recommendation.bband === DaytradeRecommendation.Neutral) {
               indicator.recommendation.mfiDivergence = DaytradeRecommendation.Bullish;
               indicator.recommendation.recommendation = OrderType.Buy;
+            } else if (indicators[idx - 4].mfiLeft > 80 &&
+              indicators[idx - 4].recommendation.bband === DaytradeRecommendation.Bearish &&
+              indicators[idx - 3].mfiLeft > 80 &&
+              indicators[idx - 3].recommendation.bband === DaytradeRecommendation.Bearish &&
+              indicators[idx - 2].mfiLeft > 80 &&
+              indicators[idx - 2].recommendation.bband === DaytradeRecommendation.Bearish &&
+              indicators[idx - 1].recommendation.bband === DaytradeRecommendation.Neutral) {
+              indicator.recommendation.mfiDivergence = DaytradeRecommendation.Bearish;
+              indicator.recommendation.recommendation = OrderType.Sell;
             }
             if (indicator.recommendation.mfiTrade === DaytradeRecommendation.Bullish) {
               mfiDivergenceArr = [];
@@ -1259,7 +1210,7 @@ class BacktestService {
   }
 
   getIndicators(indicators, bbandPeriod, returnObject) {
-    const currentQuote = returnObject;
+    const currentQuote: Indicators = returnObject;
     return this.getBBands(indicators.reals, bbandPeriod, 2)
       .then((bband80) => {
         currentQuote.bband80 = bband80;
@@ -1338,6 +1289,11 @@ class BacktestService {
       .then((mfiPrevious) => {
         const len = mfiPrevious[0].length - 1;
         currentQuote.mfiPrevious = _.round(mfiPrevious[0][len], 3);
+        return BBandBreakoutService.isBreakout(indicators.reals, currentQuote.mfiPrevious, 
+          currentQuote.mfiLeft, currentQuote.bband80, bbandPeriod);
+      })
+      .then((bbandBreakout) => {
+        currentQuote.bbandBreakout = bbandBreakout;
         return currentQuote;
       })
       .catch(error => {
@@ -1792,34 +1748,6 @@ class BacktestService {
       });
   }
 
-  getDailyRocRecommendation(price: number, indicator: Indicators): Recommendation {
-    const recommendations: Recommendation = {
-      recommendation: OrderType.None,
-      mfi: DaytradeRecommendation.Neutral,
-      roc: DaytradeRecommendation.Neutral,
-      bband: DaytradeRecommendation.Neutral,
-      vwma: DaytradeRecommendation.Neutral,
-      mfiTrade: DaytradeRecommendation.Neutral
-    };
-
-    const rocCrossoverRecommendation = AlgoService.checkRocCrossover(indicator.roc70Previous, indicator.roc70, indicator.mfiLeft);
-
-    const mfiTrendRecommendation = AlgoService.checkMfiTrend(indicator.mfiPrevious, indicator.mfiLeft, null, null);
-
-    recommendations.roc = rocCrossoverRecommendation;
-    recommendations.mfiTrade = mfiTrendRecommendation;
-
-    if (recommendations.roc === DaytradeRecommendation.Bullish &&
-      recommendations.mfiTrade === DaytradeRecommendation.Bullish) {
-      recommendations.recommendation = OrderType.Buy;
-    } else if (recommendations.roc === DaytradeRecommendation.Bearish &&
-      recommendations.mfiTrade === DaytradeRecommendation.Bearish) {
-      recommendations.recommendation = OrderType.Sell;
-    }
-
-    return recommendations;
-  }
-
   getAllRecommendations(price: number, indicator: Indicators, previousIndicator: Indicators): Recommendation {
     const recommendations: Recommendation = {
       recommendation: OrderType.None,
@@ -1830,66 +1758,46 @@ class BacktestService {
       macd: DaytradeRecommendation.Neutral,
       demark9: DaytradeRecommendation.Neutral,
       mfiDivergence: DaytradeRecommendation.Neutral,
-      mfiDivergence2: DaytradeRecommendation.Neutral
+      mfiDivergence2: DaytradeRecommendation.Neutral,
+      bband: DaytradeRecommendation.Neutral
     };
 
-    const rocCrossoverRecommendation = AlgoService.checkRocCrossover(indicator.roc70Previous, indicator.roc70, indicator.mfiLeft);
+    recommendations.roc = AlgoService.checkRocCrossover(indicator.roc70Previous, indicator.roc70, indicator.mfiLeft);
 
-    const mfiRecommendation = AlgoService.checkMfi(indicator.mfiLeft);
+    recommendations.mfi = AlgoService.checkMfi(indicator.mfiLeft);
 
-    const macdRecommendation = AlgoService.checkMacd(indicator, previousIndicator);
+    recommendations.macd = AlgoService.checkMacd(indicator, previousIndicator);
 
-    const demark9Recommendation = AlgoService.checkDemark9(indicator.demark9);
+    recommendations.demark9 = AlgoService.checkDemark9(indicator.demark9);
 
-    const mfiLowRecommendation = AlgoService.checkMfiLow(indicator.mfiLow, indicator.mfiLeft);
+    recommendations.mfiLow = AlgoService.checkMfiLow(indicator.mfiLow, indicator.mfiLeft);
 
+    recommendations.bband = AlgoService.checkBBand(price,
+      AlgoService.getLowerBBand(indicator.bband80), AlgoService.getUpperBBand(indicator.bband80));
 
-    recommendations.roc = rocCrossoverRecommendation;
-    recommendations.macd = macdRecommendation;
-    recommendations.mfi = mfiRecommendation;
-    recommendations.demark9 = demark9Recommendation;
-    recommendations.mfiLow = mfiLowRecommendation;
+    recommendations.vwma = AlgoService.checkVwma(price, indicator.vwma);
+    let counter = {
+      bullishCounter: 0,
+      bearishCounter: 0
+    };
 
-    if (recommendations.demark9 === DaytradeRecommendation.Bullish ||
-      recommendations.mfiTrade === DaytradeRecommendation.Bullish ||
-      recommendations.macd === DaytradeRecommendation.Bullish) {
+    for (let rec in recommendations) {
+      if (recommendations[rec] === DaytradeRecommendation.Bullish) {
+        counter.bullishCounter++;
+      } else if (recommendations[rec] === DaytradeRecommendation.Bearish) {
+        counter.bearishCounter++;
+      }
+    }
+
+    if (recommendations.vwma === DaytradeRecommendation.Bullish && counter.bullishCounter > 1 && counter.bullishCounter > counter.bearishCounter) {
       recommendations.recommendation = OrderType.Buy;
-    } else if (recommendations.demark9 === DaytradeRecommendation.Bearish ||
-      recommendations.mfiTrade === DaytradeRecommendation.Bearish ||
-      recommendations.macd === DaytradeRecommendation.Bearish) {
+    } else if (counter.bullishCounter > 2 && counter.bullishCounter > counter.bearishCounter) {
+      recommendations.recommendation = OrderType.Buy;
+    } else if (counter.bearishCounter > 1 && counter.bearishCounter > counter.bullishCounter) {
       recommendations.recommendation = OrderType.Sell;
     }
 
     return recommendations;
-  }
-
-  evaluateDailyRocMfiTrend(symbol, currentDate, startDate) {
-    const getIndicatorQuotes = [];
-    const minQuotes = 100;
-    const parameters = {
-      lossThreshold: null,
-      profitThreshold: null,
-      minQuotes: 81
-    };
-    return this.getData(symbol, currentDate, startDate)
-      .then(quotes => {
-        _.forEach(quotes, (value, key) => {
-          const idx = Number(key);
-          if (idx > minQuotes) {
-            const q = quotes.slice(idx - minQuotes, idx);
-            getIndicatorQuotes.push(this.getRocMfiTrend(q));
-          }
-        });
-        return Promise.all(getIndicatorQuotes);
-      })
-      .then(indicators => {
-        const testResults = this.backtestIndicators(this.getDailyRocRecommendation,
-          indicators,
-          parameters);
-
-        testResults.algo = 'RocCrossover';
-        return testResults;
-      });
   }
 
   calibrateDaytrade(symbols, currentDate, startDate, response) {
