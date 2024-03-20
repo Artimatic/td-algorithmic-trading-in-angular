@@ -8,8 +8,8 @@ import * as _ from 'lodash';
 
 import { BacktestService, Stock, AlgoParam, MachineLearningService, PortfolioService } from '../shared';
 import { FormControl } from '@angular/forms';
-import { PrimaryList, OldList } from './backtest-stocks.constant';
-import Stocks from './backtest-stocks.constant';
+import { FullList } from './backtest-stocks.constant';
+import { CurrentStockList } from './stock-list.constant';
 import { ChartDialogComponent } from '../chart-dialog/chart-dialog.component';
 import { ChartParam } from '../shared/services/backtest.service';
 import { GlobalSettingsService } from '../settings/global-settings.service';
@@ -690,7 +690,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
   runDefaultBacktest() {
     this.interval = 0;
-    this.getData(OldList, 'daily-indicators');
+    this.getData(FullList, 'daily-indicators');
 
     this.progress = 0;
   }
@@ -774,18 +774,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
           foundStock.kellyCriterion = 0;
 
           this.addToList(foundStock);
-          this.schedulerService.schedule(async () => {
-            try {
-              const results = await this.portfolioService.getInstrument(symbol).toPromise();
-              if (results[symbol]) {
-                if (results[symbol].fundamental.marketCap > 1900) {
-                  this.addToNewList(symbol);
-                }
-              }
-            } catch (err) {
-              console.log(err);
-            }
-          }, 'getInstrument', null, false, 30000);
         }
       });
   }
@@ -881,24 +869,10 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  addToNewList(ticker: string) {
-    const backtestList = JSON.parse(localStorage.getItem('newList'));
-    if (backtestList) {
-      if (!backtestList[ticker]) {
-        backtestList[ticker] = true;
-        localStorage.setItem('newList', JSON.stringify(backtestList));
-      }
-    } else {
-      const newStorageObj = {};
-      newStorageObj[ticker] = true;
-      localStorage.setItem('newList', JSON.stringify(newStorageObj));
-    }
-  }
-
   autoActivate() {
     this.endDate = moment().format('YYYY-MM-DD');
     this.interval = 0;
-    this.getData(PrimaryList, 'daily-indicators');
+    this.getData(CurrentStockList, 'daily-indicators');
 
     this.progress = 0;
   }
@@ -945,6 +919,33 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       });
     }
   }
+
+  async purgeStockList() {
+    for (let i = 0; i < CurrentStockList.length; i++) {
+      this.schedulerService.schedule(async () => {
+        try {
+          const stockSymbol = CurrentStockList[i].ticker;
+          const instruments = await this.portfolioService.getInstrument(stockSymbol).toPromise();
+          if (instruments[stockSymbol]) {
+            if (instruments[stockSymbol].fundamental.marketCap < 2000) {
+              this.addToBlackList(stockSymbol);
+            } else {
+              const optionsData = await this.optionsDataService.getImpliedMove(stockSymbol).toPromise();
+              if (optionsData) {
+                const callsCount = optionsData.strategy.secondaryLeg.totalVolume;
+                if (Number(callsCount) < 200) {
+                  this.addToBlackList(stockSymbol);
+                }
+              }
+            }
+          }
+        } catch (err) {
+          console.log(err);
+        }
+      }, 'getInstrument', null, false, 30000);
+    }
+  }
+
   ngOnDestroy() {
     this.callChainSub.unsubscribe();
     this.unsubscribe$.complete();

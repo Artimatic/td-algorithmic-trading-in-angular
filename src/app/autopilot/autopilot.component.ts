@@ -1185,7 +1185,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     const newList = [];
     while (counter < OldList.length) {
       const stock = OldList[counter].ticker;
-
       if (stock) {
         this.schedulerService.schedule(async () => {
           try {
@@ -1198,7 +1197,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           } catch (err) {
             console.log(err);
           }
-        }, `findTrades`, null, false, 60000);
+        }, `findTrades`, null, false, (counter * 1000));
       }
 
       counter++;
