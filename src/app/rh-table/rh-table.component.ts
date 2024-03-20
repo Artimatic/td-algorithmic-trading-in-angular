@@ -942,7 +942,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
         } catch (err) {
           console.log(err);
         }
-      }, 'getInstrument', null, false, 30000);
+      }, 'getInstrument', null, false, (i * 1000));
     }
   }
 
