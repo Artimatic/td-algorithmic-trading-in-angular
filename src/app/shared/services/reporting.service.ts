@@ -44,7 +44,9 @@ export class ReportingService {
       'Returns': results.returns,
       'Implied Movement': results.impliedMovement,
       'Previous Implied Move': results.previousImpliedMovement,
-      'AI Prediction': JSON.stringify(results.ml)
+      'AI Prediction': JSON.stringify(results.ml),
+      'Options Volume': results.optionsVolume,
+      'Market Cap': results.marketCap
     };
     if (selectedColumns.length > 0) {
       selectedColumns.forEach((column: {field: string, header: string}) => {

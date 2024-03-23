@@ -13,7 +13,8 @@ import { MessageService } from 'primeng/api';
 import { AlgoQueueItem } from '@shared/services/trade.service';
 import { ScoringIndex } from '@shared/services/score-keeper.service';
 import { MachineDaytradingService } from '../machine-daytrading/machine-daytrading.service';
-import { BearList, PrimaryList, PersonalBullishPicks, PersonalBearishPicks, OldList } from '../rh-table/backtest-stocks.constant';
+import { BearList, PrimaryList, PersonalBullishPicks, PersonalBearishPicks } from '../rh-table/backtest-stocks.constant';
+import { CurrentStockList } from '../rh-table/stock-list.constant';
 import { AiPicksPredictionData } from '@shared/services/ai-picks.service';
 import Stocks from '../rh-table/backtest-stocks.constant';
 import { FindPatternService } from '../strategies/find-pattern.service';
@@ -586,7 +587,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     return null;
   }
 
-  findSwingtrades(cb = async (mlResult: { label: string, value: AiPicksPredictionData[] }) => { }, stockList: (PortfolioInfoHolding[] | any[]) = PrimaryList) {
+  findSwingtrades(cb = async (mlResult: { label: string, value: AiPicksPredictionData[] }) => { }, stockList: (PortfolioInfoHolding[] | any[]) = CurrentStockList) {
     this.unsubscribeStockFinder();
     this.unsubscribe$ = new Subject();
     this.backtestBuffer$.unsubscribe();
@@ -1184,8 +1185,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   async test() {
     let counter = 0;
     const newList = [];
-    while (counter < OldList.length) {
-      const stock = OldList[counter].ticker;
+    while (counter < CurrentStockList.length) {
+      const stock = CurrentStockList[counter].ticker;
       if (stock) {
         this.schedulerService.schedule(async () => {
           try {

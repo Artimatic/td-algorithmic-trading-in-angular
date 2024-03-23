@@ -152,6 +152,9 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       { field: 'ml', header: 'AI Prediction' },
       { field: 'kellyCriterion', header: 'Trade Size' },
 
+      { field: 'optionsVolume', header: 'Options Volume' },
+      { field: 'marketCap', header: 'Market Cap' },
+
       { field: 'buySignals', header: 'Buy' },
       { field: 'sellSignals', header: 'Sell' },
       { field: 'upperResistance', header: 'Upper Resistance' },
@@ -217,6 +220,12 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     this.selectedRecommendation = ['strongbuy', 'buy', 'sell', 'strongsell'];
     this.filter();
     this.interval = 0;
+    const savedBacktest = JSON.parse(localStorage.getItem('backtest'));
+    if (savedBacktest) {
+      for (const saved in savedBacktest) {
+        this.currentList.push(savedBacktest[saved]);
+      }
+    }
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -241,7 +250,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   async getData(algoParams, selectedAlgo = null) {
-
     const currentDate = moment(this.endDate).format('YYYY-MM-DD');
     const startDate = moment(this.endDate).subtract(1000, 'days').format('YYYY-MM-DD');
 
@@ -566,6 +574,9 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     if (this.twoOrMoreSignalsOnly) {
       this.filterTwoOrMoreSignalsOnly();
     }
+    this.currentList.forEach(result => {
+      this.addToResultStorage(result);
+    });
   }
 
   filterTwoOrMoreSignalsOnly() {
@@ -690,7 +701,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
   runDefaultBacktest() {
     this.interval = 0;
-    this.getData(FullList, 'daily-indicators');
+    this.getData(CurrentStockList.concat(FullList.slice(0, 100)), 'daily-indicators');
 
     this.progress = 0;
   }
@@ -766,13 +777,20 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     const foundStock = this.findStock(symbol, this.stockList);
     this.optionsDataService.getImpliedMove(symbol)
       .subscribe({
-        next: data => {
+        next: async (data) => {
           foundStock.impliedMovement = data.move;
 
           // const impliedMove = foundStock.impliedMovement;
           // const probabilityOfProfit = foundStock.bullishProbability;
           foundStock.kellyCriterion = 0;
+          foundStock.optionsVolume = this.getOptionsVolume(data);
+          const instruments = await this.portfolioService.getInstrument(symbol).toPromise();
 
+          try {
+            foundStock.marketCap = instruments[symbol].fundamental.marketCap;
+          } catch(err) {
+            console.log(err);
+          }
           this.addToList(foundStock);
         }
       });
@@ -854,6 +872,19 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     this.currentList = [];
   }
 
+  addToResultStorage(result: Stock) {
+    const backtestStorage = JSON.parse(localStorage.getItem('backtest'));
+    const key = result.stock;
+    if (backtestStorage) {
+      backtestStorage[key] = result;
+      localStorage.setItem('backtest', JSON.stringify(backtestStorage));
+    } else {
+      const newStorageObj = {};
+      newStorageObj[key] = result;
+      localStorage.setItem('backtest', JSON.stringify(newStorageObj));
+    }
+  }
+
   addToBlackList(ticker: string) {
     this.tickerBlacklist[ticker] = true;
     const backtestBlacklist = JSON.parse(localStorage.getItem('blacklist'));
@@ -920,6 +951,12 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
+  getOptionsVolume(optionsData) {
+    const callsCount = optionsData.strategy.secondaryLeg.totalVolume;
+    const putsCount = optionsData.strategy.primaryLeg.totalVolume;
+    return Number(callsCount) + Number(putsCount);
+  }
+
   async purgeStockList() {
     for (let i = 0; i < CurrentStockList.length; i++) {
       this.schedulerService.schedule(async () => {
@@ -932,8 +969,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
             } else {
               const optionsData = await this.optionsDataService.getImpliedMove(stockSymbol).toPromise();
               if (optionsData) {
-                const callsCount = optionsData.strategy.secondaryLeg.totalVolume;
-                if (Number(callsCount) < 200) {
+                if (this.getOptionsVolume(optionsData) < 100) {
                   this.addToBlackList(stockSymbol);
                 }
               }
