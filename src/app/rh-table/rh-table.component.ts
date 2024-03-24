@@ -21,6 +21,7 @@ import { ReportingService } from '@shared/services/reporting.service';
 import { WatchListService } from '../watch-list/watch-list.service';
 import { ClientSmsService } from '@shared/services/client-sms.service';
 import { SchedulerService } from '@shared/service/scheduler.service';
+import { BacktestTableService } from '../backtest-table/backtest-table.service';
 
 export interface Algo {
   value: string;
@@ -120,7 +121,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     private schedulerService: SchedulerService,
     private watchListService: WatchListService,
     private machineLearningService: MachineLearningService,
-    private portfolioService: PortfolioService) { }
+    private portfolioService: PortfolioService,
+    private backtestTableService: BacktestTableService) { }
 
   ngOnInit() {
     this.unsubscribe$ = new Subject();
@@ -575,7 +577,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       this.filterTwoOrMoreSignalsOnly();
     }
     this.currentList.forEach(result => {
-      this.addToResultStorage(result);
+      this.backtestTableService.addToResultStorage(result);
     });
   }
 
@@ -784,9 +786,9 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
           // const probabilityOfProfit = foundStock.bullishProbability;
           foundStock.kellyCriterion = 0;
           foundStock.optionsVolume = this.getOptionsVolume(data);
-          const instruments = await this.portfolioService.getInstrument(symbol).toPromise();
 
           try {
+            const instruments = await this.portfolioService.getInstrument(symbol).toPromise();
             foundStock.marketCap = instruments[symbol].fundamental.marketCap;
           } catch(err) {
             console.log(err);
@@ -870,19 +872,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
   resetTable() {
     this.currentList = [];
-  }
-
-  addToResultStorage(result: Stock) {
-    const backtestStorage = JSON.parse(localStorage.getItem('backtest'));
-    const key = result.stock;
-    if (backtestStorage) {
-      backtestStorage[key] = result;
-      localStorage.setItem('backtest', JSON.stringify(backtestStorage));
-    } else {
-      const newStorageObj = {};
-      newStorageObj[key] = result;
-      localStorage.setItem('backtest', JSON.stringify(newStorageObj));
-    }
   }
 
   addToBlackList(ticker: string) {
