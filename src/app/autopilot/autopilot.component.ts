@@ -159,6 +159,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   executedIndex = 0;
   lastOrderListIndex = 0;
 
+  lastInterval = moment();
+
   lastMarketHourCheck = null;
   isLive = false;
 
@@ -212,11 +214,14 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   startNewInterval() {
     this.developStrategy();
-    this.timer = TimerObservable.create(0, this.interval)
+    if (this.timer) {
+      this.timer.unsubscribe();
+    }
+    this.timer = TimerObservable.create(1000, this.interval)
       .pipe(takeUntil(this.destroy$))
       .subscribe(async () => {
         const startStopTime = this.getStartStopTime();
-
+        console.log(new Date().toString());
         if (moment().isAfter(moment(startStopTime.endDateTime).subtract(5, 'minutes')) &&
           moment().isBefore(moment(startStopTime.endDateTime))) {
           if (this.reportingService.logs.length > 0) {
@@ -250,8 +255,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
                   this.isLive = false;
                 }
               });
-          } else {
+          } else if (moment().diff(this.lastInterval, 'minutes') > 3) {
             this.findSwingtrades();
+            this.lastInterval = moment();
           }
         }
 
