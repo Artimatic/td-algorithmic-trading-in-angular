@@ -295,18 +295,26 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       for (const recordKey in lastProfitLoss.profitRecord) {
         if (lastProfitLoss.profitRecord[recordKey]) {
           if (tempProfitRecord[recordKey]) {
-            tempProfitRecord[recordKey] += round(lastProfitLoss.profitRecord[recordKey], 2);
+            tempProfitRecord[recordKey] += Number(lastProfitLoss.profitRecord[recordKey].toFixed(2));
           }
         } else {
           if (tempProfitRecord[recordKey]) {
-            tempProfitRecord[recordKey] = round(Number(lastProfitLoss.profitRecord[recordKey]), 2);
+            tempProfitRecord[recordKey] = Number(lastProfitLoss.profitRecord[recordKey].toFixed(2));
           }
         }
       }
     }
+
+    let profit = 0;
+    for (let key in tempProfitRecord) {
+      if (tempProfitRecord[key]) {
+        profit += Number(tempProfitRecord[key].toFixed(2));
+      }
+    }
+    
     const profitObj: ProfitLossRecord = {
       'date': moment().format(),
-      profit: this.scoreKeeperService.total,
+      profit: profit,
       lastStrategy: this.strategyList[this.strategyCounter],
       lastRiskTolerance: this.riskCounter,
       profitRecord: tempProfitRecord
