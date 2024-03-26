@@ -31,14 +31,14 @@ export class ScoreKeeperService {
     this.total += sum;
     console.log('Adding pl ', this.profitLossHash[stock], sum);
     if (this.profitLossHash[stock]) {
-      this.profitLossHash[stock] = Number(this.profitLossHash[stock]) + sum;
+      this.profitLossHash[stock] = Number(this.profitLossHash[stock].toFixed(2)) + sum;
     } else {
       this.profitLossHash[stock] = sum;
     }
     console.log('Final pl ', this.profitLossHash[stock]);
 
     this.addSell(stock, sum);
-    const log = `${this.profitLossHash[stock].toFixed()}`;
+    const log = `${this.profitLossHash[stock].toFixed(2)}`;
     console.log(stock, ': ', log);
     this.reportingService.addAuditLog(stock, log);
   }
