@@ -4,7 +4,8 @@ import * as moment from 'moment-timezone';
 import * as _ from 'lodash';
 
 import { BacktestService, MachineLearningService, PortfolioService } from '@shared/services';
-import{ CurrentStockList } from '../rh-table/stock-list.constant';
+import { CurrentStockList } from '../rh-table/stock-list.constant';
+import { shuffle } from '../rh-table/backtest-stocks.constant';
 import { GlobalSettingsService } from '../settings/global-settings.service';
 import { tap } from 'rxjs/operators';
 
@@ -135,7 +136,7 @@ export class MachineDaytradingService {
 
   getNextStock() {
     if (!this.currentStockList) {
-      this.currentStockList = CurrentStockList;
+      this.currentStockList = shuffle(CurrentStockList);
     }
     this.counter++;
     if (this.counter > this.currentStockList.length - 1) {
