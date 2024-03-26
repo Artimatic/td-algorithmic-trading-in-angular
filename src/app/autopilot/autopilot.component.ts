@@ -255,10 +255,10 @@ export class AutopilotComponent implements OnInit, OnDestroy {
                   this.isLive = false;
                 }
               });
-          } else if (moment().diff(this.lastInterval, 'minutes') > 3) {
-            this.findSwingtrades();
-            this.lastInterval = moment();
           }
+        } else if (moment().diff(this.lastInterval, 'minutes') > 3) {
+          this.findSwingtrades();
+          this.lastInterval = moment();
         }
 
         // if (this.cartService.otherOrders.length + this.cartService.buyOrders.length + this.cartService.sellOrders.length < this.maxTradeCount) {
