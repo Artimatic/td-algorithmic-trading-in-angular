@@ -287,6 +287,17 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       });
   }
 
+  calculatePl(records) {
+    let profit = 0;
+    for (let key in records) {
+      if (records[key]) {
+        profit += Number(records[key].toFixed(2));
+      }
+    }
+    
+    return profit;
+  }
+
   setProfitLoss() {
     const lastProfitLoss = JSON.parse(localStorage.getItem('profitLoss'));
     const tempProfitRecord = this.scoreKeeperService.profitLossHash;
@@ -305,13 +316,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       }
     }
 
-    let profit = 0;
-    for (let key in tempProfitRecord) {
-      if (tempProfitRecord[key]) {
-        profit += Number(tempProfitRecord[key].toFixed(2));
-      }
-    }
-    
+    const profit = this.calculatePl(tempProfitRecord);
+
     const profitObj: ProfitLossRecord = {
       'date': moment().format(),
       profit: profit,
@@ -385,14 +391,14 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       .subscribe(patternsResponse => console.log('found patterns ', patternsResponse));
     const lastProfitLoss = JSON.parse(localStorage.getItem('profitLoss'));
     if (lastProfitLoss && lastProfitLoss.profit !== undefined) {
-      if (Number(lastProfitLoss.profit) < 0) {
+      if (Number(this.calculatePl(lastProfitLoss.profitRecord)) < 0) {
         if (lastProfitLoss.lastStrategy === Strategy.Daytrade) {
           this.increaseDayTradeRiskTolerance();
         } else {
           this.decreaseRiskTolerance();
         }
 
-      } else if (Number(lastProfitLoss.profit) > 0) {
+      } else if (Number(this.calculatePl(lastProfitLoss.profitRecord)) > 0) {
         if (lastProfitLoss.lastStrategy === Strategy.Daytrade) {
           this.decreaseDayTradeRiskTolerance();
         } else {
