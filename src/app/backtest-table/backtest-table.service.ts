@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { OptionsDataService } from '@shared/options-data.service';
 import { AiPicksService, BacktestService, PortfolioService } from '@shared/services';
 import { Stock } from '@shared/stock.interface';
+import * as moment from 'moment-timezone';
 
 @Injectable({
   providedIn: 'root'
@@ -13,9 +14,12 @@ export class BacktestTableService {
     private optionsDataService: OptionsDataService,
     private portfolioService: PortfolioService) { }
 
-  async getBacktestData(symbol: string, startDate: string, endDate: string) {
+  async getBacktestData(symbol: string, startDate: string = null, endDate: string = null) {
+    const current = moment(endDate).format('YYYY-MM-DD');
+    const start = moment(startDate).subtract(365, 'days').format('YYYY-MM-DD');
+
     try {
-      const indicatorResults = await this.backtestService.getBacktestEvaluation(symbol, startDate, endDate, 'daily-indicators').toPromise();
+      const indicatorResults = await this.backtestService.getBacktestEvaluation(symbol, start, current, 'daily-indicators').toPromise();
       indicatorResults.stock = symbol;
 
       const lastSignal = indicatorResults.signals[indicatorResults.signals.length - 1];
@@ -61,9 +65,11 @@ export class BacktestTableService {
       }
 
     this.addToResultStorage(tableObj);
+    return tableObj;
     } catch (error) {
       console.log(error);
     }
+    return null;
   }
 
   addToResultStorage(result: Stock) {

@@ -19,6 +19,7 @@ import { AiPicksPredictionData } from '@shared/services/ai-picks.service';
 import Stocks from '../rh-table/backtest-stocks.constant';
 import { FindPatternService } from '../strategies/find-pattern.service';
 import { GlobalSettingsService } from '../settings/global-settings.service';
+import { BacktestTableService } from '../backtest-table/backtest-table.service';
 
 export interface PositionHoldings {
   name: string;
@@ -169,6 +170,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     private schedulerService: SchedulerService,
     private aiPicksService: AiPicksService,
     private backtestService: BacktestService,
+    private backtestTableService: BacktestTableService,
     private cartService: CartService,
     private dailyBacktestService: DailyBacktestService,
     private messageService: MessageService,
@@ -248,6 +250,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
                   this.isLive = false;
                 }
               });
+          } else {
+            this.findSwingtrades();
           }
         }
 
@@ -409,10 +413,10 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.checkPersonalLists();
     switch (strategy) {
       case Strategy.Swingtrade: {
-        const callback = async (mlResult: { label: string, value: AiPicksPredictionData[] }) => {
-          if (this.isBuyPrediction(mlResult)) {
+        const callback = async (symbol: string, mlResult: number) => {
+          if (mlResult > 0.65) {
             const stock: PortfolioInfoHolding = {
-              name: mlResult.label,
+              name: symbol,
               pl: 0,
               netLiq: 0,
               shares: 0,
@@ -434,9 +438,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         break;
       }
       case Strategy.DaytradeFullList: {
-        const callback = async (mlResult: { label: string, value: AiPicksPredictionData[] }) => {
+        const callback = async (symbol: string, prediction: number) => {
           const stock: PortfolioInfoHolding = {
-            name: mlResult.label,
+            name: symbol,
             pl: 0,
             netLiq: 0,
             shares: 0,
@@ -448,12 +452,11 @@ export class AutopilotComponent implements OnInit, OnDestroy {
             sellConfidence: 0,
             prediction: null
           };
-          const prediction = this.isBuyPrediction(mlResult);
-          if (prediction) {
+          if (prediction > 0.5) {
             await this.addBuy(stock);
             const log = `Adding swing trade ${stock.name}`;
             this.reportingService.addAuditLog(null, log);
-          } else if (prediction === false) {
+          } else if (prediction < 0.4) {
             const sellHolding = this.currentHoldings.find(holdingInfo => {
               return holdingInfo.name === stock.name;
             });
@@ -505,10 +508,10 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         }
         break;
       default: {
-        const callback = async (mlResult: { label: string, value: AiPicksPredictionData[] }) => {
-          if (this.isBuyPrediction(mlResult)) {
+        const callback = async (symbol: string, prediction: number) => {
+          if (prediction > 0.6) {
             const stock: PortfolioInfoHolding = {
-              name: mlResult.label,
+              name: symbol,
               pl: 0,
               netLiq: 0,
               shares: 0,
@@ -587,50 +590,20 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     return null;
   }
 
-  findSwingtrades(cb = async (mlResult: { label: string, value: AiPicksPredictionData[] }) => { }, stockList: (PortfolioInfoHolding[] | any[]) = CurrentStockList) {
-    this.unsubscribeStockFinder();
-    this.unsubscribe$ = new Subject();
-    this.backtestBuffer$.unsubscribe();
-    this.backtestBuffer$ = new Subject();
-
+  async findSwingtrades(cb = async (stock: string, mlResult: number) => { }, stockList: (PortfolioInfoHolding[] | any[]) = CurrentStockList) {
     this.machineDaytradingService.setCurrentStockList(stockList);
-    this.aiPicksService.mlNeutralResults.pipe(
-      takeUntil(this.unsubscribe$),
-      finalize(() => {
-        this.setLoading(false);
-      })
-    ).subscribe(async (latestMlResult: { label: string, value: AiPicksPredictionData[] }) => {
-      if (latestMlResult) {
-        await cb(latestMlResult);
-      }
+    let stock;
+    const found = (name) => {
+      return Boolean(this.currentHoldings.find((value) => value.name === name));
+    };
 
-      this.schedulerService.schedule(() => {
-        this.triggerBacktestNext();
-      }, `findTrades`, null, false, 60000);
-    }, error => {
-      console.log(error);
-      this.schedulerService.schedule(() => {
-        this.triggerBacktestNext();
-      }, `findTrades`, null, false, 60000);
-    });
-    this.setLoading(true);
-
-    this.backtestBuffer$
-      .pipe(takeUntil(this.unsubscribe$),
-        finalize(() => this.setLoading(false))
-      )
-      .subscribe(() => {
-        let stock;
-        const found = (name) => {
-          return Boolean(this.currentHoldings.find((value) => value.name === name));
-        };
-
-        do {
-          stock = this.machineDaytradingService.getNextStock();
-        } while (found(stock))
-        this.runAi(stock);
-      });
-    this.triggerBacktestNext();
+    do {
+      stock = this.machineDaytradingService.getNextStock();
+    } while (found(stock))
+    const backtestResults = await this.backtestTableService.getBacktestData(stock);
+    if (backtestResults) {
+      cb(stock, backtestResults.ml);
+    }
   }
 
   async getPrediction(stockSymbol: string) {
@@ -964,9 +937,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   trimHoldings() {
-    const callback = async (mlResult: { label: string, value: AiPicksPredictionData[] }) => {
+    const callback = async (symbol: string, prediction: number) => {
       const stock: PortfolioInfoHolding = {
-        name: mlResult.label,
+        name: symbol,
         pl: 0,
         netLiq: 0,
         shares: 0,
@@ -978,12 +951,11 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         sellConfidence: 0,
         prediction: null
       };
-      const prediction = this.isBuyPrediction(mlResult);
-      if (prediction) {
+      if (prediction > 0.7) {
         await this.addBuy(stock);
         const log = `Adding swing trade ${stock.name}`;
         this.reportingService.addAuditLog(null, log);
-      } else if (prediction === false) {
+      } else if (prediction < 0.4) {
         const sellHolding = this.currentHoldings.find(holdingInfo => {
           return holdingInfo.name === stock.name;
         });
