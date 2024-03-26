@@ -610,10 +610,17 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     return null;
   }
 
+  async backtestList(cb = async (stock: string, mlResult: number) => { }, stockList: (PortfolioInfoHolding[] | any[]) = CurrentStockList) {
+
+    stockList.forEach(async (stock) => {
+      const backtestResults = await this.backtestTableService.getBacktestData(stock.name);
+      if (backtestResults) {
+        cb(stock, backtestResults.ml);
+      }
+    });
+  }
+
   async findSwingtrades(cb = async (stock: string, mlResult: number) => { }, stockList: (PortfolioInfoHolding[] | any[]) = CurrentStockList) {
-    if (stockList) {
-      this.machineDaytradingService.setCurrentStockList(stockList);
-    }
     let stock;
     const found = (name) => {
       return Boolean(this.currentHoldings.find((value) => value.name === name));
@@ -987,7 +994,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       }
     };
 
-    this.findSwingtrades(callback, this.currentHoldings);
+    this.backtestList(callback, this.currentHoldings);
   }
 
   async analyseRecommendations(holding: PortfolioInfoHolding) {
