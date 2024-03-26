@@ -49,4 +49,7 @@ export interface Stock {
   previousImpliedMovement?: number;
   kellyCriterion?: number;
   ml?: any;
+  optionsVolume?: number;
+  marketCap?: number;
+  high52?: number;
 }

@@ -8,8 +8,8 @@ import * as _ from 'lodash';
 
 import { BacktestService, Stock, AlgoParam, MachineLearningService, PortfolioService } from '../shared';
 import { FormControl } from '@angular/forms';
-import { PrimaryList, OldList } from './backtest-stocks.constant';
-import Stocks from './backtest-stocks.constant';
+import { FullList } from './backtest-stocks.constant';
+import { CurrentStockList } from './stock-list.constant';
 import { ChartDialogComponent } from '../chart-dialog/chart-dialog.component';
 import { ChartParam } from '../shared/services/backtest.service';
 import { GlobalSettingsService } from '../settings/global-settings.service';
@@ -21,6 +21,7 @@ import { ReportingService } from '@shared/services/reporting.service';
 import { WatchListService } from '../watch-list/watch-list.service';
 import { ClientSmsService } from '@shared/services/client-sms.service';
 import { SchedulerService } from '@shared/service/scheduler.service';
+import { BacktestTableService } from '../backtest-table/backtest-table.service';
 
 export interface Algo {
   value: string;
@@ -120,7 +121,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     private schedulerService: SchedulerService,
     private watchListService: WatchListService,
     private machineLearningService: MachineLearningService,
-    private portfolioService: PortfolioService) { }
+    private portfolioService: PortfolioService,
+    private backtestTableService: BacktestTableService) { }
 
   ngOnInit() {
     this.unsubscribe$ = new Subject();
@@ -151,6 +153,9 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       { field: 'totalTrades', header: 'Trades' },
       { field: 'ml', header: 'AI Prediction' },
       { field: 'kellyCriterion', header: 'Trade Size' },
+
+      { field: 'optionsVolume', header: 'Options Volume' },
+      { field: 'marketCap', header: 'Market Cap' },
 
       { field: 'buySignals', header: 'Buy' },
       { field: 'sellSignals', header: 'Sell' },
@@ -217,6 +222,12 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     this.selectedRecommendation = ['strongbuy', 'buy', 'sell', 'strongsell'];
     this.filter();
     this.interval = 0;
+    const savedBacktest = JSON.parse(localStorage.getItem('backtest'));
+    if (savedBacktest) {
+      for (const saved in savedBacktest) {
+        this.currentList.push(savedBacktest[saved]);
+      }
+    }
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -241,7 +252,6 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   async getData(algoParams, selectedAlgo = null) {
-
     const currentDate = moment(this.endDate).format('YYYY-MM-DD');
     const startDate = moment(this.endDate).subtract(1000, 'days').format('YYYY-MM-DD');
 
@@ -566,6 +576,9 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     if (this.twoOrMoreSignalsOnly) {
       this.filterTwoOrMoreSignalsOnly();
     }
+    this.currentList.forEach(result => {
+      this.backtestTableService.addToResultStorage(result);
+    });
   }
 
   filterTwoOrMoreSignalsOnly() {
@@ -690,7 +703,7 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
 
   runDefaultBacktest() {
     this.interval = 0;
-    this.getData(OldList, 'daily-indicators');
+    this.getData(CurrentStockList.concat(FullList.slice(0, 100)), 'daily-indicators');
 
     this.progress = 0;
   }
@@ -766,26 +779,21 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     const foundStock = this.findStock(symbol, this.stockList);
     this.optionsDataService.getImpliedMove(symbol)
       .subscribe({
-        next: data => {
+        next: async (data) => {
           foundStock.impliedMovement = data.move;
 
           // const impliedMove = foundStock.impliedMovement;
           // const probabilityOfProfit = foundStock.bullishProbability;
           foundStock.kellyCriterion = 0;
+          foundStock.optionsVolume = this.getOptionsVolume(data);
 
+          try {
+            const instruments = await this.portfolioService.getInstrument(symbol).toPromise();
+            foundStock.marketCap = instruments[symbol].fundamental.marketCap;
+          } catch(err) {
+            console.log(err);
+          }
           this.addToList(foundStock);
-          this.schedulerService.schedule(async () => {
-            try {
-              const results = await this.portfolioService.getInstrument(symbol).toPromise();
-              if (results[symbol]) {
-                if (results[symbol].fundamental.marketCap > 1900) {
-                  this.addToNewList(symbol);
-                }
-              }
-            } catch (err) {
-              console.log(err);
-            }
-          }, 'getInstrument', null, false, 30000);
         }
       });
   }
@@ -881,24 +889,10 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  addToNewList(ticker: string) {
-    const backtestList = JSON.parse(localStorage.getItem('newList'));
-    if (backtestList) {
-      if (!backtestList[ticker]) {
-        backtestList[ticker] = true;
-        localStorage.setItem('newList', JSON.stringify(backtestList));
-      }
-    } else {
-      const newStorageObj = {};
-      newStorageObj[ticker] = true;
-      localStorage.setItem('newList', JSON.stringify(newStorageObj));
-    }
-  }
-
   autoActivate() {
     this.endDate = moment().format('YYYY-MM-DD');
     this.interval = 0;
-    this.getData(PrimaryList, 'daily-indicators');
+    this.getData(CurrentStockList, 'daily-indicators');
 
     this.progress = 0;
   }
@@ -945,6 +939,38 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       });
     }
   }
+
+  getOptionsVolume(optionsData) {
+    const callsCount = optionsData.strategy.secondaryLeg.totalVolume;
+    const putsCount = optionsData.strategy.primaryLeg.totalVolume;
+    return Number(callsCount) + Number(putsCount);
+  }
+
+  async purgeStockList() {
+    for (let i = 0; i < CurrentStockList.length; i++) {
+      this.schedulerService.schedule(async () => {
+        try {
+          const stockSymbol = CurrentStockList[i].ticker;
+          const instruments = await this.portfolioService.getInstrument(stockSymbol).toPromise();
+          if (instruments[stockSymbol]) {
+            if (instruments[stockSymbol].fundamental.marketCap < 2000) {
+              this.addToBlackList(stockSymbol);
+            } else {
+              const optionsData = await this.optionsDataService.getImpliedMove(stockSymbol).toPromise();
+              if (optionsData) {
+                if (this.getOptionsVolume(optionsData) < 100) {
+                  this.addToBlackList(stockSymbol);
+                }
+              }
+            }
+          }
+        } catch (err) {
+          console.log(err);
+        }
+      }, 'getInstrument', null, false, (i * 1000));
+    }
+  }
+
   ngOnDestroy() {
     this.callChainSub.unsubscribe();
     this.unsubscribe$.complete();
