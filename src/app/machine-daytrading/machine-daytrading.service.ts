@@ -131,7 +131,10 @@ export class MachineDaytradingService {
 
   setCurrentStockList(stockList) {
     this.currentStockList = stockList;
-    this.resetStockCounter();
+  }
+
+  getCurrentStockList() {
+    return this.currentStockList;
   }
 
   getNextStock() {
@@ -143,10 +146,6 @@ export class MachineDaytradingService {
       this.counter = 0;
     }
     return this.currentStockList[this.counter].ticker ? this.currentStockList[this.counter].ticker : this.currentStockList[this.counter].name;
-  }
-
-  resetStockCounter() {
-    this.counter = 0;
   }
 
   resetStock() {

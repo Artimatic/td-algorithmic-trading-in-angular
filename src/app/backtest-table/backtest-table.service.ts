@@ -14,9 +14,9 @@ export class BacktestTableService {
     private optionsDataService: OptionsDataService,
     private portfolioService: PortfolioService) { }
 
-  async getBacktestData(symbol: string, startDate: string = null, endDate: string = null) {
-    const current = moment(endDate).format('YYYY-MM-DD');
-    const start = moment(startDate).subtract(365, 'days').format('YYYY-MM-DD');
+  async getBacktestData(symbol: string) {
+    const current = moment().format('YYYY-MM-DD');
+    const start = moment().subtract(365, 'days').format('YYYY-MM-DD');
 
     try {
       const indicatorResults = await this.backtestService.getBacktestEvaluation(symbol, start, current, 'daily-indicators').toPromise();
@@ -47,7 +47,8 @@ export class BacktestTableService {
         strongbuySignals: [],
         buySignals: [],
         strongsellSignals: [],
-        sellSignals: []
+        sellSignals: [],
+        high52: instruments[symbol].fundamental.high52
       };
       const latestMlResult = await this.aiPicksService.trainAndActivate(symbol);
       if (latestMlResult) {

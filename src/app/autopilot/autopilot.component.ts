@@ -221,7 +221,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(async () => {
         const startStopTime = this.getStartStopTime();
-        console.log(new Date().toString());
         if (moment().isAfter(moment(startStopTime.endDateTime).subtract(5, 'minutes')) &&
           moment().isBefore(moment(startStopTime.endDateTime))) {
           if (this.reportingService.logs.length > 0) {
@@ -618,13 +617,16 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     const found = (name) => {
       return Boolean(this.currentHoldings.find((value) => value.name === name));
     };
-
-    do {
-      stock = this.machineDaytradingService.getNextStock();
-    } while (found(stock))
-    const backtestResults = await this.backtestTableService.getBacktestData(stock);
-    if (backtestResults) {
-      cb(stock, backtestResults.ml);
+    let counter = this.machineDaytradingService.getCurrentStockList().length;
+    while (counter > 0 && (this.cartService.buyOrders.length + this.cartService.otherOrders.length) < this.maxTradeCount) {
+      do {
+        stock = this.machineDaytradingService.getNextStock();
+      } while (found(stock))
+      const backtestResults = await this.backtestTableService.getBacktestData(stock);
+      if (backtestResults) {
+        cb(stock, backtestResults.ml);
+      }
+      counter--;
     }
   }
 
@@ -650,7 +652,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       console.log('training daytrade results ', trainingResults);
       if (trainingResults[0].correct / trainingResults[0].guesses > 0.6 && trainingResults[0].guesses > 50) {
         await this.addDaytrade(stock);
-        if (this.cartService.otherOrders.length > this.maxTradeCount) {
+        if ((this.cartService.buyOrders.length + this.cartService.otherOrders.length) > this.maxTradeCount) {
           break;
         }
       }
@@ -713,7 +715,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   async addBuy(holding: PortfolioInfoHolding, allocation = round(this.riskToleranceList[this.riskCounter], 2)) {
-    if (this.cartService.buyOrders.length < this.maxTradeCount) {
+    if ((this.cartService.buyOrders.length + this.cartService.otherOrders.length) < this.maxTradeCount) {
       console.log('Adding buy ', holding);
 
       const currentDate = moment().format('YYYY-MM-DD');
@@ -740,7 +742,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   async addDaytrade(stock: string) {
-    if (this.cartService.otherOrders.length < this.maxTradeCount) {
+    if ((this.cartService.buyOrders.length + this.cartService.otherOrders.length) < this.maxTradeCount) {
       const currentDate = moment().format('YYYY-MM-DD');
       const startDate = moment().subtract(100, 'days').format('YYYY-MM-DD');
       try {

@@ -51,4 +51,5 @@ export interface Stock {
   ml?: any;
   optionsVolume?: number;
   marketCap?: number;
+  high52?: number;
 }
