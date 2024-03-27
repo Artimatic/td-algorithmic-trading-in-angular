@@ -256,7 +256,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
               });
           }
         } else if (moment().diff(this.lastInterval, 'minutes') > 3) {
-          this.findSwingtrades();
+          this.runBackTest();
           this.lastInterval = moment();
         }
 
@@ -617,6 +617,11 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         cb(stock, backtestResults.ml);
       }
     });
+  }
+
+  runBackTest() {
+    const stock = this.machineDaytradingService.getNextStock();
+    this.backtestTableService.getBacktestData(stock);
   }
 
   async findSwingtrades(cb = async (stock: string, mlResult: number) => { }, stockList: (PortfolioInfoHolding[] | any[]) = CurrentStockList) {
