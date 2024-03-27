@@ -293,7 +293,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         profit += Number(records[key].toFixed(2));
       }
     }
-    
+
     return profit;
   }
 
@@ -429,7 +429,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   async getNewTrades(strategy = this.strategyList[this.strategyCounter]) {
     this.findPatternService.buildTargetPatterns();
-    this.checkPersonalLists();
+    //this.checkPersonalLists();
     switch (strategy) {
       case Strategy.Swingtrade: {
         const callback = async (symbol: string, mlResult: number) => {
@@ -868,72 +868,70 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     const balance: any = await this.portfolioService.getTdBalance().toPromise();
     const totalValue = balance.cashBalance;
 
-    if (totalValue > 0) {
-      const data = await this.portfolioService.getTdPortfolio()
-        .pipe(
-          finalize(() => this.setLoading(false))
-        ).toPromise();
+    const data = await this.portfolioService.getTdPortfolio()
+      .pipe(
+        finalize(() => this.setLoading(false))
+      ).toPromise();
 
-      if (data) {
-        for (const holding of data) {
-          const stock = holding.instrument.symbol;
-          let pl;
-          if (holding.instrument.assetType.toLowerCase() === 'option') {
-            pl = holding.marketValue - (holding.averagePrice * holding.longQuantity) * 100;
-          } else {
-            pl = holding.marketValue - (holding.averagePrice * holding.longQuantity);
-          }
-          const tempHoldingObj = {
-            name: stock,
-            pl,
-            netLiq: holding.marketValue,
-            shares: holding.longQuantity,
-            alloc: (holding.averagePrice * holding.longQuantity) / totalValue,
-            recommendation: null,
-            buyReasons: '',
-            sellReasons: '',
-            buyConfidence: 0,
-            sellConfidence: 0,
-            prediction: null
-          }
-          this.scoreKeeperService.addProfitLoss(tempHoldingObj.name, tempHoldingObj.pl);
-          this.currentHoldings.push(tempHoldingObj);
-          await this.checkStopLoss(tempHoldingObj);
+    if (data) {
+      for (const holding of data) {
+        const stock = holding.instrument.symbol;
+        let pl;
+        if (holding.instrument.assetType.toLowerCase() === 'option') {
+          pl = holding.marketValue - (holding.averagePrice * holding.longQuantity) * 100;
+        } else {
+          pl = holding.marketValue - (holding.averagePrice * holding.longQuantity);
+        }
+        const tempHoldingObj = {
+          name: stock,
+          pl,
+          netLiq: holding.marketValue,
+          shares: holding.longQuantity,
+          alloc: (holding.averagePrice * holding.longQuantity) / totalValue,
+          recommendation: null,
+          buyReasons: '',
+          sellReasons: '',
+          buyConfidence: 0,
+          sellConfidence: 0,
+          prediction: null
+        }
+        this.scoreKeeperService.addProfitLoss(tempHoldingObj.name, tempHoldingObj.pl);
+        this.currentHoldings.push(tempHoldingObj);
+        await this.checkStopLoss(tempHoldingObj);
 
-          if (holding.instrument.assetType.toLowerCase() === 'equity') {
-            const indicators = await this.getTechnicalIndicators(holding.instrument.symbol,
-              startDate,
-              currentDate,
-              this.currentHoldings,
-              true).toPromise();
-            const foundIdx = this.currentHoldings.findIndex((value) => {
-              return value.name === stock;
-            });
-            this.currentHoldings[foundIdx].recommendation = indicators.recommendation.recommendation;
-            const reasons = this.getRecommendationReason(indicators.recommendation);
-            this.currentHoldings[foundIdx].buyReasons = reasons.buyReasons;
-            this.currentHoldings[foundIdx].sellReasons = reasons.sellReasons;
-            try {
-              const predictionNum = await this.getPrediction(stock);
+        if (holding.instrument.assetType.toLowerCase() === 'equity') {
+          const indicators = await this.getTechnicalIndicators(holding.instrument.symbol,
+            startDate,
+            currentDate,
+            this.currentHoldings,
+            true).toPromise();
+          const foundIdx = this.currentHoldings.findIndex((value) => {
+            return value.name === stock;
+          });
+          this.currentHoldings[foundIdx].recommendation = indicators.recommendation.recommendation;
+          const reasons = this.getRecommendationReason(indicators.recommendation);
+          this.currentHoldings[foundIdx].buyReasons = reasons.buyReasons;
+          this.currentHoldings[foundIdx].sellReasons = reasons.sellReasons;
+          try {
+            const predictionNum = await this.getPrediction(stock);
 
-              if (predictionNum > 0.7) {
-                await this.addBuy(this.createHoldingObj(stock));
-              } else if (predictionNum < 0.3) {
-                const sellHolding = this.currentHoldings.find(holdingInfo => {
-                  return holdingInfo.name === stock;
-                });
-                if (sellHolding) {
-                  this.portfolioSell(sellHolding);
-                }
+            if (predictionNum > 0.7) {
+              await this.addBuy(this.createHoldingObj(stock));
+            } else if (predictionNum < 0.3) {
+              const sellHolding = this.currentHoldings.find(holdingInfo => {
+                return holdingInfo.name === stock;
+              });
+              if (sellHolding) {
+                this.portfolioSell(sellHolding);
               }
-            } catch (error) {
-              console.log(error);
             }
+          } catch (error) {
+            console.log(error);
           }
         }
-        this.checkIfTooManyHoldings(this.currentHoldings);
-        console.log('current holdings', this.currentHoldings);
       }
+      this.checkIfTooManyHoldings(this.currentHoldings);
+      console.log('current holdings', this.currentHoldings);
     }
   }
 
