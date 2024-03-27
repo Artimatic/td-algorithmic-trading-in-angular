@@ -625,6 +625,13 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   async findSwingtrades(cb = async (stock: string, mlResult: number) => { }, stockList: (PortfolioInfoHolding[] | any[]) = CurrentStockList) {
+    if (stockList) {
+      this.machineDaytradingService.setCurrentStockList(stockList);
+    } else {
+      if (!this.machineDaytradingService.getCurrentStockList()) {
+        this.machineDaytradingService.setCurrentStockList(CurrentStockList);
+      }
+    }
     let stock;
     const found = (name) => {
       return Boolean(this.currentHoldings.find((value) => value.name === name));
