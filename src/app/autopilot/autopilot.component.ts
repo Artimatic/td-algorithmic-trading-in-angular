@@ -114,6 +114,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   strategyCounter = null;
   maxTradeCount = 7;
   strategyList = [
+    Strategy.MLSpy,
     // Strategy.SingleStockPick,
     // Strategy.StateMachine,
     Strategy.Swingtrade,
@@ -123,7 +124,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     Strategy.DaytradeShort,
     Strategy.Short,
     Strategy.DaytradeFullList,
-    Strategy.MLSpy
   ];
 
   bearishStrategy = [
