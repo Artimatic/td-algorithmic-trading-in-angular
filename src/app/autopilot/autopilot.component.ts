@@ -255,7 +255,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
                 }
               });
           }
-        } else if (moment().diff(this.lastInterval, 'minutes') > 3) {
+        } else if (Math.abs(moment().diff(moment(startStopTime.startDateTime, 'hours'))) > 3 && moment().diff(this.lastInterval, 'minutes') > 3) {
           this.runBackTest();
           this.lastInterval = moment();
         }
@@ -306,10 +306,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         if (lastProfitLoss.profitRecord[recordKey]) {
           if (tempProfitRecord[recordKey]) {
             tempProfitRecord[recordKey] += Number(lastProfitLoss.profitRecord[recordKey].toFixed(2));
-          }
-        } else {
-          if (tempProfitRecord[recordKey]) {
-            tempProfitRecord[recordKey] = Number(lastProfitLoss.profitRecord[recordKey].toFixed(2));
           }
         }
       }

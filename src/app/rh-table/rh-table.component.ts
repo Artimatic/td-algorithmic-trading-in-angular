@@ -228,6 +228,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
         this.currentList.push(savedBacktest[saved]);
       }
     }
+    const backtestBlacklist = JSON.parse(localStorage.getItem('blacklist'));
+    this.tickerBlacklist = backtestBlacklist;
   }
 
   ngOnChanges(changes: SimpleChanges) {

@@ -19,7 +19,15 @@ export class BacktestTableService {
     const start = moment().subtract(365, 'days').format('YYYY-MM-DD');
 
     try {
-      const indicatorResults = await this.backtestService.getBacktestEvaluation(symbol, start, current, 'daily-indicators').toPromise();
+      let indicatorResults;
+      try {
+        indicatorResults = await this.backtestService.getBacktestEvaluation(symbol, start, current, 'daily-indicators').toPromise();
+      } catch {
+        indicatorResults = {
+          stock: symbol
+        };
+        this.addToBlackList(symbol);
+      }
       indicatorResults.stock = symbol;
 
       const lastSignal = indicatorResults.signals[indicatorResults.signals.length - 1];
@@ -68,7 +76,7 @@ export class BacktestTableService {
     this.addToResultStorage(tableObj);
     return tableObj;
     } catch (error) {
-      console.log(error);
+      console.log('Backtest table error', error);
     }
     return null;
   }
@@ -83,6 +91,20 @@ export class BacktestTableService {
       const newStorageObj = {};
       newStorageObj[key] = result;
       localStorage.setItem('backtest', JSON.stringify(newStorageObj));
+    }
+  }
+  
+  addToBlackList(ticker: string) {
+    const backtestBlacklist = JSON.parse(localStorage.getItem('blacklist'));
+    if (backtestBlacklist) {
+      if (!backtestBlacklist[ticker]) {
+        backtestBlacklist[ticker] = true;
+        localStorage.setItem('blacklist', JSON.stringify(backtestBlacklist));
+      }
+    } else {
+      const newStorageObj = {};
+      newStorageObj[ticker] = true;
+      localStorage.setItem('blacklist', JSON.stringify(newStorageObj));
     }
   }
 }
