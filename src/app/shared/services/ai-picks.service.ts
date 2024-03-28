@@ -43,8 +43,9 @@ export class AiPicksService {
   async trainAndActivate(symbol, range = 10, limit = 0.01) {
     const endDate = this.globalSettingsService.getLastTradeDate().format('YYYY-MM-DD');
     const startDate = moment(endDate).subtract({ day: 150 }).format('YYYY-MM-DD');
+    let trainingResult = null;
     try {
-      const trainingResult = await this.machineLearningService.trainPredictDailyV4(symbol,
+      trainingResult = await this.machineLearningService.trainPredictDailyV4(symbol,
         endDate,
         startDate,
         0.8,
@@ -52,37 +53,37 @@ export class AiPicksService {
         range,
         limit
       ).toPromise();
-      console.log('training result', trainingResult);
-      try {
-        const activation = await this.machineLearningService.activateDailyV4(symbol,
-          null,
-          range,
-          limit).toPromise();
-        if (activation) {
-          this.addResults.next({
-            label: symbol, value: [
-              {
-                algorithm: range,
-                prediction: (activation as any).nextOutput,
-                accuracy: trainingResult && trainingResult.length > 0 ? trainingResult[0].score : 0
-              }
-            ]
-          })
-          return { label: symbol, value: (activation as any).nextOutput };
-        } else {
-          console.log('no activation data', activation, symbol,
-            endDate,
-            startDate,
-            0.8,
-            null,
-            range,
-            limit);
-        }
-      } catch (error) {
-        console.log(error);
-      }
+      console.log('training result', trainingResult)
     } catch (error) {
       console.log('error: ', error);
+    }
+    try {
+      const activation = await this.machineLearningService.activateDailyV4(symbol,
+        null,
+        range,
+        limit).toPromise();
+      if (activation) {
+        this.addResults.next({
+          label: symbol, value: [
+            {
+              algorithm: range,
+              prediction: (activation as any).nextOutput,
+              accuracy: trainingResult && trainingResult.length > 0 ? trainingResult[0].score : 0
+            }
+          ]
+        })
+        return { label: symbol, value: (activation as any).nextOutput };
+      } else {
+        console.log('no activation data', activation, symbol,
+          endDate,
+          startDate,
+          0.8,
+          null,
+          range,
+          limit);
+      }
+    } catch (error) {
+      console.log(error);
     }
     return null;
   }

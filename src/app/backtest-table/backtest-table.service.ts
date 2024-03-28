@@ -37,6 +37,13 @@ export class BacktestTableService {
       const callsCount = optionsData.strategy.secondaryLeg.totalVolume;
       const putsCount = optionsData.strategy.primaryLeg.totalVolume;
       const optionsVolume = Number(callsCount) + Number(putsCount);
+      let latestMlResult = { value: null };
+      try {
+        latestMlResult = await this.aiPicksService.trainAndActivate(symbol);
+      } catch(err) {
+        console.log('training error: ', new Date().toString(), latestMlResult);
+      }
+
       const tableObj = {
         recommendation: indicatorResults.recommendation,
         stock: indicatorResults.stock,
@@ -48,7 +55,7 @@ export class BacktestTableService {
         lastVolume: indicatorResults.lastVolume || null,
         totalReturns: indicatorResults.totalReturns || null,
         lastPrice: indicatorResults.lastPrice || null,
-        ml: null,
+        ml: latestMlResult.value,
         impliedMovement: optionsData.move,
         optionsVolume: optionsVolume,
         marketCap: instruments[symbol].fundamental.marketCap,
@@ -58,10 +65,6 @@ export class BacktestTableService {
         sellSignals: [],
         high52: instruments[symbol].fundamental.high52
       };
-      const latestMlResult = await this.aiPicksService.trainAndActivate(symbol);
-      if (latestMlResult) {
-        tableObj.ml = latestMlResult.value;
-      }
 
       for (const indicator in lastSignal.recommendation) {
         if (lastSignal.recommendation.hasOwnProperty(indicator)) {
@@ -76,7 +79,7 @@ export class BacktestTableService {
     this.addToResultStorage(tableObj);
     return tableObj;
     } catch (error) {
-      console.log('Backtest table error', error);
+      console.log('Backtest table error', new Date().toString(), error);
     }
     return null;
   }
