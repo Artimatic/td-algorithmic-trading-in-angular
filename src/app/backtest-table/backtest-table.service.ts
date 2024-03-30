@@ -101,11 +101,11 @@ export class BacktestTableService {
   addToStorage(storageName: string, key: string, value: any) {
     const storage = JSON.parse(localStorage.getItem(storageName));
     if (storage) {
-      storage[key] = history;
-      localStorage.setItem(storageName, JSON.stringify(storageName));
+      storage[key] = value;
+      localStorage.setItem(storageName, JSON.stringify(storage));
     } else {
       const newStorageObj = {};
-      newStorageObj[key] = key;
+      newStorageObj[key] = value;
       localStorage.setItem(storageName, JSON.stringify(newStorageObj));
     }
   }
