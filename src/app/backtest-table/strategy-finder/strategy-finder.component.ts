@@ -15,6 +15,5 @@ export class StrategyFinderComponent implements OnInit {
     console.log('backtestdata', this.config.data);
     // const backtestStore = this.backTestTableService.getStorage('backtest');
     // const orderHistory = this.backTestTableService.getStorage('orderHistory');
-  
   }
 }
