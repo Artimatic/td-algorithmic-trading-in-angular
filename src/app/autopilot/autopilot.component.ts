@@ -20,6 +20,8 @@ import Stocks from '../rh-table/backtest-stocks.constant';
 import { FindPatternService } from '../strategies/find-pattern.service';
 import { GlobalSettingsService } from '../settings/global-settings.service';
 import { BacktestTableService } from '../backtest-table/backtest-table.service';
+import { StrategyFinderComponent } from '../backtest-table/strategy-finder/strategy-finder.component';
+import { DialogService } from 'primeng/dynamicdialog';
 
 export interface PositionHoldings {
   name: string;
@@ -182,7 +184,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     private machineDaytradingService: MachineDaytradingService,
     private findPatternService: FindPatternService,
     private machineLearningService: MachineLearningService,
-    private globalSettingsService: GlobalSettingsService
+    private globalSettingsService: GlobalSettingsService,
+    private dialogService: DialogService
   ) { }
 
   ngOnInit(): void {
@@ -247,7 +250,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           } else if (!this.lastMarketHourCheck || this.lastMarketHourCheck.diff(moment(), 'hours') > 1) {
             this.portfolioService.getEquityMarketHours(moment().format('YYYY-MM-DD'))
               .subscribe((marketHour: any) => {
-                if (marketHour.equity.EQ.isOpen) {
+                if (marketHour && marketHour.equity && marketHour.equity?.equity?.isOpen) {
                   this.isLive = true;
                 } else {
                   this.lastMarketHourCheck = moment();
@@ -255,7 +258,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
                 }
               });
           }
-        } else if (Math.abs(moment().diff(moment(startStopTime.startDateTime, 'hours'))) > 3 && moment().diff(this.lastInterval, 'minutes') > 3) {
+        } else if (this.isLive === false && Math.abs(moment().diff(moment(startStopTime.startDateTime, 'hours'))) > 3 && moment().diff(this.lastInterval, 'minutes') > 3) {
           this.runBackTest();
           this.lastInterval = moment();
         }
@@ -1191,31 +1194,10 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     });
   }
 
-  async test() {
-    let counter = 0;
-    const newList = [];
-    while (counter < CurrentStockList.length) {
-      const stock = CurrentStockList[counter].ticker;
-      if (stock) {
-        this.schedulerService.schedule(async () => {
-          try {
-            const results = await this.portfolioService.getInstrument(stock).toPromise();
-            if (results[stock]) {
-              if (results[stock].fundamental.marketCap > 1900) {
-                newList.push(stock);
-              }
-            }
-          } catch (err) {
-            console.log(err);
-          }
-        }, `findTrades`, null, false, (counter * 1000));
-      }
-
-      counter++;
-    }
-    console.log(JSON.stringify(newList));
-    this.portfolioService.getInstrument('W').subscribe((response) => {
-      console.log('test123', response);
+  async findTrades() {
+    this.dialogService.open(StrategyFinderComponent, {
+      header: 'Trade Finder',
+      width: '80%'
     });
   }
 

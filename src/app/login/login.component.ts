@@ -29,9 +29,13 @@ export class LoginComponent implements OnInit {
     this.tdaForm = new FormGroup({
       accountId: new FormControl(document.cookie
         .split('; ')
-        .find((row) => row.startsWith('accountId')) || '', Validators.required),
-      consumerKey: new FormControl('', Validators.required),
-      refreshToken: new FormControl('', Validators.required),
+        .find((row) => row.startsWith('accountId'))?.replace('accountId=', '') || '', Validators.required),
+      consumerKey: new FormControl(document.cookie
+        .split('; ')
+        .find((row) => row.startsWith('consumerKey'))?.replace('consumerKey=', '') || '', Validators.required),
+      refreshToken: new FormControl(document.cookie
+        .split('; ')
+        .find((row) => row.startsWith('refreshToken'))?.replace('refreshToken=', '') || '', Validators.required),
       saveToCookie: new FormControl(false, Validators.required),
     });
 
@@ -65,7 +69,11 @@ export class LoginComponent implements OnInit {
 
   saveTdaLogin() {
     this.loading = true;
-
+    if (this.tdaForm.value.saveToCookie) {
+      document.cookie = `accountId=${this.tdaForm.value.accountId};SameSite=None;Secure`;
+      document.cookie = `consumerKey=${this.tdaForm.value.consumerKey};SameSite=None;Secure`;
+      document.cookie = `refreshToken=${this.tdaForm.value.refreshToken};SameSite=None;Secure`;
+    }
     this.authenticationService.setTdaAccount(this.tdaForm.value.accountId,
       this.tdaForm.value.consumerKey,
       this.tdaForm.value.refreshToken)
@@ -74,9 +82,7 @@ export class LoginComponent implements OnInit {
         this.tdaForm.reset();
         this.credentialSet.emit(true);
         this.snackBar.open('Credentials saved.', 'Dismiss', { duration: 2000 });
-        if (this.tdaForm.value.saveToCookie) {
-          document.cookie = `accountId=${this.tdaForm.value.accountId}; consumerKey=${this.tdaForm.value.consumerKey}; refreshToken=${this.tdaForm.value.refreshToken}; SameSite=None; Secure`;
-        }
+
       },
         error => {
           console.log(error);

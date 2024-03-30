@@ -88,6 +88,7 @@ import { DataViewModule } from 'primeng/dataview';
 import { AutopilotComponent } from './autopilot/autopilot.component';
 import { RippleModule } from 'primeng/ripple';
 import { BacktestTableComponent } from './backtest-table/backtest-table.component';
+import { StrategyFinderComponent } from './backtest-table/strategy-finder/strategy-finder.component';
 
 @NgModule({
   declarations: [
@@ -136,6 +137,7 @@ import { BacktestTableComponent } from './backtest-table/backtest-table.componen
     WatchListComponent,
     AutopilotComponent,
     BacktestTableComponent,
+    StrategyFinderComponent,
   ],
   entryComponents: [
     LoginDialogComponent,

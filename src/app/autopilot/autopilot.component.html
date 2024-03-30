@@ -17,9 +17,9 @@
     <div class="p-toolbar-group-right">
         <p-button icon="pi pi-play" *ngIf="!display" styleClass="p-button-success" (click)="open()"></p-button>
         <p-button icon="pi pi-times" *ngIf="display" styleClass="p-button-danger" (click)="stop()"></p-button>
-        <p-button icon="pi pi-fw pi-money-bill" styleClass="p-button-success" (click)="runFindPattern()"></p-button>
+        <p-button styleClass="p-button-success" label="Find patterns" (click)="runFindPattern()"></p-button>
         <p-button *ngIf="!display" styleClass="p-button-success" label="Next strategy" (click)="changeStrategy()"></p-button>
-        <p-button styleClass="p-button-success" label="test" (click)="test()"></p-button>
+        <p-button styleClass="p-button-success" label="Find trades" (click)="findTrades()"></p-button>
     </div>
 </p-toolbar>
 

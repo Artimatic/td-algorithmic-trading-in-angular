@@ -97,13 +97,13 @@ class OptionService {
           upperPrice: _.round(goal + movePrice, 2),
           lowerPrice: _.round(goal - movePrice, 2),
           strategyCost,
-          strategy: closestStrikeStraddle
+          strategy: closestStrikeStraddle,
+          optionsChain: straddleOptionsChain
         };
       });
   }
 
   private saveImpliedMove(symbol: string, move: number) {
-
     if (move) {
       axios.post(`${dataServiceUrl}backtest/update-implied-move`, {
         symbol,

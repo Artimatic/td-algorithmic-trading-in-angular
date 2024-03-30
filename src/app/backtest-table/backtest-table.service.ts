@@ -22,6 +22,8 @@ export class BacktestTableService {
       let indicatorResults;
       try {
         indicatorResults = await this.backtestService.getBacktestEvaluation(symbol, start, current, 'daily-indicators').toPromise();
+        this.addToOrderHistoryStorage(symbol, indicatorResults.orderHistory);
+
       } catch {
         indicatorResults = {
           stock: symbol
@@ -88,16 +90,30 @@ export class BacktestTableService {
   }
 
   addToResultStorage(result: Stock) {
-    const backtestStorage = JSON.parse(localStorage.getItem('backtest'));
-    const key = result.stock;
-    if (backtestStorage) {
-      backtestStorage[key] = result;
-      localStorage.setItem('backtest', JSON.stringify(backtestStorage));
+    this.addToStorage('backtest', result.stock, result);
+  }
+
+  addToOrderHistoryStorage(symbol: string, history: any[]) {
+    const storageName = 'orderHistory';
+    this.addToStorage(storageName, symbol, history);
+  }
+
+  addToStorage(storageName: string, key: string, value: any) {
+    const storage = JSON.parse(localStorage.getItem(storageName));
+    if (storage) {
+      storage[key] = history;
+      localStorage.setItem(storageName, JSON.stringify(storageName));
     } else {
       const newStorageObj = {};
-      newStorageObj[key] = result;
-      localStorage.setItem('backtest', JSON.stringify(newStorageObj));
+      newStorageObj[key] = key;
+      localStorage.setItem(storageName, JSON.stringify(newStorageObj));
     }
+  }
+
+  getStorage(storageName: string) {
+    const storage = JSON.parse(localStorage.getItem(storageName));
+
+    return storage ? storage : {};
   }
 
   addToBlackList(ticker: string) {
