@@ -52,4 +52,5 @@ export interface Stock {
   optionsVolume?: number;
   marketCap?: number;
   high52?: number;
+  backtestDate?: string;
 }

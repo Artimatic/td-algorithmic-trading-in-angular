@@ -69,7 +69,8 @@ export class BacktestTableService {
           buySignals: [],
           strongsellSignals: [],
           sellSignals: [],
-          high52: instruments[symbol].fundamental.high52
+          high52: instruments[symbol].fundamental.high52,
+          backtestDate: moment().format()
         };
 
         this.addToResultStorage(tableObj);
@@ -97,17 +98,21 @@ export class BacktestTableService {
 
   addPair(symbol: string, newPairValue: any) {
     const storage = JSON.parse(localStorage.getItem('tradingPairs'));
-    if (storage) {
-      storage[symbol] = [].concat(storage[symbol]);
-      storage[symbol].push(newPairValue)
-      console.log('set', storage, JSON.stringify(storage));
-      localStorage.setItem('tradingPairs', JSON.stringify(storage));
-    } else {
-      const newStorageObj = {};
-      newStorageObj[symbol] = [newPairValue];
-      console.log('set2', newStorageObj, JSON.stringify(newStorageObj));
-
-      localStorage.setItem('tradingPairs', JSON.stringify(newStorageObj));
+    if (newPairValue) {
+      if (storage) {
+        storage[symbol] = [].concat(storage[symbol]);
+        const findIdx = storage[symbol].findIndex(pairVal => pairVal ? pairVal.symbol === newPairValue.symbol : false);
+        if (findIdx > -1) {
+          storage[symbol][findIdx] = newPairValue;
+        } else {
+          storage[symbol].push(newPairValue)
+        }
+        localStorage.setItem('tradingPairs', JSON.stringify(storage));
+      } else {
+        const newStorageObj = {};
+        newStorageObj[symbol] = [newPairValue];
+        localStorage.setItem('tradingPairs', JSON.stringify(newStorageObj));
+      }
     }
   }
 
@@ -160,8 +165,8 @@ export class BacktestTableService {
 
   getCorrelationAndAdd(symbol: string, orderHistory: any[], targetSymbol: string, targetHistory: any[]) {
     const corr = this.getPairCorrelation(orderHistory, targetHistory);
-    if (corr) {
-      this.addPair(symbol, {symbol: targetSymbol, correlation: corr });
+    if (corr && corr > 0.4) {
+      this.addPair(symbol, { symbol: targetSymbol, correlation: corr });
     }
   }
 
@@ -183,5 +188,48 @@ export class BacktestTableService {
       }
     }
     return Number((correlatingOrderCounter / ((orderHistory.length + targetHistory.length) / 2)).toFixed(2));
+  }
+
+  sanitizeData() {
+    const backtestData = this.getStorage('backtest');
+    const newBacktestData = {};
+    for (const b in backtestData) {
+      if (!backtestData[b].backtestDate || moment().diff(moment(backtestData[b].backtestDate), 'days') < 7) {
+        newBacktestData[b] = backtestData[b];
+        this.findPair(backtestData[b].stock);
+      }
+    }
+    localStorage.setItem('backtest', JSON.stringify(newBacktestData));
+    return newBacktestData;
+  }
+
+  findTrades() {
+    const backtests = this.sanitizeData();
+    const tradingPairs = JSON.parse(localStorage.getItem('tradingPairs'));
+    for (const key in tradingPairs) {
+      const pairs = tradingPairs[key];
+      const bObj = backtests[key];
+      if (bObj.ml !== null) {
+        if ((bObj.buySignals.length + bObj.buySignals.length) > 1) {
+          if (bObj.ml > 0.6) {
+            for (const pairVal of pairs) {
+              if (pairVal !== null && backtests[pairVal.symbol] && backtests[pairVal.symbol].ml !== null) {
+                if (backtests[pairVal.symbol].ml < 0.4) {
+                  console.log(`Buy ${bObj.stock} Sell ${pairVal.symbol}`);
+                }
+              }
+            }
+          } else if (bObj.ml < 0.4) {
+            for (const pairVal of pairs) {
+              if (pairVal !== null && backtests[pairVal.symbol] && backtests[pairVal.symbol].ml !== null) {
+                if (backtests[pairVal.symbol].ml > 0.6) {
+                  console.log(`Sell ${bObj.stock} Buy ${pairVal.symbol}`);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }

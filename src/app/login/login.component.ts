@@ -45,8 +45,7 @@ export class LoginComponent implements OnInit {
 
   openDialog(): void {
     const dialogRef = this.dialogService.open(LoginDialogComponent, {
-      header: 'Algo Trader',
-      width: '30%'
+      header: 'Algo Trader'
     });
 
     dialogRef.onClose.subscribe(() => {

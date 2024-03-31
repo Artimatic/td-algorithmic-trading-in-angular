@@ -579,6 +579,8 @@ export class RhTableComponent implements OnInit, OnChanges, OnDestroy {
       this.filterTwoOrMoreSignalsOnly();
     }
     this.currentList.forEach(result => {
+      result.backtestDate = moment().format();
+
       this.backtestTableService.addToResultStorage(result);
     });
   }
