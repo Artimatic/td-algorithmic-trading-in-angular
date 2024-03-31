@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { OptionsDataService } from '@shared/options-data.service';
 import { AiPicksService, BacktestService, PortfolioService } from '@shared/services';
 import { Stock } from '@shared/stock.interface';
+import { PotentialTrade, Strategy } from './potential-trade.constant';
 import * as moment from 'moment-timezone';
 
 @Injectable({
@@ -57,7 +58,7 @@ export class BacktestTableService {
           lastVolume: indicatorResults.lastVolume || null,
           totalReturns: indicatorResults.totalReturns || null,
           lastPrice: indicatorResults.lastPrice || null,
-          ml: latestMlResult? latestMlResult.value : null,
+          ml: latestMlResult ? latestMlResult.value : null,
           impliedMovement: optionsData.move,
           optionsVolume: optionsVolume,
           marketCap: instruments[symbol].fundamental.marketCap,
@@ -97,7 +98,9 @@ export class BacktestTableService {
     const storage = JSON.parse(localStorage.getItem('tradingPairs'));
     if (newPairValue) {
       if (storage) {
-        storage[symbol] = [].concat(storage[symbol]);
+        if (!Array.isArray(storage[symbol])) {
+          storage[symbol] = [];
+        }
         const findIdx = storage[symbol].findIndex(pairVal => pairVal ? pairVal.symbol === newPairValue.symbol : false);
         if (findIdx > -1) {
           storage[symbol][findIdx] = newPairValue;
@@ -205,25 +208,64 @@ export class BacktestTableService {
       const pairs = tradingPairs[key];
       const bObj = backtests[key];
       if (bObj.ml !== null) {
-        if ((bObj.buySignals.length + bObj.sellSignals.length) > 0 || bObj.recommendation.toLowerCase() !== 'indeterminant' ) {
+        if ((!bObj.optionsChainLength || bObj.optionsChainLength > 10) && (bObj.buySignals.length + bObj.sellSignals.length) > 0 || bObj.recommendation.toLowerCase() !== 'indeterminant') {
           if (bObj.ml > 0.6) {
             for (const pairVal of pairs) {
-              if (pairVal !== null && backtests[pairVal.symbol] && backtests[pairVal.symbol].ml !== null) {
+              if (pairVal !== null && backtests[pairVal.symbol] && backtests[pairVal.symbol].ml !== null && (!backtests[pairVal.symbol].optionsChainLength || backtests[pairVal.symbol].optionsChainLength > 10)) {
                 if (backtests[pairVal.symbol].ml < 0.4) {
-                  console.log(`Buy ${bObj.stock} Sell ${pairVal.symbol}`);
-                }
-              }
-            }
-          } else if (bObj.ml < 0.4) {
-            for (const pairVal of pairs) {
-              if (pairVal !== null && backtests[pairVal.symbol] && backtests[pairVal.symbol].ml !== null) {
-                if (backtests[pairVal.symbol].ml > 0.6) {
-                  console.log(`Sell ${bObj.stock} Buy ${pairVal.symbol}`);
+                  const trade = {
+                    name: `${bObj.stock} Pair trade`,
+                    date: moment().format(),
+                    type: 'pairTrade',
+                    key: bObj.stock,
+                    strategy: {
+                      buy: [bObj.stock],
+                      sell: [pairVal.symbol]
+                    }
+                  };
+                  this.addTradingStrategy(trade);
                 }
               }
             }
           }
         }
+      }
+    }
+  }
+
+  getTradingStrategies() {
+    return JSON.parse(localStorage.getItem('tradingStrategy')) || [];
+  }
+
+  addTradingStrategy(trade: PotentialTrade) {
+    const storage = this.getTradingStrategies();
+    if (trade) {
+      if (storage && Array.isArray(storage)) {
+        const findIdx = storage.findIndex(str => str.key === trade.key && str.type === trade.type);
+        if (findIdx > -1) {
+          const buys = storage[findIdx].strategy.buy.reduce((acc, curr) => {
+            if (!acc.buy.find(a => a === curr)) {
+              acc.buy.push(curr);
+            }
+            return acc;
+          }, { buy: trade.strategy.buy }).buy;
+
+          const sells = storage[findIdx].strategy.sell.reduce((acc, curr) => {
+            if (!acc.sell.find(a => a === curr)) {
+              acc.sell.push(curr);
+            }
+            return acc;
+          }, { sell: trade.strategy.sell }).sell;
+
+          storage[findIdx].strategy.buy = buys;
+          storage[findIdx].strategy.sell = sells;
+        } else {
+          storage.push(trade)
+        }
+        localStorage.setItem('tradingStrategy', JSON.stringify(storage));
+      } else {
+        const newStorageObj = [trade];
+        localStorage.setItem('tradingStrategy', JSON.stringify(newStorageObj));
       }
     }
   }

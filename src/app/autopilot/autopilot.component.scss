@@ -21,3 +21,15 @@
 .p-toolbar-group-right > p-button {
     margin: 1rem 0.5rem;
 }
+
+.strategy-list {
+    display: flex;
+    flex-direction: row;
+    .buy-sell-container {
+        max-width: 25vw;
+        margin-left: 1rem;
+        div {
+            margin-bottom: 0.5rem;
+        }
+    }    
+}

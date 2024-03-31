@@ -22,6 +22,7 @@ import { GlobalSettingsService } from '../settings/global-settings.service';
 import { BacktestTableService } from '../backtest-table/backtest-table.service';
 import { StrategyFinderComponent } from '../backtest-table/strategy-finder/strategy-finder.component';
 import { DialogService } from 'primeng/dynamicdialog';
+import { PotentialTrade } from '../backtest-table/potential-trade.constant';
 
 export interface PositionHoldings {
   name: string;
@@ -101,7 +102,7 @@ export enum RiskTolerance {
 @Component({
   selector: 'app-autopilot',
   templateUrl: './autopilot.component.html',
-  styleUrls: ['./autopilot.component.css']
+  styleUrls: ['./autopilot.component.scss']
 })
 export class AutopilotComponent implements OnInit, OnDestroy {
   display = false;
@@ -167,6 +168,10 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   isLive = false;
 
   unsubscribe$ = new Subject();
+
+  revealPotentialStrategy = false;
+
+  strategies: PotentialTrade[] = [];
 
   constructor(
     private authenticationService: AuthenticationService,
@@ -262,7 +267,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           this.runBackTest();
           this.lastInterval = moment();
         } else {
-          this.backtestTableService.sanitizeData();
+          this.startFindingTrades();
         }
 
         // if (this.cartService.otherOrders.length + this.cartService.buyOrders.length + this.cartService.sellOrders.length < this.maxTradeCount) {
@@ -1195,11 +1200,21 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     });
   }
 
+  removeStrategy(item) {
+    console.log('TODO remove', item);
+    this.strategies = this.strategies.filter(s => s.key !== item.key || s.name !== item.name || s.date !== item.date);
+  }
+
+  startFindingTrades() {
+    this.backtestTableService.findTrades();
+    this.strategies = this.backtestTableService.getTradingStrategies();
+    if (this.strategies.length) {
+      this.revealPotentialStrategy = true;
+    }
+  }
+
   async findTrades() {
-    this.dialogService.open(StrategyFinderComponent, {
-      header: 'Trade Finder',
-      width: '80%'
-    });
+    this.startFindingTrades();
   }
 
   unsubscribeStockFinder() {
