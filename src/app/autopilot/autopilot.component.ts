@@ -609,7 +609,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   async backtestList(cb = async (stock: string, mlResult: number) => { }, stockList: (PortfolioInfoHolding[] | any[]) = CurrentStockList) {
-
     stockList.forEach(async (stock) => {
       const backtestResults = await this.backtestTableService.getBacktestData(stock.name);
       if (backtestResults) {
