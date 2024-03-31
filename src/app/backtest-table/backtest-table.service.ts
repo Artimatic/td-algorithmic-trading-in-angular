@@ -39,16 +39,12 @@ export class BacktestTableService {
         }
 
         const optionsData = await this.optionsDataService.getImpliedMove(symbol).toPromise();
+        const optionsChain = optionsData.optionsChain.monthlyStrategyList;
         const instruments = await this.portfolioService.getInstrument(symbol).toPromise();
         const callsCount = optionsData.strategy.secondaryLeg.totalVolume;
         const putsCount = optionsData.strategy.primaryLeg.totalVolume;
         const optionsVolume = Number(callsCount) + Number(putsCount);
-        let latestMlResult = { value: null };
-        try {
-          latestMlResult = await this.aiPicksService.trainAndActivate(symbol);
-        } catch (err) {
-          console.log('training error: ', new Date().toString(), latestMlResult);
-        }
+        let latestMlResult = await this.aiPicksService.trainAndActivate(symbol);
 
         const tableObj = {
           recommendation: indicatorResults.recommendation,
@@ -61,16 +57,17 @@ export class BacktestTableService {
           lastVolume: indicatorResults.lastVolume || null,
           totalReturns: indicatorResults.totalReturns || null,
           lastPrice: indicatorResults.lastPrice || null,
-          ml: latestMlResult.value,
+          ml: latestMlResult? latestMlResult.value : null,
           impliedMovement: optionsData.move,
           optionsVolume: optionsVolume,
           marketCap: instruments[symbol].fundamental.marketCap,
           strongbuySignals: [],
-          buySignals: [],
+          buySignals: buySignals,
           strongsellSignals: [],
-          sellSignals: [],
+          sellSignals: sellSignals,
           high52: instruments[symbol].fundamental.high52,
-          backtestDate: moment().format()
+          backtestDate: moment().format(),
+          optionsChainLength: optionsChain.length
         };
 
         this.addToResultStorage(tableObj);
@@ -158,8 +155,6 @@ export class BacktestTableService {
           this.getCorrelationAndAdd(symbol, orderHistory, h, targetHistory);
         }
       }
-    } else {
-      console.log('no history found');
     }
   }
 
@@ -210,7 +205,7 @@ export class BacktestTableService {
       const pairs = tradingPairs[key];
       const bObj = backtests[key];
       if (bObj.ml !== null) {
-        if ((bObj.buySignals.length + bObj.buySignals.length) > 1) {
+        if ((bObj.buySignals.length + bObj.sellSignals.length) > 0 || bObj.recommendation.toLowerCase() !== 'indeterminant' ) {
           if (bObj.ml > 0.6) {
             for (const pairVal of pairs) {
               if (pairVal !== null && backtests[pairVal.symbol] && backtests[pairVal.symbol].ml !== null) {

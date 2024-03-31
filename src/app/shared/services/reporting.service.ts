@@ -47,7 +47,8 @@ export class ReportingService {
       'AI Prediction': JSON.stringify(results.ml),
       'Options Volume': results.optionsVolume,
       'Market Cap': results.marketCap,
-      '52 Week High': results.high52
+      '52 Week High': results.high52,
+      'Options Chain Length': results.optionsChainLength
     };
     if (selectedColumns.length > 0) {
       selectedColumns.forEach((column: {field: string, header: string}) => {

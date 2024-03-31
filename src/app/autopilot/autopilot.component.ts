@@ -258,7 +258,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
                 }
               });
           }
-        } else if (Math.abs(moment().diff(moment(startStopTime.startDateTime, 'hours'))) > 3 && moment().diff(this.lastInterval, 'minutes') > 3) {
+        } else if (Math.abs(moment().diff(moment(startStopTime.startDateTime, 'hours'))) > 3 && moment().diff(this.lastInterval, 'minutes') > 2) {
           this.runBackTest();
           this.lastInterval = moment();
         } else {

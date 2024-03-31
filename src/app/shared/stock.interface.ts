@@ -53,4 +53,5 @@ export interface Stock {
   marketCap?: number;
   high52?: number;
   backtestDate?: string;
+  optionsChainLength?: number;
 }
