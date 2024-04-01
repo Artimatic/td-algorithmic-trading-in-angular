@@ -1205,6 +1205,10 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.strategies = this.strategies.filter(s => s.key !== item.key || s.name !== item.name || s.date !== item.date);
   }
 
+  test() {
+    this.runBackTest()
+  }
+
   startFindingTrades() {
     this.backtestTableService.findTrades();
     this.strategies = this.backtestTableService.getTradingStrategies();
