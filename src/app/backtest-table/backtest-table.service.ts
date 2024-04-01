@@ -20,9 +20,7 @@ export class BacktestTableService {
     const start = moment().subtract(365, 'days').format('YYYY-MM-DD');
 
     try {
-      let indicatorResults;
-      try {
-        indicatorResults = await this.backtestService.getBacktestEvaluation(symbol, start, current, 'daily-indicators').toPromise();
+        const indicatorResults = await this.backtestService.getBacktestEvaluation(symbol, start, current, 'daily-indicators').toPromise();
         this.addToOrderHistoryStorage(symbol, indicatorResults.orderHistory);
         indicatorResults.stock = symbol;
 
@@ -73,12 +71,7 @@ export class BacktestTableService {
 
         this.addToResultStorage(tableObj);
         return tableObj;
-      } catch {
-        indicatorResults = {
-          stock: symbol
-        };
-        // this.addToBlackList(symbol);
-      }
+
     } catch (error) {
       console.log('Backtest table error', new Date().toString(), error);
     }
@@ -235,6 +228,10 @@ export class BacktestTableService {
 
   getTradingStrategies() {
     return JSON.parse(localStorage.getItem('tradingStrategy')) || [];
+  }
+
+  setTradingStrategies(strats: PotentialTrade[]) {
+    localStorage.setItem('tradingStrategy', JSON.stringify(strats));
   }
 
   addTradingStrategy(trade: PotentialTrade) {
