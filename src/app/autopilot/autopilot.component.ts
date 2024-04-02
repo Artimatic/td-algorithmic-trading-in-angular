@@ -255,7 +255,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           } else if (!this.lastMarketHourCheck || this.lastMarketHourCheck.diff(moment(), 'hours') > 1) {
             this.portfolioService.getEquityMarketHours(moment().format('YYYY-MM-DD'))
               .subscribe((marketHour: any) => {
-                if (marketHour && marketHour.equity && marketHour.equity?.equity?.isOpen) {
+                if (marketHour && marketHour.equity && (marketHour.equity?.equity?.isOpen || marketHour.equity?.EQ?.isOpen)) {
                   this.isLive = true;
                 } else {
                   this.lastMarketHourCheck = moment();
@@ -263,11 +263,12 @@ export class AutopilotComponent implements OnInit, OnDestroy {
                 }
               });
           }
-        } else if (Math.abs(moment().diff(moment(startStopTime.startDateTime, 'hours'))) > 3 && moment().diff(this.lastInterval, 'minutes') > 2) {
+        } else if (Math.abs(moment().diff(moment(startStopTime.startDateTime, 'hours'))) > 9 && moment().diff(this.lastInterval, 'minutes') > 2) {
           this.runBackTest();
           this.lastInterval = moment();
-        } else {
+        } else if (moment().diff(this.lastInterval, 'hours') > 2) {
           this.startFindingTrades();
+          this.lastInterval = moment();
         }
 
         // if (this.cartService.otherOrders.length + this.cartService.buyOrders.length + this.cartService.sellOrders.length < this.maxTradeCount) {
@@ -1206,7 +1207,20 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   test() {
-    this.runBackTest()
+    if (this.timer) {
+      this.timer.unsubscribe();
+      this.stop();
+    }
+    this.timer = TimerObservable.create(1000, this.interval)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(async () => {
+        const startStopTime = this.getStartStopTime();
+        if ((moment().diff(moment(startStopTime.startDateTime, 'hours')) < -10 || moment().diff(moment(startStopTime.startDateTime, 'hours')) > 0) && moment().diff(this.lastInterval, 'minutes') > 1) {
+          this.runBackTest();
+          this.lastInterval = moment();
+          this.startFindingTrades();
+        }
+      });
   }
 
   startFindingTrades() {

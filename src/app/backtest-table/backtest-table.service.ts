@@ -9,6 +9,7 @@ import * as moment from 'moment-timezone';
   providedIn: 'root'
 })
 export class BacktestTableService {
+  orderHistory = {};
 
   constructor(private backtestService: BacktestService,
     private aiPicksService: AiPicksService,
@@ -20,22 +21,24 @@ export class BacktestTableService {
     const start = moment().subtract(365, 'days').format('YYYY-MM-DD');
 
     try {
-        const indicatorResults = await this.backtestService.getBacktestEvaluation(symbol, start, current, 'daily-indicators').toPromise();
-        this.addToOrderHistoryStorage(symbol, indicatorResults.orderHistory);
-        indicatorResults.stock = symbol;
+      const indicatorResults = await this.backtestService.getBacktestEvaluation(symbol, start, current, 'daily-indicators').toPromise();
+      this.addToOrderHistoryStorage(symbol, indicatorResults.orderHistory);
+      indicatorResults.stock = symbol;
 
-        const lastSignal = indicatorResults.signals[indicatorResults.signals.length - 1];
-        const buySignals = [];
-        const sellSignals = [];
-        for (const indicator in lastSignal.recommendation) {
-          if (lastSignal.recommendation.hasOwnProperty(indicator)) {
-            if (lastSignal.recommendation[indicator] === 'Bullish') {
-              buySignals.push(indicator);
-            } else if (lastSignal.recommendation[indicator] === 'Bearish') {
-              sellSignals.push(indicator);
-            }
+      const lastSignal = indicatorResults.signals[indicatorResults.signals.length - 1];
+      const buySignals = [];
+      const sellSignals = [];
+      for (const indicator in lastSignal.recommendation) {
+        if (lastSignal.recommendation.hasOwnProperty(indicator)) {
+          if (lastSignal.recommendation[indicator] === 'Bullish') {
+            buySignals.push(indicator);
+          } else if (lastSignal.recommendation[indicator] === 'Bearish') {
+            sellSignals.push(indicator);
           }
         }
+      }
+
+      if (buySignals.length + sellSignals.length > 1) {
 
         const optionsData = await this.optionsDataService.getImpliedMove(symbol).toPromise();
         const optionsChain = optionsData.optionsChain.monthlyStrategyList;
@@ -71,9 +74,9 @@ export class BacktestTableService {
 
         this.addToResultStorage(tableObj);
         return tableObj;
-
+      }
     } catch (error) {
-      console.log('Backtest table error', new Date().toString(), error);
+      console.log(`Backtest table error ${symbol}`, new Date().toString(), error);
     }
     return null;
   }
@@ -83,8 +86,8 @@ export class BacktestTableService {
   }
 
   addToOrderHistoryStorage(symbol: string, tradingHistory: any[]) {
-    const storageName = 'orderHistory';
-    this.addToStorage(storageName, symbol, tradingHistory);
+    this.orderHistory
+    this.orderHistory[symbol] = tradingHistory;
   }
 
   addPair(symbol: string, newPairValue: any) {
@@ -142,12 +145,11 @@ export class BacktestTableService {
   }
 
   findPair(symbol: string) {
-    const storedTradingHistory = this.getStorage('orderHistory');
-    const orderHistory = storedTradingHistory[symbol];
+    const orderHistory = this.orderHistory[symbol];
     if (orderHistory) {
-      for (const h in storedTradingHistory) {
+      for (const h in this.orderHistory) {
         if (h !== symbol) {
-          const targetHistory = storedTradingHistory[h];
+          const targetHistory = this.orderHistory[h];
           this.getCorrelationAndAdd(symbol, orderHistory, h, targetHistory);
         }
       }
@@ -200,7 +202,7 @@ export class BacktestTableService {
     for (const key in tradingPairs) {
       const pairs = tradingPairs[key];
       const bObj = backtests[key];
-      if (bObj.ml !== null) {
+      if (bObj !== undefined && bObj !== null && bObj.ml !== null) {
         if ((!bObj.optionsChainLength || bObj.optionsChainLength > 10) && (bObj.buySignals.length + bObj.sellSignals.length) > 0 || bObj.recommendation.toLowerCase() !== 'indeterminant') {
           if (bObj.ml > 0.6) {
             for (const pairVal of pairs) {
