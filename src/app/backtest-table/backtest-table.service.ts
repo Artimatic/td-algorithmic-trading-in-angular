@@ -10,6 +10,7 @@ import * as moment from 'moment-timezone';
 })
 export class BacktestTableService {
   orderHistory = {};
+  correlationThreshold = 0.4;
 
   constructor(private backtestService: BacktestService,
     private aiPicksService: AiPicksService,
@@ -86,7 +87,6 @@ export class BacktestTableService {
   }
 
   addToOrderHistoryStorage(symbol: string, tradingHistory: any[]) {
-    this.orderHistory
     this.orderHistory[symbol] = tradingHistory;
   }
 
@@ -158,7 +158,7 @@ export class BacktestTableService {
 
   getCorrelationAndAdd(symbol: string, orderHistory: any[], targetSymbol: string, targetHistory: any[]) {
     const corr = this.getPairCorrelation(orderHistory, targetHistory);
-    if (corr && corr > 0.4) {
+    if (corr && corr > this.correlationThreshold) {
       this.addPair(symbol, { symbol: targetSymbol, correlation: corr });
     }
   }

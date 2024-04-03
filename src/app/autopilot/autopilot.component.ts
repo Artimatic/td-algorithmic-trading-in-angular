@@ -136,10 +136,11 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     Strategy.Short
   ];
 
-  riskCounter = 1;
+  riskCounter = 0;
   dayTradeRiskCounter = 0;
 
   riskToleranceList = [
+    RiskTolerance.Low,
     RiskTolerance.ExtremeFear,
     RiskTolerance.Fear,
     RiskTolerance.Neutral,
@@ -264,6 +265,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
               });
           }
         } else if (Math.abs(moment().diff(moment(startStopTime.startDateTime, 'hours'))) > 9 && moment().diff(this.lastInterval, 'minutes') > 2) {
+          console.log('Running backtest at', moment().format(), ' start time:', startStopTime.startDateTime);
           this.runBackTest();
           this.lastInterval = moment();
         } else if (moment().diff(this.lastInterval, 'hours') > 2) {
@@ -1207,20 +1209,22 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   test() {
-    if (this.timer) {
-      this.timer.unsubscribe();
-      this.stop();
+    if (!this.startFindingTrades()) {
+      if (this.timer) {
+        this.timer.unsubscribe();
+        this.stop();
+      }
+      this.timer = TimerObservable.create(1000, this.interval)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(async () => {
+          const startStopTime = this.getStartStopTime();
+          if ((moment().diff(moment(startStopTime.startDateTime, 'hours')) < -10 || moment().diff(moment(startStopTime.startDateTime, 'hours')) > 0) && moment().diff(this.lastInterval, 'minutes') > 1) {
+            this.runBackTest();
+            this.lastInterval = moment();
+            this.startFindingTrades();
+          }
+        });
     }
-    this.timer = TimerObservable.create(1000, this.interval)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(async () => {
-        const startStopTime = this.getStartStopTime();
-        if ((moment().diff(moment(startStopTime.startDateTime, 'hours')) < -10 || moment().diff(moment(startStopTime.startDateTime, 'hours')) > 0) && moment().diff(this.lastInterval, 'minutes') > 1) {
-          this.runBackTest();
-          this.lastInterval = moment();
-          this.startFindingTrades();
-        }
-      });
   }
 
   startFindingTrades() {
@@ -1229,10 +1233,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     if (this.strategies.length) {
       this.revealPotentialStrategy = true;
     }
-  }
-
-  async findTrades() {
-    this.startFindingTrades();
+    return this.revealPotentialStrategy;
   }
 
   unsubscribeStockFinder() {
