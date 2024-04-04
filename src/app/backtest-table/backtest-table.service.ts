@@ -10,7 +10,7 @@ import * as moment from 'moment-timezone';
 })
 export class BacktestTableService {
   orderHistory = {};
-  correlationThreshold = 0.4;
+  correlationThreshold = 0.5;
 
   constructor(private backtestService: BacktestService,
     private aiPicksService: AiPicksService,
