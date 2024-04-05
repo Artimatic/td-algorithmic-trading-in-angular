@@ -190,8 +190,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     private machineDaytradingService: MachineDaytradingService,
     private findPatternService: FindPatternService,
     private machineLearningService: MachineLearningService,
-    private globalSettingsService: GlobalSettingsService,
-    private dialogService: DialogService
+    private globalSettingsService: GlobalSettingsService
   ) { }
 
   ngOnInit(): void {
@@ -246,7 +245,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           if (this.isLive) {
             if (this.isTradingStarted) {
               this.executeOrderList();
-              this.setProfitLoss();
             } else {
               setTimeout(() => {
                 this.initializeOrders();
@@ -397,55 +395,41 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   async developStrategy() {
     this.machineLearningService.getFoundPatterns()
       .subscribe(patternsResponse => console.log('found patterns ', patternsResponse));
-    //const lastProfitLoss = JSON.parse(localStorage.getItem('profitLoss'));
-    // if (lastProfitLoss && lastProfitLoss.profit !== undefined) {
-    //   if (Number(this.calculatePl(lastProfitLoss.profitRecord)) < 0) {
-    //     if (lastProfitLoss.lastStrategy === Strategy.Daytrade) {
-    //       this.increaseDayTradeRiskTolerance();
-    //     } else {
-    //       this.decreaseRiskTolerance();
-    //     }
-
-    //   } else if (Number(this.calculatePl(lastProfitLoss.profitRecord)) > 0) {
-    //     if (lastProfitLoss.lastStrategy === Strategy.Daytrade) {
-    //       this.decreaseDayTradeRiskTolerance();
-    //     } else {
-    //       this.increaseRiskTolerance();
-    //     }
-    //   } else {
-    //     try {
-    //       const predictionNum = await this.getPrediction('QQQ');
-
-    //       if (predictionNum >= 0.8) {
-    //         this.increaseRiskTolerance();
-    //       } else {
-    //         this.changeStrategy();
-    //         // while (!this.bearishStrategy.find(bearStrat => bearStrat === this.strategyList[this.strategyCounter])) {
-    //         //   this.changeStrategy();
-    //         // }
-    //         // this.getNewTrades(this.strategyList[this.strategyCounter]);
-    //       }
-    //     } catch (error) {
-    //       console.log(error);
-    //     }
-    //   }
-    // }
-
-    try {
-      const predictionNum = await this.getPrediction('SH');
-
-      if (predictionNum > 0.6) {
-        this.decreaseRiskTolerance();
-        this.increaseDayTradeRiskTolerance();
-      } else {
-        this.increaseRiskTolerance();
-        this.decreaseDayTradeRiskTolerance();
-      }
-    } catch (error) {
-      console.log(error);
-    }
 
     await this.checkCurrentPositions();
+    this.setProfitLoss();
+
+    const lastProfitLoss = JSON.parse(localStorage.getItem('profitLoss'));
+    if (lastProfitLoss && lastProfitLoss.profit !== undefined) {
+      if (Number(this.calculatePl(lastProfitLoss.profitRecord)) < 0) {
+        if (lastProfitLoss.lastStrategy === Strategy.Daytrade) {
+          this.increaseDayTradeRiskTolerance();
+        } else {
+          this.decreaseRiskTolerance();
+        }
+
+      } else if (Number(this.calculatePl(lastProfitLoss.profitRecord)) > 0) {
+        if (lastProfitLoss.lastStrategy === Strategy.Daytrade) {
+          this.decreaseDayTradeRiskTolerance();
+        } else {
+          this.increaseRiskTolerance();
+        }
+      } else {
+        try {
+          const predictionNum = await this.getPrediction('SH');
+    
+          if (predictionNum > 0.6) {
+            this.decreaseRiskTolerance();
+            this.increaseDayTradeRiskTolerance();
+          } else {
+            this.increaseRiskTolerance();
+            this.decreaseDayTradeRiskTolerance();
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    }
     await this.getNewTrades();
   }
 
@@ -916,7 +900,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           sellConfidence: 0,
           prediction: null
         }
-        this.scoreKeeperService.addProfitLoss(tempHoldingObj.name, tempHoldingObj.pl);
+        this.scoreKeeperService.addProfitLoss(tempHoldingObj.name, Number(tempHoldingObj.pl));
         this.currentHoldings.push(tempHoldingObj);
         await this.checkStopLoss(tempHoldingObj);
 
