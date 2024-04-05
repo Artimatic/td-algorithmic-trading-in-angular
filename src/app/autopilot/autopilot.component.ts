@@ -900,7 +900,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           sellConfidence: 0,
           prediction: null
         }
-        this.scoreKeeperService.addProfitLoss(tempHoldingObj.name, Number(tempHoldingObj.pl));
+        this.scoreKeeperService.addProfitLoss(tempHoldingObj.name, Number(tempHoldingObj.pl), false);
         this.currentHoldings.push(tempHoldingObj);
         await this.checkStopLoss(tempHoldingObj);
 

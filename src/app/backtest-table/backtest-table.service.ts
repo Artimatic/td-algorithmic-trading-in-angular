@@ -170,7 +170,7 @@ export class BacktestTableService {
     while (primaryHistoryCounter > 0 && targetHistoryCounter > 0) {
       const primaryDate = orderHistory[primaryHistoryCounter].date;
       const targetDate = targetHistory[targetHistoryCounter].date;
-      if (Math.abs(moment(primaryDate).diff(moment(targetDate), 'day')) < 10) {
+      if (Math.abs(moment(primaryDate).diff(moment(targetDate), 'day')) < 9) {
         correlatingOrderCounter++;
         primaryHistoryCounter--;
         targetHistoryCounter--;
@@ -187,7 +187,7 @@ export class BacktestTableService {
     const backtestData = this.getStorage('backtest');
     const newBacktestData = {};
     for (const b in backtestData) {
-      if (!backtestData[b].backtestDate || moment().diff(moment(backtestData[b].backtestDate), 'days') < 7) {
+      if (!backtestData[b].backtestDate || moment().diff(moment(backtestData[b].backtestDate), 'days') < 4) {
         newBacktestData[b] = backtestData[b];
         this.findPair(backtestData[b].stock);
       }
