@@ -20,9 +20,9 @@ import Stocks from '../rh-table/backtest-stocks.constant';
 import { FindPatternService } from '../strategies/find-pattern.service';
 import { GlobalSettingsService } from '../settings/global-settings.service';
 import { BacktestTableService } from '../backtest-table/backtest-table.service';
-import { StrategyFinderComponent } from '../backtest-table/strategy-finder/strategy-finder.component';
-import { DialogService } from 'primeng/dynamicdialog';
 import { PotentialTrade } from '../backtest-table/potential-trade.constant';
+import { BacktestTableComponent } from '../backtest-table/backtest-table.component';
+import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 
 export interface PositionHoldings {
   name: string;
@@ -120,13 +120,13 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     Strategy.MLSpy,
     // Strategy.SingleStockPick,
     // Strategy.StateMachine,
-    Strategy.Swingtrade,
+    //Strategy.Swingtrade,
     Strategy.Daytrade,
-    Strategy.TrimHoldings,
+    //Strategy.TrimHoldings,
     // Strategy.InverseSwingtrade,
-    Strategy.DaytradeShort,
+    //Strategy.DaytradeShort,
     Strategy.Short,
-    Strategy.DaytradeFullList,
+    //Strategy.DaytradeFullList,
   ];
 
   bearishStrategy = [
@@ -174,6 +174,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   strategies: PotentialTrade[] = [];
 
+  dialogRef: DynamicDialogRef | undefined;
+
   constructor(
     private authenticationService: AuthenticationService,
     private portfolioService: PortfolioService,
@@ -190,7 +192,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     private machineDaytradingService: MachineDaytradingService,
     private findPatternService: FindPatternService,
     private machineLearningService: MachineLearningService,
-    private globalSettingsService: GlobalSettingsService
+    private globalSettingsService: GlobalSettingsService,
+    public dialogService: DialogService
   ) { }
 
   ngOnInit(): void {
@@ -510,19 +513,19 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       }
       case Strategy.MLSpy:
         try {
-          const predictionNum = await this.getPrediction('QQQ');
-          if (predictionNum >= 0.6) {
-            this.addBuy(this.createHoldingObj('TQQQ'));
+          const predictionNum = await this.getPrediction('SH');
+          if (predictionNum > 0.6) {
+            this.addBuy(this.createHoldingObj('SH'));
             const sellHolding = this.currentHoldings.find(holdingInfo => {
-              return holdingInfo.name === 'SH';
+              return holdingInfo.name === 'TQQQ';
             });
             if (sellHolding) {
               this.portfolioSell(sellHolding);
             }
-          } else if (predictionNum < 0.3) {
-            this.addBuy(this.createHoldingObj('SH'));
+          } else {
+            this.addBuy(this.createHoldingObj('TQQQ'));
             const sellHolding = this.currentHoldings.find(holdingInfo => {
-              return holdingInfo.name === 'TQQQ';
+              return holdingInfo.name === 'SH';
             });
             if (sellHolding) {
               this.portfolioSell(sellHolding);
@@ -569,15 +572,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         };
 
         this.findSwingtrades(callback);
-        const lastProfitLoss = JSON.parse(localStorage.getItem('profitLoss'));
-
-        if (lastProfitLoss && lastProfitLoss.profitRecord) {
-          for (const recordKey in lastProfitLoss.profitRecord) {
-            if (lastProfitLoss.profitRecord[recordKey] > 0) {
-              await this.addDaytrade(recordKey);
-            }
-          }
-        }
         break;
       }
     }
@@ -831,7 +825,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   getStartStopTime() {
     const endTime = '16:00';
-    const currentMoment = moment().tz('America/New_York').set({ hour: 9, minute: 50 });
+    const currentMoment = moment().tz('America/New_York').set({ hour: 9, minute: 40 });
     const currentEndMoment = moment().tz('America/New_York').set({ hour: 16, minute: 0 });
     const currentDay = currentMoment.day();
     let startDate;
@@ -920,9 +914,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           try {
             const predictionNum = await this.getPrediction(stock);
 
-            if (predictionNum > 0.7) {
+            if (predictionNum > 0.6) {
               await this.addBuy(this.createHoldingObj(stock));
-            } else if (predictionNum < 0.3) {
+            } else if (predictionNum < 0.4) {
               const sellHolding = this.currentHoldings.find(holdingInfo => {
                 return holdingInfo.name === stock;
               });
@@ -1205,23 +1199,25 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.strategies = this.strategies.filter(s => s.key !== item.key || s.name !== item.name || s.date !== item.date);
   }
 
-  test() {
-    if (!this.startFindingTrades()) {
-      if (this.timer) {
-        this.timer.unsubscribe();
-        this.stop();
-      }
-      this.timer = TimerObservable.create(1000, this.interval)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe(async () => {
-          const startStopTime = this.getStartStopTime();
-          if ((moment().diff(moment(startStopTime.startDateTime, 'hours')) < -10 || moment().diff(moment(startStopTime.startDateTime, 'hours')) > 0) && moment().diff(this.lastInterval, 'minutes') > 1) {
-            this.runBackTest();
-            this.lastInterval = moment();
-            this.startFindingTrades();
-          }
-        });
-    }
+  async placeholder() {
+    this.dialogRef = this.dialogService.open(BacktestTableComponent, { header: 'Day trade Backtest'});
+
+    // if (!this.startFindingTrades()) {
+    //   if (this.timer) {
+    //     this.timer.unsubscribe();
+    //     this.stop();
+    //   }
+    //   this.timer = TimerObservable.create(1000, this.interval)
+    //     .pipe(takeUntil(this.destroy$))
+    //     .subscribe(async () => {
+    //       const startStopTime = this.getStartStopTime();
+    //       if ((moment().diff(moment(startStopTime.startDateTime, 'hours')) < -10 || moment().diff(moment(startStopTime.startDateTime, 'hours')) > 0) && moment().diff(this.lastInterval, 'minutes') > 1) {
+    //         this.runBackTest();
+    //         this.lastInterval = moment();
+    //         this.startFindingTrades();
+    //       }
+    //     });
+    // }
   }
 
   startFindingTrades() {

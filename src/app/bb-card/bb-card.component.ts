@@ -1,11 +1,7 @@
 import { Component, OnChanges, Input, OnInit, SimpleChanges, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { take } from 'rxjs/operators';
 
-import { Chart } from 'angular-highcharts';
-
-import * as Highcharts from 'highcharts';
 import * as moment from 'moment-timezone';
 import * as _ from 'lodash';
 
@@ -23,7 +19,6 @@ import { Subscription } from 'rxjs/Subscription';
 import { CartService } from '../shared/services/cart.service';
 import { Indicators } from '../shared/models/indicators';
 import { CardOptions } from '../shared/models/card-options';
-import { Point } from 'angular-highcharts/lib/chart';
 import { GlobalSettingsService } from '../settings/global-settings.service';
 import { TradeService, AlgoQueueItem } from '../shared/services/trade.service';
 import { OrderingService } from '@shared/services/ordering.service';
@@ -34,6 +29,8 @@ import { MachineDaytradingService } from '../machine-daytrading/machine-daytradi
 import { MenuItem, MessageService, SelectItem } from 'primeng/api';
 import { ServiceStatus } from '@shared/models/service-status';
 import { DaytradeAlgorithms } from '@shared/enums/daytrade-algorithms.enum';
+import { BacktestTableComponent } from '../backtest-table/backtest-table.component';
+import { DialogService } from 'primeng/dynamicdialog';
 
 @Component({
   selector: 'app-bb-card',
@@ -43,8 +40,6 @@ import { DaytradeAlgorithms } from '@shared/enums/daytrade-algorithms.enum';
 export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   @Input() order: SmartOrder;
   @Input() tearDown: boolean;
-  chart: Chart;
-  volumeChart: Chart;
   alive: boolean;
   live: boolean;
   interval: number;
@@ -60,7 +55,6 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   color: string;
   warning: string;
   config: CardOptions;
-  showChart: boolean;
   tiles;
   bbandPeriod: number;
   dataInterval: string;
@@ -109,6 +103,8 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     private schedulerService: SchedulerService,
     private machineDaytradingService: MachineDaytradingService,
     private messageService: MessageService,
+    private scoreKeeperService: ScoreKeeperService,
+    private dialogService: DialogService,
     public dialog: MatDialog) { }
 
   ngOnInit() {
@@ -186,13 +182,6 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
 
     this.selectedAlgorithm = new FormControl();
     this.selectedAlgorithm.setValue(this.algorithmList[0]);
-
-    Highcharts.setOptions({
-      global: {
-        useUTC: false
-      }
-    });
-    this.showChart = false;
     this.bbandPeriod = 80;
     this.dataInterval = '1min';
 
@@ -308,10 +297,6 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
               total: results.totalTrades
             };
           }
-
-          if (results.signals) {
-            this.populateChart(results.signals);
-          }
           this.isBacktest = false;
         },
           error => {
@@ -322,53 +307,6 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     }, `${this.order.holding.symbol}_bbcard`, this.globalSettingsService.stopTime);
 
     this.tiles = this.daytradeService.buildTileList(this.orders);
-  }
-
-  populateChart(indicators) {
-    const volume = [];
-    const points = [];
-    const timestamps = [];
-
-    indicators.forEach(quote => {
-      if (quote.close) {
-        const closePrice = quote.close;
-        const time = moment.utc(quote.date).tz('America/New_York').valueOf();
-        const point: Point = {
-          y: closePrice
-        };
-
-        const vwmaDesc = quote.vwma ? `[vwma:${quote.vwma.toFixed(2)}]` : '';
-        const mfiDesc = `[mfi:${quote.mfiLeft}]`;
-
-        point.description = `${vwmaDesc}${mfiDesc}`;
-
-        point.description += `[macd: ${quote.recommendation.macd}] `;
-        point.description += `[bband: ${quote.recommendation.bband}]`;
-
-        if (quote.recommendation.recommendation.toLowerCase() === 'buy') {
-          point.marker = {
-            symbol: 'triangle',
-            fillColor: 'green',
-            radius: 5
-          };
-        } else if (quote.recommendation.recommendation.toLowerCase() === 'sell') {
-          point.marker = {
-            symbol: 'triangle-down',
-            fillColor: 'red',
-            radius: 5
-          };
-        }
-
-        points.push(point);
-        timestamps.push(time);
-        volume.push([
-          moment(quote.date).valueOf(), // the date
-          quote.volume // the volume
-        ]);
-      }
-    });
-
-    this.chart = this.initPriceChart(this.order.holding.symbol, timestamps, points);
   }
 
   async play() {
@@ -408,75 +346,6 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     this.tiles = this.daytradeService.buildTileList(this.orders);
-  }
-
-  initPriceChart(title, timestamps, seriesData): Chart {
-    return new Chart({
-      chart: {
-        type: 'spline',
-        marginLeft: 40, // Keep all charts left aligned
-        marginTop: 0,
-        marginBottom: 0,
-        width: 800,
-        height: 175
-      },
-      title: {
-        text: '',
-        style: {
-          display: 'none'
-        }
-      },
-      subtitle: {
-        text: '',
-        style: {
-          display: 'none'
-        }
-      },
-      legend: {
-        enabled: false
-      },
-      xAxis: {
-        type: 'datetime',
-        dateTimeLabelFormats: {
-          second: '%H:%M:%S',
-          minute: '%H:%M',
-          hour: '%H:%M'
-        },
-        labels: {
-          formatter: function () {
-            return moment(this.value).format('hh:mm');
-          }
-        },
-        categories: timestamps
-      },
-      tooltip: {
-        crosshairs: true,
-        shared: true,
-        formatter: function () {
-          return moment(this.x).format('hh:mm') + '<br><h3>Price:</h3> ' + Number(this.y).toFixed(2) + '<br>' +
-            '<h3>indicators:</h3> ' + this.points[0].point.options.description;
-        }
-      },
-      plotOptions: {
-        spline: {
-          marker: {
-            radius: 1,
-            lineColor: '#666666',
-            lineWidth: 1
-          }
-        },
-        series: {
-          marker: {
-            enabled: true
-          },
-          turboThreshold: 5000
-        }
-      },
-      series: [{
-        name: title,
-        data: seriesData
-      }]
-    });
   }
 
   stop() {
@@ -803,6 +672,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
 
   private daytradeBuy(quote: number, orderQuantity: number, timestamp: number, analysis) {
     if (orderQuantity > 0) {
+      orderQuantity = this.scoreKeeperService.modifier(this.order.holding.symbol, orderQuantity);
       this.backtestService.getLastPriceTiingo({ symbol: this.order.holding.symbol })
         .subscribe(tiingoQuote => {
           const lastPrice = tiingoQuote[0].last;
@@ -1049,10 +919,6 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     this.activeIndex = 1;
   }
 
-  toggleChart() {
-    this.showChart = !this.showChart;
-  }
-
   runMlBuySell() {
     if (this.config.MlBuySellAtClose) {
       const orderQuantity = this.firstFormGroup.value.quantity - this.buyCount;
@@ -1096,6 +962,12 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
 
   test() {
     this.play();
+    this.dialogService.open(BacktestTableComponent, {
+      data: {
+        symbol: this.order.holding.symbol
+      },
+      header: 'Previous day backtest'
+    });
   }
 
   ngOnDestroy() {

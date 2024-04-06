@@ -105,4 +105,13 @@ export class ScoreKeeperService {
   addReturns(stock: string, returns: number) {
     this.percentReturns[stock] = returns;
   }
+
+  modifier(stock: string, quantity: number) {
+    if (!this.lossTally[stock]) {
+      return Math.ceil(0.25 * quantity);
+    } else if (this.lossTally[stock] > 0) {
+      return Math.ceil(0.5);
+    }
+    return Math.ceil(1);
+  }
 }

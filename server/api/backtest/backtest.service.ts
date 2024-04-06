@@ -52,6 +52,7 @@ export interface BacktestResults {
   endDate?: number;
   upperResistance?: number;
   lowerResistance?: number;
+  profitableTrades?: any;
 }
 
 let startTime;
@@ -318,9 +319,9 @@ class BacktestService {
         } else {
           const recommendation: Recommendation = recommendationFn(indicator.close,
             indicator,
-            idx > 0 ? indicators[idx - 1] : null);
+            idx > 0 ? indicators[idx - 1] : null, false);
 
-          orderType = recommendation.recommendation;
+          orderType = recommendation.recommendation;          
           indicator.recommendation = recommendation;
         }
         orders = this.calcTrade(orders, indicator, orderType, avgPrice);
@@ -328,7 +329,7 @@ class BacktestService {
       }
     });
 
-    const ordersResults = {
+    return {
       algo: '',
       orderHistory: orders.history,
       net: orders.net,
@@ -336,12 +337,8 @@ class BacktestService {
       total: orders.total,
       invested: orders.total,
       profitableTrades: orders.profitableTrades,
-      totalTrades: orders.trades
-    };
-
-    return {
-      ...ordersResults,
-      signals: indicators,
+      totalTrades: orders.trades,
+      signals: indicators
     };
   }
 
@@ -376,7 +373,7 @@ class BacktestService {
       });
   }
 
-  createDaytradeRecommendation(price: number, indicator: Indicators, name = ''): Recommendation {
+  createDaytradeRecommendation(price: number, indicator: Indicators, name = '', includeData = true): Recommendation {
     let counter = {
       bullishCounter: 0,
       bearishCounter: 0,
@@ -394,8 +391,12 @@ class BacktestService {
       macd: DaytradeRecommendation.Neutral,
       demark9: DaytradeRecommendation.Neutral,
       bbandBreakout: DaytradeRecommendation.Neutral,
-      data: { price, indicator }
+      data: null
     };
+
+    if (includeData) {
+      recommendations.data = { price, indicator };
+    }
 
     const mfiRecommendation = AlgoService.checkMfi(indicator.mfiLeft);
 
