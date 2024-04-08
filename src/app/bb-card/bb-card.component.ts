@@ -14,7 +14,7 @@ import {
   PortfolioService,
   MachineLearningService
 } from '../shared';
-import { SmartOrder } from '../shared/models/smart-order';
+import { OrderTypes, SmartOrder } from '../shared/models/smart-order';
 import { Subscription } from 'rxjs/Subscription';
 import { CartService } from '../shared/services/cart.service';
 import { Indicators } from '../shared/models/indicators';
@@ -31,6 +31,7 @@ import { ServiceStatus } from '@shared/models/service-status';
 import { DaytradeAlgorithms } from '@shared/enums/daytrade-algorithms.enum';
 import { BacktestTableComponent } from '../backtest-table/backtest-table.component';
 import { DialogService } from 'primeng/dynamicdialog';
+import { BacktestTableService } from '../backtest-table/backtest-table.service';
 
 @Component({
   selector: 'app-bb-card',
@@ -105,6 +106,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     private messageService: MessageService,
     private scoreKeeperService: ScoreKeeperService,
     private dialogService: DialogService,
+    private backtestTableService: BacktestTableService,
     public dialog: MatDialog) { }
 
   ngOnInit() {
@@ -397,7 +399,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     this.order.positionCount = this.positionCount;
   }
 
-  sendBuy(buyOrder: SmartOrder) {
+  async sendBuy(buyOrder: SmartOrder) {
     if (buyOrder) {
       const log = `ORDER SENT ${buyOrder.side} ${buyOrder.quantity} ${buyOrder.holding.symbol}@${buyOrder.price}`;
 
@@ -415,7 +417,16 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
             this.stop();
           }
         };
-        this.daytradeService.sendBuy(buyOrder, 'limit', resolve, reject);
+        
+        if (this.order.type === OrderTypes.options && this.order.side.toLowerCase() === 'buy') {
+          const bullishStraddle = await this.backtestTableService.getCallTrade(this.order.holding.symbol);
+          const price = bullishStraddle.call.bid + bullishStraddle.put.bid;
+          console.log('built straddle', bullishStraddle);
+          this.portfolioService.sendTwoLegOrder(bullishStraddle.call.symbol, 
+            bullishStraddle.put.symbol, 1, price, false).subscribe();
+        } else {
+          this.daytradeService.sendBuy(buyOrder, 'limit', resolve, reject);
+        }
       } else {
         this.incrementBuy(buyOrder);
         console.log(`${moment(buyOrder.signalTime).format('hh:mm')} ${log}`);
@@ -671,6 +682,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private daytradeBuy(quote: number, orderQuantity: number, timestamp: number, analysis) {
+    this.daytradeService.sellDefaultHolding();
     if (orderQuantity > 0) {
       orderQuantity = this.scoreKeeperService.modifier(this.order.holding.symbol, orderQuantity);
       this.backtestService.getLastPriceTiingo({ symbol: this.order.holding.symbol })

@@ -502,4 +502,21 @@ export class DaytradeService {
           });
       });
   }
+
+  async sellDefaultHolding() {
+    const symbol = 'VTI';
+    const data = await this.portfolioService.getTdPortfolio()
+      .pipe().toPromise();
+
+    if (data) {
+      for (const holding of data) {
+        if (holding.instrument.symbol === symbol) {
+          const price = await this.portfolioService.getPrice(symbol).toPromise();
+          const order = this.cartService.buildOrder(symbol, holding.longQuantity, price, 'Sell');
+          this.sendSell(order, 'limit', () => { }, () => { }, () => { });
+          break;
+        }
+      }
+    }
+  }
 }

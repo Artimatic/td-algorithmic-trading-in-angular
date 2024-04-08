@@ -23,6 +23,7 @@ import { BacktestTableService } from '../backtest-table/backtest-table.service';
 import { PotentialTrade } from '../backtest-table/potential-trade.constant';
 import { BacktestTableComponent } from '../backtest-table/backtest-table.component';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { OrderTypes } from '@shared/models/smart-order';
 
 export interface PositionHoldings {
   name: string;
@@ -251,7 +252,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
             if (this.isTradingStarted) {
               this.executeOrderList();
             } else {
-              this.sellAtOpen('VTI');
               setTimeout(() => {
                 this.initializeOrders();
                 this.isTradingStarted = true;
@@ -1183,8 +1183,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.strategies = this.strategies.filter(s => s.key !== item.key || s.name !== item.name || s.date !== item.date);
   }
 
-  async placeholder() {
-    const symbol = 'MSFT';
+  async buildStraddle(symbol: string) {
     let optionStrategy = null;
     const backtestResults = await this.backtestTableService.getBacktestData(symbol);
     if (backtestResults && backtestResults.ml > 0.5) {
@@ -1212,12 +1211,23 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       useTrailingStopLoss: true,
       useTakeProfit: true,
       sellAtClose: false,
-      allocation: null
+      allocation: null,
+      primaryLeg: optionStrategy.call,
+      secondaryLeg: optionStrategy.put,
+      type: OrderTypes.options
     };
 
-    const price = optionStrategy.call.bid + optionStrategy.put.bid;
-    this.portfolioService.sendTwoLegOrder(optionStrategy.call.symbol, 
-      optionStrategy.put.symbol, 1, price, false).subscribe();
+    this.cartService.addToCart(order);
+  }
+
+  async placeholder() {
+    ['PFE', 'GOOGL'].forEach(async (val) => {
+      await this.buildStraddle(val);
+    });
+
+    // const price = optionStrategy.call.bid + optionStrategy.put.bid;
+    // this.portfolioService.sendTwoLegOrder(optionStrategy.call.symbol, 
+    //   optionStrategy.put.symbol, 1, price, false).subscribe();
 
     // this.dialogRef = this.dialogService.open(BacktestTableComponent, { header: 'Day trade Backtest' });
 
@@ -1258,25 +1268,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     const order = await this.buildBuyOrder(stock, 1);
     this.daytradeService.sendBuy(order, 'limit', () => { }, () => { });
     // }
-  }
-
-  async sellAtOpen(symbol: string) {
-    const data = await this.portfolioService.getTdPortfolio()
-      .pipe(
-        finalize(() => this.setLoading(false))
-      ).toPromise();
-
-    if (data) {
-      for (const holding of data) {
-        if (holding.instrument.symbol === symbol) {
-          const price = await this.portfolioService.getPrice(symbol).toPromise();
-          const order = this.buildOrder(symbol, holding.longQuantity, price, 'Sell',
-            1, null, null, null);
-          this.daytradeService.sendSell(order, 'limit', () => { }, () => { }, () => { });
-          break;
-        }
-      }
-    }
   }
 
   startFindingTrades() {

@@ -94,63 +94,6 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
     }];
 
     this.ordersStarted = 0;
-    this.portfolioService.getInstruments('SPY').subscribe((response) => {
-      const instruments = response.results[0];
-      const newHolding: Holding = {
-        instrument: instruments.url,
-        symbol: instruments.symbol,
-        name: instruments.name
-      };
-
-      const order: SmartOrder = {
-        holding: newHolding,
-        quantity: 10,
-        price: 28.24,
-        submitted: false,
-        pending: false,
-        side: 'DayTrade',
-        useTakeProfit: true,
-        useStopLoss: true,
-        lossThreshold: -0.002,
-        profitTarget: 0.004,
-        sellAtClose: true
-      };
-      this.spy = order;
-    },
-      (error) => {
-        this.snackBar.open('Error getting instruments for UPRO', 'Dismiss', {
-          duration: 2000,
-        });
-      });
-
-    this.portfolioService.getInstruments('TLT').subscribe((response) => {
-      const instruments = response.results[0];
-      const newHolding: Holding = {
-        instrument: instruments.url,
-        symbol: instruments.symbol,
-        name: instruments.name
-      };
-
-      const order: SmartOrder = {
-        holding: newHolding,
-        quantity: 10,
-        price: 28.24,
-        submitted: false,
-        pending: false,
-        side: 'DayTrade',
-        useTakeProfit: true,
-        useStopLoss: true,
-        lossThreshold: -0.002,
-        profitTarget: 0.004,
-        sellAtClose: true
-      };
-      this.tlt = order;
-    },
-      (error) => {
-        this.snackBar.open('Error getting instruments', 'Dismiss', {
-          duration: 2000,
-        });
-      });
 
     this.multibuttonOptions = [
       {
