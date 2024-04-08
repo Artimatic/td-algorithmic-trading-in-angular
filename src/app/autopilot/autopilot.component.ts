@@ -3,7 +3,7 @@ import { Subject } from 'rxjs';
 import { TimerObservable } from 'rxjs-compat/observable/TimerObservable';
 import { finalize, takeUntil, take } from 'rxjs/operators';
 import * as moment from 'moment-timezone';
-import { AiPicksService, AuthenticationService, BacktestService, CartService, MachineLearningService, PortfolioInfoHolding, PortfolioService, ReportingService, ScoreKeeperService, TradeService } from '@shared/services';
+import { AiPicksService, AuthenticationService, BacktestService, CartService, DaytradeService, MachineLearningService, PortfolioInfoHolding, PortfolioService, ReportingService, ScoreKeeperService, TradeService } from '@shared/services';
 import { SchedulerService } from '@shared/service/scheduler.service';
 import { BacktestResponse } from '../rh-table';
 import { SmartOrder } from '@shared/index';
@@ -193,6 +193,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     private findPatternService: FindPatternService,
     private machineLearningService: MachineLearningService,
     private globalSettingsService: GlobalSettingsService,
+    private daytradeService: DaytradeService,
     public dialogService: DialogService
   ) { }
 
@@ -216,7 +217,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
     this.display = true;
     this.startNewInterval();
-    this.interval = Math.abs(moment(this.getStartStopTime().startDateTime).diff(moment(), 'milliseconds'));
+    this.interval = Math.abs(moment(this.globalSettingsService.getStartStopTime().startDateTime).diff(moment(), 'milliseconds'));
     this.messageService.add({
       severity: 'success',
       summary: 'Autopilot started'
@@ -231,9 +232,10 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.timer = TimerObservable.create(1000, this.interval)
       .pipe(takeUntil(this.destroy$))
       .subscribe(async () => {
-        const startStopTime = this.getStartStopTime();
+        const startStopTime = this.globalSettingsService.getStartStopTime();
         if (moment().isAfter(moment(startStopTime.endDateTime).subtract(5, 'minutes')) &&
           moment().isBefore(moment(startStopTime.endDateTime))) {
+          this.buyAtClose('VTI')
           if (this.reportingService.logs.length > 0) {
             const profitLog = `Profit ${this.scoreKeeperService.total}`;
             this.reportingService.addAuditLog(null, profitLog);
@@ -249,6 +251,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
             if (this.isTradingStarted) {
               this.executeOrderList();
             } else {
+              this.sellAtOpen('VTI');
               setTimeout(() => {
                 this.initializeOrders();
                 this.isTradingStarted = true;
@@ -420,7 +423,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       } else {
         try {
           const predictionNum = await this.getPrediction('SH');
-    
+
           if (predictionNum > 0.6) {
             this.decreaseRiskTolerance();
             this.increaseDayTradeRiskTolerance();
@@ -609,7 +612,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     return null;
   }
 
-  async backtestList(cb = async (stock: string, mlResult: number) => { }, stockList: (PortfolioInfoHolding[] | any[]) = CurrentStockList) {
+  async backtestList(cb = async (stock: any, mlResult: number) => { }, stockList: (PortfolioInfoHolding[] | any[]) = CurrentStockList) {
     stockList.forEach(async (stock) => {
       const backtestResults = await this.backtestTableService.getBacktestData(stock.name);
       if (backtestResults) {
@@ -823,33 +826,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     }
   }
 
-  getStartStopTime() {
-    const endTime = '16:00';
-    const currentMoment = moment().tz('America/New_York').set({ hour: 9, minute: 40 });
-    const currentEndMoment = moment().tz('America/New_York').set({ hour: 16, minute: 0 });
-    const currentDay = currentMoment.day();
-    let startDate;
-
-    if (currentDay === 6) {
-      startDate = currentMoment.add({ day: 2 });
-    } else if (currentDay === 0) {
-      startDate = currentMoment.add({ day: 1 });
-    } else {
-      if (moment().isAfter(currentMoment) && moment().isBefore(currentEndMoment)) {
-        startDate = currentMoment;
-      } else {
-        startDate = moment().tz('America/New_York').set({ hour: 9, minute: 50 }).add(1, 'days');
-      }
-    }
-
-    const startDateTime = moment.tz(startDate.format(), 'America/New_York').toDate();
-    const endDateTime = moment.tz(`${startDate.format('YYYY-MM-DD')} ${endTime}`, 'America/New_York').toDate();
-    return {
-      startDateTime,
-      endDateTime
-    };
-  }
-
   getLastTradeDate() {
     return this.globalSettingsService.getLastTradeDate();
   }
@@ -865,7 +841,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     const startDate = moment().subtract(365, 'days').format('YYYY-MM-DD');
     this.setLoading(true);
     const balance: any = await this.portfolioService.getTdBalance().toPromise();
-    const totalValue = balance.cashBalance;
+    const totalValue = balance.buyingPower;
 
     const data = await this.portfolioService.getTdPortfolio()
       .pipe(
@@ -1073,7 +1049,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.cartService.addToCart(order, true);
   }
 
-  async portfolioBuy(holding: PortfolioInfoHolding,
+  async buildBuyOrder(holding: PortfolioInfoHolding,
     allocation: number,
     profitThreshold: number = null,
     stopLossThreshold: number = null) {
@@ -1084,6 +1060,14 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     const order = this.buildOrder(holding.name, quantity, price, 'Buy',
       orderSizePct, stopLossThreshold, profitThreshold,
       stopLossThreshold, allocation);
+    return order;
+  }
+
+  async portfolioBuy(holding: PortfolioInfoHolding,
+    allocation: number,
+    profitThreshold: number = null,
+    stopLossThreshold: number = null) {
+    const order = await this.buildBuyOrder(holding, allocation, profitThreshold, stopLossThreshold);
     this.cartService.addToCart(order);
   }
 
@@ -1200,7 +1184,42 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   async placeholder() {
-    this.dialogRef = this.dialogService.open(BacktestTableComponent, { header: 'Day trade Backtest'});
+    const symbol = 'MSFT';
+    let optionStrategy = null;
+    const backtestResults = await this.backtestTableService.getBacktestData(symbol);
+    if (backtestResults && backtestResults.ml > 0.5) {
+      optionStrategy = await this.backtestTableService.getCallTrade(symbol);
+    } else {
+      optionStrategy = await this.backtestTableService.getPutTrade(symbol);
+    }
+    console.log('optionStrategy', optionStrategy);
+
+    const order = {
+      holding: {
+        instrument: null,
+        symbol,
+      },
+      quantity: 1,
+      price: optionStrategy.call.bid + optionStrategy.put.bid,
+      submitted: false,
+      pending: false,
+      orderSize: 1,
+      side: 'Buy',
+      lossThreshold: -0.05,
+      profitTarget: 0.1,
+      trailingStop: -0.05,
+      useStopLoss: true,
+      useTrailingStopLoss: true,
+      useTakeProfit: true,
+      sellAtClose: false,
+      allocation: null
+    };
+
+    const price = optionStrategy.call.bid + optionStrategy.put.bid;
+    this.portfolioService.sendTwoLegOrder(optionStrategy.call.symbol, 
+      optionStrategy.put.symbol, 1, price, false).subscribe();
+
+    // this.dialogRef = this.dialogService.open(BacktestTableComponent, { header: 'Day trade Backtest' });
 
     // if (!this.startFindingTrades()) {
     //   if (this.timer) {
@@ -1218,6 +1237,46 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     //       }
     //     });
     // }
+  }
+
+  async buyAtClose(symbol: string) {
+    // const backtestResults = await this.backtestTableService.getBacktestData(symbol);
+    // if (backtestResults && backtestResults.ml > 0.5) {
+    const stock: PortfolioInfoHolding = {
+      name: symbol,
+      pl: 0,
+      netLiq: 0,
+      shares: 0,
+      alloc: 0,
+      recommendation: 'None',
+      buyReasons: '',
+      sellReasons: '',
+      buyConfidence: 0,
+      sellConfidence: 0,
+      prediction: null
+    };
+    const order = await this.buildBuyOrder(stock, 1);
+    this.daytradeService.sendBuy(order, 'limit', () => { }, () => { });
+    // }
+  }
+
+  async sellAtOpen(symbol: string) {
+    const data = await this.portfolioService.getTdPortfolio()
+      .pipe(
+        finalize(() => this.setLoading(false))
+      ).toPromise();
+
+    if (data) {
+      for (const holding of data) {
+        if (holding.instrument.symbol === symbol) {
+          const price = await this.portfolioService.getPrice(symbol).toPromise();
+          const order = this.buildOrder(symbol, holding.longQuantity, price, 'Sell',
+            1, null, null, null);
+          this.daytradeService.sendSell(order, 'limit', () => { }, () => { }, () => { });
+          break;
+        }
+      }
+    }
   }
 
   startFindingTrades() {

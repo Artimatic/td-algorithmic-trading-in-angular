@@ -207,6 +207,20 @@ export class PortfolioService {
     return this.http.post('/api/portfolio/v2/sell', body);
   }
 
+  sendTwoLegOrder(primaryLegSymbol: string, secondaryLegSymbol: string,
+    quantity: number, price: number, extended: boolean): Observable<any> {
+    const body = {
+      primaryLegSymbol,
+      secondaryLegSymbol,
+      quantity: quantity,
+      price: price,
+      type: 'NET_DEBIT',
+      extendedHours: extended,
+      accountId: this.getAccountId()
+    };
+    return this.http.post('/api/portfolio/v2/two-leg', body);
+  }
+
   getTdBalance(): Observable<any> {
     const accountId = this.getAccountId();
     const options = {

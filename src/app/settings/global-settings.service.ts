@@ -91,6 +91,33 @@ export class GlobalSettingsService {
     this.backtestDate = this.getLastTradeDate().format('YYYY-MM-DD');
   }
 
+  getStartStopTime() {
+    const endTime = '16:00';
+    const currentMoment = moment().tz('America/New_York').set({ hour: 9, minute: 40 });
+    const currentEndMoment = moment().tz('America/New_York').set({ hour: 16, minute: 0 });
+    const currentDay = currentMoment.day();
+    let startDate;
+
+    if (currentDay === 6) {
+      startDate = currentMoment.add({ day: 2 });
+    } else if (currentDay === 0) {
+      startDate = currentMoment.add({ day: 1 });
+    } else {
+      if (moment().isAfter(currentMoment) && moment().isBefore(currentEndMoment)) {
+        startDate = currentMoment;
+      } else {
+        startDate = moment().tz('America/New_York').set({ hour: 9, minute: 50 }).add(1, 'days');
+      }
+    }
+
+    const startDateTime = moment.tz(startDate.format(), 'America/New_York').toDate();
+    const endDateTime = moment.tz(`${startDate.format('YYYY-MM-DD')} ${endTime}`, 'America/New_York').toDate();
+    return {
+      startDateTime,
+      endDateTime
+    };
+  }
+
   getLastTradeDate() {
     const currentMoment = moment().tz('America/New_York').set({ hour: 9, minute: 50 });
     const currentDay = currentMoment.day();

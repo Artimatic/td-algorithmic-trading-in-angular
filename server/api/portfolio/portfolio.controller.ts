@@ -174,6 +174,19 @@ class PortfolioController extends BaseController {
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }
 
+  twoLegOrder(request, response) {
+    PortfolioService.sendTwoLegOrder(request.body.primaryLegSymbol,
+      request.body.secondaryLegSymbol,
+      request.body.quantity,
+      request.body.price,
+      request.body.type,
+      request.body.extendedHours,
+      request.body.accountId,
+      response)
+      .then((data) => BaseController.requestGetSuccessHandler(response, data))
+      .catch((err) => BaseController.requestErrorHandler(response, err));
+  }
+
   tdPosition(request, response) {
     PortfolioService.getTdPositions(request.query.accountId)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))

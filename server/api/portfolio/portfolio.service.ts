@@ -574,6 +574,74 @@ class PortfolioService {
       });
   }
 
+  
+  sendTwoLegOrder(primarySymbol,
+    seconarySymbol,
+    quantity,
+    price,
+    type = 'NET_DEBIT',
+    extendedHours = false, accountId, response) {
+    return this.renewTDAuth(accountId, response)
+      .then(() => {
+        return this.tdTwoLegOrder(primarySymbol,
+          seconarySymbol,
+          quantity,
+          price,
+          type,
+          extendedHours, accountId);
+      });
+  }
+
+  tdTwoLegOrder(primaryLegSymbol,
+    secondaryLegSymbol,
+    quantity,
+    price,
+    type,
+    extendedHours = false, accountId) {
+    const headers = {
+      'Accept': '*/*',
+      'Accept-Encoding': 'gzip',
+      'Accept-Language': 'en-US',
+      'Authorization': `Bearer ${this.access_token[accountId].token}`,
+      'Content-Type': 'application/json',
+    };
+
+    const options = {
+      uri: tdaUrl + `accounts/${accountId}/orders`,
+      headers: headers,
+      json: true,
+      gzip: true,
+      body: {
+        orderType: type,
+        session: extendedHours ? 'SEAMLESS' : 'NORMAL',
+        duration: 'DAY',
+        orderStrategyType: 'SINGLE',
+        complexOrderStrategyType: 'CUSTOM',
+        price: price,
+        orderLegCollection: [
+          {
+            instruction: 'BUY_TO_OPEN',
+            quantity: quantity,
+            instrument: {
+              symbol: primaryLegSymbol,
+              assetType: 'OPTION'
+            }
+          },
+          {
+            instruction: 'BUY_TO_OPEN',
+            quantity: quantity,
+            instrument: {
+              symbol: secondaryLegSymbol,
+              assetType: 'OPTION'
+            }
+          }
+        ]
+      }
+    };
+
+    return request.post(options);
+  }
+
   tdBuy(symbol,
     quantity,
     price,

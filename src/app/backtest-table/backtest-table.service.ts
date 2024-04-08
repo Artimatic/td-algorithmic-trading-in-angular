@@ -4,6 +4,8 @@ import { AiPicksService, BacktestService, PortfolioService } from '@shared/servi
 import { Stock } from '@shared/stock.interface';
 import { PotentialTrade, Strategy } from './potential-trade.constant';
 import * as moment from 'moment-timezone';
+import { SmartOrder } from '@shared/index';
+import { Straddle } from '@shared/models/options';
 
 @Injectable({
   providedIn: 'root'
@@ -40,7 +42,6 @@ export class BacktestTableService {
       }
 
       if (buySignals.length + sellSignals.length > 1) {
-
         const optionsData = await this.optionsDataService.getImpliedMove(symbol).toPromise();
         const optionsChain = optionsData.optionsChain.monthlyStrategyList;
         const instruments = await this.portfolioService.getInstrument(symbol).toPromise();
@@ -80,6 +81,54 @@ export class BacktestTableService {
       console.log(`Backtest table error ${symbol}`, new Date().toString(), error);
     }
     return null;
+  }
+
+  async getCallTrade(symbol: string): Promise <Straddle> {
+    const minExpiration = 65;
+    const optionsData = await this.optionsDataService.getImpliedMove(symbol).toPromise();
+    const optionsChain = optionsData.optionsChain;
+
+    const strategyList = optionsChain.monthlyStrategyList.find(element => element.daysToExp >= minExpiration);
+    const goal = optionsChain.underlying.last;
+
+    return strategyList.optionStrategyList.reduce((prev, curr) => {
+      if (!prev.call || (Math.abs(Number(curr.strategyStrike - goal)) < Math.abs(Number(prev.call.strikePrice) - goal))) {
+        if (curr.secondaryLeg.putCallInd.toLowerCase() === 'c') {
+          prev.call = JSON.parse(JSON.stringify(curr.secondaryLeg));
+        }
+      }
+      if (curr.strategyStrike < goal &&
+        (!prev.put ||
+          (Math.abs(Number(curr.strategyStrike) - goal) < Math.abs(Number(prev.put.strikePrice) - goal)))) {
+        if (curr.primaryLeg.putCallInd.toLowerCase() === 'p') {
+          prev.put = JSON.parse(JSON.stringify(curr.primaryLeg));
+        }
+      }
+      return prev;
+    }, { call: null, put: null });
+  }
+
+  async getPutTrade(symbol: string) {
+    const minExpiration = 65;
+    const optionsData = await this.optionsDataService.getImpliedMove(symbol).toPromise();
+    const optionsChain = optionsData.optionsChain;
+
+    const strategyList = optionsChain.monthlyStrategyList.find(element => element.daysToExp >= minExpiration);
+    const goal = optionsChain.underlying.last;
+
+    return strategyList.optionStrategyList.reduce((prev, curr) => {
+      if (curr.strategyStrike > goal && (!prev.call || (Math.abs(curr.strategyStrike - goal) < Math.abs(Number(prev.call.strikePrice) - goal)))) {
+        if (curr.secondaryLeg.putCallInd.toLowerCase() === 'c') {
+          prev.call = JSON.parse(JSON.stringify(curr.secondaryLeg));
+        }
+      }
+      if (!prev.put || (Math.abs(curr.strategyStrike - goal) < Math.abs(Number(prev.put.strikePrice) - goal))) {
+        if (curr.primaryLeg.putCallInd.toLowerCase() === 'p') {
+          prev.put = JSON.parse(JSON.stringify(curr.primaryLeg));
+        }
+      }
+      return prev;
+    }, { call: null, put: null });
   }
 
   addToResultStorage(result: Stock) {

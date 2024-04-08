@@ -56,6 +56,10 @@ export const tdBuy = (request, response) => {
   PortfolioController.tdBuy(request, response);
 }
 
+export const twoLegOrder = (request, response) => {
+  PortfolioController.twoLegOrder(request, response);
+}
+
 export const tdSell = (request, response) => {
   PortfolioController.tdSell(request, response);
 }
