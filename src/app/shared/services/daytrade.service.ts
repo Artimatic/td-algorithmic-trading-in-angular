@@ -504,17 +504,19 @@ export class DaytradeService {
   }
 
   async sellDefaultHolding() {
-    const symbol = 'VTI';
+    const default1 = 'VTI';
+    const default2 = 'UPRO';
     const data = await this.portfolioService.getTdPortfolio()
       .pipe().toPromise();
 
     if (data) {
       for (const holding of data) {
-        if (holding.instrument.symbol === symbol) {
-          const price = await this.portfolioService.getPrice(symbol).toPromise();
-          const order = this.cartService.buildOrder(symbol, holding.longQuantity, price, 'Sell');
+        if (holding.instrument.symbol === default1) {
+
+        } else if (holding.instrument.symbol === default2) {
+          const price = await this.portfolioService.getPrice(default2).toPromise();
+          const order = this.cartService.buildOrder(default2, holding.longQuantity, price, 'Sell');
           this.sendSell(order, 'limit', () => { }, () => { }, () => { });
-          break;
         }
       }
     }

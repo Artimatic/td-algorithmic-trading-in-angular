@@ -83,11 +83,35 @@ export class BacktestTableService {
     return null;
   }
 
-  async getCallTrade(symbol: string): Promise <Straddle> {
+  isPutHedge(goal: number, strike: number, impliedMovement: number) {
+    if (strike < goal) {
+      if ((goal - strike) / goal > (impliedMovement * -1)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  isCallHedge(goal: number, strike: number, impliedMovement: number) {
+    if (strike > goal) {
+      if ((goal - strike) / goal < impliedMovement) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  passesVolumeCheck(currTotalVolume, prevObj) {
+    return !prevObj || (currTotalVolume > prevObj.totalVolume);
+  }
+
+  async getCallTrade(symbol: string): Promise<Straddle> {
     const minExpiration = 65;
     const optionsData = await this.optionsDataService.getImpliedMove(symbol).toPromise();
     const optionsChain = optionsData.optionsChain;
-
+    const impliedMovement = optionsData.move;
     const strategyList = optionsChain.monthlyStrategyList.find(element => element.daysToExp >= minExpiration);
     const goal = optionsChain.underlying.last;
 
@@ -97,9 +121,9 @@ export class BacktestTableService {
           prev.call = JSON.parse(JSON.stringify(curr.secondaryLeg));
         }
       }
-      if (curr.strategyStrike < goal &&
-        (!prev.put ||
-          (Math.abs(Number(curr.strategyStrike) - goal) < Math.abs(Number(prev.put.strikePrice) - goal)))) {
+
+      if ((!prev.put && curr.strategyStrike < goal) ||
+        (this.isPutHedge(goal, curr.strategyStrike, impliedMovement) && this.passesVolumeCheck(curr.totalVolume, prev.put))) {
         if (curr.primaryLeg.putCallInd.toLowerCase() === 'p') {
           prev.put = JSON.parse(JSON.stringify(curr.primaryLeg));
         }
@@ -112,13 +136,15 @@ export class BacktestTableService {
     const minExpiration = 65;
     const optionsData = await this.optionsDataService.getImpliedMove(symbol).toPromise();
     const optionsChain = optionsData.optionsChain;
+    const impliedMovement = optionsData.move;
 
     const strategyList = optionsChain.monthlyStrategyList.find(element => element.daysToExp >= minExpiration);
     const goal = optionsChain.underlying.last;
 
     return strategyList.optionStrategyList.reduce((prev, curr) => {
-      if (curr.strategyStrike > goal && (!prev.call || (Math.abs(curr.strategyStrike - goal) < Math.abs(Number(prev.call.strikePrice) - goal)))) {
-        if (curr.secondaryLeg.putCallInd.toLowerCase() === 'c') {
+      if ((!prev.call && curr.strategyStrike > goal) ||
+        (this.isCallHedge(goal, curr.strategyStrike, impliedMovement) && this.passesVolumeCheck(curr.totalVolume, prev.call))) {
+        if (curr.primaryLeg.putCallInd.toLowerCase() === 'c') {
           prev.call = JSON.parse(JSON.stringify(curr.secondaryLeg));
         }
       }

@@ -2,12 +2,15 @@
   <p-card>
     <div class="card-content">
       <span>
-        <h4>
+        <h4 *ngIf="!order.primaryLeg||!order.secondaryLeg">
           {{order.holding.symbol}}
         </h4>
-        <h5>
-          {{order.type}}
-        </h5>
+        <h4 *ngIf="order.primaryLeg">
+          {{order.primaryLeg.symbol}}
+        </h4>
+        <h4 *ngIf="order.secondaryLeg">
+          {{order.secondaryLeg.symbol}}
+        </h4>
         <ul class="detail-list">
           <li>
             <b>Type</b> {{order.side}}

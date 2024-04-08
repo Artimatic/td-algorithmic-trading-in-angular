@@ -236,7 +236,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         const startStopTime = this.globalSettingsService.getStartStopTime();
         if (moment().isAfter(moment(startStopTime.endDateTime).subtract(5, 'minutes')) &&
           moment().isBefore(moment(startStopTime.endDateTime))) {
-          this.buyAtClose('VTI')
+          this.buyAtClose()
           if (this.reportingService.logs.length > 0) {
             const profitLog = `Profit ${this.scoreKeeperService.total}`;
             this.reportingService.addAuditLog(null, profitLog);
@@ -1052,10 +1052,11 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   async buildBuyOrder(holding: PortfolioInfoHolding,
     allocation: number,
     profitThreshold: number = null,
-    stopLossThreshold: number = null) {
+    stopLossThreshold: number = null,
+    useCashBalance = false) {
     const price = await this.portfolioService.getPrice(holding.name).toPromise();
-    const data = await this.portfolioService.getTdBalance().toPromise();
-    const quantity = this.getQuantity(price, allocation, data.availableFunds);
+    const balance = await this.portfolioService.getTdBalance().toPromise();
+    const quantity = this.getQuantity(price, allocation, useCashBalance? balance.cashBalance : balance.availableFunds);
     const orderSizePct = (this.riskToleranceList[this.riskCounter] > 0.5) ? 0.5 : 0.3;
     const order = this.buildOrder(holding.name, quantity, price, 'Buy',
       orderSizePct, stopLossThreshold, profitThreshold,
@@ -1221,7 +1222,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   async placeholder() {
-    ['PFE', 'GOOGL'].forEach(async (val) => {
+    ['PFE', 'GOOGL', 'SNOW'].forEach(async (val) => {
       await this.buildStraddle(val);
     });
 
@@ -1249,25 +1250,41 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     // }
   }
 
-  async buyAtClose(symbol: string) {
-    // const backtestResults = await this.backtestTableService.getBacktestData(symbol);
-    // if (backtestResults && backtestResults.ml > 0.5) {
-    const stock: PortfolioInfoHolding = {
-      name: symbol,
-      pl: 0,
-      netLiq: 0,
-      shares: 0,
-      alloc: 0,
-      recommendation: 'None',
-      buyReasons: '',
-      sellReasons: '',
-      buyConfidence: 0,
-      sellConfidence: 0,
-      prediction: null
-    };
-    const order = await this.buildBuyOrder(stock, 1);
-    this.daytradeService.sendBuy(order, 'limit', () => { }, () => { });
-    // }
+  async buyAtClose() {
+    const backtestResults = await this.backtestTableService.getBacktestData('VTI');
+    if (backtestResults && backtestResults.ml > 0.5) {
+      const stock: PortfolioInfoHolding = {
+        name: 'UPRO',
+        pl: 0,
+        netLiq: 0,
+        shares: 0,
+        alloc: 0,
+        recommendation: 'None',
+        buyReasons: '',
+        sellReasons: '',
+        buyConfidence: 0,
+        sellConfidence: 0,
+        prediction: null
+      };
+      const order = await this.buildBuyOrder(stock, 1, null, null, true);
+      this.daytradeService.sendBuy(order, 'limit', () => { }, () => { });
+    } else {
+      const stock: PortfolioInfoHolding = {
+        name: 'VTI',
+        pl: 0,
+        netLiq: 0,
+        shares: 0,
+        alloc: 0,
+        recommendation: 'None',
+        buyReasons: '',
+        sellReasons: '',
+        buyConfidence: 0,
+        sellConfidence: 0,
+        prediction: null
+      };
+      const order = await this.buildBuyOrder(stock, 1, null, null, true);
+      this.daytradeService.sendBuy(order, 'limit', () => { }, () => { });
+    }
   }
 
   startFindingTrades() {
