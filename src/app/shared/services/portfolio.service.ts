@@ -208,7 +208,7 @@ export class PortfolioService {
   }
 
   sendTwoLegOrder(primaryLegSymbol: string, secondaryLegSymbol: string,
-    quantity: number, price: number, extended: boolean): Observable<any> {
+    quantity: number, price: number, extended: boolean, orderId: string): Observable<any> {
     const body = {
       primaryLegSymbol,
       secondaryLegSymbol,
@@ -216,7 +216,8 @@ export class PortfolioService {
       price: price,
       type: 'NET_DEBIT',
       extendedHours: extended,
-      accountId: this.getAccountId()
+      accountId: this.getAccountId(),
+      orderId
     };
     return this.http.post('/api/portfolio/v2/two-leg', body);
   }

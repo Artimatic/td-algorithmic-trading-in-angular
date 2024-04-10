@@ -580,7 +580,7 @@ class PortfolioService {
     quantity,
     price,
     type = 'NET_DEBIT',
-    extendedHours = false, accountId, response) {
+    extendedHours = false, orderId, accountId, response) {
     return this.renewTDAuth(accountId, response)
       .then(() => {
         return this.tdTwoLegOrder(primarySymbol,
@@ -588,7 +588,7 @@ class PortfolioService {
           quantity,
           price,
           type,
-          extendedHours, accountId);
+          extendedHours, orderId, accountId);
       });
   }
 
@@ -597,7 +597,7 @@ class PortfolioService {
     quantity,
     price,
     type,
-    extendedHours = false, accountId) {
+    extendedHours = false, orderId, accountId) {
     const headers = {
       'Accept': '*/*',
       'Accept-Encoding': 'gzip',
@@ -618,6 +618,7 @@ class PortfolioService {
         orderStrategyType: 'SINGLE',
         complexOrderStrategyType: 'CUSTOM',
         price: price,
+        orderId,
         orderLegCollection: [
           {
             instruction: 'BUY_TO_OPEN',

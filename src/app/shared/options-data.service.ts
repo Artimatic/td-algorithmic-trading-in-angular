@@ -9,14 +9,14 @@ export class OptionsDataService {
 
   constructor(private http: HttpClient) { }
 
-  getImpliedMove(symbol: string): Observable<any> {
+  getImpliedMove(symbol: string, strikeCount = '10'): Observable<any> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
 
     const options = {
       headers,
       params: {
         symbol,
-        strikeCount: '4',
+        strikeCount,
         optionType: 'S'
       }
     };

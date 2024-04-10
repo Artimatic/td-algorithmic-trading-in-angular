@@ -88,6 +88,8 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   selectedAlgorithm: FormControl;
   algorithmList: any[];
 
+  currentBalance: number;
+
   constructor(private _formBuilder: FormBuilder,
     private backtestService: BacktestService,
     private daytradeService: DaytradeService,
@@ -420,10 +422,17 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
         
         if (this.order.type === OrderTypes.options && this.order.side.toLowerCase() === 'buy') {
           const bullishStraddle = await this.backtestTableService.getCallTrade(this.order.holding.symbol);
-          const price = bullishStraddle.call.bid + bullishStraddle.put.bid;
+          // const price = bullishStraddle.call.bid + bullishStraddle.put.bid;
+          const price = this.backtestTableService.findOptionsPrice(bullishStraddle.call.bid, bullishStraddle.call.ask) + 
+            this.backtestTableService.findOptionsPrice(bullishStraddle.put.bid, bullishStraddle.put.ask);
+          const orderQuantity = Math.floor(this.currentBalance / price)
+
+            console.log('orderQuantity', orderQuantity)
           console.log('built straddle', bullishStraddle);
+          const orderId = String(moment().valueOf());
+          
           this.portfolioService.sendTwoLegOrder(bullishStraddle.call.symbol, 
-            bullishStraddle.put.symbol, 1, price, false).subscribe();
+            bullishStraddle.put.symbol, 1, price, false, orderId).subscribe();
         } else {
           this.daytradeService.sendBuy(buyOrder, 'limit', resolve, reject);
         }
@@ -577,11 +586,13 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
       this.stop();
     } else if (analysis.recommendation.toLowerCase() === 'buy') {
       if (daytradeType === 'buy' || this.isDayTrading()) {
+        this.daytradeService.sellDefaultHolding();
+
         console.log('Received Buy recommendation: ', analysis, this.order.holding.symbol);
         this.machineDaytradingService.getPortfolioBalance().subscribe((data) => {
-          const currentBalance = data.cashBalance;
+          this.currentBalance = data.cashBalance;
           // const availableFunds = data.availableFunds;
-          const usage = (data.liquidationValue - currentBalance) / data.liquidationValue;
+          const usage = (data.liquidationValue - this.currentBalance) / data.liquidationValue;
 
           if (usage < this.globalSettingsService.maxAccountUsage) {
             const log = `${moment().format()} Received buy recommendation`;
@@ -593,8 +604,8 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
               this.buyCount,
               this.positionCount);
             const tradeCost = orderQuantity * quote;
-            if (tradeCost > currentBalance) {
-              orderQuantity = Math.floor(currentBalance / quote)
+            if (tradeCost > this.currentBalance) {
+              orderQuantity = Math.floor((this.currentBalance * this.order.allocation) / quote) | 1;
             }
             this.schedulerService.schedule(() => {
               this.machineLearningService
@@ -682,7 +693,6 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private daytradeBuy(quote: number, orderQuantity: number, timestamp: number, analysis) {
-    this.daytradeService.sellDefaultHolding();
     if (orderQuantity > 0) {
       orderQuantity = this.scoreKeeperService.modifier(this.order.holding.symbol, orderQuantity);
       this.backtestService.getLastPriceTiingo({ symbol: this.order.holding.symbol })

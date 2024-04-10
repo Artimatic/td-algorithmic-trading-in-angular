@@ -37,7 +37,9 @@ export class AddOptionsTradeComponent implements OnInit {
     } else {
       optionStrategy = await this.backtestTableService.getPutTrade(symbol);
     }
-    console.log('optionStrategy', optionStrategy);
+
+    const price = this.backtestTableService.findOptionsPrice(optionStrategy.call.bid, optionStrategy.call.ask) + this.backtestTableService.findOptionsPrice(optionStrategy.put.bid, optionStrategy.put.ask);
+    console.log('optionStrategy', optionStrategy, price);
 
     const order = {
       holding: {
@@ -45,7 +47,7 @@ export class AddOptionsTradeComponent implements OnInit {
         symbol,
       },
       quantity: 1,
-      price: optionStrategy.call.bid + optionStrategy.put.bid,
+      price,
       submitted: false,
       pending: false,
       orderSize: 1,
@@ -57,7 +59,7 @@ export class AddOptionsTradeComponent implements OnInit {
       useTrailingStopLoss: true,
       useTakeProfit: true,
       sellAtClose: false,
-      allocation: null,
+      allocation: 0.05,
       primaryLeg: optionStrategy.call,
       secondaryLeg: optionStrategy.put,
       type: OrderTypes.options

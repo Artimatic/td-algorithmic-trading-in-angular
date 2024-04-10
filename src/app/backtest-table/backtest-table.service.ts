@@ -42,7 +42,7 @@ export class BacktestTableService {
       }
 
       if (buySignals.length + sellSignals.length > 1) {
-        const optionsData = await this.optionsDataService.getImpliedMove(symbol).toPromise();
+        const optionsData = await this.optionsDataService.getImpliedMove(symbol, '5').toPromise();
         const optionsChain = optionsData.optionsChain.monthlyStrategyList;
         const instruments = await this.portfolioService.getInstrument(symbol).toPromise();
         const callsCount = optionsData.strategy.secondaryLeg.totalVolume;
@@ -85,7 +85,7 @@ export class BacktestTableService {
 
   isPutHedge(goal: number, strike: number, impliedMovement: number) {
     if (strike < goal) {
-      if ((goal - strike) / goal > (impliedMovement * -1)) {
+      if (((goal - strike) / goal) < (impliedMovement * -1)) {
         return true;
       }
     }
@@ -95,7 +95,7 @@ export class BacktestTableService {
 
   isCallHedge(goal: number, strike: number, impliedMovement: number) {
     if (strike > goal) {
-      if ((goal - strike) / goal < impliedMovement) {
+      if (((strike - goal) / goal) > impliedMovement) {
         return true;
       }
     }
@@ -124,7 +124,7 @@ export class BacktestTableService {
       }
 
       if ((!prev.put && curr.strategyStrike < goal) ||
-        (this.isPutHedge(goal, curr.strategyStrike, impliedMovement) && this.passesVolumeCheck(curr.totalVolume, prev.put))) {
+        (this.isPutHedge(goal, curr.strategyStrike, impliedMovement) && this.passesVolumeCheck(curr.primaryLeg.totalVolume, prev.put))) {
         if (curr.primaryLeg.putCallInd.toLowerCase() === 'p') {
           prev.put = JSON.parse(JSON.stringify(curr.primaryLeg));
         }
@@ -145,7 +145,7 @@ export class BacktestTableService {
 
     return strategyList.optionStrategyList.reduce((prev, curr) => {
       if ((!prev.call && curr.strategyStrike > goal) ||
-        (this.isCallHedge(goal, curr.strategyStrike, impliedMovement) && this.passesVolumeCheck(curr.totalVolume, prev.call))) {
+        (this.isCallHedge(goal, curr.strategyStrike, impliedMovement) && this.passesVolumeCheck(curr.secondaryLeg.totalVolume, prev.call))) {
         if (curr.secondaryLeg.putCallInd.toLowerCase() === 'c') {
           prev.call = JSON.parse(JSON.stringify(curr.secondaryLeg));
         }
@@ -157,6 +157,10 @@ export class BacktestTableService {
       }
       return prev;
     }, { call: null, put: null });
+  }
+
+  findOptionsPrice(bid: number, ask: number): number {
+    return Number(((bid + ask)/2).toFixed(1) + '0');
   }
 
   addToResultStorage(result: Stock) {

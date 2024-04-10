@@ -181,6 +181,7 @@ class PortfolioController extends BaseController {
       request.body.price,
       request.body.type,
       request.body.extendedHours,
+      request.body.orderId,
       request.body.accountId,
       response)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))

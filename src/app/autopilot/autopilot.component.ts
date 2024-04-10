@@ -82,7 +82,8 @@ export enum Strategy {
   DaytradeFullList = 'DaytradeFullList',
   StateMachine = 'StateMachine',
   SingleStockPick = 'SingleStockPick',
-  MLSpy = 'MLSpy'
+  MLSpy = 'MLSpy',
+  OptionsStraddle = 'OptionsStraddle'
 }
 
 export enum RiskTolerance {
@@ -119,6 +120,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   strategyCounter = null;
   maxTradeCount = 7;
   strategyList = [
+    Strategy.OptionsStraddle,
     Strategy.MLSpy,
     // Strategy.SingleStockPick,
     // Strategy.StateMachine,
@@ -444,6 +446,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.findPatternService.buildTargetPatterns();
     //this.checkPersonalLists();
     switch (strategy) {
+      case Strategy.OptionsStraddle: {
+        break;
+      }
       case Strategy.Swingtrade: {
         const callback = async (symbol: string, mlResult: number) => {
           if (mlResult > 0.65) {
