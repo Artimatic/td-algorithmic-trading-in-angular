@@ -174,7 +174,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
       useTrailingStopLoss: true,
       useTakeProfit: true,
       sellAtClose: false,
-      allocation: null,
+      allocation: 0.1,
       primaryLeg: optionStrategy.call,
       secondaryLeg: optionStrategy.put,
       type: OrderTypes.options
