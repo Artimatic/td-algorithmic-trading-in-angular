@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
-import { SmartOrder } from '../shared/models/smart-order';
+import { OrderTypes, SmartOrder } from '../shared/models/smart-order';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import * as _ from 'lodash';
 import { CartService } from '../shared/services/cart.service';
@@ -11,6 +11,7 @@ import {
 import { MachineDaytradingService } from '../machine-daytrading/machine-daytrading.service';
 import { SchedulerService } from '@shared/service/scheduler.service';
 import { MenuItem, SelectItem } from 'primeng/api';
+import { BacktestTableService } from '../backtest-table/backtest-table.service';
 
 export interface DefaultOrders {
   label: string;
@@ -47,6 +48,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
 
   constructor(private _formBuilder: FormBuilder,
     private cartService: CartService,
+    private backtestTableService: BacktestTableService,
     private schedulerService: SchedulerService,
     private machineDaytradingService: MachineDaytradingService) { }
 
@@ -84,7 +86,8 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
     this.sides = [
       { label: 'Buy', value: 'Buy' },
       { label: 'Sell', value: 'Sell' },
-      { label: 'DayTrade', value: 'DayTrade' }
+      { label: 'DayTrade', value: 'DayTrade' },
+      { label: 'Straddle', value: 'Straddle' }
     ];
 
     this.setAddOrderForm();
@@ -143,12 +146,54 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
     }, 'adding_order', null, true, 3000);
   }
 
+  async buildStraddle(symbol: string) {
+    let optionStrategy = null;
+    const backtestResults = await this.backtestTableService.getBacktestData(symbol);
+    if (backtestResults && backtestResults.ml > 0.5) {
+      optionStrategy = await this.backtestTableService.getCallTrade(symbol);
+    } else {
+      optionStrategy = await this.backtestTableService.getPutTrade(symbol);
+    }
+    console.log('optionStrategy', optionStrategy);
+
+    const order = {
+      holding: {
+        instrument: null,
+        symbol,
+      },
+      quantity: 1,
+      price: optionStrategy.call.bid + optionStrategy.put.bid,
+      submitted: false,
+      pending: false,
+      orderSize: 1,
+      side: 'Buy',
+      lossThreshold: -0.05,
+      profitTarget: 0.1,
+      trailingStop: -0.05,
+      useStopLoss: true,
+      useTrailingStopLoss: true,
+      useTakeProfit: true,
+      sellAtClose: false,
+      allocation: null,
+      primaryLeg: optionStrategy.call,
+      secondaryLeg: optionStrategy.put,
+      type: OrderTypes.options
+    };
+
+    this.cartService.addToCart(order);
+  }
+
+
   addCustomList() {
     if (this.addOrderFormGroup.valid) {
-      const stock = this.addOrderFormGroup.value.symbol;
-      const allocationPct = this.addOrderFormGroup.value.allocation;
-      const total = this.cashBalance;
-      this.addOrder(stock, allocationPct, total);
+      if (this.addOrderFormGroup.value.side === 'Straddle') {
+        this.buildStraddle(this.addOrderFormGroup.value.symbol);
+      } else {
+        const stock = this.addOrderFormGroup.value.symbol;
+        const allocationPct = this.addOrderFormGroup.value.allocation;
+        const total = this.cashBalance;
+        this.addOrder(stock, allocationPct, total);
+      }
 
       this.errorMsg = '';
     } else {

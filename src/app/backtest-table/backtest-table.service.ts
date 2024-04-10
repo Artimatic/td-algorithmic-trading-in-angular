@@ -64,12 +64,12 @@ export class BacktestTableService {
           ml: latestMlResult ? latestMlResult.value : null,
           impliedMovement: optionsData.move,
           optionsVolume: optionsVolume,
-          marketCap: instruments[symbol].fundamental.marketCap,
+          marketCap: instruments[symbol]?.fundamental.marketCap,
           strongbuySignals: [],
           buySignals: buySignals,
           strongsellSignals: [],
           sellSignals: sellSignals,
-          high52: instruments[symbol].fundamental.high52,
+          high52: instruments[symbol]?.fundamental.high52,
           backtestDate: moment().format(),
           optionsChainLength: optionsChain.length
         };
@@ -108,6 +108,7 @@ export class BacktestTableService {
   }
 
   async getCallTrade(symbol: string): Promise<Straddle> {
+    console.log('getting call trade');
     const minExpiration = 65;
     const optionsData = await this.optionsDataService.getImpliedMove(symbol).toPromise();
     const optionsChain = optionsData.optionsChain;
@@ -133,6 +134,7 @@ export class BacktestTableService {
   }
 
   async getPutTrade(symbol: string) {
+    console.log('getting put trade');
     const minExpiration = 65;
     const optionsData = await this.optionsDataService.getImpliedMove(symbol).toPromise();
     const optionsChain = optionsData.optionsChain;
@@ -144,7 +146,7 @@ export class BacktestTableService {
     return strategyList.optionStrategyList.reduce((prev, curr) => {
       if ((!prev.call && curr.strategyStrike > goal) ||
         (this.isCallHedge(goal, curr.strategyStrike, impliedMovement) && this.passesVolumeCheck(curr.totalVolume, prev.call))) {
-        if (curr.primaryLeg.putCallInd.toLowerCase() === 'c') {
+        if (curr.secondaryLeg.putCallInd.toLowerCase() === 'c') {
           prev.call = JSON.parse(JSON.stringify(curr.secondaryLeg));
         }
       }

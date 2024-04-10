@@ -89,6 +89,7 @@ import { AutopilotComponent } from './autopilot/autopilot.component';
 import { RippleModule } from 'primeng/ripple';
 import { BacktestTableComponent } from './backtest-table/backtest-table.component';
 import { StrategyFinderComponent } from './backtest-table/strategy-finder/strategy-finder.component';
+import { AddOptionsTradeComponent } from './autopilot/add-options-trade/add-options-trade.component';
 
 @NgModule({
   declarations: [
@@ -138,6 +139,7 @@ import { StrategyFinderComponent } from './backtest-table/strategy-finder/strate
     AutopilotComponent,
     BacktestTableComponent,
     StrategyFinderComponent,
+    AddOptionsTradeComponent,
   ],
   entryComponents: [
     LoginDialogComponent,
