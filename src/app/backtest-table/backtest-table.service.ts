@@ -85,7 +85,8 @@ export class BacktestTableService {
 
   isPutHedge(goal: number, strike: number, impliedMovement: number) {
     if (strike < goal) {
-      if (((goal - strike) / goal) < (impliedMovement * -1)) {
+      const diff = ((goal - strike) / goal);
+      if (diff > (impliedMovement * -1)) {
         return true;
       }
     }
@@ -95,7 +96,8 @@ export class BacktestTableService {
 
   isCallHedge(goal: number, strike: number, impliedMovement: number) {
     if (strike > goal) {
-      if (((strike - goal) / goal) > impliedMovement) {
+      const diff = ((strike - goal) / goal);
+      if (diff < impliedMovement) {
         return true;
       }
     }
