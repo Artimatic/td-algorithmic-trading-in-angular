@@ -47,7 +47,7 @@ export class BacktestTableService {
         const optionsChain = optionsData.optionsChain.monthlyStrategyList;
         const instruments = await this.portfolioService.getInstrument(symbol).toPromise();
         const callsCount = optionsData.optionsChain.monthlyStrategyList[0].optionStrategyList[0].secondaryLeg.totalVolume;
-        const putsCount = optionsData.strategy.optionsChain.monthlyStrategyList[0].optionStrategyList[0].primaryLeg.totalVolume;
+        const putsCount = optionsData.optionsChain.monthlyStrategyList[0].optionStrategyList[0].primaryLeg.totalVolume;
         const optionsVolume = Number(callsCount) + Number(putsCount);
         let latestMlResult = await this.aiPicksService.trainAndActivate(symbol);
 
