@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
 import { OptionsDataService } from '@shared/options-data.service';
-import { AiPicksService, BacktestService, PortfolioService } from '@shared/services';
+import { AiPicksService, BacktestService, CartService, PortfolioService } from '@shared/services';
 import { Stock } from '@shared/stock.interface';
 import { PotentialTrade, Strategy } from './potential-trade.constant';
 import * as moment from 'moment-timezone';
-import { SmartOrder } from '@shared/index';
 import { Straddle } from '@shared/models/options';
+import { OrderTypes } from '@shared/models/smart-order';
 
 @Injectable({
   providedIn: 'root'
@@ -17,7 +17,8 @@ export class BacktestTableService {
   constructor(private backtestService: BacktestService,
     private aiPicksService: AiPicksService,
     private optionsDataService: OptionsDataService,
-    private portfolioService: PortfolioService) { }
+    private portfolioService: PortfolioService,
+    private cartService: CartService) { }
 
   async getBacktestData(symbol: string) {
     const current = moment().format('YYYY-MM-DD');
@@ -45,8 +46,8 @@ export class BacktestTableService {
         const optionsData = await this.optionsDataService.getImpliedMove(symbol, '5').toPromise();
         const optionsChain = optionsData.optionsChain.monthlyStrategyList;
         const instruments = await this.portfolioService.getInstrument(symbol).toPromise();
-        const callsCount = optionsData.strategy.secondaryLeg.totalVolume;
-        const putsCount = optionsData.strategy.primaryLeg.totalVolume;
+        const callsCount = optionsData.optionsChain.monthlyStrategyList[0].optionStrategyList[0].secondaryLeg.totalVolume;
+        const putsCount = optionsData.strategy.optionsChain.monthlyStrategyList[0].optionStrategyList[0].primaryLeg.totalVolume;
         const optionsVolume = Number(callsCount) + Number(putsCount);
         let latestMlResult = await this.aiPicksService.trainAndActivate(symbol);
 
@@ -350,5 +351,33 @@ export class BacktestTableService {
         localStorage.setItem('tradingStrategy', JSON.stringify(newStorageObj));
       }
     }
+  }
+
+  addStraddle(symbol: string, price: number, optionStrategy: Straddle) {
+    const order = {
+      holding: {
+        instrument: null,
+        symbol,
+      },
+      quantity: 1,
+      price,
+      submitted: false,
+      pending: false,
+      orderSize: 1,
+      side: 'Buy',
+      lossThreshold: -0.05,
+      profitTarget: 0.1,
+      trailingStop: -0.05,
+      useStopLoss: true,
+      useTrailingStopLoss: true,
+      useTakeProfit: true,
+      sellAtClose: false,
+      allocation: 0.05,
+      primaryLeg: optionStrategy.call,
+      secondaryLeg: optionStrategy.put,
+      type: OrderTypes.options
+    };
+
+    this.cartService.addToCart(order);
   }
 }

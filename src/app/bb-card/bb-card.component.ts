@@ -425,14 +425,13 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
           // const price = bullishStraddle.call.bid + bullishStraddle.put.bid;
           const price = this.backtestTableService.findOptionsPrice(bullishStraddle.call.bid, bullishStraddle.call.ask) + 
             this.backtestTableService.findOptionsPrice(bullishStraddle.put.bid, bullishStraddle.put.ask);
-          const orderQuantity = Math.floor(this.currentBalance / price)
+          const orderQuantity = Math.floor(this.currentBalance * (this.order?.allocation || 0.01) / price)
 
-            console.log('orderQuantity', orderQuantity)
+          console.log('orderQuantity', orderQuantity)
           console.log('built straddle', bullishStraddle);
-          const orderId = String(moment().valueOf());
           
           this.portfolioService.sendTwoLegOrder(bullishStraddle.call.symbol, 
-            bullishStraddle.put.symbol, 1, price, false, orderId).subscribe();
+            bullishStraddle.put.symbol, 1, price, false).subscribe();
         } else {
           this.daytradeService.sendBuy(buyOrder, 'limit', resolve, reject);
         }

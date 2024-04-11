@@ -446,9 +446,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.findPatternService.buildTargetPatterns();
     //this.checkPersonalLists();
     switch (strategy) {
-      case Strategy.OptionsStraddle: {
-        break;
-      }
       case Strategy.Swingtrade: {
         const callback = async (symbol: string, mlResult: number) => {
           if (mlResult > 0.65) {
@@ -545,7 +542,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         }
         break;
       default: {
-        const callback = async (symbol: string, prediction: number) => {
+        const callback = async (symbol: string, prediction: number, backtestData: any) => {
           if (prediction > 0.6) {
             const stock: PortfolioInfoHolding = {
               name: symbol,
@@ -572,7 +569,13 @@ export class AutopilotComponent implements OnInit, OnDestroy {
                   await this.addDaytrade(stock.name);
                 }
               } else {
-                await this.addBuy(stock);
+                if (backtestData?.optionsVolume > 1000) {
+                  const optionStrategy = await this.backtestTableService.getCallTrade(symbol);
+                  const price = this.backtestTableService.findOptionsPrice(optionStrategy.call.bid, optionStrategy.call.ask) + this.backtestTableService.findOptionsPrice(optionStrategy.put.bid, optionStrategy.put.ask);
+                  this.backtestTableService.addStraddle(symbol, price, optionStrategy);
+                } else {
+                  await this.addBuy(stock);
+                }
               }
             } catch (error) {
               console.log('error getting training results ', error);
@@ -632,7 +635,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.backtestTableService.getBacktestData(stock);
   }
 
-  async findSwingtrades(cb = async (stock: string, mlResult: number) => { }, stockList: (PortfolioInfoHolding[] | any[]) = CurrentStockList) {
+  async findSwingtrades(cb = async (stock: string, mlResult: number, backtestResults: any) => { }, stockList: (PortfolioInfoHolding[] | any[]) = CurrentStockList) {
     if (stockList) {
       this.machineDaytradingService.setCurrentStockList(stockList);
     } else {
@@ -651,7 +654,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       } while (found(stock))
       const backtestResults = await this.backtestTableService.getBacktestData(stock);
       if (backtestResults) {
-        cb(stock, backtestResults.ml);
+        cb(stock, backtestResults.ml, backtestResults);
       }
       counter--;
     }
