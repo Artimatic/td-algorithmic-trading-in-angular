@@ -275,9 +275,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           console.log('Running backtest at', moment().format(), ' start time:', startStopTime.startDateTime);
           this.runBackTest();
           this.lastInterval = moment();
-        } else if (moment().diff(this.lastInterval, 'hours') > 2) {
           this.startFindingTrades();
-          this.lastInterval = moment();
         }
 
         // if (this.cartService.otherOrders.length + this.cartService.buyOrders.length + this.cartService.sellOrders.length < this.maxTradeCount) {
@@ -914,7 +912,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           }
         }
       }
-      this.checkIfTooManyHoldings(this.currentHoldings);
+      // this.checkIfTooManyHoldings(this.currentHoldings);
       console.log('current holdings', this.currentHoldings);
     }
   }
@@ -1065,7 +1063,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     useCashBalance = false) {
     const price = await this.portfolioService.getPrice(holding.name).toPromise();
     const balance = await this.portfolioService.getTdBalance().toPromise();
-    const quantity = this.getQuantity(price, allocation, useCashBalance? balance.cashBalance : balance.availableFunds);
+    const quantity = this.getQuantity(price, allocation, useCashBalance ? balance.cashBalance : balance.availableFunds);
     const orderSizePct = (this.riskToleranceList[this.riskCounter] > 0.5) ? 0.5 : 0.3;
     const order = this.buildOrder(holding.name, quantity, price, 'Buy',
       orderSizePct, stopLossThreshold, profitThreshold,
@@ -1195,7 +1193,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   async placeholder() {
     this.dialogService.open(AddOptionsTradeComponent, {
-      header: 'Add options trade'
+      header: 'Add options trade',
+      contentStyle: { 'overflow-y': 'unset'}
     });
 
     // const price = optionStrategy.call.bid + optionStrategy.put.bid;

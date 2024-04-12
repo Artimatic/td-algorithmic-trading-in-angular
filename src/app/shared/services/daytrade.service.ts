@@ -512,7 +512,9 @@ export class DaytradeService {
     if (data) {
       for (const holding of data) {
         if (holding.instrument.symbol === default1) {
-
+          const price = await this.portfolioService.getPrice(default1).toPromise();
+          const order = this.cartService.buildOrder(default1, holding.longQuantity, price, 'Sell');
+          this.sendSell(order, 'limit', () => { }, () => { }, () => { });
         } else if (holding.instrument.symbol === default2) {
           const price = await this.portfolioService.getPrice(default2).toPromise();
           const order = this.cartService.buildOrder(default2, holding.longQuantity, price, 'Sell');

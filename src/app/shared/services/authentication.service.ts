@@ -3,9 +3,9 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 import { Account } from '../account';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { RedirectLoginDialogComponent } from '../../redirect-login-dialog/redirect-login-dialog.component';
 import { DialogService } from 'primeng/dynamicdialog';
+import { MessageService } from 'primeng/api';
 
 export interface TdaAccount {
   accountId: string;
@@ -22,8 +22,8 @@ export class AuthenticationService {
   public selectedTdaAccount: TdaAccount;
 
   constructor(private http: HttpClient,
-    public dialogService: DialogService,
-    public snackBar: MatSnackBar) { }
+    private dialogService: DialogService,
+    private messageService: MessageService) { }
 
   openLoginDialog(): void {
     this.dialogService.open(RedirectLoginDialogComponent, {
@@ -103,16 +103,25 @@ export class AuthenticationService {
 
     this.checkCredentials(this.selectedTdaAccount.accountId)
       .subscribe(() => {
-        this.snackBar.open('Credentials selected.', 'Dismiss', { duration: 2000 });
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Credentials selected'
+        });
       }, () => {
         if (this.selectedTdaAccount.consumerKey && this.selectedTdaAccount.refreshKey) {
           this.setTdaAccount(this.selectedTdaAccount.accountId,
             this.selectedTdaAccount.consumerKey,
             this.selectedTdaAccount.refreshKey).subscribe(() => { }, () => {
-              this.snackBar.open('Current selected account info is missing. Reenter credentials.', 'Dismiss');
+              this.messageService.add({
+                severity: 'danger',
+                summary: 'Current selected account info is missing. Reenter credentials.'
+              });
             });
         } else {
-          this.snackBar.open('Current selected account info is missing. Reenter credentials.', 'Dismiss');
+          this.messageService.add({
+            severity: 'danger',
+            summary: 'Current selected account info is missing. Reenter credentials.'
+          });
         }
       });
   }

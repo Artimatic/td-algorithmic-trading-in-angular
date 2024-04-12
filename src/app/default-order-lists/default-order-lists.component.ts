@@ -156,31 +156,9 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
     }
     console.log('optionStrategy', optionStrategy);
 
-    const order = {
-      holding: {
-        instrument: null,
-        symbol,
-      },
-      quantity: 1,
-      price: optionStrategy.call.bid + optionStrategy.put.bid,
-      submitted: false,
-      pending: false,
-      orderSize: 1,
-      side: 'Buy',
-      lossThreshold: -0.05,
-      profitTarget: 0.1,
-      trailingStop: -0.05,
-      useStopLoss: true,
-      useTrailingStopLoss: true,
-      useTakeProfit: true,
-      sellAtClose: false,
-      allocation: 0.1,
-      primaryLeg: optionStrategy.call,
-      secondaryLeg: optionStrategy.put,
-      type: OrderTypes.options
-    };
+    const price = this.backtestTableService.findOptionsPrice(optionStrategy.call.bid, optionStrategy.call.ask) + this.backtestTableService.findOptionsPrice(optionStrategy.put.bid, optionStrategy.put.ask);
 
-    this.cartService.addToCart(order);
+    this.backtestTableService.addStraddle(symbol, price, optionStrategy);
   }
 
 

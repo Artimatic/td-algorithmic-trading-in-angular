@@ -1,0 +1,12 @@
+<div>
+    <div class="order-form-item">
+        <p-autoComplete [(ngModel)]="symbolsQuery" [baseZIndex]="100000" [suggestions]="suggestionsArr" (completeMethod)="filterItems($event)"
+            field="label" [multiple]="true" completeOnFocus="true">
+        </p-autoComplete>
+    </div>
+    <div class="order-form-item">
+        <button *ngIf="!isLoading" pButton type="button" label="Ok" (click)="processList()" class="ui-button-success"
+            type="submit" (keyup.enter)="processList()"></button>
+        <p-spinner *ngIf="isLoading"></p-spinner>
+    </div>
+</div>

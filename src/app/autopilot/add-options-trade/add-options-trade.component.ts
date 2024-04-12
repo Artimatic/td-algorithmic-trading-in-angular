@@ -1,7 +1,6 @@
-import { Component, OnInit } from '@angular/core';
-import { FormControl, FormGroup } from '@angular/forms';
-import { OrderTypes } from '@shared/models/smart-order';
-import { CartService } from '@shared/services';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { DynamicDialogRef } from 'primeng/dynamicdialog';
+import { Subject } from 'rxjs';
 import { BacktestTableService } from 'src/app/backtest-table/backtest-table.service';
 
 @Component({
@@ -9,23 +8,39 @@ import { BacktestTableService } from 'src/app/backtest-table/backtest-table.serv
   templateUrl: './add-options-trade.component.html',
   styleUrls: ['./add-options-trade.component.css']
 })
-export class AddOptionsTradeComponent implements OnInit {
-  formGroup: FormGroup | undefined;
+export class AddOptionsTradeComponent implements OnInit, OnDestroy {
+  symbolsQuery = null;
+  defaultSuggestions = [{ label: 'PFE,GOOGL,SNOW' }];
+  suggestionsArr = [];
+  processSymbol$ = new Subject<string>();
+  symbolsArr = [];
+  isLoading = false;
 
   constructor(private backtestTableService: BacktestTableService,
-    private cartService: CartService) { }
+    private ref: DynamicDialogRef) { }
 
 
   ngOnInit() {
-    this.formGroup = new FormGroup({
-      text: new FormControl(null)
+    const storedSuggestions = this.backtestTableService.getStorage('straddle_suggestions');
+    for (const s in storedSuggestions) {
+      this.suggestionsArr.push({label: s})
+    }
+    this.suggestionsArr.push(this.defaultSuggestions);
+    this.processSymbol$.subscribe(sym => {
+      this.buildStraddle(sym);
     });
-    this.execute();
   }
 
-  execute() {
-    ['PFE', 'GOOGL', 'SNOW'].forEach(async (val) => {
-      await this.buildStraddle(val);
+  processList() {
+    this.isLoading = true;
+    this.symbolsQuery.forEach(query => {
+      const symbol = query.label;
+      if (symbol.includes(',')) {
+        this.symbolsArr = query.label.trim().toUpperCase().split(',');
+        this.buildStraddle(this.symbolsArr.pop());
+      } else {
+        this.buildStraddle(symbol);
+      }
     });
   }
 
@@ -42,5 +57,40 @@ export class AddOptionsTradeComponent implements OnInit {
     console.log('optionStrategy', optionStrategy, price);
 
     this.backtestTableService.addStraddle(symbol, price, optionStrategy);
+    this.saveToStorage(symbol);
+    if (this.symbolsArr.length) {
+      this.processSymbol$.next(this.symbolsArr.pop());
+    } else {
+      this.isLoading = false;
+      this.closeDialog();
+    }
+  }
+
+
+  filterItems(event) {
+    if (event.query) {
+      const foundSuggestions = this.suggestionsArr.filter(suggestion => suggestion.label.includes(event.query));
+      if (foundSuggestions.length) {
+        this.suggestionsArr = foundSuggestions;
+      } else {
+        this.suggestionsArr = [
+          { label: event.query.toUpperCase() }
+        ];
+      }
+    }
+    this.suggestionsArr = [].concat(this.suggestionsArr);
+    console.log('filter', this.suggestionsArr);
+  }
+
+  closeDialog() {
+    this.ref.close();
+  }
+
+  saveToStorage(symbol) {
+    this.backtestTableService.addToStorage('straddle_suggestions', symbol, true);
+  }
+  ngOnDestroy() {
+    this.processSymbol$.next();
+    this.processSymbol$.complete();
   }
 }
