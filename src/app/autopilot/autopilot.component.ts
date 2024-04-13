@@ -1225,22 +1225,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     const backtestResults = await this.backtestTableService.getBacktestData('VTI');
     if (backtestResults && backtestResults.ml > 0.5) {
       const stock: PortfolioInfoHolding = {
-        name: 'UPRO',
-        pl: 0,
-        netLiq: 0,
-        shares: 0,
-        alloc: 0,
-        recommendation: 'None',
-        buyReasons: '',
-        sellReasons: '',
-        buyConfidence: 0,
-        sellConfidence: 0,
-        prediction: null
-      };
-      const order = await this.buildBuyOrder(stock, 1, null, null, true);
-      this.daytradeService.sendBuy(order, 'limit', () => { }, () => { });
-    } else {
-      const stock: PortfolioInfoHolding = {
         name: 'VTI',
         pl: 0,
         netLiq: 0,
