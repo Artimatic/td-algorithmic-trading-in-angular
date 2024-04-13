@@ -354,8 +354,8 @@ export class BacktestTableService {
   }
 
   async addStraddle(symbol: string, price: number, optionStrategy: Straddle) {
-    const balance: any = await this.portfolioService.getTdBalance().toPromise();
-    const quantity = Math.floor(balance.cashBalance/price) | 1;
+    // const balance: any = await this.portfolioService.getTdBalance().toPromise();
+    const quantity = Math.floor(1000/price) | 1;
     const order = {
       holding: {
         instrument: null,
