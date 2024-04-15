@@ -14,7 +14,7 @@ class BacktestController extends BaseController {
   }
 
   backtest(request, response) {
-    if (_.isEmpty(request.body)) {
+    if (_.isEmpty(request.body) || !request.body.ticker) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     } else {
       if (request.body.algo) {

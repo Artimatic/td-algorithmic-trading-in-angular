@@ -25,7 +25,7 @@ export class AddOptionsTradeComponent implements OnInit, OnDestroy {
     for (const s in storedSuggestions) {
       this.suggestionsArr.push({label: s})
     }
-    this.suggestionsArr.push(this.defaultSuggestions);
+    this.suggestionsArr = this.suggestionsArr.concat(this.defaultSuggestions);
     this.processSymbol$.subscribe(sym => {
       this.buildStraddle(sym);
     });
