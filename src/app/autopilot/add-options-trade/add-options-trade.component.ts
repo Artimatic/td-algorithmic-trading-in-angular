@@ -10,7 +10,7 @@ import { BacktestTableService } from 'src/app/backtest-table/backtest-table.serv
 })
 export class AddOptionsTradeComponent implements OnInit, OnDestroy {
   symbolsQuery = null;
-  defaultSuggestions = [{ label: 'PFE,GOOGL,SNOW' }];
+  defaultSuggestions = [{ label: 'HUBS,GOOGL,SNOW' }];
   suggestionsArr = [];
   processSymbol$ = new Subject<string>();
   symbolsArr = [];
@@ -47,9 +47,9 @@ export class AddOptionsTradeComponent implements OnInit, OnDestroy {
   async buildStraddle(symbol: string) {
     let optionStrategy = null;
     const backtestResults = await this.backtestTableService.getBacktestData(symbol);
-    if (backtestResults && backtestResults.ml > 0.5) {
+    if (backtestResults && backtestResults.ml > 0.6) {
       optionStrategy = await this.backtestTableService.getCallTrade(symbol);
-    } else {
+    } else if (backtestResults && backtestResults.ml < 0.2){
       optionStrategy = await this.backtestTableService.getPutTrade(symbol);
     }
 

@@ -7,6 +7,5 @@
     <div class="order-form-item">
         <button *ngIf="!isLoading" pButton type="button" label="Ok" (click)="processList()" class="ui-button-success"
             type="submit" (keyup.enter)="processList()"></button>
-        <p-spinner *ngIf="isLoading"></p-spinner>
     </div>
 </div>

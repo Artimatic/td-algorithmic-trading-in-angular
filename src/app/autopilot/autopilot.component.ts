@@ -120,7 +120,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   strategyCounter = null;
   maxTradeCount = 7;
   strategyList = [
-    Strategy.OptionsStraddle,
+    // Strategy.OptionsStraddle,
     Strategy.MLSpy,
     // Strategy.SingleStockPick,
     // Strategy.StateMachine,
@@ -541,7 +541,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         break;
       default: {
         const callback = async (symbol: string, prediction: number, backtestData: any) => {
-          if (prediction > 0.6) {
+          if (prediction > 0.5) {
             const stock: PortfolioInfoHolding = {
               name: symbol,
               pl: 0,
@@ -567,12 +567,12 @@ export class AutopilotComponent implements OnInit, OnDestroy {
                   await this.addDaytrade(stock.name);
                 }
               } else {
+                console.log('backtestData 0', backtestData);
+
                 if (backtestData?.optionsVolume > 1000) {
                   const optionStrategy = await this.backtestTableService.getCallTrade(symbol);
                   const price = this.backtestTableService.findOptionsPrice(optionStrategy.call.bid, optionStrategy.call.ask) + this.backtestTableService.findOptionsPrice(optionStrategy.put.bid, optionStrategy.put.ask);
                   this.backtestTableService.addStraddle(symbol, price, optionStrategy);
-                } else {
-                  await this.addBuy(stock);
                 }
               }
             } catch (error) {
@@ -1222,8 +1222,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   async buyAtClose() {
-    const backtestResults = await this.backtestTableService.getBacktestData('VTI');
-    if (backtestResults && backtestResults.ml > 0.5) {
+    const backtestResults = await this.backtestTableService.getBacktestData('SH');
+    if (backtestResults && backtestResults.ml < 0.5) {
       const stock: PortfolioInfoHolding = {
         name: 'VTI',
         pl: 0,

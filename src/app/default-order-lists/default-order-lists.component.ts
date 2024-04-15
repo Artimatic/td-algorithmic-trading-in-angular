@@ -78,7 +78,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
       )
       .subscribe(value => {
         this.cashBalance = value;
-        if (!this.defaultLists.length) {
+        if (!this.defaultLists?.length) {
           this.defaultLists = this.createDefaultList();
         }
       });
