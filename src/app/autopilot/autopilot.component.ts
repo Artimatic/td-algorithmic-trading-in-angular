@@ -221,7 +221,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
     this.display = true;
     this.startNewInterval();
-    this.interval = Math.abs(moment(this.globalSettingsService.getStartStopTime().startDateTime).diff(moment(), 'milliseconds'));
+    //this.interval = Math.abs(moment(this.globalSettingsService.getStartStopTime().startDateTime).diff(moment(), 'milliseconds'));
+    this.interval = this.defaultInterval;
     this.messageService.add({
       severity: 'success',
       summary: 'Autopilot started'

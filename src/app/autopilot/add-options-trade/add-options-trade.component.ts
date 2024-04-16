@@ -23,7 +23,7 @@ export class AddOptionsTradeComponent implements OnInit, OnDestroy {
   ngOnInit() {
     const storedSuggestions = this.backtestTableService.getStorage('straddle_suggestions');
     for (const s in storedSuggestions) {
-      this.suggestionsArr.push({label: s})
+      this.suggestionsArr.push({ label: s })
     }
     this.suggestionsArr = this.suggestionsArr.concat(this.defaultSuggestions);
     this.processSymbol$.subscribe(sym => {
@@ -49,14 +49,16 @@ export class AddOptionsTradeComponent implements OnInit, OnDestroy {
     const backtestResults = await this.backtestTableService.getBacktestData(symbol);
     if (backtestResults && backtestResults.ml > 0.6) {
       optionStrategy = await this.backtestTableService.getCallTrade(symbol);
-    } else if (backtestResults && backtestResults.ml < 0.2){
+    } else if (backtestResults && backtestResults.ml < 0.2) {
       optionStrategy = await this.backtestTableService.getPutTrade(symbol);
     }
 
-    const price = this.backtestTableService.findOptionsPrice(optionStrategy.call.bid, optionStrategy.call.ask) + this.backtestTableService.findOptionsPrice(optionStrategy.put.bid, optionStrategy.put.ask);
-    console.log('optionStrategy', optionStrategy, price);
+    if (optionStrategy.call && optionStrategy.put) {
+      const price = this.backtestTableService.findOptionsPrice(optionStrategy.call.bid, optionStrategy.call.ask) + this.backtestTableService.findOptionsPrice(optionStrategy.put.bid, optionStrategy.put.ask);
+      console.log('optionStrategy', optionStrategy, price);
 
-    this.backtestTableService.addStraddle(symbol, price, optionStrategy);
+      this.backtestTableService.addStraddle(symbol, price, optionStrategy);
+    }
     this.saveToStorage(symbol);
     if (this.symbolsArr.length) {
       this.processSymbol$.next(this.symbolsArr.pop());
