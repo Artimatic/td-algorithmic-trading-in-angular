@@ -858,58 +858,62 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
     if (data) {
       for (const holding of data) {
-        const stock = holding.instrument.symbol;
-        let pl;
-        if (holding.instrument.assetType.toLowerCase() === 'option') {
-          pl = holding.marketValue - (holding.averagePrice * holding.longQuantity) * 100;
-        } else {
-          pl = holding.marketValue - (holding.averagePrice * holding.longQuantity);
-        }
-        const tempHoldingObj = {
-          name: stock,
-          pl,
-          netLiq: holding.marketValue,
-          shares: holding.longQuantity,
-          alloc: (holding.averagePrice * holding.longQuantity) / totalValue,
-          recommendation: null,
-          buyReasons: '',
-          sellReasons: '',
-          buyConfidence: 0,
-          sellConfidence: 0,
-          prediction: null
-        }
-        this.scoreKeeperService.addProfitLoss(tempHoldingObj.name, Number(tempHoldingObj.pl), false);
-        this.currentHoldings.push(tempHoldingObj);
-        await this.checkStopLoss(tempHoldingObj);
+        if (holding.instrument.assetType.toLowerCase() !== 'option') {
+          const stock = holding.instrument.symbol;
+          // let pl;
+          // if (holding.instrument.assetType.toLowerCase() === 'option') {
+          //   pl = holding.marketValue - (holding.averagePrice * holding.longQuantity) * 100;
+          // } else {
+          //   pl = holding.marketValue - (holding.averagePrice * holding.longQuantity);
+          // }
+          const pl = holding.marketValue - (holding.averagePrice * holding.longQuantity);
 
-        if (holding.instrument.assetType.toLowerCase() === 'equity') {
-          const indicators = await this.getTechnicalIndicators(holding.instrument.symbol,
-            startDate,
-            currentDate,
-            this.currentHoldings,
-            true).toPromise();
-          const foundIdx = this.currentHoldings.findIndex((value) => {
-            return value.name === stock;
-          });
-          this.currentHoldings[foundIdx].recommendation = indicators.recommendation.recommendation;
-          const reasons = this.getRecommendationReason(indicators.recommendation);
-          this.currentHoldings[foundIdx].buyReasons = reasons.buyReasons;
-          this.currentHoldings[foundIdx].sellReasons = reasons.sellReasons;
-          try {
-            const predictionNum = await this.getPrediction(stock);
+          const tempHoldingObj = {
+            name: stock,
+            pl,
+            netLiq: holding.marketValue,
+            shares: holding.longQuantity,
+            alloc: (holding.averagePrice * holding.longQuantity) / totalValue,
+            recommendation: null,
+            buyReasons: '',
+            sellReasons: '',
+            buyConfidence: 0,
+            sellConfidence: 0,
+            prediction: null
+          }
+          this.scoreKeeperService.addProfitLoss(tempHoldingObj.name, Number(tempHoldingObj.pl), false);
+          this.currentHoldings.push(tempHoldingObj);
+          await this.checkStopLoss(tempHoldingObj);
 
-            if (predictionNum > 0.6) {
-              await this.addBuy(this.createHoldingObj(stock));
-            } else if (predictionNum < 0.4) {
-              const sellHolding = this.currentHoldings.find(holdingInfo => {
-                return holdingInfo.name === stock;
-              });
-              if (sellHolding) {
-                this.portfolioSell(sellHolding);
+          if (holding.instrument.assetType.toLowerCase() === 'equity') {
+            const indicators = await this.getTechnicalIndicators(holding.instrument.symbol,
+              startDate,
+              currentDate,
+              this.currentHoldings,
+              true).toPromise();
+            const foundIdx = this.currentHoldings.findIndex((value) => {
+              return value.name === stock;
+            });
+            this.currentHoldings[foundIdx].recommendation = indicators.recommendation.recommendation;
+            const reasons = this.getRecommendationReason(indicators.recommendation);
+            this.currentHoldings[foundIdx].buyReasons = reasons.buyReasons;
+            this.currentHoldings[foundIdx].sellReasons = reasons.sellReasons;
+            try {
+              const predictionNum = await this.getPrediction(stock);
+
+              if (predictionNum > 0.6) {
+                await this.addBuy(this.createHoldingObj(stock));
+              } else if (predictionNum < 0.4) {
+                const sellHolding = this.currentHoldings.find(holdingInfo => {
+                  return holdingInfo.name === stock;
+                });
+                if (sellHolding) {
+                  this.portfolioSell(sellHolding);
+                }
               }
+            } catch (error) {
+              console.log(error);
             }
-          } catch (error) {
-            console.log(error);
           }
         }
       }
@@ -1195,7 +1199,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   async placeholder() {
     this.dialogService.open(AddOptionsTradeComponent, {
       header: 'Add options trade',
-      contentStyle: { 'overflow-y': 'unset'}
+      contentStyle: { 'overflow-y': 'unset' }
     });
 
     // const price = optionStrategy.call.bid + optionStrategy.put.bid;
