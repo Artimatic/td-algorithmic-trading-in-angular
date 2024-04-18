@@ -4,7 +4,7 @@ import { AiPicksService, BacktestService, CartService, PortfolioService } from '
 import { Stock } from '@shared/stock.interface';
 import { PotentialTrade, Strategy } from './potential-trade.constant';
 import * as moment from 'moment-timezone';
-import { Straddle } from '@shared/models/options';
+import { Strangle } from '@shared/models/options';
 import { OrderTypes } from '@shared/models/smart-order';
 
 @Injectable({
@@ -110,7 +110,7 @@ export class BacktestTableService {
     return !prevObj || (currTotalVolume > prevObj.totalVolume);
   }
 
-  async getCallTrade(symbol: string): Promise<Straddle> {
+  async getCallTrade(symbol: string): Promise<Strangle> {
     console.log('getting call trade');
     const minExpiration = 65;
     const optionsData = await this.optionsDataService.getImpliedMove(symbol).toPromise();
@@ -353,9 +353,42 @@ export class BacktestTableService {
     }
   }
 
-  async addStraddle(symbol: string, price: number, optionStrategy: Straddle) {
+  removeTradingStrategy(trade: PotentialTrade) {
+    const storage = this.getTradingStrategies();
+    if (trade) {
+      if (storage && Array.isArray(storage)) {
+        const findIdx = storage.findIndex(str => str.key === trade.key && str.type === trade.type);
+        if (findIdx > -1) {
+          const buys = storage[findIdx].strategy.buy.reduce((acc, curr) => {
+            if (!acc.buy.find(a => a === curr)) {
+              acc.buy.push(curr);
+            }
+            return acc;
+          }, { buy: trade.strategy.buy }).buy;
+
+          const sells = storage[findIdx].strategy.sell.reduce((acc, curr) => {
+            if (!acc.sell.find(a => a === curr)) {
+              acc.sell.push(curr);
+            }
+            return acc;
+          }, { sell: trade.strategy.sell }).sell;
+
+          storage[findIdx].strategy.buy = buys;
+          storage[findIdx].strategy.sell = sells;
+        } else {
+          storage.push(trade)
+        }
+        localStorage.setItem('tradingStrategy', JSON.stringify(storage));
+      } else {
+        const newStorageObj = [trade];
+        localStorage.setItem('tradingStrategy', JSON.stringify(newStorageObj));
+      }
+    }
+  }
+
+  async addStrangle(symbol: string, price: number, optionStrategy: Strangle) {
     // const balance: any = await this.portfolioService.getTdBalance().toPromise();
-    const quantity = Math.floor(1000/price) | 1;
+    const quantity = Math.floor(1000/(price * 100)) | 1;
     const order = {
       holding: {
         instrument: null,

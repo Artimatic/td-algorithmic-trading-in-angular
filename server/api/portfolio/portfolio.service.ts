@@ -801,7 +801,7 @@ class PortfolioService {
     response.status(200).send({});
   }
 
-  getOptionsStraddle(accountId, symbol, strikeCount, optionType = 'S', response) {
+  getOptionsStrangle(accountId, symbol, strikeCount, optionType = 'S', response) {
     if (!accountId) {
       accountId = this.getAccountId();
     }

@@ -9,7 +9,7 @@ export interface Options {
     totalVolume: number;
 }
 
-export interface Straddle {
+export interface Strangle {
     call: Options;
     put: Options;
 }

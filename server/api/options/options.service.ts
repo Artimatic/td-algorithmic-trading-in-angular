@@ -78,16 +78,16 @@ export interface ImpliedMove {
 
 class OptionService {
   calculateImpliedMove(accountId, symbol, strikeCount, optionType, minExpiration = 29, response) {
-    return PortfolioService.getOptionsStraddle(accountId, symbol, strikeCount, optionType, response)
-      .then((straddleOptionsChain: OptionsChain) => {
-        const strategyList = straddleOptionsChain.monthlyStrategyList.find(element => element.daysToExp >= minExpiration);
-        const goal = straddleOptionsChain.underlying.last;
+    return PortfolioService.getOptionsStrangle(accountId, symbol, strikeCount, optionType, response)
+      .then((strangleOptionsChain: OptionsChain) => {
+        const strategyList = strangleOptionsChain.monthlyStrategyList.find(element => element.daysToExp >= minExpiration);
+        const goal = strangleOptionsChain.underlying.last;
 
-        const closestStrikeStraddle = strategyList.optionStrategyList.reduce((prev, curr) => {
+        const closestStrikeStrangle = strategyList.optionStrategyList.reduce((prev, curr) => {
           return (Math.abs(curr.strategyStrike - goal) < Math.abs(prev.strategyStrike - goal) ? curr : prev);
         });
 
-        const strategyCost = portfolioController.midPrice(closestStrikeStraddle.strategyAsk, closestStrikeStraddle.strategyBid);
+        const strategyCost = portfolioController.midPrice(closestStrikeStrangle.strategyAsk, closestStrikeStrangle.strategyBid);
         const move = _.round(strategyCost / goal, 3);
         const movePrice = _.round(move * goal, 2);
 
@@ -97,8 +97,8 @@ class OptionService {
           upperPrice: _.round(goal + movePrice, 2),
           lowerPrice: _.round(goal - movePrice, 2),
           strategyCost,
-          strategy: closestStrikeStraddle,
-          optionsChain: straddleOptionsChain
+          strategy: closestStrikeStrangle,
+          optionsChain: strangleOptionsChain
         };
       });
   }

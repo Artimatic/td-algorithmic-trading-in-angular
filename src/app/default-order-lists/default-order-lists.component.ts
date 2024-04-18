@@ -87,7 +87,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
       { label: 'Buy', value: 'Buy' },
       { label: 'Sell', value: 'Sell' },
       { label: 'DayTrade', value: 'DayTrade' },
-      { label: 'Straddle', value: 'Straddle' }
+      { label: 'Strangle', value: 'Strangle' }
     ];
 
     this.setAddOrderForm();
@@ -146,7 +146,7 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
     }, 'adding_order', null, true, 3000);
   }
 
-  async buildStraddle(symbol: string) {
+  async buildStrangle(symbol: string) {
     let optionStrategy = null;
     const backtestResults = await this.backtestTableService.getBacktestData(symbol);
     if (backtestResults && backtestResults.ml > 0.5) {
@@ -158,14 +158,14 @@ export class DefaultOrderListsComponent implements OnInit, OnChanges, OnDestroy 
 
     const price = this.backtestTableService.findOptionsPrice(optionStrategy.call.bid, optionStrategy.call.ask) + this.backtestTableService.findOptionsPrice(optionStrategy.put.bid, optionStrategy.put.ask);
 
-    this.backtestTableService.addStraddle(symbol, price, optionStrategy);
+    this.backtestTableService.addStrangle(symbol, price, optionStrategy);
   }
 
 
   addCustomList() {
     if (this.addOrderFormGroup.valid) {
-      if (this.addOrderFormGroup.value.side === 'Straddle') {
-        this.buildStraddle(this.addOrderFormGroup.value.symbol);
+      if (this.addOrderFormGroup.value.side === 'Strangle') {
+        this.buildStrangle(this.addOrderFormGroup.value.symbol);
       } else {
         const stock = this.addOrderFormGroup.value.symbol;
         const allocationPct = this.addOrderFormGroup.value.allocation;

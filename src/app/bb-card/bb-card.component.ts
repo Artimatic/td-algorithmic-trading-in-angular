@@ -421,17 +421,17 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
         };
         
         if (this.order.type === OrderTypes.options && this.order.side.toLowerCase() === 'buy') {
-          const bullishStraddle = await this.backtestTableService.getCallTrade(this.order.holding.symbol);
-          // const price = bullishStraddle.call.bid + bullishStraddle.put.bid;
-          const price = this.backtestTableService.findOptionsPrice(bullishStraddle.call.bid, bullishStraddle.call.ask) + 
-            this.backtestTableService.findOptionsPrice(bullishStraddle.put.bid, bullishStraddle.put.ask);
+          const bullishStrangle = await this.backtestTableService.getCallTrade(this.order.holding.symbol);
+          // const price = bullishStrangle.call.bid + bullishStrangle.put.bid;
+          const price = this.backtestTableService.findOptionsPrice(bullishStrangle.call.bid, bullishStrangle.call.ask) + 
+            this.backtestTableService.findOptionsPrice(bullishStrangle.put.bid, bullishStrangle.put.ask);
           const orderQuantity = Math.floor(this.currentBalance * (this.order?.allocation || 0.01) / price)
 
           console.log('orderQuantity', orderQuantity)
-          console.log('built straddle', bullishStraddle);
+          console.log('built strangle', bullishStrangle);
           
-          this.portfolioService.sendTwoLegOrder(bullishStraddle.call.symbol, 
-            bullishStraddle.put.symbol, 1, price, false).subscribe();
+          this.portfolioService.sendTwoLegOrder(bullishStrangle.call.symbol, 
+            bullishStrangle.put.symbol, 1, price, false).subscribe();
         } else {
           this.daytradeService.sendBuy(buyOrder, 'limit', resolve, reject);
         }

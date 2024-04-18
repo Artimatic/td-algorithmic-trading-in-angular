@@ -13,7 +13,7 @@ import { MessageService } from 'primeng/api';
 import { AlgoQueueItem } from '@shared/services/trade.service';
 import { ScoringIndex } from '@shared/services/score-keeper.service';
 import { MachineDaytradingService } from '../machine-daytrading/machine-daytrading.service';
-import { BearList, PrimaryList, PersonalBullishPicks, PersonalBearishPicks } from '../rh-table/backtest-stocks.constant';
+import { BearList, PersonalBullishPicks, PersonalBearishPicks } from '../rh-table/backtest-stocks.constant';
 import { CurrentStockList } from '../rh-table/stock-list.constant';
 import { AiPicksPredictionData } from '@shared/services/ai-picks.service';
 import Stocks from '../rh-table/backtest-stocks.constant';
@@ -21,9 +21,7 @@ import { FindPatternService } from '../strategies/find-pattern.service';
 import { GlobalSettingsService } from '../settings/global-settings.service';
 import { BacktestTableService } from '../backtest-table/backtest-table.service';
 import { PotentialTrade } from '../backtest-table/potential-trade.constant';
-import { BacktestTableComponent } from '../backtest-table/backtest-table.component';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { OrderTypes } from '@shared/models/smart-order';
 import { AddOptionsTradeComponent } from './add-options-trade/add-options-trade.component';
 
 export interface PositionHoldings {
@@ -83,7 +81,7 @@ export enum Strategy {
   StateMachine = 'StateMachine',
   SingleStockPick = 'SingleStockPick',
   MLSpy = 'MLSpy',
-  OptionsStraddle = 'OptionsStraddle'
+  OptionsStrangle = 'OptionsStrangle'
 }
 
 export enum RiskTolerance {
@@ -120,7 +118,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   strategyCounter = null;
   maxTradeCount = 7;
   strategyList = [
-    // Strategy.OptionsStraddle,
+    // Strategy.OptionsStrangle,
     Strategy.MLSpy,
     // Strategy.SingleStockPick,
     // Strategy.StateMachine,
@@ -573,7 +571,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
                 if (backtestData?.optionsVolume > 1000) {
                   const optionStrategy = await this.backtestTableService.getCallTrade(symbol);
                   const price = this.backtestTableService.findOptionsPrice(optionStrategy.call.bid, optionStrategy.call.ask) + this.backtestTableService.findOptionsPrice(optionStrategy.put.bid, optionStrategy.put.ask);
-                  this.backtestTableService.addStraddle(symbol, price, optionStrategy);
+                  this.backtestTableService.addStrangle(symbol, price, optionStrategy);
                 }
               }
             } catch (error) {
@@ -1194,6 +1192,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   removeStrategy(item) {
     console.log('TODO remove', item);
     this.strategies = this.strategies.filter(s => s.key !== item.key || s.name !== item.name || s.date !== item.date);
+    //this.backtestTableService.removeTradingStrategy();
   }
 
   async placeholder() {

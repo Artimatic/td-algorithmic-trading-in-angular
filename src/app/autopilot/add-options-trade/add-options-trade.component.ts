@@ -21,13 +21,13 @@ export class AddOptionsTradeComponent implements OnInit, OnDestroy {
 
 
   ngOnInit() {
-    const storedSuggestions = this.backtestTableService.getStorage('straddle_suggestions');
+    const storedSuggestions = this.backtestTableService.getStorage('strangle_suggestions');
     for (const s in storedSuggestions) {
       this.suggestionsArr.push({ label: s })
     }
     this.suggestionsArr = this.suggestionsArr.concat(this.defaultSuggestions);
     this.processSymbol$.subscribe(sym => {
-      this.buildStraddle(sym);
+      this.buildStrangle(sym);
     });
   }
 
@@ -37,14 +37,14 @@ export class AddOptionsTradeComponent implements OnInit, OnDestroy {
       const symbol = query.label;
       if (symbol.includes(',')) {
         this.symbolsArr = query.label.trim().toUpperCase().split(',');
-        this.buildStraddle(this.symbolsArr.pop());
+        this.buildStrangle(this.symbolsArr.pop());
       } else {
-        this.buildStraddle(symbol);
+        this.buildStrangle(symbol);
       }
     });
   }
 
-  async buildStraddle(symbol: string) {
+  async buildStrangle(symbol: string) {
     let optionStrategy = null;
     const backtestResults = await this.backtestTableService.getBacktestData(symbol);
     if (backtestResults && backtestResults.ml > 0.6) {
@@ -57,7 +57,7 @@ export class AddOptionsTradeComponent implements OnInit, OnDestroy {
       const price = this.backtestTableService.findOptionsPrice(optionStrategy.call.bid, optionStrategy.call.ask) + this.backtestTableService.findOptionsPrice(optionStrategy.put.bid, optionStrategy.put.ask);
       console.log('optionStrategy', optionStrategy, price);
 
-      this.backtestTableService.addStraddle(symbol, price, optionStrategy);
+      this.backtestTableService.addStrangle(symbol, price, optionStrategy);
     }
     this.saveToStorage(symbol);
     if (this.symbolsArr.length) {
@@ -89,7 +89,7 @@ export class AddOptionsTradeComponent implements OnInit, OnDestroy {
   }
 
   saveToStorage(symbol) {
-    this.backtestTableService.addToStorage('straddle_suggestions', symbol, true);
+    this.backtestTableService.addToStorage('strangle_suggestions', symbol, true);
   }
   ngOnDestroy() {
     this.processSymbol$.next();
