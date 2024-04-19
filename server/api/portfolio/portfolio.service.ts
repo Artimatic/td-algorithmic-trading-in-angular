@@ -256,7 +256,7 @@ class PortfolioService {
     }
 
     if (!accountId) {
-      throw new Error('Missing accountId');
+      return new Error('Missing accountId');
     }
 
     if (this.access_token[accountId]) {
@@ -292,7 +292,7 @@ class PortfolioService {
               reply.end();
             }
 
-            throw new Error('Last token request was too recent');
+            return new Error('Last token request was too recent');
           }
         }
         return Promise.reject(errorMessage);
@@ -369,7 +369,7 @@ class PortfolioService {
     const accountId = this.getAccountId();
 
     if (!this.access_token[accountId] || !this.access_token[accountId].token) {
-      throw new Error('Token missing');
+      return new Error('Token missing');
     }
 
     const query = `${tdaUrl}marketdata/${symbol}/pricehistory`;
@@ -523,7 +523,7 @@ class PortfolioService {
       key = this.tdaKey[accountId];
     }
     if (!accountId || !this.tdaKey[accountId]) {
-      throw new Error('Missing accountId');
+      return new Error('Missing accountId');
     }
     console.log(moment().format(), ' GETTING NEW ACCESS TOKEN');
 

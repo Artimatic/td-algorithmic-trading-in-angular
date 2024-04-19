@@ -31,7 +31,7 @@ class ReversionService {
     const { to, from } = this.getDateRanges(toDate, fromDate);
 
     if (isNaN(deviation)) {
-      throw BaseErrors.InvalidArgumentsError();
+      return BaseErrors.InvalidArgumentsError();
     }
 
     return this.getData(ticker, to, from)
@@ -40,7 +40,7 @@ class ReversionService {
       })
       .catch(err => {
         console.log('ERROR! backtest', err);
-        throw BaseErrors.InvalidArgumentsError();
+        return BaseErrors.InvalidArgumentsError();
       });
   }
 
@@ -88,7 +88,7 @@ class ReversionService {
       })
       .catch(err => {
         console.log('ERROR! backtest snapshot', err, ticker);
-        throw BaseErrors.InvalidArgumentsError();
+        return BaseErrors.InvalidArgumentsError();
       });
   }
 

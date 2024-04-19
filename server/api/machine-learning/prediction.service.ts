@@ -160,7 +160,7 @@ export default class PredictionService {
       }
       return 0;
     } else {
-      throw new Error('BBand Missing');
+      return new Error('BBand Missing');
     }
   }
 }
