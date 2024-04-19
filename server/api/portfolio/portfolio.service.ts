@@ -291,8 +291,7 @@ class PortfolioService {
               reply.status(500).send({ error: tooRecentErrMsg});
               reply.end();
             }
-
-            return new Error('Last token request was too recent');
+            return Promise.reject(new Error('Last token request was too recent'));
           }
         }
         return Promise.reject(errorMessage);

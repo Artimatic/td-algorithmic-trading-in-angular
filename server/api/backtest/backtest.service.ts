@@ -144,7 +144,7 @@ class BacktestService {
       })
       .catch(err => {
         console.log('ERROR! getIntradayV2', err);
-        return err;
+        return Promise.reject(err);
       });
   }
 
@@ -1353,7 +1353,7 @@ class BacktestService {
       })
       .catch(err => {
         console.log('ERROR! backtest', err);
-        return BaseErrors.InvalidArgumentsError();
+        return Promise.reject(BaseErrors.InvalidArgumentsError());
       });
   }
 
