@@ -45,25 +45,29 @@ export class AddOptionsTradeComponent implements OnInit, OnDestroy {
   }
 
   async buildStrangle(symbol: string) {
-    let optionStrategy = null;
-    const backtestResults = await this.backtestTableService.getBacktestData(symbol);
-    if (backtestResults && backtestResults.ml > 0.6) {
-      optionStrategy = await this.backtestTableService.getCallTrade(symbol);
-    } else if (backtestResults && backtestResults.ml < 0.2) {
-      optionStrategy = await this.backtestTableService.getPutTrade(symbol);
-    }
+    if (symbol) {
+      let optionStrategy = null;
+      const backtestResults = await this.backtestTableService.getBacktestData(symbol);
+      if (backtestResults && backtestResults.ml > 0.6) {
+        optionStrategy = await this.backtestTableService.getCallTrade(symbol);
+      } else if (backtestResults && backtestResults.ml < 0.2) {
+        optionStrategy = await this.backtestTableService.getPutTrade(symbol);
+      }
 
-    if (optionStrategy.call && optionStrategy.put) {
-      const price = this.backtestTableService.findOptionsPrice(optionStrategy.call.bid, optionStrategy.call.ask) + this.backtestTableService.findOptionsPrice(optionStrategy.put.bid, optionStrategy.put.ask);
-      console.log('optionStrategy', optionStrategy, price);
+      if (optionStrategy.call && optionStrategy.put) {
+        const price = this.backtestTableService.findOptionsPrice(optionStrategy.call.bid, optionStrategy.call.ask) + this.backtestTableService.findOptionsPrice(optionStrategy.put.bid, optionStrategy.put.ask);
+        console.log('optionStrategy', optionStrategy, price);
 
-      this.backtestTableService.addStrangle(symbol, price, optionStrategy);
-    }
-    this.saveToStorage(symbol);
-    if (this.symbolsArr.length) {
-      this.processSymbol$.next(this.symbolsArr.pop());
+        this.backtestTableService.addStrangle(symbol, price, optionStrategy);
+      }
+      this.saveToStorage(symbol);
+      if (this.symbolsArr.length) {
+        this.processSymbol$.next(this.symbolsArr.pop());
+      } else {
+        this.isLoading = false;
+        this.closeDialog();
+      }
     } else {
-      this.isLoading = false;
       this.closeDialog();
     }
   }

@@ -49,7 +49,13 @@ export class BacktestTableService {
         const callsCount = optionsData.optionsChain.monthlyStrategyList[0].optionStrategyList[0].secondaryLeg.totalVolume;
         const putsCount = optionsData.optionsChain.monthlyStrategyList[0].optionStrategyList[0].primaryLeg.totalVolume;
         const optionsVolume = Number(callsCount) + Number(putsCount);
-        let latestMlResult = await this.aiPicksService.trainAndActivate(symbol);
+        let latestMlResult = null;
+        try {
+          latestMlResult = await this.aiPicksService.trainAndActivate(symbol);
+        } catch(error) {
+          console.log('Error training', error);
+          latestMlResult = await this.aiPicksService.trainAndActivate(symbol);
+        }
 
         const tableObj = {
           recommendation: indicatorResults.recommendation,
@@ -62,7 +68,7 @@ export class BacktestTableService {
           lastVolume: indicatorResults.lastVolume || null,
           totalReturns: indicatorResults.totalReturns || null,
           lastPrice: indicatorResults.lastPrice || null,
-          ml: latestMlResult ? latestMlResult.value : null,
+          ml: latestMlResult,
           impliedMovement: optionsData.move,
           optionsVolume: optionsVolume,
           marketCap: instruments[symbol]?.fundamental.marketCap,

@@ -261,7 +261,7 @@ class PortfolioService {
 
     if (this.access_token[accountId]) {
       const diffMinutes = moment().diff(moment(this.access_token[accountId].timestamp), 'minutes');
-      console.log('Found access token ', diffMinutes);
+      console.log('Found access token ', diffMinutes, new Date().toString());
 
       if (diffMinutes < 30) {
         return Promise.resolve();
