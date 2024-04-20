@@ -116,19 +116,19 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   destroy$ = new Subject();
   currentHoldings: PortfolioInfoHolding[] = [];
   strategyCounter = null;
-  maxTradeCount = 7;
+  maxTradeCount = 3;
   strategyList = [
     // Strategy.OptionsStrangle,
     Strategy.MLSpy,
     // Strategy.SingleStockPick,
     // Strategy.StateMachine,
-    //Strategy.Swingtrade,
+    Strategy.Swingtrade,
     Strategy.Daytrade,
     //Strategy.TrimHoldings,
     // Strategy.InverseSwingtrade,
     //Strategy.DaytradeShort,
     Strategy.Short,
-    //Strategy.DaytradeFullList,
+    Strategy.DaytradeFullList,
   ];
 
   bearishStrategy = [
@@ -444,24 +444,31 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     //this.checkPersonalLists();
     switch (strategy) {
       case Strategy.Swingtrade: {
-        const callback = async (symbol: string, mlResult: number) => {
+        const callback = async (symbol: string, mlResult: number, backtestData) => {
           if (mlResult > 0.65) {
-            const stock: PortfolioInfoHolding = {
-              name: symbol,
-              pl: 0,
-              netLiq: 0,
-              shares: 0,
-              alloc: 0,
-              recommendation: 'None',
-              buyReasons: '',
-              sellReasons: '',
-              buyConfidence: 0,
-              sellConfidence: 0,
-              prediction: null
-            };
-            await this.addBuy(stock);
-            const log = `Adding swing trade ${stock.name}`;
-            this.reportingService.addAuditLog(null, log);
+            
+            if (backtestData?.optionsVolume > 1000) {
+              const optionStrategy = await this.backtestTableService.getCallTrade(symbol);
+              const price = this.backtestTableService.findOptionsPrice(optionStrategy.call.bid, optionStrategy.call.ask) + this.backtestTableService.findOptionsPrice(optionStrategy.put.bid, optionStrategy.put.ask);
+              this.backtestTableService.addStrangle(symbol, price, optionStrategy);
+            } else {
+              const stock: PortfolioInfoHolding = {
+                name: symbol,
+                pl: 0,
+                netLiq: 0,
+                shares: 0,
+                alloc: 0,
+                recommendation: 'None',
+                buyReasons: '',
+                sellReasons: '',
+                buyConfidence: 0,
+                sellConfidence: 0,
+                prediction: null
+              };
+              await this.addBuy(stock);
+              const log = `Adding swing trade ${stock.name}`;
+              this.reportingService.addAuditLog(null, log);
+            }
           }
         };
 
@@ -1192,7 +1199,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   removeStrategy(item) {
     console.log('TODO remove', item);
     this.strategies = this.strategies.filter(s => s.key !== item.key || s.name !== item.name || s.date !== item.date);
-    //this.backtestTableService.removeTradingStrategy();
+    this.backtestTableService.removeTradingStrategy(item);
   }
 
   async placeholder() {

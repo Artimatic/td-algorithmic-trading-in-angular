@@ -52,7 +52,7 @@ export class BacktestTableService {
         let latestMlResult = null;
         try {
           latestMlResult = await this.aiPicksService.trainAndActivate(symbol);
-        } catch(error) {
+        } catch (error) {
           console.log('Error training', error);
           latestMlResult = await this.aiPicksService.trainAndActivate(symbol);
         }
@@ -169,7 +169,7 @@ export class BacktestTableService {
   }
 
   findOptionsPrice(bid: number, ask: number): number {
-    return Number(((bid + ask)/2).toFixed(1) + '0');
+    return Number(((bid + ask) / 2).toFixed(1) + '0');
   }
 
   addToResultStorage(result: Stock) {
@@ -359,66 +359,44 @@ export class BacktestTableService {
     }
   }
 
-  removeTradingStrategy(trade: PotentialTrade) {
+  removeTradingStrategy(removeTrade: PotentialTrade) {
     const storage = this.getTradingStrategies();
-    if (trade) {
-      if (storage && Array.isArray(storage)) {
-        const findIdx = storage.findIndex(str => str.key === trade.key && str.type === trade.type);
-        if (findIdx > -1) {
-          const buys = storage[findIdx].strategy.buy.reduce((acc, curr) => {
-            if (!acc.buy.find(a => a === curr)) {
-              acc.buy.push(curr);
-            }
-            return acc;
-          }, { buy: trade.strategy.buy }).buy;
 
-          const sells = storage[findIdx].strategy.sell.reduce((acc, curr) => {
-            if (!acc.sell.find(a => a === curr)) {
-              acc.sell.push(curr);
-            }
-            return acc;
-          }, { sell: trade.strategy.sell }).sell;
-
-          storage[findIdx].strategy.buy = buys;
-          storage[findIdx].strategy.sell = sells;
-        } else {
-          storage.push(trade)
-        }
-        localStorage.setItem('tradingStrategy', JSON.stringify(storage));
-      } else {
-        const newStorageObj = [trade];
-        localStorage.setItem('tradingStrategy', JSON.stringify(newStorageObj));
-      }
+    if (storage && Array.isArray(storage)) {
+      const newStorage = storage.filter(s => s.key !== removeTrade.key || s.name !== removeTrade.name || s.date !== removeTrade.date);
+      localStorage.setItem('tradingStrategy', JSON.stringify(newStorage));
     }
   }
 
   async addStrangle(symbol: string, price: number, optionStrategy: Strangle) {
-    // const balance: any = await this.portfolioService.getTdBalance().toPromise();
-    const quantity = Math.floor(1000/(price * 100)) | 1;
-    const order = {
-      holding: {
-        instrument: null,
-        symbol: symbol.toUpperCase(),
-      },
-      quantity: quantity,
-      price,
-      submitted: false,
-      pending: false,
-      orderSize: 1,
-      side: 'Buy',
-      lossThreshold: -0.05,
-      profitTarget: 0.1,
-      trailingStop: -0.05,
-      useStopLoss: true,
-      useTrailingStopLoss: true,
-      useTakeProfit: true,
-      sellAtClose: false,
-      allocation: 0.05,
-      primaryLeg: optionStrategy.call,
-      secondaryLeg: optionStrategy.put,
-      type: OrderTypes.options
-    };
-
-    this.cartService.addToCart(order);
+    const balance: any = await this.portfolioService.getTdBalance().toPromise();
+    const quantity = Math.floor((balance * 0.1) / (price * 100)) | 1;
+    if (quantity < 10) {
+      const order = {
+        holding: {
+          instrument: null,
+          symbol: symbol.toUpperCase(),
+        },
+        quantity: quantity,
+        price,
+        submitted: false,
+        pending: false,
+        orderSize: 1,
+        side: 'Buy',
+        lossThreshold: -0.05,
+        profitTarget: 0.1,
+        trailingStop: -0.05,
+        useStopLoss: true,
+        useTrailingStopLoss: true,
+        useTakeProfit: true,
+        sellAtClose: false,
+        allocation: 0.05,
+        primaryLeg: optionStrategy.call,
+        secondaryLeg: optionStrategy.put,
+        type: OrderTypes.options
+      };
+  
+      this.cartService.addToCart(order);
+    }
   }
 }
