@@ -315,18 +315,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   setProfitLoss() {
-    const lastProfitLoss = JSON.parse(localStorage.getItem('profitLoss'));
     const tempProfitRecord = this.scoreKeeperService.profitLossHash;
-
-    if (lastProfitLoss && lastProfitLoss.profitRecord) {
-      for (const recordKey in lastProfitLoss.profitRecord) {
-        if (lastProfitLoss.profitRecord[recordKey]) {
-          if (tempProfitRecord[recordKey]) {
-            tempProfitRecord[recordKey] += Number(lastProfitLoss.profitRecord[recordKey].toFixed(2));
-          }
-        }
-      }
-    }
 
     const profit = this.calculatePl(tempProfitRecord);
 

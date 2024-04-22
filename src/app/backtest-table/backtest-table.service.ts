@@ -68,7 +68,7 @@ export class BacktestTableService {
           lastVolume: indicatorResults.lastVolume || null,
           totalReturns: indicatorResults.totalReturns || null,
           lastPrice: indicatorResults.lastPrice || null,
-          ml: latestMlResult,
+          ml: latestMlResult.value,
           impliedMovement: optionsData.move,
           optionsVolume: optionsVolume,
           marketCap: instruments[symbol]?.fundamental.marketCap,
