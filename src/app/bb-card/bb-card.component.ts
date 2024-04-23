@@ -881,7 +881,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
               this.error = 'Issue getting analysis.';
             }
           );
-      }, `${this.order.holding.symbol}_getDaytradeRecommendation`, this.globalSettingsService.stopTime);
+      }, 'getDaytradeRecommendation', this.globalSettingsService.stopTime);
 
     }
   }
