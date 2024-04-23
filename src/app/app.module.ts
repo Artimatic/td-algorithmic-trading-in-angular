@@ -90,6 +90,7 @@ import { RippleModule } from 'primeng/ripple';
 import { BacktestTableComponent } from './backtest-table/backtest-table.component';
 import { StrategyFinderComponent } from './backtest-table/strategy-finder/strategy-finder.component';
 import { AddOptionsTradeComponent } from './autopilot/add-options-trade/add-options-trade.component';
+import { FindSomeDaytradeComponent } from './autopilot/find-some-daytrade/find-some-daytrade.component';
 
 @NgModule({
   declarations: [
@@ -140,6 +141,7 @@ import { AddOptionsTradeComponent } from './autopilot/add-options-trade/add-opti
     BacktestTableComponent,
     StrategyFinderComponent,
     AddOptionsTradeComponent,
+    FindSomeDaytradeComponent,
   ],
   entryComponents: [
     LoginDialogComponent,

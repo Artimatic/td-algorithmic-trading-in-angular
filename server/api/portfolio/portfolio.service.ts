@@ -256,7 +256,7 @@ class PortfolioService {
     }
 
     if (!accountId) {
-      return new Error('Missing accountId');
+      return Promise.reject(new Error('Missing accountId'));
     }
 
     if (this.access_token[accountId]) {

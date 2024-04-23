@@ -23,6 +23,7 @@ import { BacktestTableService } from '../backtest-table/backtest-table.service';
 import { PotentialTrade } from '../backtest-table/potential-trade.constant';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { AddOptionsTradeComponent } from './add-options-trade/add-options-trade.component';
+import { FindSomeDaytradeComponent } from './find-some-daytrade/find-some-daytrade.component';
 
 export interface PositionHoldings {
   name: string;
@@ -1191,34 +1192,18 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.backtestTableService.removeTradingStrategy(item);
   }
 
-  async placeholder() {
+  addOptions() {
     this.dialogService.open(AddOptionsTradeComponent, {
       header: 'Add options trade',
       contentStyle: { 'overflow-y': 'unset' }
     });
+  }
 
-    // const price = optionStrategy.call.bid + optionStrategy.put.bid;
-    // this.portfolioService.sendTwoLegOrder(optionStrategy.call.symbol, 
-    //   optionStrategy.put.symbol, 1, price, false).subscribe();
-
-    // this.dialogRef = this.dialogService.open(BacktestTableComponent, { header: 'Day trade Backtest' });
-
-    // if (!this.startFindingTrades()) {
-    //   if (this.timer) {
-    //     this.timer.unsubscribe();
-    //     this.stop();
-    //   }
-    //   this.timer = TimerObservable.create(1000, this.interval)
-    //     .pipe(takeUntil(this.destroy$))
-    //     .subscribe(async () => {
-    //       const startStopTime = this.getStartStopTime();
-    //       if ((moment().diff(moment(startStopTime.startDateTime, 'hours')) < -10 || moment().diff(moment(startStopTime.startDateTime, 'hours')) > 0) && moment().diff(this.lastInterval, 'minutes') > 1) {
-    //         this.runBackTest();
-    //         this.lastInterval = moment();
-    //         this.startFindingTrades();
-    //       }
-    //     });
-    // }
+  findSomeDayTrades() {
+    this.dialogService.open(FindSomeDaytradeComponent, {
+      header: 'Find day trade',
+      contentStyle: { 'overflow-y': 'unset' }
+    });
   }
 
   async buyAtClose() {

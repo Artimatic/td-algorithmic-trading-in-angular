@@ -1,0 +1,19 @@
+<p-table [value]="currentTrades">
+    <ng-template pTemplate="caption">
+        <p-button icon="pi pi-refresh" styleClass="p-button-success" (click)="findTrades()"></p-button>
+    </ng-template>
+    <ng-template pTemplate="header">
+        <tr>
+            <th>Stock</th>
+            <th>Recommendations</th>
+            <th>Time</th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-trade>
+        <tr>
+            <td>{{ trade.stock }}</td>
+            <td>{{ trade.recommendations }}</td>
+            <td>{{ trade.time }}</td>
+        </tr>
+    </ng-template>
+</p-table>
