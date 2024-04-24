@@ -120,16 +120,16 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   maxTradeCount = 3;
   strategyList = [
     // Strategy.OptionsStrangle,
-    Strategy.MLSpy,
+    //Strategy.MLSpy,
     // Strategy.SingleStockPick,
     // Strategy.StateMachine,
-    Strategy.Swingtrade,
+    //Strategy.Swingtrade,
     Strategy.Daytrade,
     //Strategy.TrimHoldings,
     // Strategy.InverseSwingtrade,
     //Strategy.DaytradeShort,
-    Strategy.Short,
-    Strategy.DaytradeFullList,
+    // Strategy.Short,
+    // Strategy.DaytradeFullList,
   ];
 
   bearishStrategy = [
@@ -569,6 +569,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
                   const optionStrategy = await this.backtestTableService.getCallTrade(symbol);
                   const price = this.backtestTableService.findOptionsPrice(optionStrategy.call.bid, optionStrategy.call.ask) + this.backtestTableService.findOptionsPrice(optionStrategy.put.bid, optionStrategy.put.ask);
                   this.backtestTableService.addStrangle(symbol, price, optionStrategy);
+                } else {
+                  await this.addBuy(stock);
                 }
               }
             } catch (error) {
@@ -586,6 +588,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   createHoldingObj(name: string) {
     return {
       name,
+      symbol: name,
       pl: 0,
       netLiq: 0,
       shares: 0,

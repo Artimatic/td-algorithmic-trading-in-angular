@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import * as moment from 'moment-timezone';
 
-import { BacktestService, PortfolioService } from '@shared/services';
+import { BacktestService, DaytradeService, PortfolioService } from '@shared/services';
 import { BacktestTableService } from 'src/app/backtest-table/backtest-table.service';
 import { SchedulerService } from '@shared/service/scheduler.service';
+import { MachineDaytradingService } from 'src/app/machine-daytrading/machine-daytrading.service';
 
 @Component({
   selector: 'app-find-some-daytrade',
@@ -12,10 +13,13 @@ import { SchedulerService } from '@shared/service/scheduler.service';
 })
 export class FindSomeDaytradeComponent implements OnInit {
   currentTrades = [];
+  dollarAmount = 1000;
   constructor(private backtestTableService: BacktestTableService,
     private backtestService: BacktestService,
     private portfolioService: PortfolioService,
-    private schedulerService: SchedulerService
+    private schedulerService: SchedulerService,
+    private daytradeService: DaytradeService,
+    private machineDaytradingService: MachineDaytradingService
   ) { }
 
   ngOnInit(): void {
@@ -59,6 +63,7 @@ export class FindSomeDaytradeComponent implements OnInit {
       setTimeout(resolve, 2000);
     });
   }
+
   addTrade(stock: string, daytradeData) {
     let recommendationsArr = [];
     for (const key in daytradeData) {
@@ -68,5 +73,31 @@ export class FindSomeDaytradeComponent implements OnInit {
       }
     }
     this.currentTrades.push({ stock: stock, recommendations: recommendationsArr.join(','), time: moment().format('hh:mm a z') });
+  }
+
+  async sendBuy(symbol: string) {
+    const tiingoQuote = await this.backtestService.getLastPriceTiingo({ symbol: symbol }).toPromise();
+    const lastPrice = Number(tiingoQuote[0].last);
+
+    const balance = await this.machineDaytradingService.getPortfolioBalance().toPromise();
+    const currentBalance = balance.cashBalance;
+    const orderQuantity = Math.floor(this.dollarAmount / lastPrice) || 1;
+    if (currentBalance > orderQuantity * lastPrice)  {
+      const order = {
+        symbol: symbol,
+        pl: 0,
+        netLiq: 0,
+        shares: 0,
+        alloc: 0,
+        recommendation: 'None',
+        buyReasons: '',
+        sellReasons: '',
+        buyConfidence: 0,
+        sellConfidence: 0,
+        prediction: null
+      };
+      const buyOrder = this.daytradeService.createOrder(order, 'Buy', orderQuantity, lastPrice, 0)
+      this.daytradeService.sendBuy(buyOrder, 'limit', () => {}, () => {});
+    }
   }
 }

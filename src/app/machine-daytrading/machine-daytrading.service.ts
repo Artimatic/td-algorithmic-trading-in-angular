@@ -8,6 +8,38 @@ import { CurrentStockList } from '../rh-table/stock-list.constant';
 import { shuffle } from '../rh-table/backtest-stocks.constant';
 import { GlobalSettingsService } from '../settings/global-settings.service';
 import { tap } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+
+export interface Balance {
+  accruedInterest: number;
+  availableFunds: number;
+  availableFundsNonMarginableTrade: number;
+  bondValue: number;
+  buyingPower: number;
+  buyingPowerNonMarginableTrade: number;
+  cashBalance: number;
+  cashReceipts: number;
+  dayTradingBuyingPower: number;
+  equity: number;
+  equityPercentage: number;
+  liquidationValue: number;
+  longMarginValue: number;
+  longMarketValue: number;
+  longOptionMarketValue: number;
+  maintenanceCall: number;
+  maintenanceRequirement: number;
+  marginBalance: number;
+  moneyMarketFund: number;
+  mutualFundValue: number;
+  pendingDeposits: number;
+  regTCall: number;
+  savings: number;
+  shortBalance: number;
+  shortMarginValue: number;
+  shortMarketValue: number;
+  shortOptionMarketValue: number;
+  sma: number;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -152,13 +184,13 @@ export class MachineDaytradingService {
     this.selectedStock = null;
   }
 
-  getPortfolioBalance() {
+  getPortfolioBalance(): Observable<Balance> {
     return this.portfolioService.getTdBalance().pipe(tap(total => this.lastBalance = total));
   }
 
   isBalanceSufficient(orderCost: number) {
     return this.getPortfolioBalance().subscribe(data => {
-      if (data.cashBalance > orderCost || data.cashAvailableForTrading > orderCost) {
+      if (data.cashBalance > orderCost || data.availableFunds > orderCost) {
         return true;
       }
       return false;

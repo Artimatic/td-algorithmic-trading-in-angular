@@ -1,12 +1,17 @@
 <p-table [value]="currentTrades">
     <ng-template pTemplate="caption">
-        <p-button icon="pi pi-refresh" styleClass="p-button-success" (click)="findTrades()"></p-button>
+        <p-button icon="pi pi-refresh" label="Refresh list" styleClass="p-button-success caption-items" (click)="findTrades()"></p-button>
+        <p-inputNumber [(ngModel)]="dollarAmount" [showButtons]="true" buttonLayout="horizontal" inputId="horizontal"
+            spinnerMode="horizontal" [step]="0.25" decrementButtonClass="p-button-danger"
+            incrementButtonClass="p-button-success" incrementButtonIcon="pi pi-plus" decrementButtonIcon="pi pi-minus"
+            mode="currency" currency="USD"></p-inputNumber>
     </ng-template>
     <ng-template pTemplate="header">
         <tr>
             <th>Stock</th>
             <th>Recommendations</th>
             <th>Time</th>
+            <th>Action</th>
         </tr>
     </ng-template>
     <ng-template pTemplate="body" let-trade>
@@ -14,6 +19,10 @@
             <td>{{ trade.stock }}</td>
             <td>{{ trade.recommendations }}</td>
             <td>{{ trade.time }}</td>
+            <td>
+                <p-button icon="pi pi-money-bill" styleClass="p-button-success"
+                    (click)="sendBuy(trade.stock)"></p-button>
+            </td>
         </tr>
     </ng-template>
 </p-table>
