@@ -62,6 +62,7 @@ export class AddOptionsTradeComponent implements OnInit, OnDestroy {
       }
       this.saveToStorage(symbol);
       if (this.symbolsArr.length) {
+        await this.delayRequest();
         this.processSymbol$.next(this.symbolsArr.pop());
       } else {
         this.isLoading = false;
@@ -72,6 +73,11 @@ export class AddOptionsTradeComponent implements OnInit, OnDestroy {
     }
   }
 
+  delayRequest() {
+    return new Promise(function (resolve) {
+      setTimeout(resolve, 5000);
+    });
+  }
 
   filterItems(event) {
     if (event.query) {
