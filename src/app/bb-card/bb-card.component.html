@@ -16,15 +16,10 @@
   <p-steps [model]="items" [(activeIndex)]="activeIndex" [readonly]="false"></p-steps>
 
   <div class="card-form-main" *ngIf="activeIndex === 0">
+    <h3>{{order.holding.symbol}}</h3>
     <form [formGroup]="firstFormGroup" class="bb-form">
       <div class="p-field-radiobutton bb-form-field" *ngFor="let side of sides">
         <p-radioButton name="orderType" [value]="side" [label]="side" formControlName="orderType"></p-radioButton>
-      </div>
-      <div class="bb-form-field">
-        <p-checkbox formControlName="useML" label="Enable machine learning" (onChange)="checkMLService()"></p-checkbox>
-      </div>
-      <div class="bb-form-field">
-        <p-dropdown [options]="algorithmList" [formControl]="selectedAlgorithm" optionLabel="Select an Algorithm"></p-dropdown>
       </div>
       <div class="bb-form-field">
         <p-multiSelect [formControl]="preferences" defaultLabel="Select additional options"
@@ -35,6 +30,17 @@
           required></p-inputNumber>
         <label for="float-input">Quantity</label>
       </span>
+      <span class="p-float-label bb-form-field">
+        <p-inputNumber id="float-input" type="number" pInputText formControlName="orderSize"
+          required></p-inputNumber>
+          <label for="float-input">Orders</label>
+      </span>
+      <div class="bb-form-field">
+        <p-checkbox formControlName="useML" label="Enable machine learning" (onChange)="checkMLService()"></p-checkbox>
+      </div>
+      <div class="bb-form-field">
+        <p-dropdown [options]="algorithmList" [formControl]="selectedAlgorithm" optionLabel="Select an Algorithm"></p-dropdown>
+      </div>
       <span class="p-float-label bb-form-field">
         <p-inputNumber id="float-input" type="number" placeholder="Stop Loss" pInputText formControlName="lossThreshold"
           required></p-inputNumber>
@@ -49,11 +55,6 @@
         <p-inputNumber id="float-input" type="number" pInputText formControlName="profitTarget"
           required></p-inputNumber>
           <label for="float-input">Profit Target</label>
-      </span>
-      <span class="p-float-label bb-form-field">
-        <p-inputNumber id="float-input" type="number" pInputText formControlName="orderSize"
-          required></p-inputNumber>
-          <label for="float-input">Orders</label>
       </span>
       <span class="p-float-label bb-form-field">
         <input type="text" pInputText [(ngModel)]="value" formControlName="phoneNumber"/>

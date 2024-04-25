@@ -6,13 +6,21 @@ import { BacktestTableService } from 'src/app/backtest-table/backtest-table.serv
 import { SchedulerService } from '@shared/service/scheduler.service';
 import { MachineDaytradingService } from 'src/app/machine-daytrading/machine-daytrading.service';
 
+interface StockTrade {
+  stock: string;
+  recommendations?: string;
+  time?: string;
+  orderQuantity?: number
+}
+
 @Component({
   selector: 'app-find-some-daytrade',
   templateUrl: './find-some-daytrade.component.html',
   styleUrls: ['./find-some-daytrade.component.css']
 })
 export class FindSomeDaytradeComponent implements OnInit {
-  currentTrades = [];
+  currentTrades: StockTrade[] = [];
+  currentHoldings: StockTrade[] = [];
   dollarAmount = 1000;
   constructor(private backtestTableService: BacktestTableService,
     private backtestService: BacktestService,
@@ -26,10 +34,29 @@ export class FindSomeDaytradeComponent implements OnInit {
     this.findTrades();
   }
 
-  async findTrades() {
-    this.currentTrades = [];
-    await this.portfolioService.getTdBalance().toPromise();
+  async getCurrentHoldings() {
+    const data = await this.portfolioService.getTdPortfolio().toPromise();
+    if (data) {
+      for (const holding of data) {
+        if (holding.instrument.assetType.toLowerCase() !== 'option') {
+          this.currentHoldings.push({
+            stock: holding.instrument.symbol,
+            orderQuantity: holding.longQuantity
+          });
+        }
+      }
+    }
+  }
 
+  async getCashBalance() {
+    const balance = await this.portfolioService.getTdBalance().toPromise();
+    this.dollarAmount = Math.floor(balance.buyingPower * 0.05);
+  }
+
+  async findTrades() {
+    await this.getCashBalance();
+    await this.getCurrentHoldings();
+    this.currentTrades = [];
     const savedBacktestData = this.backtestTableService.getStorage('backtest');
     for (const backtestDataKey in savedBacktestData) {
       const backtestData = savedBacktestData[backtestDataKey];
@@ -39,7 +66,7 @@ export class FindSomeDaytradeComponent implements OnInit {
             let daytradeData;
             try {
               daytradeData = await this.backtestService.getDaytradeRecommendation(backtestData.stock, backtestData.high52, backtestData.high52, { minQuotes: 81 }).toPromise();
-            } catch(err) {
+            } catch (err) {
               await this.delayRequest();
               daytradeData = await this.backtestService.getDaytradeRecommendation(backtestData.stock, backtestData.high52, backtestData.high52, { minQuotes: 81 }).toPromise();
             }
@@ -47,7 +74,7 @@ export class FindSomeDaytradeComponent implements OnInit {
               this.addTrade(backtestData.stock, daytradeData);
             } else {
               const indicator = daytradeData.data.indicator;
-              if (indicator.mfiLeft < 30 || indicator.bbandBreakout || indicator.close < indicator.bband80[0][0]) {
+              if ((indicator?.mfiLeft && indicator?.mfiLeft < 20) || indicator.bbandBreakout || (indicator.bband80[0][0] && indicator.close < indicator.bband80[0][0])) {
                 this.addTrade(backtestData.stock, daytradeData);
               }
             }
@@ -72,7 +99,8 @@ export class FindSomeDaytradeComponent implements OnInit {
         recommendationsArr.push(key);
       }
     }
-    this.currentTrades.push({ stock: stock, recommendations: recommendationsArr.join(','), time: moment().format('hh:mm a z') });
+    const found = this.currentHoldings.find((value) => value.stock === stock);
+    this.currentTrades.push({ stock: stock, recommendations: recommendationsArr.join(','), time: moment().format('hh:mm a z'), orderQuantity: found?.orderQuantity });
   }
 
   async sendBuy(symbol: string) {
@@ -82,7 +110,7 @@ export class FindSomeDaytradeComponent implements OnInit {
     const balance = await this.machineDaytradingService.getPortfolioBalance().toPromise();
     const currentBalance = balance.cashBalance;
     const orderQuantity = Math.floor(this.dollarAmount / lastPrice) || 1;
-    if (currentBalance > orderQuantity * lastPrice)  {
+    if (currentBalance > orderQuantity * lastPrice) {
       const order = {
         symbol: symbol,
         pl: 0,
@@ -97,7 +125,30 @@ export class FindSomeDaytradeComponent implements OnInit {
         prediction: null
       };
       const buyOrder = this.daytradeService.createOrder(order, 'Buy', orderQuantity, lastPrice, 0)
-      this.daytradeService.sendBuy(buyOrder, 'limit', () => {}, () => {});
+      this.daytradeService.sendBuy(buyOrder, 'limit', () => { }, () => { });
     }
+  }
+
+  async sendSell(symbol: string, orderQuantity: number) {
+    const tiingoQuote = await this.backtestService.getLastPriceTiingo({ symbol: symbol }).toPromise();
+    const lastPrice = Number(tiingoQuote[0].last);
+
+
+    const order = {
+      symbol: symbol,
+      pl: 0,
+      netLiq: 0,
+      shares: 0,
+      alloc: 0,
+      recommendation: 'None',
+      buyReasons: '',
+      sellReasons: '',
+      buyConfidence: 0,
+      sellConfidence: 0,
+      prediction: null
+    };
+    const sellOrder = this.daytradeService.createOrder(order, 'Sell', orderQuantity, lastPrice, 0)
+    this.daytradeService.sendSell(sellOrder, 'limit', () => { }, () => { }, () => { });
+
   }
 }

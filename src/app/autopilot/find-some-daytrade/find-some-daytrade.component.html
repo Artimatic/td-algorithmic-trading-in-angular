@@ -1,8 +1,11 @@
-<p-table [value]="currentTrades">
+<p-table [value]="currentTrades"  [paginator]="true" [rows]="20" dataKey="stock" selectionMode="single" [resizableColumns]="true" columnResizeMode="expand">
     <ng-template pTemplate="caption">
-        <p-button icon="pi pi-refresh" label="Refresh list" styleClass="p-button-success caption-items" (click)="findTrades()"></p-button>
+        <div class="caption-items">
+            <p-button icon="pi pi-refresh" label="Find day trades" styleClass="p-button-success"
+                (click)="findTrades()"></p-button>
+        </div>
         <p-inputNumber [(ngModel)]="dollarAmount" [showButtons]="true" buttonLayout="horizontal" inputId="horizontal"
-            spinnerMode="horizontal" [step]="0.25" decrementButtonClass="p-button-danger"
+            spinnerMode="horizontal" [step]="1000" decrementButtonClass="p-button-danger"
             incrementButtonClass="p-button-success" incrementButtonIcon="pi pi-plus" decrementButtonIcon="pi pi-minus"
             mode="currency" currency="USD"></p-inputNumber>
     </ng-template>
@@ -20,8 +23,14 @@
             <td>{{ trade.recommendations }}</td>
             <td>{{ trade.time }}</td>
             <td>
-                <p-button icon="pi pi-money-bill" styleClass="p-button-success"
-                    (click)="sendBuy(trade.stock)"></p-button>
+                <div class="caption-items">
+                    <p-button pRipple label="Buy" styleClass="p-button-success"
+                        (click)="sendBuy(trade.stock)"></p-button>
+                </div>
+                <div class="caption-items" *ngIf="trade.orderQuantity">
+                    <p-button pRipple label="Sell" styleClass="p-button-danger"
+                        (click)="sendSell(trade.stock, trade.orderQuantity)"></p-button>
+                </div>
             </td>
         </tr>
     </ng-template>

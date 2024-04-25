@@ -171,7 +171,7 @@ export class DetermineHedgeComponent implements OnInit {
   portfolioBuy(stock, desiredAllocation, cash) {
     this.portfolioService.getPrice(stock).subscribe((price) => {
       this.portfolioService.getTdBalance().subscribe((data) => {
-        const allocation = data.cashAvailableForTrading >= desiredAllocation ? desiredAllocation : data.cashAvailableForTrading;
+        const allocation = data.cashBalance >= desiredAllocation ? desiredAllocation : data.cashAvailableForTrading;
         const quantity = this.getQuantity(price, allocation, cash);
 
         const order = this.buildOrder(stock, quantity, price, 'Buy');

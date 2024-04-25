@@ -24,6 +24,37 @@ export interface PortfolioInfoHolding {
   prediction: number;
 }
 
+export interface Balance {
+  accruedInterest: number;
+  availableFunds: number;
+  availableFundsNonMarginableTrade: number;
+  bondValue: number;
+  buyingPower: number;
+  buyingPowerNonMarginableTrade: number;
+  cashBalance: number;
+  cashReceipts: number;
+  dayTradingBuyingPower: number;
+  equity: number;
+  equityPercentage: number;
+  liquidationValue: number;
+  longMarginValue: number;
+  longMarketValue: number;
+  longOptionMarketValue: number;
+  maintenanceCall: number;
+  maintenanceRequirement: number;
+  marginBalance: number;
+  moneyMarketFund: number;
+  mutualFundValue: number;
+  pendingDeposits: number;
+  regTCall: number;
+  savings: number;
+  shortBalance: number;
+  shortMarginValue: number;
+  shortMarketValue: number;
+  shortOptionMarketValue: number;
+  sma: number;
+}
+
 @Injectable()
 export class PortfolioService {
   portfolioSubject: Subject<PortfolioInfoHolding> = new Subject();
