@@ -90,6 +90,8 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
 
   currentBalance: number;
 
+  settingsVisible = false;
+
   constructor(private _formBuilder: FormBuilder,
     private backtestService: BacktestService,
     private daytradeService: DaytradeService,
@@ -361,6 +363,8 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     this.alive = false;
     this.live = false;
     this.stopped = true;
+    this.order.stopped = true;
+    this.cartService.updateOrder(this.order);
     if (this.sub) {
       this.sub.unsubscribe();
     }
@@ -636,7 +640,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
                       severity: 'success',
                       summary: this.order.holding.symbol,
                       detail: `Buy recommendation at ${moment().format('hh:mm')}`,
-                      sticky: true
+                      life: 300000
                     });
                   }
                 }, error => {
@@ -960,7 +964,8 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
       this.messageService.add({
         key: 'mlServiceStatus',
         severity: 'danger',
-        summary: 'Machine learning service is currently offline'
+        summary: 'Machine learning service is currently offline',
+        life: 300000
       });
     };
 
@@ -984,6 +989,10 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
         )
         .subscribe();
     }, `calibrateOne${this.order.holding.symbol}`, null, false, 180000);
+  }
+
+  toggleSettingsVisible() {
+    this.settingsVisible = !this.settingsVisible;
   }
 
   test() {

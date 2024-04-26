@@ -48,13 +48,8 @@
     padding: 3px 0 5px 3px;
 }
 
-.bb-form {
-    display: flex;
-    margin: 1rem;
-}
-
 .bb-form-field {
-    margin-right: 1rem;
+    margin: 2rem 0.5rem;
 }
 
 :host ::ng-deep .p-chip.live-chip {
@@ -69,4 +64,9 @@
 button {
     margin-bottom: 0.5rem;
     margin-right: 0.5rem;
+}
+
+.settings-container {
+    display: flex;
+    flex-wrap: wrap;
 }

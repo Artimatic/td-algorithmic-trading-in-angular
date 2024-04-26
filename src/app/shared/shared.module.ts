@@ -50,6 +50,7 @@ import { InputTextareaModule } from 'primeng/inputtextarea';
 import { TagModule } from 'primeng/tag';
 import { AvatarModule } from 'primeng/avatar';
 import { AvatarGroupModule } from 'primeng/avatargroup';
+import { OrderListModule } from 'primeng/orderlist';
 
 const materialModules = [
   MatCardModule,
@@ -103,6 +104,7 @@ const primeModules = [
   TagModule,
   AvatarModule,
   AvatarGroupModule,
+  OrderListModule
 ];
 
 @NgModule({

@@ -4,13 +4,15 @@ import { SmartOrder } from '../models/smart-order';
 import { TradeService, AlgoQueueItem } from './trade.service';
 import * as _ from 'lodash';
 import { MessageService } from 'primeng/api';
+import { Subject } from 'rxjs';
 
 @Injectable()
 export class CartService {
   sellOrders: SmartOrder[] = [];
   buyOrders: SmartOrder[] = [];
   otherOrders: SmartOrder[] = [];
-
+  cartObserver: Subject<boolean> = new Subject<boolean>();
+  
   constructor(
     private portfolioService: PortfolioService,
     private tradeService: TradeService,
@@ -70,21 +72,26 @@ export class CartService {
         });
       }
     }
+    this.cartObserver.next(true);
   }
 
   deleteSell(deleteOrder: SmartOrder) {
     console.log('Deleting sell order', deleteOrder.holding.symbol);
     this.sellOrders = this.sellOrders.filter(fullOrder => fullOrder.holding.symbol !== deleteOrder.holding.symbol );
+    this.cartObserver.next(true);
   }
 
   deleteBuy(deleteOrder: SmartOrder) {
     console.log('Deleting buy order', deleteOrder.holding.symbol);
     this.buyOrders = this.buyOrders.filter(fullOrder => fullOrder.holding.symbol !== deleteOrder.holding.symbol );
+    this.cartObserver.next(true);
+
   }
 
   deleteDaytrade(deleteOrder: SmartOrder) {
     console.log('Deleting day trade', deleteOrder.holding.symbol);
     this.otherOrders = this.otherOrders.filter(fullOrder => fullOrder.holding.symbol !== deleteOrder.holding.symbol );
+    this.cartObserver.next(true);
   }
 
   updateOrder(updatedOrder: SmartOrder) {
@@ -93,7 +100,9 @@ export class CartService {
 
     indices.forEach((val, idx) => {
       if (val > -1) {
-        lists[idx][val] = updatedOrder;
+        if (lists[idx][val].holding.symbol === updatedOrder.holding.symbol) {
+          lists[idx][val] = updatedOrder;
+        }
         const queueItem: AlgoQueueItem = {
           symbol: updatedOrder.holding.symbol,
           reset: false,
@@ -103,6 +112,7 @@ export class CartService {
         this.tradeService.algoQueue.next(queueItem);
       }
     });
+    this.cartObserver.next(true);
   }
 
   searchAllLists(targetOrder: SmartOrder) {
@@ -124,6 +134,7 @@ export class CartService {
         this.deleteDaytrade(order);
         break;
     }
+    this.cartObserver.next(true);
   }
 
   addOrder(order: SmartOrder) {
@@ -138,6 +149,7 @@ export class CartService {
         this.otherOrders.push(order);
         break;
     }
+    this.cartObserver.next(true);
   }
 
   getOrderIndex(orderList: SmartOrder[], targetOrder: SmartOrder) {
@@ -227,8 +239,9 @@ export class CartService {
   }
 
   removeCompletedOrders() {
-    this.buyOrders = this.buyOrders.filter(order => Math.abs(order.positionCount) > order.quantity);
-    this.sellOrders = this.sellOrders.filter(order => Math.abs(order.positionCount) > order.quantity);
-    this.otherOrders = this.otherOrders.filter(order => Math.abs(order.positionCount) > order.quantity);
+    this.buyOrders = this.buyOrders.filter(order => !order.stopped);
+    this.sellOrders = this.sellOrders.filter(order => !order.stopped);
+    this.otherOrders = this.otherOrders.filter(order => !order.stopped);
+    this.cartObserver.next(true);
   }
 }

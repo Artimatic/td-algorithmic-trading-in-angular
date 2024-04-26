@@ -1,7 +1,6 @@
-<p-card>
-  <span class="delete-me">
-    <button pButton type="button" (click)="delete()" icon="pi pi-times" iconPos="left"></button>
-  </span>
+<p-button [label]="order.holding.symbol" (click)="toggleSettingsVisible()" [badge]="firstFormGroup.value.quantity" styleClass="mr-2"></p-button>
+
+<p-dialog [header]="order.holding.symbol" [(visible)]="settingsVisible">
   <div class="banner" *ngIf="error">
     <div class="banner-content">
       ERROR: {{error}}
@@ -12,12 +11,10 @@
       WARNING: {{warning}}
     </div>
   </div>
-
   <p-steps [model]="items" [(activeIndex)]="activeIndex" [readonly]="false"></p-steps>
 
   <div class="card-form-main" *ngIf="activeIndex === 0">
-    <h3>{{order.holding.symbol}}</h3>
-    <form [formGroup]="firstFormGroup" class="bb-form">
+    <form [formGroup]="firstFormGroup">
       <div class="p-field-radiobutton bb-form-field" *ngFor="let side of sides">
         <p-radioButton name="orderType" [value]="side" [label]="side" formControlName="orderType"></p-radioButton>
       </div>
@@ -31,15 +28,15 @@
         <label for="float-input">Quantity</label>
       </span>
       <span class="p-float-label bb-form-field">
-        <p-inputNumber id="float-input" type="number" pInputText formControlName="orderSize"
-          required></p-inputNumber>
-          <label for="float-input">Orders</label>
+        <p-inputNumber id="float-input" type="number" pInputText formControlName="orderSize" required></p-inputNumber>
+        <label for="float-input">Orders</label>
       </span>
       <div class="bb-form-field">
         <p-checkbox formControlName="useML" label="Enable machine learning" (onChange)="checkMLService()"></p-checkbox>
       </div>
       <div class="bb-form-field">
-        <p-dropdown [options]="algorithmList" [formControl]="selectedAlgorithm" optionLabel="Select an Algorithm"></p-dropdown>
+        <p-dropdown [options]="algorithmList" [formControl]="selectedAlgorithm"
+          optionLabel="Select an Algorithm"></p-dropdown>
       </div>
       <span class="p-float-label bb-form-field">
         <p-inputNumber id="float-input" type="number" placeholder="Stop Loss" pInputText formControlName="lossThreshold"
@@ -47,79 +44,23 @@
         <label for="float-input">Stop Loss</label>
       </span>
       <span class="p-float-label bb-form-field">
-        <p-inputNumber id="float-input" type="number" placeholder="Trailing Stop Loss" pInputText formControlName="trailingStop"
-          required></p-inputNumber>
-          <label for="float-input">Trailing Stop Loss</label>
+        <p-inputNumber id="float-input" type="number" placeholder="Trailing Stop Loss" pInputText
+          formControlName="trailingStop" required></p-inputNumber>
+        <label for="float-input">Trailing Stop Loss</label>
       </span>
       <span class="p-float-label bb-form-field">
         <p-inputNumber id="float-input" type="number" pInputText formControlName="profitTarget"
           required></p-inputNumber>
-          <label for="float-input">Profit Target</label>
+        <label for="float-input">Profit Target</label>
       </span>
       <span class="p-float-label bb-form-field">
-        <input type="text" pInputText [(ngModel)]="value" formControlName="phoneNumber"/>
+        <input type="text" pInputText formControlName="phoneNumber" />
         <label for="float-input">Phone Number</label>
       </span>
     </form>
-
-    <!-- <form [formGroup]="firstFormGroup">
-      <ng-template matStepLabel>Edit Order</ng-template>
-      <mat-chip>{{order.holding.symbol}}</mat-chip>
-      <p>{{order.holding.name}}</p>
-      <mat-form-field>
-        <mat-select placeholder="Side" formControlName="orderType" name="side" required>
-          <mat-option *ngFor="let side of sides" [value]="side">
-            {{ side }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-      <mat-form-field hintLabel="Quantity">
-        <input matInput type="number" placeholder="Quantity" formControlName="quantity" required>
-      </mat-form-field>
-      <mat-form-field hintLabel="Stop Loss">
-        <input matInput type="number" placeholder="Stop Loss" formControlName="lossThreshold" required>
-      </mat-form-field>
-      <mat-form-field hintLabel="Trailing stop loss">
-        <input matInput type="number" placeholder="Trailing Stop Loss" formControlName="trailingStop" required>
-      </mat-form-field>
-      <mat-form-field hintLabel="Profit exit">
-        <input matInput type="number" placeholder="Profit Target" formControlName="profitTarget">
-      </mat-form-field>
-      <mat-form-field hintLabel="Size of Each Order">
-        <input matInput type="number" placeholder="Orders" formControlName="orderSize" required>
-      </mat-form-field>
-      <mat-form-field>
-        <mat-select placeholder="Preferences" [formControl]="preferences" name="preferences" multiple>
-          <mat-option *ngFor="let pref of preferenceList" [value]="pref">
-            {{ pref }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-      <mat-form-field>
-        <mat-select placeholder="Multiplier" [formControl]="multiplierPreference" name="multiplier">
-          <mat-option *ngFor="let mulitiplier of multiplierList" [value]="mulitiplier">
-            {{ mulitiplier }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-      <mat-form-field>
-        <input matInput type="string" placeholder="Phone" formControlName="phoneNumber" required>
-      </mat-form-field>
-      <p-selectButton [options]="smsOptions" [formControl]="smsOption"></p-selectButton>
-      <div class="machine-switch">
-        <mat-slide-toggle [formControl]="machineControlled">
-          <a matTooltip="Machine picks the stock">
-            Machine Controlled
-          </a>
-        </mat-slide-toggle>
-      </div>
-      <div>
-        <button (click)="activeIndex=1;">Next</button>
-      </div>
-    </form> -->
   </div>
   <div *ngIf="activeIndex === 1">
-    <p-card>
+    <div>
       <div *ngIf="live">
         <p-chip label="Live" styleClass="p-mr-2 live-chip"></p-chip>
       </div>
@@ -164,14 +105,17 @@
           </div>
         </div>
       </div>
-      <p-footer>
+      <div>
         <div class="card-actions">
           <button pButton class="p-button-info" (click)="backtest()">Backtest</button>
         </div>
         <div class="card-actions">
           <button pButton class="p-button-info" (click)="test()">Test</button>
         </div>
-      </p-footer>
-    </p-card>
+      </div>
+    </div>
   </div>
-</p-card>
+  <span class="delete-me">
+    <button pButton type="button" (click)="delete()" label="Delete" iconPos="left"></button>
+  </span>
+</p-dialog>

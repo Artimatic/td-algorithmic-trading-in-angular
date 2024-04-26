@@ -25,7 +25,7 @@ class QuoteController extends BaseController {
     if (_.isEmpty(request.body)) {
       return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
     } else {
-      QuoteService.getLastPrice(request.body.symbol)
+      QuoteService.getLastPrice(request.body.symbol, response)
         .then((data) => BaseController.requestGetSuccessHandler(response, data))
         .catch((e) => BaseController.requestErrorHandler(response, e));
     }

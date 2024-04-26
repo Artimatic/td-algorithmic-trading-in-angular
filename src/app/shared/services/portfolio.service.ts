@@ -8,7 +8,7 @@ import { Holding } from '../models';
 import * as _ from 'lodash';
 import { GlobalSettingsService, Brokerage } from '../../settings/global-settings.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Subject } from 'rxjs';
+import { Subject, of } from 'rxjs';
 
 export interface PortfolioInfoHolding {
   name: string;
@@ -75,9 +75,13 @@ export class PortfolioService {
   }
 
   getTdPortfolio(): Observable<any> {
+    const accountId = this.getAccountId();
+    if (!accountId) {
+      return of(null);
+    }
     const options = {
       params: {
-        accountId: this.getAccountId()
+        accountId
       }
     };
     return this.http.get('/api/portfolio/v2/positions/', options);
@@ -185,10 +189,14 @@ export class PortfolioService {
   }
 
   getQuote(symbol: string): Observable<any> {
+    const accountId = this.getAccountId();
+    if (!accountId) {
+      return of(null);
+    }
     const options = {
       params: {
         symbol,
-        accountId: this.getAccountId()
+        accountId
       }
     };
 
@@ -214,13 +222,17 @@ export class PortfolioService {
   }
 
   sendTdBuy(holding: Holding, quantity: number, price: number, extended: boolean): Observable<any> {
+    const accountId = this.getAccountId();
+    if (!accountId) {
+      return of(null);
+    }
     const body = {
       symbol: holding.symbol,
       quantity: quantity,
       price: price,
       type: 'LIMIT',
       extendedHours: extended,
-      accountId: this.getAccountId()
+      accountId
     };
     return this.http.post('/api/portfolio/v2/buy', body);
   }
@@ -240,6 +252,10 @@ export class PortfolioService {
 
   sendTwoLegOrder(primaryLegSymbol: string, secondaryLegSymbol: string,
     quantity: number, price: number, extended: boolean): Observable<any> {
+    const accountId = this.getAccountId();
+    if (!accountId) {
+      return of(null);
+    }
     const body = {
       primaryLegSymbol,
       secondaryLegSymbol,
@@ -247,13 +263,16 @@ export class PortfolioService {
       price: price,
       type: 'NET_DEBIT',
       extendedHours: extended,
-      accountId: this.getAccountId()
+      accountId
     };
     return this.http.post('/api/portfolio/v2/two-leg', body);
   }
 
   getTdBalance(): Observable<any> {
     const accountId = this.getAccountId();
+    if (!accountId) {
+      return of(null);
+    }
     const options = {
       params: {
         accountId

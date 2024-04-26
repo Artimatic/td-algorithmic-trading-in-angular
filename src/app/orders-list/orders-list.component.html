@@ -1,19 +1,40 @@
-<p-accordion>
-  <p-accordionTab header="Orders">
-    <div *ngFor="let sell of cartService.sellOrders" class="order-card">
-      <app-bb-card [order]="sell" [tearDown]="sell.stopped">
-      </app-bb-card>
-    </div>
-    <div *ngFor="let buy of cartService.buyOrders" class="order-card">
-      <app-bb-card [order]="buy" [tearDown]="buy.stopped">
-      </app-bb-card>
-    </div>
-    <div *ngFor="let other of cartService.otherOrders" class="order-card">
-      <app-bb-card [order]="other" [tearDown]="other.stopped">
-      </app-bb-card>
-    </div>
-    <div *ngIf="!cartService.sellOrders.length && !cartService.buyOrders.length && !cartService.otherOrders.length">
-      <p>No orders found.</p>
-    </div>
-  </p-accordionTab>
-</p-accordion>
+<div class="container">
+  <p-orderList [value]="otherOrders" [style]="{ width: '28vw' }" [listStyle]="{ height: '25rem' }"
+    header="Day trade">
+    <ng-template let-other pTemplate="item">
+      <div class="flex flex-wrap p-2 align-items-center gap-3">
+        <app-bb-card [order]="other" [tearDown]="other.stopped">
+        </app-bb-card>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="empty">
+      <p> No orders</p>
+    </ng-template>
+  </p-orderList>
+
+  <p-orderList [value]="buyOrders" [style]="{ width: '28vw' }" [listStyle]="{ height: '25rem' }"
+    header="Buy">
+    <ng-template let-buy pTemplate="item">
+      <div class="flex flex-wrap p-2 align-items-center gap-3">
+        <app-bb-card [order]="buy" [tearDown]="buy.stopped">
+        </app-bb-card>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="empty">
+      <p> No orders</p>
+    </ng-template>
+  </p-orderList>
+
+  <p-orderList [value]="sellOrders" [style]="{ width: '28vw' }" [listStyle]="{ height: '25rem' }"
+    header="Sell">
+    <ng-template let-sell pTemplate="item">
+      <div class="flex flex-wrap p-2 align-items-center gap-3">
+        <app-bb-card [order]="sell" [tearDown]="sell.stopped">
+        </app-bb-card>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="empty">
+      <p> No orders</p>
+    </ng-template>
+  </p-orderList>
+</div>

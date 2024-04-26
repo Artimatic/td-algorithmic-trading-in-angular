@@ -1,37 +1,42 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import * as moment from 'moment-timezone';
 
 import { BacktestService, DaytradeService, PortfolioService } from '@shared/services';
 import { BacktestTableService } from 'src/app/backtest-table/backtest-table.service';
 import { SchedulerService } from '@shared/service/scheduler.service';
 import { MachineDaytradingService } from 'src/app/machine-daytrading/machine-daytrading.service';
-
-interface StockTrade {
-  stock: string;
-  recommendations?: string;
-  time?: string;
-  orderQuantity?: number
-}
+import { MessageService } from 'primeng/api';
+import { FindDaytradeService, StockTrade } from '../find-daytrade.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-find-some-daytrade',
   templateUrl: './find-some-daytrade.component.html',
   styleUrls: ['./find-some-daytrade.component.css']
 })
-export class FindSomeDaytradeComponent implements OnInit {
+export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
   currentTrades: StockTrade[] = [];
   currentHoldings: StockTrade[] = [];
   dollarAmount = 1000;
+  destroy$ = new Subject();
+
   constructor(private backtestTableService: BacktestTableService,
     private backtestService: BacktestService,
     private portfolioService: PortfolioService,
     private schedulerService: SchedulerService,
     private daytradeService: DaytradeService,
-    private machineDaytradingService: MachineDaytradingService
+    private machineDaytradingService: MachineDaytradingService,
+    private messageService: MessageService,
+    private findDaytradeService: FindDaytradeService
   ) { }
 
   ngOnInit(): void {
-    this.findTrades();
+    this.findDaytradeService.getRefreshObserver()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.findTrades();
+      });
   }
 
   async getCurrentHoldings() {
@@ -50,7 +55,7 @@ export class FindSomeDaytradeComponent implements OnInit {
 
   async getCashBalance() {
     const balance = await this.portfolioService.getTdBalance().toPromise();
-    this.dollarAmount = Math.floor(balance.buyingPower * 0.05);
+    this.dollarAmount = Math.floor((balance?.buyingPower | 0) * 0.05);
   }
 
   async findTrades() {
@@ -100,7 +105,21 @@ export class FindSomeDaytradeComponent implements OnInit {
       }
     }
     const found = this.currentHoldings.find((value) => value.stock === stock);
-    this.currentTrades.push({ stock: stock, recommendations: recommendationsArr.join(','), time: moment().format('hh:mm a z'), orderQuantity: found?.orderQuantity });
+    const trade = { stock: stock, recommendations: recommendationsArr.join(','), time: moment().format('hh:mm a z'), orderQuantity: found?.orderQuantity };
+    this.findDaytradeService.addTrade(trade);
+    this.currentTrades.push(trade);
+  }
+
+  async checkCurrentHoldings() {
+    await this.delayRequest();
+    await this.getCurrentHoldings();
+    this.currentTrades = this.currentTrades.map((trade: StockTrade) => {
+      const found = this.currentHoldings.find((value) => value.stock === trade.stock);
+      if (found) {
+        return found;
+      }
+      return trade;
+    });
   }
 
   async sendBuy(symbol: string) {
@@ -125,7 +144,23 @@ export class FindSomeDaytradeComponent implements OnInit {
         prediction: null
       };
       const buyOrder = this.daytradeService.createOrder(order, 'Buy', orderQuantity, lastPrice, 0)
-      this.daytradeService.sendBuy(buyOrder, 'limit', () => { }, () => { });
+      const success = () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: `Bought ${orderQuantity} shares of ${symbol}`
+        });
+        this.checkCurrentHoldings();
+      };
+
+      const failure = (error) => {
+        console.log(error);
+        this.messageService.add({
+          severity: 'danger',
+          summary: `Failed to buy ${orderQuantity} shares of ${symbol}`
+        });
+        this.checkCurrentHoldings();
+      };
+      this.daytradeService.sendBuy(buyOrder, 'limit', success, failure);
     }
   }
 
@@ -147,8 +182,31 @@ export class FindSomeDaytradeComponent implements OnInit {
       sellConfidence: 0,
       prediction: null
     };
-    const sellOrder = this.daytradeService.createOrder(order, 'Sell', orderQuantity, lastPrice, 0)
-    this.daytradeService.sendSell(sellOrder, 'limit', () => { }, () => { }, () => { });
 
+    const success = () => {
+      this.messageService.add({
+        severity: 'success',
+        summary: `Sold ${orderQuantity} shares of ${symbol}`
+      });
+      this.checkCurrentHoldings();
+    };
+
+    const failure = (error) => {
+      console.log(error);
+      this.messageService.add({
+        severity: 'danger',
+        summary: `Failed to sell ${orderQuantity} shares of ${symbol}`
+      });
+      this.checkCurrentHoldings();
+    };
+    const sellOrder = this.daytradeService.createOrder(order, 'Sell', orderQuantity, lastPrice, 0)
+    this.daytradeService.sendSell(sellOrder, 'limit', success, failure, failure);
+  }
+
+  ngOnDestroy() {
+    if (this.destroy$) {
+      this.destroy$.next();
+      this.destroy$.complete();
+    }
   }
 }

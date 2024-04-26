@@ -32,7 +32,8 @@
         <div *ngIf="display">
             <p-tag value="Active"></p-tag>
         </div>
-        <app-ai-picks></app-ai-picks>
+        <!-- <app-ai-picks></app-ai-picks> -->
+        <app-find-some-daytrade></app-find-some-daytrade>
     </div>
     <div class="p-toolbar-group-right">
         <p-button icon="pi pi-play" *ngIf="!display" styleClass="p-button-success" (click)="open()"></p-button>
@@ -41,7 +42,6 @@
         <p-button *ngIf="!display" styleClass="p-button-success" label="Next strategy"
             (click)="changeStrategy()"></p-button>
         <p-button styleClass="p-button-success" label="Add options trades" (click)="addOptions()"></p-button>
-        <p-button styleClass="p-button-success" label="Find some day trades" (click)="findSomeDayTrades()"></p-button>
     </div>
 </p-toolbar>
 
