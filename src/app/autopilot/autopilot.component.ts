@@ -177,6 +177,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   strategies: PotentialTrade[] = [];
 
   dialogRef: DynamicDialogRef | undefined;
+  
+  lastReceivedRecommendation = null;
 
   constructor(
     private authenticationService: AuthenticationService,
@@ -211,6 +213,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     this.findDaytradeService.getTradeObserver()
       .pipe(takeUntil(this.destroy$))
       .subscribe((trade: Trade) => {
+        this.lastReceivedRecommendation = moment();
         if (this.cartService.otherOrders.length < 1) {
           this.addDaytrade(trade.stock);
           this.cartService.removeCompletedOrders();
@@ -260,9 +263,10 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           moment().isBefore(moment(startStopTime.endDateTime))) {
           if (this.isLive) {
             this.executeOrderList();
-            if (this.cartService.otherOrders.length < this.maxTradeCount) {
+            if (this.cartService.otherOrders.length < this.maxTradeCount && (!this.lastReceivedRecommendation || Math.abs(this.lastReceivedRecommendation.diff(moment(), 'minutes')) > 5)) {
               this.findDaytradeService.getRefreshObserver().next(true);
             } else {
+              this.cartService.removeCompletedOrders();
               this.cartService.otherOrders.forEach(order => {
                 if (order.side.toLowerCase() === 'daytrade' && 
                 moment(order.createdTime).diff(moment(), 'minutes') > 60 &&

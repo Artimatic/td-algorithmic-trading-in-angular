@@ -20,7 +20,7 @@ export class CartService {
     private messageService: MessageService) { }
 
   addToCart(order: SmartOrder, replaceAnyExistingOrders = false) {
-    order.createTime = moment().format();
+    order.createdTime = moment().format();
     const indices = this.searchAllLists(order);
     let noDup = true;
     for (const idx of indices) {
