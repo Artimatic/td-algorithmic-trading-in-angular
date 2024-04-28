@@ -27,4 +27,5 @@ export interface SmartOrder extends Order {
     type?: OrderTypes;
     primaryLeg?: Options;
     secondaryLeg?: Options;
+    createdTime?: string;
 }

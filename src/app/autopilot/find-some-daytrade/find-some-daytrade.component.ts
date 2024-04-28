@@ -107,7 +107,9 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
     const found = this.currentHoldings.find((value) => value.stock === stock);
     const trade = { stock: stock, recommendations: recommendationsArr.join(','), time: moment().format('hh:mm a z'), orderQuantity: found?.orderQuantity };
     this.findDaytradeService.addTrade(trade);
-    this.currentTrades.push(trade);
+    if (!this.currentTrades.find(t => t.stock === trade.stock)) {
+      this.currentTrades.push(trade);
+    }
   }
 
   async checkCurrentHoldings() {
@@ -201,6 +203,11 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
     };
     const sellOrder = this.daytradeService.createOrder(order, 'Sell', orderQuantity, lastPrice, 0)
     this.daytradeService.sendSell(sellOrder, 'limit', success, failure, failure);
+  }
+
+  async maxAllocation() {
+    const balance = await this.portfolioService.getTdBalance().toPromise();
+    this.dollarAmount = Math.floor((balance?.buyingPower | 0));
   }
 
   ngOnDestroy() {

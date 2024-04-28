@@ -5,6 +5,7 @@ import { TradeService, AlgoQueueItem } from './trade.service';
 import * as _ from 'lodash';
 import { MessageService } from 'primeng/api';
 import { Subject } from 'rxjs';
+import * as moment from 'moment-timezone';
 
 @Injectable()
 export class CartService {
@@ -19,6 +20,7 @@ export class CartService {
     private messageService: MessageService) { }
 
   addToCart(order: SmartOrder, replaceAnyExistingOrders = false) {
+    order.createTime = moment().format();
     const indices = this.searchAllLists(order);
     let noDup = true;
     for (const idx of indices) {

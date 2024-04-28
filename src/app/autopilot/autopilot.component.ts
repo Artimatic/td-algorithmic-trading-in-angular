@@ -260,8 +260,16 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           moment().isBefore(moment(startStopTime.endDateTime))) {
           if (this.isLive) {
             this.executeOrderList();
-            if (this.cartService.otherOrders.length < 1) {
+            if (this.cartService.otherOrders.length < this.maxTradeCount) {
               this.findDaytradeService.getRefreshObserver().next(true);
+            } else {
+              this.cartService.otherOrders.forEach(order => {
+                if (order.side.toLowerCase() === 'daytrade' && 
+                moment(order.createdTime).diff(moment(), 'minutes') > 60 &&
+                order.positionCount === 0) {
+                  this.cartService.deleteDaytrade(order);
+                }
+              });
             }
           } else if (!this.lastMarketHourCheck || this.lastMarketHourCheck.diff(moment(), 'hours') > 1) {
             this.portfolioService.getEquityMarketHours(moment().format('YYYY-MM-DD'))

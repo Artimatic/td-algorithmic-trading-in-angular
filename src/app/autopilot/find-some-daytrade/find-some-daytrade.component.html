@@ -10,6 +10,10 @@
                 inputId="horizontal" spinnerMode="horizontal" [step]="1000" decrementButtonClass="p-button-danger"
                 incrementButtonClass="p-button-success" incrementButtonIcon="pi pi-plus"
                 decrementButtonIcon="pi pi-minus" mode="currency" currency="USD"></p-inputNumber>
+            <div class="caption-items">
+                <p-button icon="pi pi-refresh" label="Max allocation" styleClass="p-button-success"
+                    (click)="maxAllocation()"></p-button>
+            </div>
         </ng-template>
         <ng-template pTemplate="header">
             <tr>

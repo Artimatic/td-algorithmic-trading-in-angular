@@ -401,6 +401,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     this.buyCount += order.quantity;
     this.positionCount += order.quantity;
     this.order.positionCount = this.positionCount;
+    this.cartService.updateOrder(this.order);
   }
 
   incrementSell(order) {
@@ -408,6 +409,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     this.sellCount += order.quantity;
     this.positionCount -= order.quantity;
     this.order.positionCount = this.positionCount;
+    this.cartService.updateOrder(this.order);
   }
 
   async sendBuy(buyOrder: SmartOrder) {
