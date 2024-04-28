@@ -829,7 +829,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   private isStagnantDaytrade(currentOrders: SmartOrder[], gains: number) {
     if (this.isDayTrading() && gains < 0 && currentOrders.length > 0 && this.positionCount > 0) {
       const stagnantOrderIdx = currentOrders.findIndex((order) => {
-        if (order.side.toLowerCase() === 'buy' && moment.duration(moment().diff(moment(order.timeSubmitted))).asMinutes() > 30) {
+        if (order.side.toLowerCase() === 'buy' && moment.duration(moment().diff(moment(order.timeSubmitted))).asMinutes() > 60) {
           return true;
         }
         return false;

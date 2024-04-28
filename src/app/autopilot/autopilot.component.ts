@@ -1093,7 +1093,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   private getStopLoss(low: number, high: number) {
     const profitTakingThreshold = round(((high / low) - 1) / 2, 4);
-    const stopLoss = (round(profitTakingThreshold / 2, 4)) * -1;
+    const stopLoss = profitTakingThreshold * -1;
     return {
       profitTakingThreshold,
       stopLoss
@@ -1148,10 +1148,10 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
 
   async buyAtClose() {
-    const backtestResults = await this.backtestTableService.getBacktestData('SH');
-    if (backtestResults && backtestResults.ml < 0.5) {
+    const backtestResults = await this.backtestTableService.getBacktestData('TQQQ');
+    if (backtestResults) {
       const stock: PortfolioInfoHolding = {
-        name: 'VTI',
+        name: 'TQQQ',
         pl: 0,
         netLiq: 0,
         shares: 0,
@@ -1163,7 +1163,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         sellConfidence: 0,
         prediction: null
       };
-      const order = await this.buildBuyOrder(stock, 1, null, null, true);
+      const order = await this.buildBuyOrder(stock, backtestResults.ml, null, null, true);
       this.daytradeService.sendBuy(order, 'limit', () => { }, () => { });
     }
   }

@@ -9,7 +9,7 @@ import { CartService } from '@shared/services/cart.service';
 export class OrdersListComponent implements OnInit {
   buyOrders = [];
   sellOrders = [];
-  otherOrders =[];
+  otherOrders = [];
   constructor(public cartService: CartService) { }
 
   ngOnInit() {
