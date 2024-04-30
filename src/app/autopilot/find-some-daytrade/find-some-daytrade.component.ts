@@ -20,7 +20,7 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
   currentHoldings: StockTrade[] = [];
   dollarAmount = 1000;
   destroy$ = new Subject();
-
+  lastBacktest = null;
   constructor(private backtestTableService: BacktestTableService,
     private backtestService: BacktestService,
     private portfolioService: PortfolioService,
@@ -35,7 +35,9 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
     this.findDaytradeService.getRefreshObserver()
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        this.findTrades();
+        if (!this.lastBacktest || Math.abs(this.lastBacktest.diff(moment(), 'minutes')) > 5) {
+          this.findTrades();
+        }
       });
   }
 
@@ -44,10 +46,12 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
     if (data) {
       for (const holding of data) {
         if (holding.instrument.assetType.toLowerCase() !== 'option') {
-          this.currentHoldings.push({
+          const newHolding = {
             stock: holding.instrument.symbol,
             orderQuantity: holding.longQuantity
-          });
+          };
+          this.currentHoldings.push(newHolding);
+          this.currentTrades.push(newHolding);
         }
       }
     }
@@ -55,7 +59,7 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
 
   async getCashBalance() {
     const balance = await this.portfolioService.getTdBalance().toPromise();
-    this.dollarAmount = Math.floor((balance?.buyingPower | 0) * 0.05);
+    this.dollarAmount = Math.floor((balance?.buyingPower | 0) * 0.1);
   }
 
   async findTrades() {
@@ -68,6 +72,7 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
       if (backtestData) {
         if (backtestData.ml > 0.5) {
           this.schedulerService.schedule(async () => {
+            this.lastBacktest = moment();
             let daytradeData;
             try {
               daytradeData = await this.backtestService.getDaytradeRecommendation(backtestData.stock, backtestData.high52, backtestData.high52, { minQuotes: 81 }).toPromise();
