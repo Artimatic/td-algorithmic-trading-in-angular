@@ -440,7 +440,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         }
       }
     }
-    // await this.getNewTrades();
+    await this.getNewTrades();
   }
 
   async getNewTrades(strategy = this.strategyList[this.strategyCounter]) {

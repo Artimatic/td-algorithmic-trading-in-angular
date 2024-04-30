@@ -50,8 +50,28 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
             stock: holding.instrument.symbol,
             orderQuantity: holding.longQuantity
           };
-          this.currentHoldings.push(newHolding);
-          this.currentTrades.push(newHolding);
+
+          const foundInCurrentHoldings = this.currentHoldings.find(h => {
+            const isFound = (h.stock === newHolding.stock);
+            if (isFound) {
+              h.orderQuantity = newHolding.orderQuantity;
+            }
+            return isFound;
+          });
+          if (!foundInCurrentHoldings) {
+            this.currentHoldings.push(newHolding);
+          }
+
+          const foundInCurrentTrades = this.currentTrades.find(h => {
+            const isFound = (h.stock === newHolding.stock);
+            if (isFound) {
+              h.orderQuantity = newHolding.orderQuantity;
+            }
+            return isFound;
+          });
+          if (!foundInCurrentTrades) {
+            this.currentTrades.push(newHolding);
+          }
         }
       }
     }
@@ -63,8 +83,6 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
   }
 
   async findTrades() {
-    await this.getCashBalance();
-    await this.getCurrentHoldings();
     this.currentTrades = [];
     const savedBacktestData = this.backtestTableService.getStorage('backtest');
     for (const backtestDataKey in savedBacktestData) {
@@ -72,6 +90,8 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
       if (backtestData) {
         if (backtestData.ml > 0.5) {
           this.schedulerService.schedule(async () => {
+            await this.getCashBalance();
+            await this.getCurrentHoldings();
             this.lastBacktest = moment();
             let daytradeData;
             try {
