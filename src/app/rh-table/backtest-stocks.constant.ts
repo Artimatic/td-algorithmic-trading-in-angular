@@ -4016,12 +4016,16 @@ for (const b of bearList) {
   BearList.push(createParam(b));
 }
 
-export const PersonalBullishPicks = ['GOOG',
+export const PersonalBullishPicks = [
+  'TQQQ',
+  'AAPL',
+  'GOOG',
   'INTC',
   'MSFT'].map(b => createParam(b));
 export const PersonalBearishPicks = ['TWLO',
   'MDB',
-  'ADBE'].map(b => createParam(b));
+  'CVNA',
+  'WING'].map(b => createParam(b));
   
 export const OldList = oldList.map(b => createParam(b));
 export const FullList = shuffle(fullList).map(b => createParam(b));

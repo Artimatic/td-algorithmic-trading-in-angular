@@ -9,6 +9,7 @@ import { MessageService } from 'primeng/api';
 import { FindDaytradeService, StockTrade } from '../find-daytrade.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { PersonalBullishPicks } from 'src/app/rh-table/backtest-stocks.constant';
 
 @Component({
   selector: 'app-find-some-daytrade',
@@ -85,6 +86,24 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
   async findTrades() {
     this.currentTrades = [];
     const savedBacktestData = this.backtestTableService.getStorage('backtest');
+    for (const symbol in PersonalBullishPicks) {
+      this.schedulerService.schedule(async () => {
+        await this.getCashBalance();
+        await this.getCurrentHoldings();
+        this.lastBacktest = moment();
+        let daytradeData = await this.backtestService.getDaytradeRecommendation(symbol, null,  null, { minQuotes: 81 }).toPromise();
+            
+        if (daytradeData.recommendation.toLowerCase() === 'buy') {
+          this.addTrade(symbol, daytradeData);
+        } else {
+          const indicator = daytradeData.data.indicator;
+          if ((indicator?.mfiLeft && indicator?.mfiLeft < 20) || indicator.bbandBreakout || (indicator.bband80[0][0] && indicator.close < indicator.bband80[0][0])) {
+            this.addTrade(symbol, daytradeData);
+          }
+        }
+      }, 'getDaytradeRecommendation');
+    }
+
     for (const backtestDataKey in savedBacktestData) {
       const backtestData = savedBacktestData[backtestDataKey];
       if (backtestData) {
@@ -117,7 +136,7 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
 
   delayRequest() {
     return new Promise(function (resolve) {
-      setTimeout(resolve, 2000);
+      setTimeout(resolve, 10000);
     });
   }
 
