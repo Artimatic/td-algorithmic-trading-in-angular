@@ -12,6 +12,8 @@ const fullList = [
     'WMT',
     'CVX',
     'PFE',
+    'CVNA',
+    'WING',
     'BAC',
     'KO',
     'VZ',
