@@ -117,7 +117,6 @@ export class BacktestTableService {
   }
 
   async getCallTrade(symbol: string): Promise<Strangle> {
-    console.log('getting call trade');
     const minExpiration = 65;
     const optionsData = await this.optionsDataService.getImpliedMove(symbol).toPromise();
     const optionsChain = optionsData.optionsChain;
@@ -143,7 +142,6 @@ export class BacktestTableService {
   }
 
   async getPutTrade(symbol: string) {
-    console.log('getting put trade');
     const minExpiration = 65;
     const optionsData = await this.optionsDataService.getImpliedMove(symbol).toPromise();
     const optionsChain = optionsData.optionsChain;
