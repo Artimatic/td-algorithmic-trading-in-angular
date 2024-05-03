@@ -283,34 +283,32 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     const currentDate = this.globalSettingsService.backtestDate;
     const futureDate = moment().add(1, 'days').format('YYYY-MM-DD');
 
-    this.schedulerService.schedule(() => {
-      this.backtestService.getDaytradeBacktest(this.order.holding.symbol,
-        futureDate, currentDate,
-        {
-          lossThreshold: this.order.lossThreshold,
-          profitThreshold: this.order.profitTarget,
-          minQuotes: 81
-        }).subscribe(results => {
-          if (results.returns) {
-            this.scoringService.resetProfitLoss(this.order.holding.symbol);
-            this.scoringService.addProfitLoss(this.order.holding.symbol, results.returns * 100);
-          }
+    this.backtestService.getDaytradeBacktest(this.order.holding.symbol,
+      futureDate, currentDate,
+      {
+        lossThreshold: this.order.lossThreshold,
+        profitThreshold: this.order.profitTarget,
+        minQuotes: 81
+      }).subscribe(results => {
+        if (results.returns) {
+          this.scoringService.resetProfitLoss(this.order.holding.symbol);
+          this.scoringService.addProfitLoss(this.order.holding.symbol, results.returns * 100);
+        }
 
-          if (results.profitableTrades && results.totalTrades) {
-            this.scoringService.winlossHash[this.order.holding.symbol] = {
-              wins: results.profitableTrades,
-              losses: null,
-              total: results.totalTrades
-            };
-          }
+        if (results.profitableTrades && results.totalTrades) {
+          this.scoringService.winlossHash[this.order.holding.symbol] = {
+            wins: results.profitableTrades,
+            losses: null,
+            total: results.totalTrades
+          };
+        }
+        this.isBacktest = false;
+      },
+        error => {
+          this.error = error._body;
           this.isBacktest = false;
-        },
-          error => {
-            this.error = error._body;
-            this.isBacktest = false;
-          }
-        );
-    }, `${this.order.holding.symbol}_bbcard`, this.globalSettingsService.stopTime);
+        }
+      );
 
     this.tiles = this.daytradeService.buildTileList(this.orders);
   }
@@ -337,23 +335,18 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
         this.firstFormGroup.value.orderSize = this.machineDaytradingService.orderSize || 1;
 
         console.log('Scheduling machine order ', this.firstFormGroup.value);
-        this.schedulerService.schedule(() => {
-
-          this.backtestService.getLastPriceTiingo({ symbol: this.order.holding.symbol })
-            .subscribe(tiingoQuote => {
-              const lastPrice = tiingoQuote[0].last;
-              this.runStrategy(1 * lastPrice);
-            });
-        }, 'current');
-      }
-    } else {
-      this.schedulerService.schedule(() => {
         this.backtestService.getLastPriceTiingo({ symbol: this.order.holding.symbol })
           .subscribe(tiingoQuote => {
             const lastPrice = tiingoQuote[0].last;
             this.runStrategy(1 * lastPrice);
           });
-      }, 'current');
+      }
+    } else {
+      this.backtestService.getLastPriceTiingo({ symbol: this.order.holding.symbol })
+        .subscribe(tiingoQuote => {
+          const lastPrice = tiingoQuote[0].last;
+          this.runStrategy(1 * lastPrice);
+        });
     }
 
     this.tiles = this.daytradeService.buildTileList(this.orders);
@@ -881,19 +874,16 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     if (!orderProcessed) {
       const daytradeType = this.firstFormGroup.value.orderType.toLowerCase();
       const estimatedPrice = this.daytradeService.estimateAverageBuyOrderPrice(this.orders);
-      this.schedulerService.schedule(() => {
-        this.backtestService.getDaytradeRecommendation(this.order.holding.symbol, lastPrice, estimatedPrice, { minQuotes: 81 })
-          .subscribe(
-            analysis => {
-              this.processAnalysis(daytradeType, analysis, lastPrice, moment().valueOf());
-              return null;
-            },
-            error => {
-              this.error = 'Issue getting analysis.';
-            }
-          );
-      }, 'getDaytradeRecommendation', this.globalSettingsService.stopTime);
-
+      this.backtestService.getDaytradeRecommendation(this.order.holding.symbol, lastPrice, estimatedPrice, { minQuotes: 81 })
+        .subscribe(
+          analysis => {
+            this.processAnalysis(daytradeType, analysis, lastPrice, moment().valueOf());
+            return null;
+          },
+          error => {
+            this.error = 'Issue getting analysis.';
+          }
+        );
     }
   }
 

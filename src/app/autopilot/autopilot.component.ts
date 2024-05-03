@@ -179,6 +179,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   dialogRef: DynamicDialogRef | undefined;
   
   lastReceivedRecommendation = null;
+  boughtAtClose = false;
 
   constructor(
     private authenticationService: AuthenticationService,
@@ -247,9 +248,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(async () => {
         const startStopTime = this.globalSettingsService.getStartStopTime();
-        if (moment().isAfter(moment(startStopTime.endDateTime).subtract(5, 'minutes')) &&
+        if (moment().isAfter(moment(startStopTime.endDateTime).subtract(8, 'minutes')) &&
           moment().isBefore(moment(startStopTime.endDateTime))) {
-          this.buyAtClose()
+          this.buyAtClose();
           if (this.reportingService.logs.length > 0) {
             const profitLog = `Profit ${this.scoreKeeperService.total}`;
             this.reportingService.addAuditLog(null, profitLog);
@@ -403,6 +404,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   async developStrategy() {
+    this.boughtAtClose = false;
     this.machineLearningService.getFoundPatterns()
       .subscribe(patternsResponse => console.log('found patterns ', patternsResponse));
 
@@ -1160,8 +1162,12 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
 
   async buyAtClose() {
+    if (this.boughtAtClose) {
+      return;
+    }
     const backtestResults = await this.backtestTableService.getBacktestData('TQQQ');
     if (backtestResults) {
+      this.boughtAtClose = true;
       const stock: PortfolioInfoHolding = {
         name: 'TQQQ',
         pl: 0,
@@ -1177,6 +1183,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       };
       const order = await this.buildBuyOrder(stock, backtestResults.ml, null, null, true);
       this.daytradeService.sendBuy(order, 'limit', () => { }, () => { });
+      console.log('buy at close', order);
     }
   }
 

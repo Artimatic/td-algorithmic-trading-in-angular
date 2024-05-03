@@ -1,9 +1,8 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import * as moment from 'moment-timezone';
 
 import { BacktestService, DaytradeService, PortfolioService } from '@shared/services';
 import { BacktestTableService } from 'src/app/backtest-table/backtest-table.service';
-import { SchedulerService } from '@shared/service/scheduler.service';
 import { MachineDaytradingService } from 'src/app/machine-daytrading/machine-daytrading.service';
 import { MessageService } from 'primeng/api';
 import { FindDaytradeService, StockTrade } from '../find-daytrade.service';
@@ -25,11 +24,11 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
   constructor(private backtestTableService: BacktestTableService,
     private backtestService: BacktestService,
     private portfolioService: PortfolioService,
-    private schedulerService: SchedulerService,
     private daytradeService: DaytradeService,
     private machineDaytradingService: MachineDaytradingService,
     private messageService: MessageService,
-    private findDaytradeService: FindDaytradeService
+    private findDaytradeService: FindDaytradeService,
+    private ref: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
@@ -86,48 +85,46 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
   async findTrades() {
     this.currentTrades = [];
     const savedBacktestData = this.backtestTableService.getStorage('backtest');
-    for (const symbol in PersonalBullishPicks) {
-      this.schedulerService.schedule(async () => {
-        await this.getCashBalance();
-        await this.getCurrentHoldings();
-        this.lastBacktest = moment();
-        let daytradeData = await this.backtestService.getDaytradeRecommendation(symbol, null,  null, { minQuotes: 81 }).toPromise();
-            
-        if (daytradeData.recommendation.toLowerCase() === 'buy') {
+    for (const stockPick of PersonalBullishPicks) {
+      const symbol = stockPick.ticker;
+      await this.getCashBalance();
+      await this.getCurrentHoldings();
+      this.lastBacktest = moment();
+      let daytradeData = await this.backtestService.getDaytradeRecommendation(symbol, null, null, { minQuotes: 81 }).toPromise();
+      await this.delayRequest();
+
+      if (daytradeData.recommendation.toLowerCase() === 'buy') {
+        this.addTrade(symbol, daytradeData);
+      } else {
+        const indicator = daytradeData.data.indicator;
+        if ((indicator?.mfiLeft && indicator?.mfiLeft < 20) || indicator.bbandBreakout || (indicator.bband80[0][0] && indicator.close < indicator.bband80[0][0])) {
           this.addTrade(symbol, daytradeData);
-        } else {
-          const indicator = daytradeData.data.indicator;
-          if ((indicator?.mfiLeft && indicator?.mfiLeft < 20) || indicator.bbandBreakout || (indicator.bband80[0][0] && indicator.close < indicator.bband80[0][0])) {
-            this.addTrade(symbol, daytradeData);
-          }
         }
-      }, 'getDaytradeRecommendation');
+      }
     }
 
     for (const backtestDataKey in savedBacktestData) {
       const backtestData = savedBacktestData[backtestDataKey];
       if (backtestData) {
         if (backtestData.ml > 0.5) {
-          this.schedulerService.schedule(async () => {
-            await this.getCashBalance();
-            await this.getCurrentHoldings();
-            this.lastBacktest = moment();
-            let daytradeData;
-            try {
-              daytradeData = await this.backtestService.getDaytradeRecommendation(backtestData.stock, backtestData.high52, backtestData.high52, { minQuotes: 81 }).toPromise();
-            } catch (err) {
-              await this.delayRequest();
-              daytradeData = await this.backtestService.getDaytradeRecommendation(backtestData.stock, backtestData.high52, backtestData.high52, { minQuotes: 81 }).toPromise();
-            }
-            if (daytradeData.recommendation.toLowerCase() === 'buy') {
+          await this.getCashBalance();
+          await this.getCurrentHoldings();
+          this.lastBacktest = moment();
+          let daytradeData;
+          try {
+            daytradeData = await this.backtestService.getDaytradeRecommendation(backtestData.stock, backtestData.high52, backtestData.high52, { minQuotes: 81 }).toPromise();
+          } catch (err) {
+            await this.delayRequest();
+            daytradeData = await this.backtestService.getDaytradeRecommendation(backtestData.stock, backtestData.high52, backtestData.high52, { minQuotes: 81 }).toPromise();
+          }
+          if (daytradeData.recommendation.toLowerCase() === 'buy') {
+            this.addTrade(backtestData.stock, daytradeData);
+          } else {
+            const indicator = daytradeData.data.indicator;
+            if ((indicator?.mfiLeft && indicator?.mfiLeft < 20) || indicator.bbandBreakout || (indicator.bband80[0][0] && indicator.close < indicator.bband80[0][0])) {
               this.addTrade(backtestData.stock, daytradeData);
-            } else {
-              const indicator = daytradeData.data.indicator;
-              if ((indicator?.mfiLeft && indicator?.mfiLeft < 20) || indicator.bbandBreakout || (indicator.bband80[0][0] && indicator.close < indicator.bband80[0][0])) {
-                this.addTrade(backtestData.stock, daytradeData);
-              }
             }
-          }, 'getDaytradeRecommendation');
+          }
           await this.delayRequest();
         }
       }
@@ -154,6 +151,7 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
     if (!this.currentTrades.find(t => t.stock === trade.stock)) {
       this.currentTrades.push(trade);
     }
+    this.ref.markForCheck();
   }
 
   async checkCurrentHoldings() {
