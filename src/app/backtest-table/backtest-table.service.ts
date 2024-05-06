@@ -30,7 +30,7 @@ export class BacktestTableService {
   }
 
   async getBacktestData(symbol: string) {
-    const recentBacktest = this.getBacktestData(symbol);
+    const recentBacktest = this.getRecentBacktest(symbol);
     if (recentBacktest) {
       return recentBacktest;
     }
