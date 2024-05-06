@@ -176,7 +176,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   strategies: PotentialTrade[] = [];
 
   dialogRef: DynamicDialogRef | undefined;
-  
+
   lastReceivedRecommendation = null;
   boughtAtClose = false;
 
@@ -268,9 +268,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
             } else {
               this.cartService.removeCompletedOrders();
               this.cartService.otherOrders.forEach(order => {
-                if (order.side.toLowerCase() === 'daytrade' && 
-                moment(order.createdTime).diff(moment(), 'minutes') > 60 &&
-                order.positionCount === 0) {
+                if (order.side.toLowerCase() === 'daytrade' &&
+                  moment(order.createdTime).diff(moment(), 'minutes') > 60 &&
+                  order.positionCount === 0) {
                   this.cartService.deleteDaytrade(order);
                 }
               });
@@ -551,11 +551,18 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         break;
       default: {
         const callback = async (symbol: string, prediction: number, backtestData: any) => {
-          
-          if (backtestData?.optionsVolume > 200) {
-            const optionStrategy = await this.backtestTableService.getCallTrade(symbol);
-            const price = this.backtestTableService.findOptionsPrice(optionStrategy.call.bid, optionStrategy.call.ask) + this.backtestTableService.findOptionsPrice(optionStrategy.put.bid, optionStrategy.put.ask);
-            this.backtestTableService.addStrangle(symbol, price, optionStrategy);
+          if (backtestData?.optionsVolume > 200 && (prediction > 0.7 || prediction < 0.3)) {
+            let optionStrategy;
+            if (prediction > 0.7) {
+              optionStrategy = await this.backtestTableService.getCallTrade(symbol);
+              const price = this.backtestTableService.findOptionsPrice(optionStrategy.call.bid, optionStrategy.call.ask) + this.backtestTableService.findOptionsPrice(optionStrategy.put.bid, optionStrategy.put.ask);
+              this.backtestTableService.addStrangle(symbol, price, optionStrategy);
+
+            } else if (prediction < 0.3) {
+              optionStrategy = await this.backtestTableService.getPutTrade(symbol);
+              const price = this.backtestTableService.findOptionsPrice(optionStrategy.call.bid, optionStrategy.call.ask) + this.backtestTableService.findOptionsPrice(optionStrategy.put.bid, optionStrategy.put.ask);
+              this.backtestTableService.addStrangle(symbol, price, optionStrategy);
+            }
           } else if (prediction > 0.7) {
             const stock: PortfolioInfoHolding = {
               name: symbol,
@@ -580,7 +587,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
                   const trainingMsg = `Day trade training results correct: ${trainingResults[0].correct}, guesses: ${trainingResults[0].guesses}`;
                   this.reportingService.addAuditLog(stock.name, trainingMsg);
                   await this.addDaytrade(stock.name);
-                }  else {
+                } else {
                   await this.addBuy(stock);
                 }
               }

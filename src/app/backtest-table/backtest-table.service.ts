@@ -20,7 +20,20 @@ export class BacktestTableService {
     private portfolioService: PortfolioService,
     private cartService: CartService) { }
 
+  getRecentBacktest(symbol: string) {
+    const backtestStorage = this.getStorage('backtest');
+    const backtestData = backtestStorage[symbol];
+    if (backtestData && backtestData.backtestDate && moment().diff(moment(backtestData.backtestDate), 'days') < 1) {
+      return backtestData;
+    }
+    return null;
+  }
+
   async getBacktestData(symbol: string) {
+    const recentBacktest = this.getBacktestData(symbol);
+    if (recentBacktest) {
+      return recentBacktest;
+    }
     const current = moment().format('YYYY-MM-DD');
     const start = moment().subtract(365, 'days').format('YYYY-MM-DD');
 
