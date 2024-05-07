@@ -2,17 +2,23 @@
     <p-table [value]="currentTrades" [paginator]="true" [rows]="3" dataKey="stock" selectionMode="single"
         [resizableColumns]="true" columnResizeMode="expand">
         <ng-template pTemplate="caption">
-            <div class="caption-items">
-                <p-button icon="pi pi-refresh" label="Find day trades" styleClass="p-button-success"
-                    (click)="findTrades()"></p-button>
-            </div>
-            <p-inputNumber [(ngModel)]="dollarAmount" [showButtons]="true" buttonLayout="horizontal"
-                inputId="horizontal" spinnerMode="horizontal" [step]="1000" decrementButtonClass="p-button-danger"
-                incrementButtonClass="p-button-success" incrementButtonIcon="pi pi-plus"
-                decrementButtonIcon="pi pi-minus" mode="currency" currency="USD"></p-inputNumber>
-            <div class="caption-items">
-                <p-button icon="pi pi-refresh" label="Max allocation" styleClass="p-button-success"
-                    (click)="maxAllocation()"></p-button>
+            <div class="caption-container">
+                <div class="caption-items">
+                    <p-button icon="pi pi-refresh" label="Find day trades" styleClass="p-button-success"
+                        (click)="findTrades()"></p-button>
+                </div>
+                <div class="caption-items">
+                    <p-button icon="pi pi-refresh" label="Refresh current holdings" styleClass="p-button-success"
+                        (click)="getCurrentHoldings()"></p-button>
+                </div>
+                <p-inputNumber [(ngModel)]="dollarAmount" [showButtons]="true" buttonLayout="horizontal"
+                    inputId="horizontal" spinnerMode="horizontal" [step]="1000" decrementButtonClass="p-button-danger"
+                    incrementButtonClass="p-button-success" incrementButtonIcon="pi pi-plus"
+                    decrementButtonIcon="pi pi-minus" mode="currency" currency="USD"></p-inputNumber>
+                <div class="caption-items">
+                    <p-button icon="pi pi-refresh" label="Max allocation" styleClass="p-button-success"
+                        (click)="maxAllocation()"></p-button>
+                </div>
             </div>
         </ng-template>
         <ng-template pTemplate="header">

@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import * as moment from 'moment-timezone';
 
-import { BacktestService, DaytradeService, PortfolioService } from '@shared/services';
+import { BacktestService, DaytradeService, MachineLearningService, PortfolioService } from '@shared/services';
 import { BacktestTableService } from 'src/app/backtest-table/backtest-table.service';
 import { MachineDaytradingService } from 'src/app/machine-daytrading/machine-daytrading.service';
 import { MessageService } from 'primeng/api';
@@ -9,6 +9,7 @@ import { FindDaytradeService, StockTrade } from '../find-daytrade.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { PersonalBullishPicks } from 'src/app/rh-table/backtest-stocks.constant';
+import { GlobalSettingsService } from 'src/app/settings/global-settings.service';
 
 @Component({
   selector: 'app-find-some-daytrade',
@@ -28,6 +29,8 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
     private machineDaytradingService: MachineDaytradingService,
     private messageService: MessageService,
     private findDaytradeService: FindDaytradeService,
+    private machineLearningService: MachineLearningService,
+    private globalSettingsService: GlobalSettingsService,
     private ref: ChangeDetectorRef
   ) { }
 
@@ -79,16 +82,16 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
 
   async getCashBalance() {
     const balance = await this.portfolioService.getTdBalance().toPromise();
-    this.dollarAmount = Math.floor((balance?.buyingPower | 0) * 0.1);
+    this.dollarAmount = Math.floor((balance?.buyingPower | 0) * 0.05);
   }
 
   async findTrades() {
+    await this.getCashBalance();
+    await this.getCurrentHoldings();
     this.currentTrades = [];
     const savedBacktestData = this.backtestTableService.getStorage('backtest');
     for (const stockPick of PersonalBullishPicks) {
       const symbol = stockPick.ticker;
-      await this.getCashBalance();
-      await this.getCurrentHoldings();
       this.lastBacktest = moment();
       let daytradeData = await this.backtestService.getDaytradeRecommendation(symbol, null, null, { minQuotes: 81 }).toPromise();
       await this.delayRequest();
@@ -107,8 +110,6 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
       const backtestData = savedBacktestData[backtestDataKey];
       if (backtestData) {
         if (backtestData.ml > 0.5) {
-          await this.getCashBalance();
-          await this.getCurrentHoldings();
           this.lastBacktest = moment();
           let daytradeData;
           try {
@@ -117,6 +118,13 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
             await this.delayRequest();
             daytradeData = await this.backtestService.getDaytradeRecommendation(backtestData.stock, backtestData.high52, backtestData.high52, { minQuotes: 81 }).toPromise();
           }
+          // const mlResult = await this.machineLearningService
+          //   .trainDaytrade(backtestData.stock,
+          //     moment().add({ days: 1 }).format('YYYY-MM-DD'),
+          //     moment().subtract({ days: 1 }).format('YYYY-MM-DD'),
+          //     1,
+          //     this.globalSettingsService.daytradeAlgo
+          //   ).toPromise;
           if (daytradeData.recommendation.toLowerCase() === 'buy') {
             this.addTrade(backtestData.stock, daytradeData);
           } else {
@@ -151,7 +159,7 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
     if (!this.currentTrades.find(t => t.stock === trade.stock)) {
       this.currentTrades.push(trade);
     }
-    this.ref.markForCheck();
+    this.ref.detectChanges();
   }
 
   async checkCurrentHoldings() {
@@ -161,9 +169,14 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
       const found = this.currentHoldings.find((value) => value.stock === trade.stock);
       if (found) {
         return found;
+      } else {
+        if (trade.orderQuantity) {
+          trade.orderQuantity = 0;
+        }
       }
       return trade;
     });
+    this.ref.detectChanges();
   }
 
   async sendBuy(symbol: string) {

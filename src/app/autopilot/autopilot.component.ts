@@ -1173,6 +1173,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       return;
     }
     const backtestResults = await this.backtestTableService.getBacktestData('TQQQ');
+    console.log('buy at close backtest results', backtestResults);
     if (backtestResults) {
       this.boughtAtClose = true;
       const stock: PortfolioInfoHolding = {

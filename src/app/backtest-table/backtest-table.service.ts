@@ -12,7 +12,7 @@ import { OrderTypes } from '@shared/models/smart-order';
 })
 export class BacktestTableService {
   orderHistory = {};
-  correlationThreshold = 0.5;
+  correlationThreshold = 0.6;
 
   constructor(private backtestService: BacktestService,
     private aiPicksService: AiPicksService,

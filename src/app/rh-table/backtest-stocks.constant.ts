@@ -4021,6 +4021,8 @@ export const PersonalBullishPicks = [
   'AAPL',
   'GOOG',
   'INTC',
+  'AMD',
+  'NVDA',
   'MSFT'].map(b => createParam(b));
 export const PersonalBearishPicks = ['TWLO',
   'MDB',
