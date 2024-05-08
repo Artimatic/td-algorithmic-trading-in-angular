@@ -46,6 +46,8 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
 
   async getCurrentHoldings() {
     const data = await this.portfolioService.getTdPortfolio().toPromise();
+    this.currentTrades = this.currentTrades.filter(trade => !trade.time || moment().diff(moment(trade.time), 'minutes') < 30);
+
     if (data) {
       for (const holding of data) {
         if (holding.instrument.assetType.toLowerCase() !== 'option') {
@@ -78,6 +80,7 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
         }
       }
     }
+    this.ref.detectChanges();
   }
 
   async getCashBalance() {
@@ -88,7 +91,6 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
   async findTrades() {
     await this.getCashBalance();
     await this.getCurrentHoldings();
-    this.currentTrades = [];
     const savedBacktestData = this.backtestTableService.getStorage('backtest');
     for (const stockPick of PersonalBullishPicks) {
       const symbol = stockPick.ticker;
