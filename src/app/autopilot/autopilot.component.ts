@@ -14,7 +14,7 @@ import { ScoringIndex } from '@shared/services/score-keeper.service';
 import { MachineDaytradingService } from '../machine-daytrading/machine-daytrading.service';
 import { BearList, PersonalBullishPicks, PersonalBearishPicks } from '../rh-table/backtest-stocks.constant';
 import { CurrentStockList } from '../rh-table/stock-list.constant';
-import { AiPicksPredictionData } from '@shared/services/ai-picks.service';
+import { AiPicksPredictionData, AiPicksService } from '@shared/services/ai-picks.service';
 import Stocks from '../rh-table/backtest-stocks.constant';
 import { FindPatternService } from '../strategies/find-pattern.service';
 import { GlobalSettingsService } from '../settings/global-settings.service';
@@ -197,7 +197,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     private globalSettingsService: GlobalSettingsService,
     private daytradeService: DaytradeService,
     public dialogService: DialogService,
-    private findDaytradeService: FindDaytradeService
+    private findDaytradeService: FindDaytradeService,
+    private aiPicksService: AiPicksService
   ) { }
 
   ngOnInit(): void {
@@ -1172,9 +1173,10 @@ export class AutopilotComponent implements OnInit, OnDestroy {
     if (this.boughtAtClose) {
       return;
     }
-    const backtestResults = await this.backtestTableService.getBacktestData('TQQQ');
-    console.log('buy at close backtest results', backtestResults);
-    if (backtestResults) {
+    const trainingResult = await this.aiPicksService.trainAndActivate('TQQQ');
+
+    console.log('buy at close training results', trainingResult);
+    if (trainingResult) {
       this.boughtAtClose = true;
       const stock: PortfolioInfoHolding = {
         name: 'TQQQ',
@@ -1189,7 +1191,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         sellConfidence: 0,
         prediction: null
       };
-      const order = await this.buildBuyOrder(stock, backtestResults.ml, null, null, true);
+      const order = await this.buildBuyOrder(stock, trainingResult.value, null, null, true);
       this.daytradeService.sendBuy(order, 'limit', () => { }, () => { });
       console.log('buy at close', order);
     }
