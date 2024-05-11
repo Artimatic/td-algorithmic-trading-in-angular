@@ -11,6 +11,11 @@ import { takeUntil } from 'rxjs/operators';
 import { PersonalBullishPicks } from 'src/app/rh-table/backtest-stocks.constant';
 import { GlobalSettingsService } from 'src/app/settings/global-settings.service';
 
+interface Daytrade {
+  stock: string;
+  daytradeIndicators: any;
+}
+
 @Component({
   selector: 'app-find-some-daytrade',
   templateUrl: './find-some-daytrade.component.html',
@@ -22,6 +27,8 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
   dollarAmount = 1000;
   destroy$ = new Subject();
   lastBacktest = null;
+  currentStockList: Daytrade[] = [];
+
   constructor(private backtestTableService: BacktestTableService,
     private backtestService: BacktestService,
     private portfolioService: PortfolioService,
@@ -45,6 +52,7 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
   }
 
   async getCurrentHoldings() {
+    this.currentHoldings = [];
     const data = await this.portfolioService.getTdPortfolio().toPromise();
     this.currentTrades = this.currentTrades.filter(trade => !trade.time || moment().diff(moment(trade.time), 'minutes') < 30);
 
@@ -88,9 +96,48 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
     this.dollarAmount = Math.floor((balance?.buyingPower | 0) * 0.05);
   }
 
+  updateStockList(symbol, daytradeIndicators) {
+    const foundIdx = this.currentStockList.findIndex(s => s.stock === symbol);
+    if (foundIdx > -1) {
+      this.currentStockList[foundIdx] = {stock: symbol, daytradeIndicators};
+    } else {
+      this.currentStockList.push({stock: symbol, daytradeIndicators});
+    }
+
+    if (this.currentStockList.length > 10) {
+      this.currentStockList = this.currentStockList.filter((stock: Daytrade) =>{
+        if (!stock.daytradeIndicators) {
+          return true;
+        } else if ((stock.daytradeIndicators?.mfiLeft && stock.daytradeIndicators?.mfiLeft < 30) || stock.daytradeIndicators.bbandBreakout || (stock.daytradeIndicators.bband80[0][0] && stock.daytradeIndicators.close < (1.1 * stock.daytradeIndicators.bband80[0][0]))) {
+          return true;
+        }
+        return false;
+      });
+    }
+  }
+
   async findTrades() {
     await this.getCashBalance();
     await this.getCurrentHoldings();
+    if (this.currentStockList.length > 5) {
+      this.currentStockList.forEach(async (stock: Daytrade) => {
+        const symbol = stock.stock;
+        this.lastBacktest = moment();
+        let daytradeData = await this.backtestService.getDaytradeRecommendation(symbol, null, null, { minQuotes: 81 }).toPromise();
+        await this.delayRequest();
+  
+        if (daytradeData.recommendation.toLowerCase() === 'buy') {
+          this.addTrade(symbol, daytradeData);
+        } else {
+          const indicator = daytradeData.data.indicator;
+          if ((indicator?.mfiLeft && indicator?.mfiLeft < 25) || indicator.bbandBreakout || (indicator.bband80[0][0] && indicator.close < indicator.bband80[0][0])) {
+            this.addTrade(symbol, daytradeData);
+          }
+        }
+      });
+      return;
+    }
+
     const savedBacktestData = this.backtestTableService.getStorage('backtest');
     for (const stockPick of PersonalBullishPicks) {
       const symbol = stockPick.ticker;
@@ -102,10 +149,12 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
         this.addTrade(symbol, daytradeData);
       } else {
         const indicator = daytradeData.data.indicator;
-        if ((indicator?.mfiLeft && indicator?.mfiLeft < 20) || indicator.bbandBreakout || (indicator.bband80[0][0] && indicator.close < indicator.bband80[0][0])) {
+        if ((indicator?.mfiLeft && indicator?.mfiLeft < 25) || indicator.bbandBreakout || (indicator.bband80[0][0] && indicator.close < indicator.bband80[0][0])) {
           this.addTrade(symbol, daytradeData);
+        } else {
+          this.updateStockList(symbol, indicator);
         }
-      }
+      } 
     }
 
     for (const backtestDataKey in savedBacktestData) {
@@ -133,6 +182,8 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
             const indicator = daytradeData.data.indicator;
             if ((indicator?.mfiLeft && indicator?.mfiLeft < 20) || indicator.bbandBreakout || (indicator.bband80[0][0] && indicator.close < indicator.bband80[0][0])) {
               this.addTrade(backtestData.stock, daytradeData);
+            } else {
+              this.updateStockList(backtestData.stock, indicator);
             }
           }
           await this.delayRequest();

@@ -91,6 +91,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   currentBalance: number;
 
   settingsVisible = false;
+  startingPrice = null;
 
   constructor(private _formBuilder: FormBuilder,
     private backtestService: BacktestService,
@@ -371,6 +372,7 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     this.config = this.daytradeService.parsePreferences(this.preferences.value);
     this.warning = '';
     this.stopped = false;
+    this.startingPrice = null;
     this.scoringService.resetScore(this.order.holding.symbol);
 
     switch (this.firstFormGroup.value.orderType.side) {
@@ -425,17 +427,19 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
         };
 
         if (this.order.type === OrderTypes.options && this.order.side.toLowerCase() === 'buy') {
-          const bullishStrangle = await this.backtestTableService.getCallTrade(this.order.holding.symbol);
-          // const price = bullishStrangle.call.bid + bullishStrangle.put.bid;
-          const price = this.backtestTableService.findOptionsPrice(bullishStrangle.call.bid, bullishStrangle.call.ask) +
-            this.backtestTableService.findOptionsPrice(bullishStrangle.put.bid, bullishStrangle.put.ask);
-          const orderQuantity = Math.floor(this.currentBalance * (this.order?.allocation || 0.01) / price)
+          if ((Math.abs(this.startingPrice - buyOrder.price) / this.startingPrice) < 0.015) {
+            const bullishStrangle = await this.backtestTableService.getCallTrade(this.order.holding.symbol);
+            // const price = bullishStrangle.call.bid + bullishStrangle.put.bid;
+            const price = this.backtestTableService.findOptionsPrice(bullishStrangle.call.bid, bullishStrangle.call.ask) +
+              this.backtestTableService.findOptionsPrice(bullishStrangle.put.bid, bullishStrangle.put.ask);
+            const orderQuantity = Math.floor(this.currentBalance * (this.order?.allocation || 0.01) / price)
 
-          console.log('orderQuantity', orderQuantity)
-          console.log('built strangle', bullishStrangle);
+            console.log('orderQuantity', orderQuantity)
+            console.log('built strangle', bullishStrangle);
 
-          this.portfolioService.sendTwoLegOrder(bullishStrangle.call.symbol,
-            bullishStrangle.put.symbol, 1, price, false).subscribe();
+            this.portfolioService.sendTwoLegOrder(bullishStrangle.call.symbol,
+              bullishStrangle.put.symbol, 1, price, false).subscribe();
+          }
         } else {
           this.daytradeService.sendBuy(buyOrder, 'limit', resolve, reject);
         }
@@ -869,6 +873,9 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   async runStrategy(lastPrice: number) {
+    if (!this.startingPrice) {
+      this.startingPrice = lastPrice;
+    }
     const orderProcessed = this.handleStoploss(lastPrice, moment().valueOf());
 
     if (!orderProcessed) {

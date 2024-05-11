@@ -78,20 +78,20 @@ export class CartService {
   }
 
   deleteSell(deleteOrder: SmartOrder) {
-    console.log('Deleting sell order', deleteOrder.holding.symbol);
+    console.log('Deleting sell orders that match', deleteOrder.holding.symbol);
     this.sellOrders = this.sellOrders.filter(fullOrder => fullOrder.holding.symbol !== deleteOrder.holding.symbol );
     this.cartObserver.next(true);
   }
 
   deleteBuy(deleteOrder: SmartOrder) {
-    console.log('Deleting buy order', deleteOrder.holding.symbol);
+    console.log('Deleting buy orders that match', deleteOrder.holding.symbol);
     this.buyOrders = this.buyOrders.filter(fullOrder => fullOrder.holding.symbol !== deleteOrder.holding.symbol );
     this.cartObserver.next(true);
 
   }
 
   deleteDaytrade(deleteOrder: SmartOrder) {
-    console.log('Deleting day trade', deleteOrder.holding.symbol);
+    console.log('Deleting day trades that match', deleteOrder.holding.symbol);
     this.otherOrders = this.otherOrders.filter(fullOrder => fullOrder.holding.symbol !== deleteOrder.holding.symbol );
     this.cartObserver.next(true);
   }
