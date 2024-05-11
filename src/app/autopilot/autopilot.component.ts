@@ -1200,9 +1200,6 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   startFindingTrades() {
     this.backtestTableService.findTrades();
     this.strategies = this.backtestTableService.getTradingStrategies();
-    if (this.strategies.length) {
-      this.revealPotentialStrategy = true;
-    }
     return this.revealPotentialStrategy;
   }
 

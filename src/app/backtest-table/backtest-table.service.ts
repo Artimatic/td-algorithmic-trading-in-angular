@@ -338,7 +338,7 @@ export class BacktestTableService {
   }
 
   addTradingStrategy(trade: PotentialTrade) {
-    const storage = this.getTradingStrategies();
+    let storage = this.getTradingStrategies();
     if (trade) {
       if (storage && Array.isArray(storage)) {
         const findIdx = storage.findIndex(str => str.key === trade.key && str.type === trade.type);
@@ -362,6 +362,8 @@ export class BacktestTableService {
         } else {
           storage.push(trade)
         }
+
+        storage = storage.filter(s => moment().diff(moment(s.date), 'days') < 3);
         localStorage.setItem('tradingStrategy', JSON.stringify(storage));
       } else {
         const newStorageObj = [trade];
