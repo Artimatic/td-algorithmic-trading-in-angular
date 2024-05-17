@@ -45,27 +45,20 @@ export interface Option {
 
 export interface OptionsChain {
   symbol: string;
-  underlying: {
-    symbol: string;
-    description: string;
-    change: number;
-    percentChange: number;
-    close: number;
-    bid: number;
-    ask: number;
-    last: number;
-    mark: number;
-    markChange: number;
-    markPercentChange: number;
-    bidSize: number;
-    askSize: number;
-    highPrice: number;
-    lowPrice: number;
-    openPrice: number;
-    totalVolume: number;
-    fiftyTwoWeekHigh: number;
-    fiftyTwoWeekLow: number;
-  };
+  status: string;
+  strategy: string;
+  interval: number;
+  isDelayed: boolean;
+  isIndex: boolean;
+  interestRate: number;
+  underlyingPrice: number;
+  volatility: number;
+  daysToExpiration: number;
+  numberOfContracts: number;
+  assetMainType: string;
+  assetSubType: string;
+  isChainTruncated: boolean;
+  intervals: number[];
   monthlyStrategyList: MonthlyStrategyList[];
 }
 
@@ -81,7 +74,7 @@ class OptionService {
     return PortfolioService.getOptionsStrangle(accountId, symbol, strikeCount, optionType, response)
       .then((strangleOptionsChain: OptionsChain) => {
         const strategyList = strangleOptionsChain.monthlyStrategyList.find(element => element.daysToExp >= minExpiration);
-        const goal = strangleOptionsChain.underlying.last;
+        const goal = strangleOptionsChain.underlyingPrice;
 
         const closestStrikeStrangle = strategyList.optionStrategyList.reduce((prev, curr) => {
           return (Math.abs(curr.strategyStrike - goal) < Math.abs(prev.strategyStrike - goal) ? curr : prev);

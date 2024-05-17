@@ -12,14 +12,16 @@ import { FormGroup, FormControl, Validators } from '@angular/forms';
 })
 export class LoginComponent implements OnInit {
   @Output() credentialSet: EventEmitter<boolean> = new EventEmitter();
-  authenticated = false;
-  hide = true;
+  hideSecret = true;
+  hideKey = true;
   model: any = {};
   loading = false;
   error = '';
   selectedLogin = '';
   tdaForm: FormGroup;
   selectedItem;
+  code = null;
+  dialogRef;
 
   constructor(public dialogService: DialogService,
     public snackBar: MatSnackBar,
@@ -30,35 +32,37 @@ export class LoginComponent implements OnInit {
       accountId: new FormControl(document.cookie
         .split('; ')
         .find((row) => row.startsWith('accountId'))?.replace('accountId=', '') || '', Validators.required),
-      consumerKey: new FormControl(document.cookie
+      appKey: new FormControl(document.cookie
         .split('; ')
-        .find((row) => row.startsWith('consumerKey'))?.replace('consumerKey=', '') || '', Validators.required),
-      refreshToken: new FormControl(document.cookie
+        .find((row) => row.startsWith('appKey'))?.replace('appKey=', '') || '', Validators.required),
+      secret: new FormControl(document.cookie
         .split('; ')
-        .find((row) => row.startsWith('refreshToken'))?.replace('refreshToken=', '') || '', Validators.required),
+        .find((row) => row.startsWith('secret'))?.replace('secret=', '') || '', Validators.required),
+      callbackUrl: new FormControl(document.cookie
+        .split('; ')
+        .find((row) => row.startsWith('callbackUrl'))?.replace('callbackUrl=', '') || '', Validators.required),
       saveToCookie: new FormControl(false, Validators.required),
     });
 
     this.selectedLogin = 'tda';
-    this.selectedItem = '';
+    this.selectedItem = '';    
+    const query = new URLSearchParams(window.location.search);
+    const code = query.get('code');
+    if (code) {
+      this.code = code;
+    }
+  }
+
+  getAccessToken() {
+    this.authenticationService.getAccessToken(this.tdaForm.value.accountId, this.tdaForm.value.appKey, this.tdaForm.value.secret, this.code, this.tdaForm.value.callbackUrl)
+      .subscribe(() => this.dialogRef.close());
   }
 
   openDialog(): void {
-    const dialogRef = this.dialogService.open(LoginDialogComponent, {
+    this.dialogRef = this.dialogService.open(LoginDialogComponent, {
       header: 'Algo Trader'
     });
-
-    dialogRef.onClose.subscribe(() => {
-      this.checkAuthenticated();
-    });
-  }
-
-  checkAuthenticated() {
-    if (sessionStorage.getItem('currentUser')) {
-      this.authenticated = true;
-    } else {
-      this.authenticated = false;
-    }
+    this.dialogRef.onClose.subscribe();
   }
 
   logout() {
@@ -66,27 +70,26 @@ export class LoginComponent implements OnInit {
     window.location.reload();
   }
 
-  saveTdaLogin() {
+  signIn() {
     this.loading = true;
     if (this.tdaForm.value.saveToCookie) {
       document.cookie = `accountId=${this.tdaForm.value.accountId};SameSite=None;Secure`;
-      document.cookie = `consumerKey=${this.tdaForm.value.consumerKey};SameSite=None;Secure`;
-      document.cookie = `refreshToken=${this.tdaForm.value.refreshToken};SameSite=None;Secure`;
+      document.cookie = `appKey=${this.tdaForm.value.appKey};SameSite=None;Secure`;
+      document.cookie = `secret=${this.tdaForm.value.secret};SameSite=None;Secure`;
+      document.cookie = `callbackUrl=${this.tdaForm.value.callbackUrl};SameSite=None;Secure`;
     }
-    this.authenticationService.setTdaAccount(this.tdaForm.value.accountId,
-      this.tdaForm.value.consumerKey,
-      this.tdaForm.value.refreshToken)
-      .subscribe(() => {
-        this.loading = false;
-        this.tdaForm.reset();
-        this.credentialSet.emit(true);
-        this.snackBar.open('Credentials saved.', 'Dismiss', { duration: 2000 });
+    this.authenticationService.signIn(this.tdaForm.value.appKey, this.tdaForm.value.callbackUrl);
+      
+    // .subscribe(() => {
+      //   this.loading = false;
+      //   this.tdaForm.reset();
+      //   this.credentialSet.emit(true);
+      //   this.snackBar.open('Credentials saved.', 'Dismiss', { duration: 2000 });
 
-      },
-        error => {
-          console.log(error);
-          this.snackBar.open('Error setting TDA account.', 'Dismiss');
-        });
+      //   error => {
+      //     console.log(error);
+      //     this.snackBar.open('Error setting TDA account.', 'Dismiss');
+      //   });
   }
 
   selectAccount(account) {

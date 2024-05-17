@@ -12,87 +12,17 @@ class PortfolioController extends BaseController {
   }
 
   login(request, response) {
-    if (_.isEmpty(request.body)) {
-      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
-    } else {
-      PortfolioService.login(request.body.username, request.body.password, response);
-    }
+    PortfolioService.login(request.query.consumerKey, request.query.callbackUrl, response);
   }
 
-  mfaLogin(request, response) {
-    if (_.isEmpty(request.body)) {
-      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
-    } else {
-      PortfolioService.mfaLogin(request.body.username, request.body.password, request.body.code, response);
-    }
-  }
-
-  logout(request, response) {
-    if (_.isEmpty(request.body)) {
-      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
-    } else {
-      PortfolioService.expireToken(request.body.token, response);
-    }
-  }
-
-  getPortfolio(request, response) {
-    if (_.isEmpty(request.headers.authorization)) {
-      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
-    } else {
-      PortfolioService.getPortfolio(request.headers.authorization.replace('Bearer ', ''), response);
-    }
-  }
-
-  getPositions(request, response) {
-    if (_.isEmpty(request.headers.authorization)) {
-      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
-    } else {
-      PortfolioService.getPositions(request.headers.authorization.replace('Bearer ', ''), response);
-    }
-  }
-
-  getResources(request, response) {
-    const urlRegex =
-      /^https\:\/\/api\.robinhood\.com\/instruments\/[a-z0-9]{8}\-[a-z0-9]{4}\-[a-z0-9]{4}\-[a-z0-9]{4}\-[a-z0-9]{12}\/{0,}$/;
-    if (_.isEmpty(request.body) || _.isEmpty(request.body.instrument) || !request.body.instrument.match(urlRegex)) {
-      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
-    } else {
-      PortfolioService.getResource(request.body.instrument, response);
-    }
-  }
-
-  sell(request, response) {
-    if (_.isEmpty(request.headers.authorization) || _.isEmpty(request.body)) {
-      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
-    } else {
-      PortfolioService.sell(request.body.account,
-        request.headers.authorization.replace('Bearer ', ''),
-        request.body.url,
-        request.body.symbol,
-        request.body.quantity,
-        request.body.price,
-        request.body.type,
-        request.body.extendedHour)
-        .then((data) => BaseController.requestGetSuccessHandler(response, data))
-        .catch((err) => BaseController.requestErrorHandler(response, err));
-    }
-  }
-
-  buy(request, response) {
-    if (_.isEmpty(request.headers.authorization) || _.isEmpty(request.body)) {
-      return response.status(Boom.badRequest().output.statusCode).send(Boom.badRequest().output);
-    } else {
-      PortfolioService.buy(request.body.account,
-        request.headers.authorization.replace('Bearer ', ''),
-        request.body.url,
-        request.body.symbol,
-        request.body.quantity,
-        request.body.price,
-        request.body.type,
-        request.body.extendedHour)
-        .then((data) => BaseController.requestGetSuccessHandler(response, data))
-        .catch((err) => BaseController.requestErrorHandler(response, err));
-    }
+  getAccessToken(request, response) {
+    PortfolioService.getAccessToken(
+      request.body.accountId, 
+      request.body.clientId, 
+      request.body.secret, 
+      request.body.code, 
+      request.body.callbackUrl, 
+      response);
   }
 
   getInstruments(request, response) {
@@ -188,7 +118,7 @@ class PortfolioController extends BaseController {
   }
 
   tdPosition(request, response) {
-    PortfolioService.getTdPositions(request.query.accountId)
+    PortfolioService.getPositions(request.query.accountId)
       .then((data) => BaseController.requestGetSuccessHandler(response, data))
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }

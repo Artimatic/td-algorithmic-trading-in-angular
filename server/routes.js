@@ -1,8 +1,7 @@
 /**
  * Main application routes
  */
-const express = require('express');
-const path = require('path');
+import * as charlesSchwabApi from 'charles-schwab-api';
 
 module.exports = function(app) {
   // Insert routes below
@@ -15,7 +14,6 @@ module.exports = function(app) {
   app.use('/api/bonds', require('./api/bonds'));
   app.use('/api/sms', require('./api/sms'));
   app.use('/api/stock-info', require('./api/stock-info'));
-
   app.route('/*')
     .get(function(req, res) {
       res.sendfile('dist/public/index.html');

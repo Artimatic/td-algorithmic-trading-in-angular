@@ -2,16 +2,16 @@ import * as request from 'request-promise';
 import * as Robinhood from 'robinhood';
 import * as _ from 'lodash';
 import * as moment from 'moment';
+import * as charlesSchwabApi from 'charles-schwab-api';
+import axios from 'axios';
+import * as qs from 'qs';
 
 import QuoteService from '../quote/quote.service';
 import * as configurations from '../../config/environment';
 
-const robinhoodDevice = {
-  deviceToken: configurations.robinhood.deviceId
-};
-
-const apiUrl = 'https://api.robinhood.com/';
-const tdaUrl = 'https://api.tdameritrade.com/v1/';
+const charlesSchwabUrl = 'https://api.schwabapi.com/v1/';
+const charlesSchwabTraderUrl = 'https://api.schwabapi.com/trader/v1/';
+const charlesSchwabMarketDataUrl = 'https://api.schwabapi.com/marketdata/v1/';
 
 interface TokenInfo {
   timestamp: number;
@@ -19,219 +19,157 @@ interface TokenInfo {
 }
 
 class PortfolioService {
-
   access_token: { [key: string]: TokenInfo } = {};
-  tdaKey = {};
   refreshTokensHash = {};
+  accountIdToHash = {};
+  appKey = {};
+  secret = {};
   lastTokenRequest = null;
 
-  login(username, password, reply) {
-    const options = {
-      uri: apiUrl + 'oauth2/token/',
-      headers: {
-        'X-Robinhood-API-Version': '1.265.0'
-      },
-      form: {
-        username: username,
-        password: password,
-        client_id: 'c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS',
-        grant_type: 'password',
-        expires_in: 86400,
-        device_token: robinhoodDevice.deviceToken,
-        scope: 'internal'
-      }
+  login(consumerKey, callbackUrl, reply) {
+    return charlesSchwabApi.authorize(consumerKey, callbackUrl)
+      .then(response => {
+        reply.status(200).send(response.json());
+      })
+      .catch((e) => {
+        if (e.request && e.request._redirectable && e.request._redirectable._options && e.request._redirectable._options.href) {
+          reply.redirect(e.request._redirectable._options.href);
+        } else {
+          reply.status(500).send(e);
+        }
+      });
+  }
+
+  getAccessToken(accountId, clientId, secret, code, callbackUrl, reply) {
+    return charlesSchwabApi.getAccessToken(clientId,
+      secret,
+      'authorization_code',
+      code,
+      callbackUrl)
+      .then((response) => {
+        const data = (response as any).data;
+        this.getAccountNumbers(data?.access_token)
+          .then(accountNumbers => {
+            accountNumbers.forEach(val => {
+              this.accountIdToHash[val.accountNumber] = val.hashValue;
+            });
+            this.refreshTokensHash[accountId] = (data?.refresh_token as string) || null;
+            this.access_token[accountId] = {
+              timestamp: moment().valueOf(),
+              token: data?.access_token || null
+            };
+            this.appKey[accountId] = clientId;
+            this.secret[accountId] = secret;
+          });
+
+        reply.status(200).send(data);
+      })
+      .catch((e) => {
+        if (e.toJSON) {
+          const error = e.toJSON();
+          console.log('error:', JSON.stringify(error));
+          reply.status(error.status).send(error);
+        } else {
+          reply.status(500).send(e);
+        }
+      });
+    // const token = Buffer.from(`${clientId}:${secret}`).toString('base64');
+    // console.log('token', token);
+
+    // const data = {
+    //   grant_type: 'authorization_code',
+    //   code,
+    //   redirect_uri: callbackUrl
+    // };
+    // const options = {
+    //   method: 'POST',
+    //   headers: { 
+    //     'Content-Type': 'application/x-www-form-urlencoded',
+    //     'Authorization': `Basic ${token}`
+    //   },
+    //   data: qs.stringify(data),
+    //   url: charlesSchwabUrl + 'oauth/token',
+    // };
+    // axios(options)
+    //   .then((response) => reply.status(200).send(response.data))
+    //   .catch((e) => {
+    //     // for (const key in e) {
+    //     //   console.log(key);
+    //     // }
+    //     // console.log('err:', e);
+
+    //     if (e.toJSON) {
+    //       const error = e.toJSON();
+    //       console.log('e:', error);
+    //       reply.status(error.status).send(error);
+    //     } else {
+    //       reply.status(e.status).send(e);
+    //     }
+    //   });
+  }
+
+  //grant_type=refresh_token&refresh_token={REFRESH_TOKEN_GENERATED_FROM_PRIOR_STEP}
+  refreshAccessToken(accountId) {
+    const token = Buffer.from(`${this.appKey[accountId]}:${this.secret[accountId]}`).toString('base64');
+    const data = {
+      grant_type: 'refresh_token',
+      refresh_token: this.refreshTokensHash[accountId]
     };
-
-    return request.post(options)
-      .then(() => reply.status(200).send({}))
-      .catch((e) => (reply.status(401).send(e)));
-  }
-
-  mfaLogin(username, password, code, reply) {
     const options = {
-      uri: apiUrl + 'oauth2/token/',
+      method: 'POST',
       headers: {
-        'X-Robinhood-API-Version': '1.265.0'
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `Basic ${token}`
       },
-      form: {
-        username: username,
-        password: password,
-        client_id: 'c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS',
-        grant_type: 'password',
-        expires_in: 86400,
-        device_token: robinhoodDevice.deviceToken,
-        scope: 'internal',
-        mfa_code: code
-      }
+      data: qs.stringify(data),
+      url: charlesSchwabUrl + 'oauth/token',
     };
-
-    return request.post(options)
-      .then((response) => reply.status(200).send(response))
-      .catch((e) => (reply.status(401).send(e)));
+    return axios(options)
+      .then((response) => {
+        const data = (response as any).data;
+        this.refreshTokensHash[accountId] = (data?.refresh_token as string) || null;
+        this.access_token[accountId] = {
+          timestamp: moment().valueOf(),
+          token: data?.access_token || null
+        }
+      })
+      .catch((e) => {
+        if (e.toJSON) {
+          const error = e.toJSON();
+          console.log('error refreshing token:', JSON.stringify(error));
+        }
+      });
   }
 
-  expireToken(token, reply) {
-    return request.post({
-      uri: apiUrl + 'oauth2/revoke_token/',
-      form: {
-        client_id: 'c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS',
-        token
-      }
-    })
-      .then(() => reply.status(200).send({}))
-      .catch((e) => (reply.status(401).send(e)));
-  }
+  getAccountNumbers(token) {
+    const url = `${charlesSchwabTraderUrl}accounts/accountNumbers`;
 
-  getPortfolio(token, reply) {
     const options = {
-      uri: apiUrl + 'positions/',
+      uri: url,
       headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      json: true
+        Authorization: `Bearer ${token}`
+      }
     };
 
     return request.get(options)
-      .then((response) => reply.status(200).send(response))
-      .catch((e) => (reply.status(500).send(e)));
-  }
-
-  getPositions(token, reply) {
-    const options = {
-      uri: apiUrl + 'positions/?nonzero=true',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    };
-
-    return request.get(options)
-      .then((response) => reply.status(200).send(response))
-      .catch((e) => (reply.status(500).send(e)));
-  }
-
-  getResource(instrument, reply) {
-    (async () => {
-      try {
-        reply.status(200).send({});
-      } catch (e) {
-        reply.status(500).send(e);
-      }
-    })();
+      .then(this.processData);
   }
 
   getQuote(symbol, accountId, response) {
     if (!this.access_token[accountId]) {
-      return this.renewExpiredTDAccessTokenAndGetQuote(symbol, accountId, response);
+      return this.renewExpiredAccessTokenAndGetQuote(symbol, accountId, response);
     } else {
-      return this.getTDMarketData(symbol, accountId)
-        .then(this.processTDData)
+      return this.getMarketData(symbol, accountId)
+        .then(this.processData)
         .then(quote => {
           if (quote[symbol].delayed) {
-            return this.renewExpiredTDAccessTokenAndGetQuote(symbol, accountId, response);
+            return this.renewExpiredAccessTokenAndGetQuote(symbol, accountId, response);
           } else {
             return quote;
           }
         })
-        .catch(error => this.renewExpiredTDAccessTokenAndGetQuote(symbol, accountId, response));
+        .catch(error => this.renewExpiredAccessTokenAndGetQuote(symbol, accountId, response));
     }
-  }
-
-  sell(account, token, instrumentUrl, symbol, quantity, price, type = 'limit',
-    extendedHours = false) {
-    const headers = {
-      'Accept': '*/*',
-      'Accept-Encoding': 'gzip, deflate',
-      'Accept-Language': 'en;q=1, fr;q=0.9, de;q=0.8, ja;q=0.7, nl;q=0.6, it;q=0.5',
-      'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8',
-      'Connection': 'keep-alive',
-      'Authorization': `Bearer ${token}`
-    };
-
-    console.log('Sell order: ', {
-      account: account,
-      instrument: instrumentUrl,
-      price: price,
-      stop_price: null,
-      quantity: quantity,
-      side: 'sell',
-      symbol: symbol,
-      time_in_force: 'gfd',
-      trigger: 'immediate',
-      type: type,
-      extended_hours: extendedHours
-    });
-
-    return request.post({
-      uri: apiUrl + 'orders/',
-      headers: headers,
-      json: true,
-      gzip: true,
-      form: {
-        account: account,
-        instrument: instrumentUrl,
-        price: price,
-        stop_price: null,
-        quantity: quantity,
-        side: 'sell',
-        symbol: symbol,
-        time_in_force: 'gfd',
-        trigger: 'immediate',
-        type: type,
-        extended_hours: extendedHours
-      }
-    });
-  }
-
-  buy(account,
-    token,
-    instrumentUrl,
-    symbol,
-    quantity,
-    price,
-    type = 'limit',
-    extendedHours = false) {
-    const headers = {
-      'Accept': '*/*',
-      'Accept-Encoding': 'gzip, deflate',
-      'Accept-Language': 'en;q=1, fr;q=0.9, de;q=0.8, ja;q=0.7, nl;q=0.6, it;q=0.5',
-      'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8',
-      'Connection': 'keep-alive',
-      'Authorization': `Bearer ${token}`
-    };
-
-    console.log('Buy order: ', {
-      account: account,
-      instrument: instrumentUrl,
-      price: price,
-      stop_price: null,
-      quantity: quantity,
-      side: 'buy',
-      symbol: symbol,
-      time_in_force: 'gfd',
-      trigger: 'immediate',
-      type: type,
-      extended_hours: extendedHours
-    });
-
-    return request.post({
-      uri: apiUrl + 'orders/',
-      headers: headers,
-      json: true,
-      gzip: true,
-      form: {
-        account: account,
-        instrument: instrumentUrl,
-        price: price,
-        stop_price: null,
-        quantity: quantity,
-        side: 'buy',
-        symbol: symbol,
-        time_in_force: 'gfd',
-        trigger: 'immediate',
-        type: type,
-        extended_hours: extendedHours
-      }
-    });
   }
 
   getInstruments(symbol, reply) {
@@ -245,7 +183,7 @@ class PortfolioService {
     });
   }
 
-  renewTDAuth(accountId, reply = null) {
+  renewAuth(accountId, reply = null) {
     if (accountId === null) {
       for (const id in this.access_token) {
         if (id && id !== 'null' && this.access_token[id]) {
@@ -271,7 +209,7 @@ class PortfolioService {
     } else if (!this.access_token[accountId]) {
       this.access_token[accountId] = { token: '123', timestamp: moment().valueOf() };
     }
-    return this.sendTdPositionRequest(accountId).then(pos => {
+    return this.sendPositionRequest(accountId).then(pos => {
       console.log('Added new token');
       return Promise.resolve();
     })
@@ -280,15 +218,15 @@ class PortfolioService {
         console.log('Token error: ', errorMessage);
         if (errorMessage === 'The access token being passed has expired or is invalid.') {
           console.log('Last token request: ', moment(this.lastTokenRequest).format());
-          if (this.tdaKey[accountId] && (this.lastTokenRequest === null || moment().diff(moment(this.lastTokenRequest), 'minutes') > 29)) {
+          if (this.access_token[accountId] && (this.lastTokenRequest === null || moment().diff(moment(this.lastTokenRequest), 'minutes') > 29)) {
             this.lastTokenRequest = moment().valueOf();
             console.log('Requesting new token');
-            return this.getTDAccessToken(accountId);
+            return this.refreshAccessToken(accountId);
           } else {
             const tooRecentErrMsg = 'Last token request was too recent';
             console.log(tooRecentErrMsg);
             if (reply) {
-              reply.status(500).send({ error: tooRecentErrMsg});
+              reply.status(500).send({ error: tooRecentErrMsg });
               reply.end();
             }
             return Promise.reject(new Error('Last token request was too recent'));
@@ -302,14 +240,14 @@ class PortfolioService {
     console.log(moment().format(), 'Retrieving intraday quotes ');
     if (!accountId || !this.access_token[accountId]) {
       console.log('missing access token for ', accountId, this.access_token);
-      return this.renewTDAuth(accountId, reply)
+      return this.renewAuth(accountId, reply)
         .then(() => this.getTDIntraday(symbol, accountId));
     } else {
       return this.getTDIntraday(symbol, accountId)
         .catch((error) => {
           console.log('Error retrieving intraday data ', error.error);
 
-          return this.renewTDAuth(accountId, reply)
+          return this.renewAuth(accountId, reply)
             .then(() => this.getTDIntraday(symbol, accountId));
         });
     }
@@ -320,17 +258,16 @@ class PortfolioService {
       accountId = this.getAccountId();
     }
 
-    const query = `${tdaUrl}marketdata/${symbol}/pricehistory`;
+    const query = `${charlesSchwabMarketDataUrl}pricehistory`;
     const options = {
       uri: query,
       qs: {
-        apikey: this.tdaKey[accountId],
+        symbol,
         periodType: 'day',
         period: 2,
         frequencyType: 'minute',
         frequency: 1,
-        endDate: Date.now(),
-        needExtendedHoursData: false
+        endDate: Date.now()
       },
       headers: {
         Authorization: `Bearer ${this.access_token[accountId].token}`
@@ -339,13 +276,13 @@ class PortfolioService {
 
     return request.get(options)
       .then((data) => {
-        const response = this.processTDData(data);
+        const response = this.processData(data);
         return QuoteService.convertTdIntraday(response.candles);
       });
   }
 
   getIntradayV2(symbol, period = 2, frequencyType = 'minute', frequency = 1, reply = null) {
-    return this.renewTDAuth(null, reply)
+    return this.renewAuth(null, reply)
       .then(() => this.getTDIntradayV2(symbol, period, frequencyType, frequency));
   }
 
@@ -371,17 +308,16 @@ class PortfolioService {
       return new Error('Token missing');
     }
 
-    const query = `${tdaUrl}marketdata/${symbol}/pricehistory`;
+    const query = `${charlesSchwabMarketDataUrl}pricehistory`;
     const options = {
       uri: query,
       qs: {
-        apikey: this.tdaKey[accountId],
+        symbol,
         periodType: 'day',
         period,
         frequencyType,
         frequency,
-        endDate: Date.now(),
-        needExtendedHoursData: false
+        endDate: Date.now()
       },
       headers: {
         Authorization: `Bearer ${this.access_token[accountId].token}`
@@ -390,30 +326,29 @@ class PortfolioService {
 
     return request.get(options)
       .then((data) => {
-        return this.processTDData(data);
+        return this.processData(data);
       });
   }
 
   getIntradayV3(symbol, startDate = moment().subtract({ days: 1 }).valueOf(), endDate = moment().valueOf(), reply = null) {
-    return this.renewTDAuth(null, reply)
+    return this.renewAuth(null, reply)
       .then(() => this.getTDIntradayV3(symbol, moment(startDate).valueOf(), moment(endDate).valueOf()));
   }
 
   getTDIntradayV3(symbol, startDate, endDate) {
     const accountId = this.getAccountId();
 
-    const query = `${tdaUrl}marketdata/${symbol}/pricehistory`;
+    const query = `${charlesSchwabMarketDataUrl}pricehistory`;
     const options = {
       uri: query,
       qs: {
-        apikey: this.tdaKey[accountId],
+        symbol,
         periodType: 'day',
         period: 2,
         frequencyType: 'minute',
         frequency: 1,
         startDate,
-        endDate,
-        needExtendedHoursData: false
+        endDate
       },
       headers: {
         Authorization: `Bearer ${this.access_token[accountId].token}`
@@ -422,7 +357,7 @@ class PortfolioService {
 
     return request.get(options)
       .then((data) => {
-        const response = this.processTDData(data);
+        const response = this.processData(data);
         return QuoteService.convertTdIntradayV2(symbol, response.candles);
       })
       .catch(error => {
@@ -439,14 +374,14 @@ class PortfolioService {
     if (!this.access_token[accountId]) {
       console.log('missing access token');
 
-      return this.renewTDAuth(accountId, reply)
+      return this.renewAuth(accountId, reply)
         .then(() => this.getTDDailyQuotes(symbol, startDate, endDate, accountId));
     } else {
       return this.getTDDailyQuotes(symbol, startDate, endDate, accountId)
         .catch(error => {
           console.log(moment().format(), 'Error retrieving daily quotes ', error.error);
 
-          return this.renewTDAuth(accountId, reply)
+          return this.renewAuth(accountId, reply)
             .then(() => this.getTDDailyQuotes(symbol, startDate, endDate, accountId));
         });
     }
@@ -467,17 +402,16 @@ class PortfolioService {
   }
 
   getTDDailyQuotes(symbol, startDate, endDate, accountId) {
-    const query = `${tdaUrl}marketdata/${symbol}/pricehistory`;
+    const query = `${charlesSchwabMarketDataUrl}pricehistory`;
     const options = {
       uri: query,
       qs: {
-        apikey: this.tdaKey[accountId],
+        symbol,
         periodType: 'month',
         frequencyType: 'daily',
         frequency: 1,
         startDate: startDate,
-        endDate: endDate,
-        needExtendedHoursData: false
+        endDate: endDate
       },
       headers: {
         Authorization: `Bearer ${this.access_token[accountId].token}`
@@ -486,17 +420,17 @@ class PortfolioService {
 
     return request.get(options)
       .then((data) => {
-        const response = this.processTDData(data);
+        const response = this.processData(data);
         return QuoteService.convertTdIntraday(response.candles);
       });
   }
 
-  getTDMarketData(symbol, accountId) {
-    const query = `${tdaUrl}marketdata/${symbol}/quotes`;
+  getMarketData(symbol, accountId) {
+    const query = `${charlesSchwabMarketDataUrl}${symbol}/quotes`;
     const options = {
       uri: query,
       qs: {
-        apikey: this.tdaKey[accountId]
+        fields: 'quote'
       },
       headers: {
         Authorization: `Bearer ${this.access_token[accountId].token}`
@@ -505,56 +439,15 @@ class PortfolioService {
     return request.get(options);
   }
 
-  processTDData(data) {
+  processData(data) {
     return JSON.parse(data);
   }
 
-  getTDAccessToken(accountId) {
-    let refreshToken;
-    let key;
-    if (!accountId ||
-      !this.refreshTokensHash[accountId] || !this.tdaKey[accountId]) {
-      accountId = this.getAccountId();
-      key = configurations.tdameritrade.consumer_key;
-      refreshToken = configurations.tdameritrade.refresh_token;
-    } else {
-      refreshToken = this.refreshTokensHash[accountId];
-      key = this.tdaKey[accountId];
-    }
-    if (!accountId || !this.tdaKey[accountId]) {
-      return new Error('Missing accountId');
-    }
-    console.log(moment().format(), ' GETTING NEW ACCESS TOKEN');
-
-    return request.post({
-      uri: tdaUrl + 'oauth2/token',
-      form: {
-        grant_type: 'refresh_token',
-        refresh_token: refreshToken,
-        client_id: `${key}@AMER.OAUTHAP`
-      }
-    })
-      .then(this.processTDData)
-      .then(EASObject => {
-        this.access_token[accountId] = {
-          token: EASObject.access_token,
-          timestamp: moment().valueOf()
-        };
-
-        console.log(moment().format(), 'Set new access token');
-
-        return this.access_token[accountId].token;
-      })
-      .catch((err) => {
-        return Promise.reject(err);
-      });
-  }
-
-  renewExpiredTDAccessTokenAndGetQuote(symbol, accountId, response) {
-    return this.renewTDAuth(accountId, response)
+  renewExpiredAccessTokenAndGetQuote(symbol, accountId, response) {
+    return this.renewAuth(accountId, response)
       .then(() => {
-        return this.getTDMarketData(symbol, accountId || this.getAccountId())
-          .then(this.processTDData);
+        return this.getMarketData(symbol, accountId || this.getAccountId())
+          .then(this.processData);
       });
   }
 
@@ -563,7 +456,7 @@ class PortfolioService {
     price,
     type = 'LIMIT',
     extendedHours = false, accountId, response) {
-    return this.renewTDAuth(accountId, response)
+    return this.renewAuth(accountId, response)
       .then(() => {
         return this.tdBuy(symbol,
           quantity,
@@ -573,14 +466,14 @@ class PortfolioService {
       });
   }
 
-  
+
   sendTwoLegOrder(primarySymbol,
     seconarySymbol,
     quantity,
     price,
     type = 'NET_DEBIT',
     extendedHours = false, accountId, response) {
-    return this.renewTDAuth(accountId, response)
+    return this.renewAuth(accountId, response)
       .then(() => {
         return this.tdTwoLegOrder(primarySymbol,
           seconarySymbol,
@@ -606,7 +499,7 @@ class PortfolioService {
     };
 
     const options = {
-      uri: tdaUrl + `accounts/${accountId}/orders`,
+      uri: charlesSchwabTraderUrl + `accounts/${this.accountIdToHash[accountId]}/orders`,
       headers: headers,
       json: true,
       gzip: true,
@@ -655,7 +548,7 @@ class PortfolioService {
     };
 
     const options = {
-      uri: tdaUrl + `accounts/${accountId}/orders`,
+      uri: charlesSchwabTraderUrl + `accounts/${this.accountIdToHash[accountId]}/orders`,
       headers: headers,
       json: true,
       gzip: true,
@@ -687,7 +580,7 @@ class PortfolioService {
     price,
     type = 'LIMIT',
     extendedHours = false, accountId, response) {
-    return this.renewTDAuth(accountId, response)
+    return this.renewAuth(accountId, response)
       .then(() => {
         return this.tdSell(symbol,
           quantity,
@@ -711,7 +604,7 @@ class PortfolioService {
     };
 
     const options = {
-      uri: tdaUrl + `accounts/${accountId}/orders`,
+      uri: charlesSchwabTraderUrl + `accounts/${this.accountIdToHash[accountId]}/orders`,
       headers: headers,
       json: true,
       gzip: true,
@@ -741,25 +634,25 @@ class PortfolioService {
     return request.post(options);
   }
 
-  getTdPositions(accountId) {
-    return this.sendTdPositionRequest(accountId)
+  getPositions(accountId) {
+    return this.sendPositionRequest(accountId)
       .then((pos) => {
         return pos.securitiesAccount.positions;
       });
   }
 
   getTdBalance(accountId, response) {
-    return this.renewTDAuth(accountId, response)
+    return this.renewAuth(accountId, response)
       .then(() => {
-        return this.sendTdPositionRequest(accountId)
+        return this.sendPositionRequest(accountId)
           .then((pos) => {
             return pos.securitiesAccount.currentBalances;
           });
       });
   }
 
-  sendTdPositionRequest(accountId) {
-    const query = `${tdaUrl}accounts/${accountId}`;
+  sendPositionRequest(accountId) {
+    const query = `${charlesSchwabTraderUrl}accounts/${this.accountIdToHash[accountId]}`;
     const options = {
       uri: query,
       qs: {
@@ -772,18 +665,17 @@ class PortfolioService {
 
     return request.get(options)
       .then((data) => {
-        return this.processTDData(data);
+        return this.processData(data);
       });
   }
 
   setCredentials(accountId, key, refreshToken, response) {
     this.refreshTokensHash[accountId] = refreshToken;
-    this.tdaKey[accountId] = key;
     response.status(200).send();
   }
 
   isSet(accountId, response) {
-    const isSet = !_.isNil(this.refreshTokensHash[accountId]) && !_.isNil(this.tdaKey[accountId]);
+    const isSet = !_.isNil(this.refreshTokensHash[accountId]) && !_.isNil(this.accountIdToHash[accountId]);
 
     if (isSet) {
       response.status(200).send(isSet);
@@ -794,7 +686,6 @@ class PortfolioService {
 
   deleteCredentials(accountId, response) {
     this.refreshTokensHash[accountId] = null;
-    this.tdaKey[accountId] = null;
     this.access_token[accountId] = null;
     this.lastTokenRequest = null;
     response.status(200).send({});
@@ -805,17 +696,15 @@ class PortfolioService {
       accountId = this.getAccountId();
     }
 
-    return this.renewTDAuth(accountId, response)
+    return this.renewAuth(accountId, response)
       .then(() => {
-        const query = `${tdaUrl}marketdata/chains`;
+        const query = `${charlesSchwabMarketDataUrl}chains`;
         const options = {
           uri: query,
           qs: {
             symbol,
             strikeCount,
-            includeQuotes: true,
             strategy: 'STRADDLE',
-            interval: 0,
             range: 'SNK',
             optionType
           },
@@ -825,7 +714,7 @@ class PortfolioService {
         };
         return request.get(options)
           .then((data) => {
-            return this.processTDData(data);
+            return this.processData(data);
           });
       });
   }
@@ -833,11 +722,11 @@ class PortfolioService {
   getEquityMarketHours(date: string) {
     const accountId = this.getAccountId();
 
-    const query = `${tdaUrl}marketdata/EQUITY/hours`;
+    const query = `${charlesSchwabMarketDataUrl}markets`;
     const options = {
       uri: query,
       qs: {
-        apikey: this.tdaKey[accountId],
+        markets: 'equity',
         date
       },
       headers: {
@@ -845,28 +734,25 @@ class PortfolioService {
       }
     };
 
-      return request.get(options)
-        .then(this.processTDData);
+    return request.get(options)
+      .then(this.processData);
   }
 
   getInstrument(cusip: string) {
     const accountId = this.getAccountId();
 
     //const query = `${tdaUrl}instruments/${cusip}`;
-    const url = `${tdaUrl}instruments?symbol=${cusip}&projection=fundamental`;
+    const url = `${charlesSchwabMarketDataUrl}instruments?symbol=${cusip}&projection=fundamental`;
 
     const options = {
       uri: url,
-      qs: {
-        apikey: this.tdaKey[accountId]
-      },
       headers: {
         Authorization: `Bearer ${this.access_token[accountId].token}`
       }
     };
 
-      return request.get(options)
-        .then(this.processTDData);
+    return request.get(options)
+      .then(this.processData);
   }
 }
 

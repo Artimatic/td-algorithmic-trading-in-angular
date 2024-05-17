@@ -6,10 +6,11 @@ import { Account } from '../account';
 import { RedirectLoginDialogComponent } from '../../redirect-login-dialog/redirect-login-dialog.component';
 import { DialogService } from 'primeng/dynamicdialog';
 import { MessageService } from 'primeng/api';
+import { tap } from 'rxjs/operators';
 
 export interface TdaAccount {
   accountId: string;
-  consumerKey?: string;
+  appKey?: string;
   refreshKey?: string;
 }
 
@@ -108,15 +109,8 @@ export class AuthenticationService {
           summary: 'Credentials selected'
         });
       }, () => {
-        if (this.selectedTdaAccount.consumerKey && this.selectedTdaAccount.refreshKey) {
-          this.setTdaAccount(this.selectedTdaAccount.accountId,
-            this.selectedTdaAccount.consumerKey,
-            this.selectedTdaAccount.refreshKey).subscribe(() => { }, () => {
-              this.messageService.add({
-                severity: 'danger',
-                summary: 'Current selected account info is missing. Reenter credentials.'
-              });
-            });
+        if (this.selectedTdaAccount.appKey && this.selectedTdaAccount.refreshKey) {
+          this.setTdaAccount(this.selectedTdaAccount.accountId);
         } else {
           this.messageService.add({
             severity: 'danger',
@@ -126,17 +120,13 @@ export class AuthenticationService {
       });
   }
 
-  setTdaAccount(accountId, consumerKey, refreshToken): Observable<any> {
+  setTdaAccount(accountId) {
     const account: TdaAccount = {
-      accountId
+      accountId: accountId
     };
 
-
-    return this.setCredentials(accountId, consumerKey, refreshToken)
-      .map(() => {
-        this.saveTdaLogin(account);
-        this.selectTdaAccount(accountId);
-      });
+    this.saveTdaLogin(account);
+    this.selectTdaAccount(accountId);
   }
 
   removeTdaAccount(accountId: string): void {
@@ -152,13 +142,8 @@ export class AuthenticationService {
     this.deleteCredentials(accountId).subscribe();
   }
 
-  setCredentials(accountId, key, refreshToken) {
-    const body = {
-      accountId,
-      key,
-      refreshToken
-    };
-    return this.http.post('/api/portfolio/v3/set-account', body);
+  signIn(appKey, callbackUrl) {
+    window.location.assign(`/api/portfolio/login?consumerKey=${appKey}&callbackUrl=${callbackUrl}`);
   }
 
   checkCredentials(accountId) {
@@ -173,5 +158,18 @@ export class AuthenticationService {
       accountId
     };
     return this.http.post('/api/portfolio/v3/delete-cred', body);
+  }
+
+  getAccessToken(accountId: string, clientId: string, secret: string, code: string, callbackUrl: string): Observable<any> {
+    return this.http.post('/api/portfolio/access-token',
+      {
+        accountId,
+        clientId,
+        secret,
+        code,
+        callbackUrl
+      }).pipe(tap(() => {
+        this.setTdaAccount(accountId);
+      }));
   }
 }

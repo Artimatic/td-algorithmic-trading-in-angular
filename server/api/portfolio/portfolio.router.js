@@ -16,8 +16,8 @@ export let logout = (request, response) => {
   PortfolioController.logout(request, response);
 };
 
-export let mfaLogin = (request, response) => {
-  PortfolioController.mfaLogin(request, response);
+export let getAccessToken = (request, response) => {
+  PortfolioController.getAccessToken(request, response);
 };
 
 export let getResources = (request, response) => {

@@ -1,20 +1,28 @@
 <div class="login-container">
   <form name="tdaLogin" *ngIf="selectedLogin==='tda'" (ngSubmit)="saveTdaLogin(tdaForm)" [formGroup]="tdaForm">
     <div class="p-inputgroup">
-      <input pInputText type="text" id="float-input" placeholder="Account ID" type="text" name="accountId" formControlName="accountId"
-        required />
+      <input pInputText placeholder="Account ID" [type]="hideKey ? 'password' : 'text'" name="accountId"
+        formControlName="accountId" required>
+      <p-button styleClass="p-button-outlined" [icon]="hideKey ? 'pi pi-eye' : 'pi pi-eye-slash'"
+        (click)="hideKey = !hideKey"></p-button>
+    </div>
+    <div class="p-inputgroup">
+      <input pInputText placeholder="App Key" [type]="hideKey ? 'password' : 'text'" name="appKey"
+        formControlName="appKey" required>
+      <p-button styleClass="p-button-outlined" [icon]="hideKey ? 'pi pi-eye' : 'pi pi-eye-slash'"
+        (click)="hideKey = !hideKey"></p-button>
     </div>
     <div>
       <div class="p-inputgroup">
-        <input pInputText placeholder="Consumer Key" [type]="hide ? 'password' : 'text'" name="consumerKey"
-          formControlName="consumerKey" required>
-        <p-button styleClass="p-button-outlined" [icon]="hide ? 'pi pi-eye' : 'pi pi-eye-slash'"
-          (click)="hide = !hide"></p-button>
+        <input pInputText placeholder="Secret" [type]="hideSecret ? 'password' : 'text'" name="secret"
+          formControlName="secret" required>
+        <p-button styleClass="p-button-outlined" [icon]="hideSecret ? 'pi pi-eye' : 'pi pi-eye-slash'"
+          (click)="hideSecret = !hideSecret"></p-button>
       </div>
     </div>
     <div>
       <div class="p-inputgroup">
-        <textarea pInputTextarea placeholder="Refresh Token" formControlName="refreshToken" name="refreshToken"
+        <textarea pInputTextarea placeholder="Callback Url" formControlName="callbackUrl" name="callbackUrl"
           required></textarea>
       </div>
       <div class="p-inputgroup">
@@ -28,8 +36,14 @@
           animationDuration="1s"></p-progressSpinner>
       </div>
       <div *ngIf="!loading" class="login-send-btn">
-        <button pButton pRipple type="submit" label="Submit" [disabled]="!tdaForm.valid" class="p-button-success"
-          (click)="saveTdaLogin()"></button>
+        <div *ngIf="code" class="login-send-btn">
+          <button pButton pRipple type="submit" label="Get Access Token" [disabled]="!tdaForm.valid" class="p-button-success"
+          (click)="getAccessToken()"></button>
+        </div>
+        <div *ngIf="!code" class="login-send-btn">
+          <button pButton pRipple type="submit" label="Sign into Charles Schwab" [disabled]="!tdaForm.valid"
+            (click)="signIn()"></button>
+        </div>
       </div>
 
       <div class="available-accounts-title">Available Accounts</div>

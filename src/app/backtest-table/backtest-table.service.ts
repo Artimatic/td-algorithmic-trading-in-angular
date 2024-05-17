@@ -56,7 +56,7 @@ export class BacktestTableService {
       }
 
       if (buySignals.length + sellSignals.length > 1) {
-        const optionsData = await this.optionsDataService.getImpliedMove(symbol, '5').toPromise();
+        const optionsData = await this.optionsDataService.getImpliedMove(symbol).toPromise();
         const optionsChain = optionsData.optionsChain.monthlyStrategyList;
         const instruments = await this.portfolioService.getInstrument(symbol).toPromise();
         const callsCount = optionsData.optionsChain.monthlyStrategyList[0].optionStrategyList[0].secondaryLeg.totalVolume;
