@@ -233,7 +233,7 @@ class PortfolioService {
             return Promise.reject(new Error('Last token request was too recent'));
           }
         }
-        return Promise.reject(errorMessage);
+        return Promise.reject(new Error('Unknown error'));
       });
   }
 
