@@ -214,8 +214,7 @@ class PortfolioService {
       return Promise.resolve();
     })
       .catch(error => {
-        const errorMessage = JSON.parse(error);
-        console.log('Potential token error: ', errorMessage);
+        console.log('Potential token error: ', error);
         const diffMinutes = moment().diff(moment(this.access_token[accountId].timestamp), 'minutes');
 
         if (!diffMinutes || diffMinutes >= 30) {

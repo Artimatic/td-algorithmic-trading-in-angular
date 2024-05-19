@@ -72,7 +72,7 @@ export class FindPatternService {
             target.dates.forEach(d => {
               const endIdx = data.findIndex(val => d === moment(val.date).format('YYYY-MM-DD'));
               const targetPattern = this.getPattern(target.symbol, data, endIdx);
-              if (targetPattern.key) {
+              if (targetPattern && targetPattern.key) {
                 this.targetPatterns[targetPattern.key] = targetPattern.data;
               } else {
                 console.log('key not found for', targetPattern);
