@@ -6,7 +6,8 @@ import { Account } from '../account';
 import { RedirectLoginDialogComponent } from '../../redirect-login-dialog/redirect-login-dialog.component';
 import { DialogService } from 'primeng/dynamicdialog';
 import { MessageService } from 'primeng/api';
-import { tap } from 'rxjs/operators';
+import { catchError, tap } from 'rxjs/operators';
+import { throwError } from 'rxjs';
 
 export interface TdaAccount {
   accountId: string;
@@ -82,11 +83,11 @@ export class AuthenticationService {
     }
 
     this.tdaAccounts.push(newAccount);
-    sessionStorage.setItem('tdaAccounts', JSON.stringify(this.tdaAccounts));
+    sessionStorage.setItem('accounts', JSON.stringify(this.tdaAccounts));
   }
 
   retrieveLocalAccounts(): void {
-    this.tdaAccounts = JSON.parse(sessionStorage.getItem('tdaAccounts'));
+    this.tdaAccounts = JSON.parse(sessionStorage.getItem('accounts'));
 
     this.refreshTdaAccounts();
   }
@@ -102,7 +103,8 @@ export class AuthenticationService {
       return account.accountId === accountId;
     });
 
-    this.checkCredentials(this.selectedTdaAccount.accountId)
+    setTimeout(() => {
+      this.checkCredentials(this.selectedTdaAccount.accountId)
       .subscribe(() => {
         this.messageService.add({
           severity: 'success',
@@ -118,6 +120,7 @@ export class AuthenticationService {
           });
         }
       });
+    }, 1000);
   }
 
   setTdaAccount(accountId) {
@@ -138,7 +141,7 @@ export class AuthenticationService {
     });
 
     this.tdaAccounts.splice(idx, 1);
-    sessionStorage.setItem('tdaAccounts', JSON.stringify(this.tdaAccounts));
+    sessionStorage.setItem('accounts', JSON.stringify(this.tdaAccounts));
     this.deleteCredentials(accountId).subscribe();
   }
 
@@ -160,16 +163,26 @@ export class AuthenticationService {
     return this.http.post('/api/portfolio/v3/delete-cred', body);
   }
 
-  getAccessToken(accountId: string, clientId: string, secret: string, code: string, callbackUrl: string): Observable<any> {
+  getAccessToken(accountId: string, appKey: string, secret: string, code: string, callbackUrl: string): Observable<any> {
     return this.http.post('/api/portfolio/access-token',
       {
         accountId,
-        clientId,
+        appKey,
         secret,
         code,
         callbackUrl
       }).pipe(tap(() => {
         this.setTdaAccount(accountId);
+      }), catchError((error: any) => {
+        console.log(error);
+        this.messageService.add({
+          severity: 'danger',
+          summary: 'Issue with getting access token. Retrying login in 10 seconds.'
+        });
+        setTimeout(() => {
+          this.signIn(appKey, callbackUrl);
+        }, 10000);
+        return throwError(() => error);
       }));
   }
 }

@@ -1004,6 +1004,38 @@ export class BbCardComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
+  buyAll() {
+    this.backtestService.getLastPriceTiingo({ symbol: this.order.holding.symbol })
+      .subscribe(tiingoQuote => {
+        const lastPrice = tiingoQuote[0].last;
+        const buyOrder = this.daytradeService.createOrder(this.order.holding, 'Buy', this.firstFormGroup.value.quantity, lastPrice, moment().valueOf());
+        this.daytradeService.sendBuy(buyOrder, 'limit', () => { }, () => { });
+      });
+  }
+
+  sellAll() {
+    this.backtestService.getLastPriceTiingo({ symbol: this.order.holding.symbol })
+      .subscribe(tiingoQuote => {
+        const lastPrice = tiingoQuote[0].last;
+        const sellOrder = this.daytradeService.createOrder(this.order.holding, 'Sell', this.firstFormGroup.value.quantity, lastPrice, moment().valueOf());
+        this.daytradeService.sendSell(sellOrder, 'limit', () => { }, () => { }, () => { });
+      });
+  }
+
+  async buyStrangle() {
+    const bullishStrangle = await this.backtestTableService.getCallTrade(this.order.holding.symbol);
+    // const price = bullishStrangle.call.bid + bullishStrangle.put.bid;
+    const price = this.backtestTableService.findOptionsPrice(bullishStrangle.call.bid, bullishStrangle.call.ask) +
+      this.backtestTableService.findOptionsPrice(bullishStrangle.put.bid, bullishStrangle.put.ask);
+    const orderQuantity = 1;
+
+    console.log('orderQuantity', orderQuantity)
+    console.log('built strangle', bullishStrangle);
+
+    this.portfolioService.sendTwoLegOrder(bullishStrangle.call.symbol,
+      bullishStrangle.put.symbol, 1, price, false).subscribe();
+  }
+
   ngOnDestroy() {
     this.order = null;
     this.subscriptions.forEach(sub => {

@@ -200,7 +200,9 @@ export class PortfolioService {
       }
     };
 
-    return this.http.get('/api/portfolio/quote', options);
+    return this.http.get('/api/portfolio/quote', options).map(quote => {
+      return quote[symbol].quote;
+    })
   }
 
   getPrice(symbol: string): Observable<number> {
@@ -215,8 +217,8 @@ export class PortfolioService {
     }
     return this.http.get('/api/portfolio/quote', options)
       .pipe(
-        map((response) => {
-          return _.round(response['askPrice'], 2);
+        map((quote) => {
+          return _.round(quote[symbol].quote.askPrice, 2);
         })
       );
   }

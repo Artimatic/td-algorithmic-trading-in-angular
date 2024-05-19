@@ -3,8 +3,9 @@ import {
   HttpHeaders
 } from '@angular/common/http';
 
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, of } from 'rxjs';
 import { Injectable } from '@angular/core';
+import * as moment from 'moment-timezone';
 
 import { environment } from '../../../environments/environment';
 import { AuthenticationService } from './authentication.service';
@@ -30,6 +31,7 @@ export interface DaytradeParameters {
 export class BacktestService {
   currentChart: Subject<ChartParam> = new Subject();
   triggerBacktest: Subject<string> = new Subject();
+  lastRequest = null;
 
   constructor(private http: HttpClient, private authenticationService: AuthenticationService) { }
 
@@ -125,6 +127,12 @@ export class BacktestService {
     start: string,
     end: string,
     algo: string): Observable<any> {
+
+    if (this.lastRequest && moment().diff(this.lastRequest, 'milliseconds') < 350) {
+      return of({});
+    } else {
+      this.lastRequest = moment();
+    }
     const data = {
       ticker,
       start,

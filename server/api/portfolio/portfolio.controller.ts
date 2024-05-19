@@ -18,7 +18,7 @@ class PortfolioController extends BaseController {
   getAccessToken(request, response) {
     PortfolioService.getAccessToken(
       request.body.accountId, 
-      request.body.clientId, 
+      request.body.appKey, 
       request.body.secret, 
       request.body.code, 
       request.body.callbackUrl, 
@@ -53,11 +53,7 @@ class PortfolioController extends BaseController {
   getQuote(request, response) {
     PortfolioService.getQuote(request.query.symbol, request.query.accountId, response)
       .then((priceData) => {
-        response.status(200).send({
-          price: 1 * this.midPrice(priceData[request.query.symbol].askPrice, priceData[request.query.symbol].bidPrice),
-          bidPrice: 1 * priceData[request.query.symbol].bidPrice,
-          askPrice: 1 * priceData[request.query.symbol].askPrice
-        });
+        response.status(200).send(priceData);
       })
       .catch((err) => BaseController.requestErrorHandler(response, err));
   }

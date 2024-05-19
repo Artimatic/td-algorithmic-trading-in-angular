@@ -135,12 +135,14 @@ export class BacktestTableService {
     const optionsChain = optionsData.optionsChain;
     const impliedMovement = optionsData.move;
     const strategyList = optionsChain.monthlyStrategyList.find(element => element.daysToExp >= minExpiration);
-    const goal = optionsChain.underlying.last;
+    const goal = optionsChain?.underlyingPrice;
 
     return strategyList.optionStrategyList.reduce((prev, curr) => {
-      if (!prev.call || (Math.abs(Number(curr.strategyStrike - goal)) < Math.abs(Number(prev.call.strikePrice) - goal))) {
+      if (!prev.call || (Math.abs(Number(curr.strategyStrike) - goal) < Math.abs(Number(prev.call.strikePrice) - goal))) {
         if (curr.secondaryLeg.putCallInd.toLowerCase() === 'c') {
           prev.call = JSON.parse(JSON.stringify(curr.secondaryLeg));
+        } else if (curr.primaryLeg.putCallInd.toLowerCase() === 'c') {
+          prev.call = JSON.parse(JSON.stringify(curr.primaryLeg));
         }
       }
 
@@ -148,6 +150,8 @@ export class BacktestTableService {
         (this.isPutHedge(goal, curr.strategyStrike, impliedMovement) && this.passesVolumeCheck(curr.primaryLeg.totalVolume, prev.put))) {
         if (curr.primaryLeg.putCallInd.toLowerCase() === 'p') {
           prev.put = JSON.parse(JSON.stringify(curr.primaryLeg));
+        } else if (curr.secondaryLeg.putCallInd.toLowerCase() === 'p') {
+          prev.put = JSON.parse(JSON.stringify(curr.secondaryLeg));
         }
       }
       return prev;
@@ -161,18 +165,22 @@ export class BacktestTableService {
     const impliedMovement = optionsData.move;
 
     const strategyList = optionsChain.monthlyStrategyList.find(element => element.daysToExp >= minExpiration);
-    const goal = optionsChain.underlying.last;
+    const goal = optionsChain?.underlyingPrice;
 
     return strategyList.optionStrategyList.reduce((prev, curr) => {
       if ((!prev.call && curr.strategyStrike > goal) ||
         (this.isCallHedge(goal, curr.strategyStrike, impliedMovement) && this.passesVolumeCheck(curr.secondaryLeg.totalVolume, prev.call))) {
         if (curr.secondaryLeg.putCallInd.toLowerCase() === 'c') {
           prev.call = JSON.parse(JSON.stringify(curr.secondaryLeg));
+        } else if (curr.primaryLeg.putCallInd.toLowerCase() === 'p') {
+          prev.call = JSON.parse(JSON.stringify(curr.primaryLeg));
         }
       }
       if (!prev.put || (Math.abs(curr.strategyStrike - goal) < Math.abs(Number(prev.put.strikePrice) - goal))) {
         if (curr.primaryLeg.putCallInd.toLowerCase() === 'p') {
           prev.put = JSON.parse(JSON.stringify(curr.primaryLeg));
+        } else if (curr.secondaryLeg.putCallInd.toLowerCase() === 'c') {
+          prev.put = JSON.parse(JSON.stringify(curr.secondaryLeg));
         }
       }
       return prev;

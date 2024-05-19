@@ -63,7 +63,7 @@ class BacktestService {
   tiingoRequestCount = 0;
   tdThrottleExpiry = null;
   tiingoThrottleExpiry = null;
-  lastDaytradeRequest = null;
+  lastRequest = null;
 
   getIndicator() {
     return tulind.indicators;
@@ -343,11 +343,11 @@ class BacktestService {
   }
 
   getCurrentDaytrade(symbol: string, price: number, paidPrice: number, parameters, dataSource = 'td', response) {
-    if (this.lastDaytradeRequest && moment().diff(this.lastDaytradeRequest, 'milliseconds') < 350) {
+    if (this.lastRequest && moment().diff(this.lastRequest, 'milliseconds') < 350) {
       response.status(429).send({ message: 'Last request was to soon.' });
       return Promise.reject();
     } else {
-      this.lastDaytradeRequest = moment();
+      this.lastRequest = moment();
     }
     return this.getCurrentDaytradeIndicators(symbol, parameters.minQuotes || 80, dataSource)
       .then((currentIndicators: Indicators) => {

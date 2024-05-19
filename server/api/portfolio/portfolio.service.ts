@@ -40,8 +40,8 @@ class PortfolioService {
       });
   }
 
-  getAccessToken(accountId, clientId, secret, code, callbackUrl, reply) {
-    return charlesSchwabApi.getAccessToken(clientId,
+  getAccessToken(accountId, appKey, secret, code, callbackUrl, reply) {
+    return charlesSchwabApi.getAccessToken(appKey,
       secret,
       'authorization_code',
       code,
@@ -58,7 +58,7 @@ class PortfolioService {
               timestamp: moment().valueOf(),
               token: data?.access_token || null
             };
-            this.appKey[accountId] = clientId;
+            this.appKey[accountId] = appKey;
             this.secret[accountId] = secret;
           });
 
@@ -73,7 +73,7 @@ class PortfolioService {
           reply.status(500).send(e);
         }
       });
-    // const token = Buffer.from(`${clientId}:${secret}`).toString('base64');
+    // const token = Buffer.from(`${appKey}:${secret}`).toString('base64');
     // console.log('token', token);
 
     // const data = {
@@ -561,7 +561,7 @@ class PortfolioService {
         taxLotMethod: 'LIFO',
         orderLegCollection: [
           {
-            instruction: 'Buy',
+            instruction: 'BUY',
             quantity: quantity,
             instrument: {
               symbol: symbol,
@@ -616,7 +616,7 @@ class PortfolioService {
         taxLotMethod: 'LIFO',
         orderLegCollection: [
           {
-            instruction: 'Sell',
+            instruction: 'SELL',
             quantity: quantity,
             instrument: {
               symbol: symbol,

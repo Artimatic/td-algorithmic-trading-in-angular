@@ -1,5 +1,5 @@
 <div class="login-container">
-  <form name="tdaLogin" *ngIf="selectedLogin==='tda'" (ngSubmit)="saveTdaLogin(tdaForm)" [formGroup]="tdaForm">
+  <form name="tdaLogin" *ngIf="selectedLogin==='tda'" [formGroup]="tdaForm">
     <div class="p-inputgroup">
       <input pInputText placeholder="Account ID" [type]="hideKey ? 'password' : 'text'" name="accountId"
         formControlName="accountId" required>
@@ -41,7 +41,7 @@
           (click)="getAccessToken()"></button>
         </div>
         <div *ngIf="!code" class="login-send-btn">
-          <button pButton pRipple type="submit" label="Sign into Charles Schwab" [disabled]="!tdaForm.valid"
+          <button pButton pRipple type="submit" label="Sign Into Charles Schwab" [disabled]="!tdaForm.valid"
             (click)="signIn()"></button>
         </div>
       </div>

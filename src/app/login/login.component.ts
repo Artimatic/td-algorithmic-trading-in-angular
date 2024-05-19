@@ -1,5 +1,5 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
-import { DialogService } from 'primeng/dynamicdialog';
+import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { LoginDialogComponent } from '../login-dialog/login-dialog.component';
 import { AuthenticationService } from '../shared';
@@ -23,9 +23,9 @@ export class LoginComponent implements OnInit {
   code = null;
   dialogRef;
 
-  constructor(public dialogService: DialogService,
-    public snackBar: MatSnackBar,
-    public authenticationService: AuthenticationService) { }
+  constructor(private dialogService: DialogService,
+    private ref: DynamicDialogRef, 
+    private authenticationService: AuthenticationService) { }
 
   ngOnInit() {
     this.tdaForm = new FormGroup({
@@ -55,7 +55,7 @@ export class LoginComponent implements OnInit {
 
   getAccessToken() {
     this.authenticationService.getAccessToken(this.tdaForm.value.accountId, this.tdaForm.value.appKey, this.tdaForm.value.secret, this.code, this.tdaForm.value.callbackUrl)
-      .subscribe(() => this.dialogRef.close());
+      .subscribe(() => this.ref?.close());
   }
 
   openDialog(): void {

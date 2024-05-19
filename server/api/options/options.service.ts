@@ -77,7 +77,7 @@ class OptionService {
         const goal = strangleOptionsChain.underlyingPrice;
 
         const closestStrikeStrangle = strategyList.optionStrategyList.reduce((prev, curr) => {
-          return (Math.abs(curr.strategyStrike - goal) < Math.abs(prev.strategyStrike - goal) ? curr : prev);
+          return (Math.abs(Number(curr.strategyStrike) - goal) < Math.abs(Number(prev.strategyStrike) - goal) ? curr : prev);
         });
 
         const strategyCost = portfolioController.midPrice(closestStrikeStrangle.strategyAsk, closestStrikeStrangle.strategyBid);
