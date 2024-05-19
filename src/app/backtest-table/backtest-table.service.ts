@@ -6,6 +6,7 @@ import { PotentialTrade, Strategy } from './potential-trade.constant';
 import * as moment from 'moment-timezone';
 import { Strangle } from '@shared/models/options';
 import { OrderTypes } from '@shared/models/smart-order';
+import { MessageService } from 'primeng/api';
 
 @Injectable({
   providedIn: 'root'
@@ -13,11 +14,13 @@ import { OrderTypes } from '@shared/models/smart-order';
 export class BacktestTableService {
   orderHistory = {};
   correlationThreshold = 0.6;
+  lastRequest = null;
 
   constructor(private backtestService: BacktestService,
     private aiPicksService: AiPicksService,
     private optionsDataService: OptionsDataService,
     private portfolioService: PortfolioService,
+    private messageService: MessageService,
     private cartService: CartService) { }
 
   getRecentBacktest(symbol: string) {
@@ -30,9 +33,20 @@ export class BacktestTableService {
   }
 
   async getBacktestData(symbol: string) {
+    if (this.lastRequest && moment().diff(this.lastRequest, 'milliseconds') < 10000) {
+      this.messageService.add({
+        severity: 'danger',
+        summary: 'Last backtest was too soon. Try again later.'
+      });
+      return null;
+    } else {
+      this.lastRequest = moment();
+    }
     const recentBacktest = this.getRecentBacktest(symbol);
     if (recentBacktest) {
-      return recentBacktest;
+      return new Promise(function (resolve) {
+        setTimeout(resolve, 11000);
+      }).then(() => recentBacktest);
     }
     const current = moment().format('YYYY-MM-DD');
     const start = moment().subtract(365, 'days').format('YYYY-MM-DD');
@@ -41,7 +55,9 @@ export class BacktestTableService {
       const indicatorResults = await this.backtestService.getBacktestEvaluation(symbol, start, current, 'daily-indicators').toPromise();
       this.addToOrderHistoryStorage(symbol, indicatorResults.orderHistory);
       indicatorResults.stock = symbol;
-
+      if (!indicatorResults.signals || !indicatorResults.signals.length) {
+        return null;
+      }
       const lastSignal = indicatorResults.signals[indicatorResults.signals.length - 1];
       const buySignals = [];
       const sellSignals = [];
@@ -273,6 +289,9 @@ export class BacktestTableService {
   }
 
   getPairCorrelation(orderHistory, targetHistory): number {
+    if (!orderHistory || !targetHistory) {
+      return null;
+    }
     let primaryHistoryCounter = orderHistory.length - 1;
     let targetHistoryCounter = targetHistory.length - 1;
     let correlatingOrderCounter = 0;
