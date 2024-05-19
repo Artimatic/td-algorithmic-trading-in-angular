@@ -214,9 +214,11 @@ class PortfolioService {
       return Promise.resolve();
     })
       .catch(error => {
-        const errorMessage = JSON.parse(error.error).error;
-        console.log('Token error: ', errorMessage);
-        if (errorMessage === 'The access token being passed has expired or is invalid.') {
+        const errorMessage = JSON.parse(error);
+        console.log('Potential token error: ', errorMessage);
+        const diffMinutes = moment().diff(moment(this.access_token[accountId].timestamp), 'minutes');
+
+        if (!diffMinutes || diffMinutes >= 30) {
           console.log('Last token request: ', moment(this.lastTokenRequest).format());
           if (this.access_token[accountId] && (this.lastTokenRequest === null || moment().diff(moment(this.lastTokenRequest), 'minutes') > 29)) {
             this.lastTokenRequest = moment().valueOf();
