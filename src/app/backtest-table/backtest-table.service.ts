@@ -36,10 +36,10 @@ export class BacktestTableService {
     if (this.lastRequest && moment().diff(this.lastRequest, 'milliseconds') < 10000) {
       this.messageService.add({
         severity: 'danger',
-        summary: 'Last backtest was too soon. Try again later.'
+        summary: 'Last backtest was too soon. Trying again later.'
       });
       await new Promise(function (resolve) {
-        setTimeout(resolve, Math.floor(10000 * Math.random());
+        setTimeout(resolve, Math.floor(10000 * Math.random())
       });
     } else {
       this.lastRequest = moment();
