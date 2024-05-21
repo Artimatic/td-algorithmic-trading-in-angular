@@ -38,7 +38,9 @@ export class BacktestTableService {
         severity: 'danger',
         summary: 'Last backtest was too soon. Try again later.'
       });
-      return null;
+      await new Promise(function (resolve) {
+        setTimeout(resolve, Math.floor(10000 * Math.random());
+      });
     } else {
       this.lastRequest = moment();
     }
