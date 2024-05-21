@@ -33,7 +33,7 @@ export class BacktestTableService {
   }
 
   async getBacktestData(symbol: string) {
-    if (this.lastRequest && moment().diff(this.lastRequest, 'milliseconds') < 1000) {
+    if (this.lastRequest && moment().diff(this.lastRequest, 'milliseconds') < 100) {
       this.messageService.add({
         severity: 'danger',
         summary: 'Last backtest was too soon. Trying again later.'
@@ -411,6 +411,9 @@ export class BacktestTableService {
   }
 
   async addStrangle(symbol: string, price: number, optionStrategy: Strangle) {
+    if (symbol === 'TQQQ') {
+      return null;
+    }
     const balance: any = await this.portfolioService.getTdBalance().toPromise();
     const quantity = Math.floor((balance * 0.1) / (price * 100)) | 1;
     if (quantity < 10) {
