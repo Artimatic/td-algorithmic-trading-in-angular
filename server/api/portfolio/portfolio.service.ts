@@ -73,42 +73,8 @@ class PortfolioService {
           reply.status(500).send(e);
         }
       });
-    // const token = Buffer.from(`${appKey}:${secret}`).toString('base64');
-    // console.log('token', token);
-
-    // const data = {
-    //   grant_type: 'authorization_code',
-    //   code,
-    //   redirect_uri: callbackUrl
-    // };
-    // const options = {
-    //   method: 'POST',
-    //   headers: { 
-    //     'Content-Type': 'application/x-www-form-urlencoded',
-    //     'Authorization': `Basic ${token}`
-    //   },
-    //   data: qs.stringify(data),
-    //   url: charlesSchwabUrl + 'oauth/token',
-    // };
-    // axios(options)
-    //   .then((response) => reply.status(200).send(response.data))
-    //   .catch((e) => {
-    //     // for (const key in e) {
-    //     //   console.log(key);
-    //     // }
-    //     // console.log('err:', e);
-
-    //     if (e.toJSON) {
-    //       const error = e.toJSON();
-    //       console.log('e:', error);
-    //       reply.status(error.status).send(error);
-    //     } else {
-    //       reply.status(e.status).send(e);
-    //     }
-    //   });
   }
 
-  //grant_type=refresh_token&refresh_token={REFRESH_TOKEN_GENERATED_FROM_PRIOR_STEP}
   refreshAccessToken(accountId) {
     const token = Buffer.from(`${this.appKey[accountId]}:${this.secret[accountId]}`).toString('base64');
     const data = {

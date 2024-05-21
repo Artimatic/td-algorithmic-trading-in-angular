@@ -552,7 +552,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         break;
       default: {
         const callback = async (symbol: string, prediction: number, backtestData: any) => {
-          if (backtestData?.optionsVolume > 200 && (prediction > 0.7 || prediction < 0.3)) {
+          if (backtestData?.optionsVolume > 230 && (prediction > 0.7 || prediction < 0.3)) {
             let optionStrategy;
             if (prediction > 0.7) {
               optionStrategy = await this.backtestTableService.getCallTrade(symbol);
@@ -806,6 +806,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   async checkCurrentPositions() {
     await this.authenticationService.checkCredentials(this.authenticationService?.selectedTdaAccount?.accountId).toPromise();
+    
     this.currentHoldings = [];
     const currentDate = moment().format('YYYY-MM-DD');
     const startDate = moment().subtract(365, 'days').format('YYYY-MM-DD');
@@ -862,17 +863,16 @@ export class AutopilotComponent implements OnInit, OnDestroy {
             this.currentHoldings[foundIdx].sellReasons = reasons.sellReasons;
             try {
               const backtestResults = await this.backtestTableService.getBacktestData(stock);
-
-              if (backtestResults && backtestResults.ml > 0.7) {
-                await this.addBuy(this.createHoldingObj(stock));
-              } else if (backtestResults && backtestResults.ml < 0.3) {
+              if ((backtestResults && backtestResults.ml < 0.3) || stock === 'TQQQ') {
                 const sellHolding = this.currentHoldings.find(holdingInfo => {
                   return holdingInfo.name === stock;
                 });
                 if (sellHolding) {
                   this.portfolioSell(sellHolding);
                 }
-              }
+              } else if (backtestResults && backtestResults.ml > 0.7) {
+                await this.addBuy(this.createHoldingObj(stock));
+              } 
             } catch (error) {
               console.log(error);
             }
