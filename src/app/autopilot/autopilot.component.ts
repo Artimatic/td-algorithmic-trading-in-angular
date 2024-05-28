@@ -900,6 +900,12 @@ export class AutopilotComponent implements OnInit, OnDestroy {
       // this.checkIfTooManyHoldings(this.currentHoldings);
       console.log('current holdings', this.currentHoldings);
     }
+    const sellHolding = this.currentHoldings.find(holdingInfo => {
+      return holdingInfo.name === 'TQQQ';
+    });
+    if (sellHolding) {
+      this.portfolioSell(sellHolding);
+    }
   }
 
   getTechnicalIndicators(stock: string, startDate: string, currentDate: string, holdings, triggerBuySell = false) {
