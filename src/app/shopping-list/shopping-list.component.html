@@ -10,6 +10,9 @@
       <app-daytrade-score-board [buyOrders]="cartService.buyOrders" [otherOrders]="cartService.otherOrders"
         [totalScore]="scoreKeeperService.total"></app-daytrade-score-board>
     </p-accordionTab>
+    <p-accordionTab header="Logs">
+      <app-terminal-view></app-terminal-view>
+    </p-accordionTab>
   </p-accordion>
 
   <h1 mat-subheader>Shopping List</h1>

@@ -39,37 +39,30 @@ export class AppComponent implements OnInit, AfterViewInit {
         disabled: true
       },
       {
-        label: 'Authentication',
-        icon: 'pi pi-fw pi-sign-in',
-        items: [{
-          label: 'Login',
-          command: () => {
-            this.launchLogin();
-          }
-        }]
-      },
-      {
         label: 'Live Trading',
         icon: 'account_balance',
         routerLink: '/'
       },
       {
-        label: 'Machine Learning',
-        icon: 'pi pi-fw pi-prime',
-        routerLink: '/deep-analysis/machine-learning'
-      },
-      {
-        label: 'Portfolio Management',
-        icon: 'pi pi-fw pi-money-bill',
-        routerLink: '/portfolio-managment'
-      },
-      {
-        label: 'Daytrade Backtest',
-        routerLink: '/backtest'
-      },
-      {
-        label: 'Backtesting',
-        routerLink: '/research'
+        label: 'Additional Options',
+        items: [{
+          label: 'Machine Learning',
+          icon: 'pi pi-fw pi-prime',
+          routerLink: '/deep-analysis/machine-learning'
+        },
+        {
+          label: 'Portfolio Management',
+          icon: 'pi pi-fw pi-money-bill',
+          routerLink: '/portfolio-managment'
+        },
+        {
+          label: 'Daytrade Backtest',
+          routerLink: '/backtest'
+        },
+        {
+          label: 'Backtesting',
+          routerLink: '/research'
+        }]
       },
       {
         label: 'Export Logs',

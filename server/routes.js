@@ -1,8 +1,6 @@
 /**
  * Main application routes
  */
-import * as charlesSchwabApi from 'charles-schwab-api';
-
 module.exports = function(app) {
   // Insert routes below
   app.use('/api/quote', require('./api/quote'));

@@ -120,15 +120,15 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   maxTradeCount = 5;
   strategyList = [
     // Strategy.OptionsStrangle,
-    //Strategy.MLSpy,
+    Strategy.MLSpy,
     // Strategy.SingleStockPick,
     // Strategy.StateMachine,
-    //Strategy.Swingtrade,
+    Strategy.Swingtrade,
     Strategy.Daytrade,
     //Strategy.TrimHoldings,
     // Strategy.InverseSwingtrade,
     //Strategy.DaytradeShort,
-    // Strategy.Short,
+    Strategy.Short,
     // Strategy.DaytradeFullList,
   ];
 
@@ -524,7 +524,19 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         break;
       }
       case Strategy.Short: {
+        const callback = async (symbol: string, prediction: number, backtestData: any) => {
+          if (backtestData?.optionsVolume > 230) {
+            let optionStrategy;
+            if (prediction < 0.3) {
+              optionStrategy = await this.backtestTableService.getPutTrade(symbol);
+              const price = this.backtestTableService.findOptionsPrice(optionStrategy.call.bid, optionStrategy.call.ask) + this.backtestTableService.findOptionsPrice(optionStrategy.put.bid, optionStrategy.put.ask);
+              this.backtestTableService.addStrangle(optionStrategy.put.symbol + '/' + optionStrategy.call.symbol, price, optionStrategy);
+              console.log('Adding Bearish strangle', symbol, price, optionStrategy);
+            }
+          }
+        };
 
+        this.findSwingtrades(callback);
       }
       case Strategy.MLSpy:
         try {
@@ -552,6 +564,9 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         break;
       default: {
         const callback = async (symbol: string, prediction: number, backtestData: any) => {
+          if (symbol === 'TQQQ') {
+            return;
+          }
           if (backtestData?.optionsVolume > 230 && (prediction > 0.7 || prediction < 0.3)) {
             let optionStrategy;
             if (prediction > 0.7) {

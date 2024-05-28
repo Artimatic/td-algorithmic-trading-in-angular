@@ -2,7 +2,6 @@ import * as request from 'request-promise';
 import * as Robinhood from 'robinhood';
 import * as _ from 'lodash';
 import * as moment from 'moment';
-import * as charlesSchwabApi from 'charles-schwab-api';
 import axios from 'axios';
 import * as qs from 'qs';
 
@@ -27,9 +26,13 @@ class PortfolioService {
   lastTokenRequest = null;
 
   login(consumerKey, callbackUrl, reply) {
-    return charlesSchwabApi.authorize(consumerKey, callbackUrl)
-      .then(response => {
-        reply.status(200).send(response.json());
+    const path = '/oauth/authorize';
+    const url = `${charlesSchwabUrl}${path}?client_id=${consumerKey}&redirect_uri=${callbackUrl}`;
+    return axios({
+      method: 'get',
+      url
+    }).then(response => {
+        reply.status(200).send((response as any).json());
       })
       .catch((e) => {
         if (e.request && e.request._redirectable && e.request._redirectable._options && e.request._redirectable._options.href) {
@@ -41,11 +44,26 @@ class PortfolioService {
   }
 
   getAccessToken(accountId, appKey, secret, code, callbackUrl, reply) {
-    return charlesSchwabApi.getAccessToken(appKey,
-      secret,
-      'authorization_code',
+    const path = '/oauth/token'
+    const url = `${charlesSchwabUrl}${path}`;
+    const data = {
+      grant_type: 'authorization_code',
       code,
-      callbackUrl)
+      redirect_uri: callbackUrl
+    };
+  
+    const auth = Buffer.from(`${accountId}:${secret}`).toString('base64');
+  
+    const options = {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+        'Authorization': `Basic ${auth}`
+      },
+      data: qs.stringify(data),
+      url
+    };
+    return axios(options)
       .then((response) => {
         const data = (response as any).data;
         this.getAccountNumbers(data?.access_token)

@@ -27,8 +27,6 @@ import { MenuItem } from 'primeng/api';
 export class ShoppingListComponent implements OnInit, OnDestroy {
   defaultInterval = 70800;
   simultaneousOrderLimit = 3;
-  spy: SmartOrder;
-  tlt: SmartOrder;
 
   ordersStarted: number;
   interval: number;
@@ -99,16 +97,6 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
       {
         label: 'Delete Orders', icon: 'pi pi-trash', command: () => {
           this.stopAndDeleteOrders();
-        }
-      },
-      {
-        label: 'Close Opened DayTrades', icon: 'pi pi-sign-out', command: () => {
-          this.closeAllTrades();
-        }
-      },
-      {
-        label: 'Load Example Orders', icon: 'pi pi-shopping-cart', command: () => {
-          this.loadExamples();
         }
       }
     ];
@@ -266,28 +254,6 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
     this.alive = false;
   }
 
-  closeAllTrades() {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '250px',
-      data: { title: 'Confirm', message: 'Close all open day trade positions?' }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        const resolve = (data) => {
-          console.log('close all resolved: ', data);
-          this.snackBar.open('Open positions closed', 'Dismiss');
-        };
-        const reject = (error) => {
-          console.log('close all error: ', error);
-          this.snackBar.open('Unable to close all positions', 'Dismiss');
-        };
-        const handleNotFound = () => { };
-        this.daytradeService.closeTrades(resolve, reject, handleNotFound);
-      }
-    });
-  }
-
   stopAndDeleteOrders() {
     this.stop();
     this.cleanUp();
@@ -298,11 +264,6 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
     });
 
     this.cartService.deleteCart();
-  }
-
-  loadExamples() {
-    this.cartService.addToCart(this.spy);
-    this.cartService.addToCart(this.tlt);
   }
 
   import(file) {
