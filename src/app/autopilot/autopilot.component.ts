@@ -551,8 +551,14 @@ export class AutopilotComponent implements OnInit, OnDestroy {
         }
         break;
       default: {
+        const sellHolding = this.currentHoldings.find(holdingInfo => {
+          return holdingInfo.name === 'TQQQ';
+        });
+        if (sellHolding) {
+          this.portfolioSell(sellHolding);
+        }
         const callback = async (symbol: string, prediction: number, backtestData: any) => {
-          if (backtestData?.optionsVolume > 230 && (prediction > 0.7 || prediction < 0.3)) {
+          if (backtestData?.optionsVolume > 230 && (prediction > 0.7 || prediction < 0.3) && symbol !== 'TQQQ') {
             let optionStrategy;
             if (prediction > 0.7) {
               optionStrategy = await this.backtestTableService.getCallTrade(symbol);
