@@ -38,16 +38,12 @@
     <div class="p-toolbar-group-right">
         <p-button icon="pi pi-play" *ngIf="!display" styleClass="p-button-success" (click)="open()"></p-button>
         <p-button icon="pi pi-times" *ngIf="display" styleClass="p-button-danger" (click)="stop()"></p-button>
-        <p-button styleClass="p-button-success" label="Find patterns" (click)="runFindPattern()"></p-button>
-        <p-button *ngIf="!display" styleClass="p-button-success" label="Next strategy"
-            (click)="changeStrategy()"></p-button>
-        <p-button styleClass="p-button-success" label="Add options trades" (click)="addOptions()"></p-button>
-        <p-button styleClass="p-button-success" label="Show strategies" (click)="revealPotentialStrategy = !revealPotentialStrategy;"></p-button>
+        <p-splitButton label="Change strategy" (onClick)="changeStrategy()" [model]="multibuttonOptions" styleClass="ui-button-success"></p-splitButton>
     </div>
 </p-toolbar>
 
 <ng-template #header>
-    <h3>Auto Manager</h3>
+    <h3>Day Trade Manager</h3>
     <span *ngIf="strategyList[strategyCounter] === 'Daytrade'">
         <p-tag [value]="strategyList[strategyCounter]" severity="warning"></p-tag>
     </span>

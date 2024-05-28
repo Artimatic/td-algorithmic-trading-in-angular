@@ -36,9 +36,8 @@ export class BacktestTableService {
     if (this.lastRequest && moment().diff(this.lastRequest, 'milliseconds') < 100) {
       this.messageService.add({
         severity: 'danger',
-        summary: 'Last backtest was too soon. Trying again later.'
+        summary: 'Last backtest was too soon.'
       });
-
     } else {
       this.lastRequest = moment();
     }

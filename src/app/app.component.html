@@ -2,7 +2,7 @@
   <div class="service-status-container">
     <label>Online Status:</label>
     <div class="services-status" (click)="checkStatus()" matTooltip="{{dataText}}">
-      <div class="online-status-text">Data Service</div>
+      <div class="online-status-text">Database</div>
       <div class="status-indicator">
         <div class="status-indicator" [ngClass]="{
             'status-on': dataStatus,
@@ -10,7 +10,7 @@
       </div>
     </div>
     <div class="services-status" (click)="checkStatus()" matTooltip="{{mlText}}">
-      <div class="online-status-text">Machine Learning Service</div>
+      <div class="online-status-text">Machine Learning</div>
       <div class="status-indicator">
         <div [ngClass]="{
             'status-on': mlStatus,

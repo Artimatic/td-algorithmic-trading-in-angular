@@ -27,7 +27,10 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
   dollarAmount = 1000;
   destroy$ = new Subject();
   lastBacktest = null;
-  currentStockList: Daytrade[] = [];
+  mostRelevantStockList: Daytrade[] = [];
+  currentCycleList: Daytrade[] = [];
+  processSymbol$ = new Subject<string>();
+  delay;
 
   constructor(private backtestTableService: BacktestTableService,
     private backtestService: BacktestService,
@@ -42,6 +45,11 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
+    this.processSymbol$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(sym => {
+        this.getRecommendations(sym);
+      });
     this.findDaytradeService.getRefreshObserver()
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
@@ -49,6 +57,7 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
           this.findTrades();
         }
       });
+      this.delay = this.delayRequest();
   }
 
   async getCurrentHoldings() {
@@ -97,15 +106,15 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
   }
 
   updateStockList(symbol, daytradeIndicators) {
-    const foundIdx = this.currentStockList.findIndex(s => s.stock === symbol);
+    const foundIdx = this.mostRelevantStockList.findIndex(s => s.stock === symbol);
     if (foundIdx > -1) {
-      this.currentStockList[foundIdx] = {stock: symbol, daytradeIndicators};
+      this.mostRelevantStockList[foundIdx] = { stock: symbol, daytradeIndicators };
     } else {
-      this.currentStockList.push({stock: symbol, daytradeIndicators});
+      this.mostRelevantStockList.push({ stock: symbol, daytradeIndicators });
     }
 
-    if (this.currentStockList.length > 10) {
-      this.currentStockList = this.currentStockList.filter((stock: Daytrade) =>{
+    if (this.mostRelevantStockList.length > 10) {
+      this.mostRelevantStockList = this.mostRelevantStockList.filter((stock: Daytrade) => {
         if (!stock.daytradeIndicators) {
           return true;
         } else if ((stock.daytradeIndicators?.mfiLeft && stock.daytradeIndicators?.mfiLeft < 30) || stock.daytradeIndicators.bbandBreakout || (stock.daytradeIndicators.bband80[0][0] && stock.daytradeIndicators.close < (1.1 * stock.daytradeIndicators.bband80[0][0]))) {
@@ -116,86 +125,65 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
     }
   }
 
+  async getRecommendations(symbol: string) {
+    this.lastBacktest = moment();
+    let daytradeData = await this.backtestService.getDaytradeRecommendation(symbol, null, null, { minQuotes: 81 }).toPromise();
+
+    if (daytradeData.recommendation.toLowerCase() === 'buy') {
+      this.addTrade(symbol, daytradeData);
+    } else {
+      const indicator = daytradeData.data.indicator;
+      const mlResult = await this.machineLearningService
+        .trainDaytrade(symbol.toUpperCase(),
+          moment().add({ days: 1 }).format('YYYY-MM-DD'),
+          moment().subtract({ days: 1 }).format('YYYY-MM-DD'),
+          1,
+          this.globalSettingsService.daytradeAlgo
+        ).toPromise();
+      if (mlResult[0]?.nextOutput > 0.6) {
+        this.addTrade(symbol, daytradeData);
+      } else if ((indicator?.mfiLeft && indicator?.mfiLeft < 25) || indicator.bbandBreakout || (indicator.bband80[0][0] && indicator.close < indicator.bband80[0][0])) {
+        this.addTrade(symbol, daytradeData);
+      } else {
+        this.updateStockList(symbol, indicator);
+      }
+    }
+    if (this.currentCycleList.length > 0) {
+      this.delay.then(() => {
+        this.processSymbol$.next(this.currentCycleList.pop().stock);
+      });
+    }
+  }
+
   async findTrades() {
     await this.getCashBalance();
     await this.getCurrentHoldings();
-    if (this.currentStockList.length > 5) {
-      this.currentStockList.forEach(async (stock: Daytrade) => {
-        const symbol = stock.stock;
-        this.lastBacktest = moment();
-        let daytradeData = await this.backtestService.getDaytradeRecommendation(symbol, null, null, { minQuotes: 81 }).toPromise();
-        await this.delayRequest();
-  
-        if (daytradeData.recommendation.toLowerCase() === 'buy') {
-          this.addTrade(symbol, daytradeData);
-        } else {
-          const indicator = daytradeData.data.indicator;
-          if ((indicator?.mfiLeft && indicator?.mfiLeft < 25) || indicator.bbandBreakout || (indicator.bband80[0][0] && indicator.close < indicator.bband80[0][0])) {
-            this.addTrade(symbol, daytradeData);
-          }
-        }
+
+    if (!this.currentCycleList.length) {
+      const personalPicks = PersonalBullishPicks.map(pick => {
+        return { stock: pick.ticker, daytradeIndicators: null };
       });
-      return;
-    }
+      this.currentCycleList = this.mostRelevantStockList.concat(personalPicks)
 
-    const savedBacktestData = this.backtestTableService.getStorage('backtest');
-    for (const stockPick of PersonalBullishPicks) {
-      const symbol = stockPick.ticker;
-      this.lastBacktest = moment();
-      let daytradeData = await this.backtestService.getDaytradeRecommendation(symbol, null, null, { minQuotes: 81 }).toPromise();
-      await this.delayRequest();
-
-      if (daytradeData.recommendation.toLowerCase() === 'buy') {
-        this.addTrade(symbol, daytradeData);
-      } else {
-        const indicator = daytradeData.data.indicator;
-        if ((indicator?.mfiLeft && indicator?.mfiLeft < 25) || indicator.bbandBreakout || (indicator.bband80[0][0] && indicator.close < indicator.bband80[0][0])) {
-          this.addTrade(symbol, daytradeData);
-        } else {
-          this.updateStockList(symbol, indicator);
-        }
-      } 
-    }
-
-    for (const backtestDataKey in savedBacktestData) {
-      const backtestData = savedBacktestData[backtestDataKey];
-      if (backtestData) {
-        if (backtestData.ml > 0.5) {
-          this.lastBacktest = moment();
-          let daytradeData;
-          try {
-            daytradeData = await this.backtestService.getDaytradeRecommendation(backtestData.stock, backtestData.high52, backtestData.high52, { minQuotes: 81 }).toPromise();
-          } catch (err) {
-            await this.delayRequest();
-            daytradeData = await this.backtestService.getDaytradeRecommendation(backtestData.stock, backtestData.high52, backtestData.high52, { minQuotes: 81 }).toPromise();
+      const savedBacktestData = this.backtestTableService.getStorage('backtest');
+      for (const backtestDataKey in savedBacktestData) {
+        const backtestData = savedBacktestData[backtestDataKey];
+        if (backtestData) {
+          if (backtestData.ml > 0.5) {
+            this.currentCycleList.push({ stock: backtestData.stock, daytradeIndicators: null });
           }
-          // const mlResult = await this.machineLearningService
-          //   .trainDaytrade(backtestData.stock,
-          //     moment().add({ days: 1 }).format('YYYY-MM-DD'),
-          //     moment().subtract({ days: 1 }).format('YYYY-MM-DD'),
-          //     1,
-          //     this.globalSettingsService.daytradeAlgo
-          //   ).toPromise;
-          if (daytradeData.recommendation.toLowerCase() === 'buy') {
-            this.addTrade(backtestData.stock, daytradeData);
-          } else {
-            const indicator = daytradeData.data.indicator;
-            if ((indicator?.mfiLeft && indicator?.mfiLeft < 20) || indicator.bbandBreakout || (indicator.bband80[0][0] && indicator.close < indicator.bband80[0][0])) {
-              this.addTrade(backtestData.stock, daytradeData);
-            } else {
-              this.updateStockList(backtestData.stock, indicator);
-            }
-          }
-          await this.delayRequest();
         }
       }
     }
+    this.delay.then(() => {
+      this.processSymbol$.next(this.currentCycleList.pop().stock);
+    });
   }
 
   delayRequest() {
     return new Promise(function (resolve) {
       setTimeout(resolve, 10000);
-    });
+    })
   }
 
   addTrade(stock: string, daytradeData) {
@@ -216,7 +204,7 @@ export class FindSomeDaytradeComponent implements OnInit, OnDestroy {
   }
 
   async checkCurrentHoldings() {
-    await this.delayRequest();
+    await this.delay();
     await this.getCurrentHoldings();
     this.currentTrades = this.currentTrades.map((trade: StockTrade) => {
       const found = this.currentHoldings.find((value) => value.stock === trade.stock);

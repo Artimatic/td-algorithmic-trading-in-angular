@@ -8,7 +8,7 @@ import { BacktestResponse } from '../rh-table';
 import { SmartOrder } from '@shared/index';
 import { divide, floor, round } from 'lodash';
 import { DailyBacktestService } from '@shared/daily-backtest.service';
-import { MessageService } from 'primeng/api';
+import { MenuItem, MessageService } from 'primeng/api';
 import { AlgoQueueItem } from '@shared/services/trade.service';
 import { ScoringIndex } from '@shared/services/score-keeper.service';
 import { MachineDaytradingService } from '../machine-daytrading/machine-daytrading.service';
@@ -179,6 +179,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   lastReceivedRecommendation = null;
   boughtAtClose = false;
+  multibuttonOptions: MenuItem[];
 
   constructor(
     private authenticationService: AuthenticationService,
@@ -220,6 +221,27 @@ export class AutopilotComponent implements OnInit, OnDestroy {
           this.cartService.removeCompletedOrders();
         }
       });
+
+    this.multibuttonOptions = [
+      {
+        label: 'Add strangle', 
+        command: () => {
+          this.addOptions();
+        }
+      },
+      {
+        label: 'Find patterns', 
+        command: () => {
+          this.runFindPattern();
+        }
+      },
+      {
+        label: 'Show strategies', 
+        command: () => {
+          this.revealPotentialStrategy = !this.revealPotentialStrategy;
+        }
+      }
+    ];
   }
 
   open() {
@@ -788,8 +810,8 @@ export class AutopilotComponent implements OnInit, OnDestroy {
   }
 
   executeOrderList() {
-    const concat = this.cartService.sellOrders.concat(this.cartService.buyOrders);
-    const orders = concat.concat(this.cartService.otherOrders);
+    const buyAndSellList = this.cartService.sellOrders.concat(this.cartService.buyOrders);
+    const orders = buyAndSellList.concat(this.cartService.otherOrders);
     const limit = this.simultaneousOrderLimit > orders.length ? orders.length : this.simultaneousOrderLimit;
 
     while (this.executedIndex < limit && this.lastOrderListIndex < orders.length) {
@@ -824,7 +846,7 @@ export class AutopilotComponent implements OnInit, OnDestroy {
 
   async checkCurrentPositions() {
     await this.authenticationService.checkCredentials(this.authenticationService?.selectedTdaAccount?.accountId).toPromise();
-    
+
     this.currentHoldings = [];
     const currentDate = moment().format('YYYY-MM-DD');
     const startDate = moment().subtract(365, 'days').format('YYYY-MM-DD');
@@ -890,14 +912,14 @@ export class AutopilotComponent implements OnInit, OnDestroy {
                 }
               } else if (backtestResults && backtestResults.ml > 0.7) {
                 await this.addBuy(this.createHoldingObj(stock));
-              } 
+              }
             } catch (error) {
               console.log(error);
             }
           }
         }
       }
-      // this.checkIfTooManyHoldings(this.currentHoldings);
+      //this.checkIfTooManyHoldings(this.currentHoldings);
       console.log('current holdings', this.currentHoldings);
     }
     const sellHolding = this.currentHoldings.find(holdingInfo => {
