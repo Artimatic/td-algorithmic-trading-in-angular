@@ -26,7 +26,7 @@ class PortfolioService {
   lastTokenRequest = null;
 
   login(consumerKey, callbackUrl, reply) {
-    const path = '/oauth/authorize';
+    const path = 'oauth/authorize';
     const url = `${charlesSchwabUrl}${path}?client_id=${consumerKey}&redirect_uri=${callbackUrl}`;
     return axios({
       method: 'get',
@@ -44,7 +44,7 @@ class PortfolioService {
   }
 
   getAccessToken(accountId, appKey, secret, code, callbackUrl, reply) {
-    const path = '/oauth/token'
+    const path = 'oauth/token'
     const url = `${charlesSchwabUrl}${path}`;
     const data = {
       grant_type: 'authorization_code',
@@ -52,8 +52,7 @@ class PortfolioService {
       redirect_uri: callbackUrl
     };
   
-    const auth = Buffer.from(`${accountId}:${secret}`).toString('base64');
-  
+    const auth = Buffer.from(`${appKey}:${secret}`).toString('base64');
     const options = {
       method: 'POST',
       headers: {
@@ -63,6 +62,7 @@ class PortfolioService {
       data: qs.stringify(data),
       url
     };
+
     return axios(options)
       .then((response) => {
         const data = (response as any).data;

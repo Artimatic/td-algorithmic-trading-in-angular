@@ -177,11 +177,8 @@ export class AuthenticationService {
         console.log(error);
         this.messageService.add({
           severity: 'danger',
-          summary: 'Issue with getting access token. Retrying login in 10 seconds.'
+          summary: 'Issue with getting access token.'
         });
-        setTimeout(() => {
-          this.signIn(appKey, callbackUrl);
-        }, 10000);
         return throwError(() => error);
       }));
   }
