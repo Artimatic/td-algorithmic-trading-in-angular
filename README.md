@@ -1,5 +1,15 @@
 # Robinhood Station
 
+# Project Deprecated
+
+This repository is **no longer maintained**. To ensure you are using the most up-to-date tools, security patches, and features for Schwab's API, please migrate to the new repository.
+
+---
+
+## New Repository
+All development has moved to:
+### **[Artimatic/charles-schwab-algorithmic-trading](https://github.com/Artimatic/charles-schwab-algorithmic-trading)**
+
 ## Code scaffolding
 
 Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
